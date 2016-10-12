@@ -119,14 +119,14 @@ class PyQAbstractItemModel(QAbstractItemModel):
         #
         #       http://stackoverflow.com/questions/26680168/pyqt-treeview-index-error-removing-last-row
 
-        # if not self.hasIndex(row, column, parent):
-        #     return QModelIndex()
+        if not self.hasIndex(row, column, parent):
+            return QModelIndex()
 
         # if not parent.isValid():
         #     return QModelIndex()
 
-        if row < 0 or column < 0:
-            return QModelIndex()
+        # if row < 0 or column < 0:
+        #     return QModelIndex()
 
         node = self.node_from_index(parent)
         child = node.child_at_row(row)
@@ -207,18 +207,16 @@ class PyQAbstractItemModel(QAbstractItemModel):
         start_row = start_index.row()
         start_parent = start_index.parent()
         start_index = self.index(start_row, start_column, start_parent)
-        if end_node is not start_node:
+
+        if end_node is start_node:
+            end_row = start_row
+            end_parent = start_parent
+        else:
             end_index = self.index_from_node(end_node)
             end_row = end_index.row()
             end_parent = end_index.parent()
-            end_index = self.index(end_row, end_column, end_parent)
-        else:
-            end_row = start_row
-            end_parent = start_parent
-            if end_column != start_column:
-                end_index = self.index(end_row, end_column, end_parent)
-            else:
-                end_index = start_index
+
+        end_index = self.index(end_row, end_column, end_parent)
 
         self.dataChanged.emit(start_index, end_index, roles)
 
