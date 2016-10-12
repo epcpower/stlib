@@ -4,7 +4,7 @@
 
 from epyqlib.treenode import TreeNode
 from PyQt5.QtCore import (Qt, QAbstractItemModel, QVariant,
-                          QModelIndex, pyqtSignal, pyqtSlot)
+                          QModelIndex, pyqtSignal, pyqtSlot, QSize)
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -37,7 +37,8 @@ class PyQAbstractItemModel(QAbstractItemModel):
             unique_role: self.data_unique,
             Qt.TextAlignmentRole: lambda index: int(self.alignment),
             Qt.CheckStateRole: self.data_check_state,
-            Qt.EditRole: self.data_edit
+            Qt.EditRole: self.data_edit,
+            Qt.SizeHintRole: self.data_size_hint
         }
 
     def headerData(self, section, orientation, role):
@@ -83,6 +84,9 @@ class PyQAbstractItemModel(QAbstractItemModel):
             value = str(value)
 
         return value
+
+    def data_size_hint(self, index):
+        return QSize(50, 50)
 
     def data(self, index, role):
         if not index.isValid():

@@ -313,7 +313,7 @@ class Columns(AbstractColumns):
 
 Columns.indexes = Columns.indexes()
 
-
+import time
 class TxRxModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
     def __init__(self, root, parent=None):
         checkbox_columns = Columns.fill(False)
@@ -330,6 +330,17 @@ class TxRxModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                                value='Value',
                                dt='Cycle Time',
                                count='Count')
+
+        self.last_changed_print = time.monotonic()
+        self.changes = 0
+        self.last_changes = self.changes
+
+        self.data_last_changed_print = time.monotonic()
+        self.data_changes = 0
+        self.data_last_changes = self.changes
+
+        if self.root.rx:
+            self.dataChanged.connect(self.data_changed)
 
     def flags(self, index):
         flags = epyqlib.pyqabstractitemmodel.PyQAbstractItemModel.flags(self, index)
@@ -388,3 +399,24 @@ class TxRxModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 return True
 
         return False
+
+    def data_changed(self, start_index, end_index, roles):
+        self.changes += 1
+        now = time.monotonic()
+        delta = now - self.last_changed_print
+        if delta > 1:
+            print((self.changes - self.last_changes) / delta)
+            self.last_changed_print = now
+            self.last_changes = self.changes
+
+    def data(self, index, role):
+        if self.root.rx:
+            self.data_changes += 1
+            now = time.monotonic()
+            delta = now - self.data_last_changed_print
+            if delta > 1:
+                print('--' + str((self.data_changes - self.data_last_changes) / delta))
+                self.data_last_changed_print = now
+                self.data_last_changes = self.data_changes
+
+        return epyqlib.pyqabstractitemmodel.PyQAbstractItemModel.data(self, index, role)

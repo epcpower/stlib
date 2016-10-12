@@ -28,11 +28,19 @@
    </property>
    <item>
     <widget class="QTreeView" name="tree_view">
+     <property name="font">
+      <font>
+       <stylestrategy>NoAntialias</stylestrategy>
+      </font>
+     </property>
      <property name="verticalScrollBarPolicy">
       <enum>Qt::ScrollBarAlwaysOn</enum>
      </property>
      <property name="alternatingRowColors">
       <bool>true</bool>
+     </property>
+     <property name="textElideMode">
+      <enum>Qt::ElideNone</enum>
      </property>
      <property name="uniformRowHeights">
       <bool>true</bool>
