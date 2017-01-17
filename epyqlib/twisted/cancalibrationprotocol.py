@@ -154,10 +154,7 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
         self._state = new_state
 
     def _new_deferred(self, action):
-        self._deferred = eliot.twisted.DeferredContext(
-            twisted.internet.defer.Deferred()
-        )
-        self._deferred.addActionFinish()
+        self._deferred = twisted.internet.defer.Deferred()
 
         self._eliot_action = action
 
@@ -177,7 +174,7 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
             if self.state is not HandlerState.idle:
                 self.errback(HandlerBusy(
                     'Connect requested while {}'.format(self.state.name)))
-                return self._deferred.result
+                return self._deferred
 
             packet = HostCommand(code=CommandCode.connect,
                                  arbitration_id=self._tx_id)
@@ -187,7 +184,7 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
             self._send(packet, state=HandlerState.connecting,
                        count_towards_total=False)
 
-            return self._deferred.result
+            return self._deferred
 
     def disconnect(self):
         action = eliot.start_action(action_type='disconnect')
@@ -201,14 +198,14 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
             if self.state is not HandlerState.connected:
                 self.errback(HandlerBusy(
                     'Disconnect requested while {}'.format(self.state.name)))
-                return self._deferred.result
+                return self._deferred
 
             packet = HostCommand(code=CommandCode.disconnect,
                                  arbitration_id=self._tx_id)
             self._send(packet, state=HandlerState.disconnecting)
 
             eliot.Message.log(message='disconnecting')
-            return self._deferred.result
+            return self._deferred
 
     def set_mta(self, address_extension, address):
         action = eliot.start_action(action_type='set_mta')
@@ -226,12 +223,12 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
                     'Expected AddressExtension, got: {}'
                         .format(type(address_extension))
                 ))
-                return self._deferred.result
+                return self._deferred
 
             if self.state is not HandlerState.connected:
                 self.errback(HandlerBusy(
                     'Set MTA requested while {}'.format(self.state.name)))
-                return self._deferred.result
+                return self._deferred
 
             packet = HostCommand(code=CommandCode.set_mta,
                                  arbitration_id=self._tx_id)
@@ -242,7 +239,7 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
 
             self._send(packet=packet, state=HandlerState.setting_mta)
 
-            return self._deferred.result
+            return self._deferred
 
     def unlock(self, section):
         action = eliot.start_action(action_type='unlock')
@@ -257,7 +254,7 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
                 self.errback(InvalidSection(
                     'Invalid section password specified: {} - {}'.format(
                         section.name, section.value)))
-                return self._deferred.result
+                return self._deferred
 
             packet = HostCommand(code=CommandCode.unlock,
                                  arbitration_id=self._tx_id)
@@ -266,7 +263,7 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
 
             self._send(packet=packet, state=HandlerState.unlocking)
 
-            return self._deferred.result
+            return self._deferred
 
     def download(self, data):
         action = eliot.start_action(action_type='download')
@@ -285,12 +282,12 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
                     'Invalid data length {}'
                         .format(length)
                 ))
-                return self._deferred.result
+                return self._deferred
 
             if self.state is not HandlerState.connected:
                 self.errback(HandlerBusy(
                     'Download requested while {}'.format(self.state.name)))
-                return self._deferred.result
+                return self._deferred
 
             packet = HostCommand(code=CommandCode.download,
                                  arbitration_id=self._tx_id)
@@ -300,7 +297,7 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
 
             self._send(packet=packet, state=HandlerState.downloading)
 
-            return self._deferred.result
+            return self._deferred
 
     def download_6(self, data):
         action = eliot.start_action(action_type='download_6')
@@ -316,12 +313,12 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
                     'Invalid data length {}'
                         .format(len(bytes))
                 ))
-                return self._deferred.result
+                return self._deferred
 
             if self.state is not HandlerState.connected:
                 self.errback(HandlerBusy(
                     'Download requested while {}'.format(self.state.name)))
-                return self._deferred.result
+                return self._deferred
 
             packet = HostCommand(code=CommandCode.download_6,
                                  arbitration_id=self._tx_id)
@@ -329,7 +326,7 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
 
             self._send(packet=packet, state=HandlerState.download_6ing)
 
-            return self._deferred.result
+            return self._deferred
 
     def upload(self, number_of_bytes=4):
         action = eliot.start_action(action_type='upload')
@@ -357,7 +354,7 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
 
                     self._send(packet=packet, state=HandlerState.uploading)
 
-            return self._deferred.result
+            return self._deferred
 
     def build_checksum(self, checksum, length):
         # length is in bytes, not addresses
@@ -373,7 +370,7 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
             if self.state is not HandlerState.connected:
                 self.errback(HandlerBusy(
                     'Build checksum requested while {}'.format(self.state.name)))
-                return self._deferred.result
+                return self._deferred
 
             packet = HostCommand(code=CommandCode.build_checksum,
                                  arbitration_id=self._tx_id)
@@ -385,7 +382,7 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
 
             self._send(packet=packet, state=HandlerState.building_checksum)
 
-            return self._deferred.result
+            return self._deferred
 
     def clear_memory(self):
         action = eliot.start_action(action_type='clear_memory')
@@ -401,7 +398,7 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
             if self.state is not HandlerState.connected:
                 self.errback(HandlerBusy(
                     'Clear memory requested while {}'.format(self.state.name)))
-                return self._deferred.result
+                return self._deferred
 
             packet = HostCommand(code=CommandCode.clear_memory,
                                  arbitration_id=self._tx_id)
@@ -409,7 +406,7 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
 
             self._send(packet=packet, state=HandlerState.clearing_memory)
 
-            return self._deferred.result
+            return self._deferred
 
     def download_block(self, address_extension, address, data):
         action = eliot.start_action(action_type='download_block')
@@ -711,29 +708,29 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
             self.state = self._previous_state
         self._eliot_action.finish()
         self._eliot_action = None
-        self._deferred.result.errback(RequestTimeoutError(message))
+        self._deferred.errback(RequestTimeoutError(message))
 
     def callback(self, payload):
         self._active = False
-        eliot.Message.log(repr=object.__repr__(self), message='calling back', deferred=str(self._deferred.result))
+        eliot.Message.log(repr=object.__repr__(self), message='calling back', deferred=str(self._deferred))
         self._eliot_action.finish()
         self._eliot_action = None
-        self._deferred.result.callback(payload)
+        self._deferred.callback(payload)
 
     def errback(self, payload):
         self._active = False
-        eliot.Message.log(message='erring back', deferred=str(self._deferred.result), payload=str(payload))
+        eliot.Message.log(message='erring back', deferred=str(self._deferred), payload=str(payload))
         self._eliot_action.finish()
         self._eliot_action = None
-        self._deferred.result.errback(payload)
+        self._deferred.errback(payload)
 
     def cancel(self):
         self._active = False
-        eliot.Message.log(message='cancelling', deferred=str(self._deferred.result))
+        eliot.Message.log(message='cancelling', deferred=str(self._deferred))
         self.setTimeout(None)
         self._eliot_action.finish()
         self._eliot_action = None
-        self._deferred.result.cancel()
+        self._deferred.cancel()
 
 
 def crc(data, crc=None):
