@@ -224,6 +224,8 @@ runit(args=[
 
 files = []
 
+device_file_groups = ('release', 'factory', 'dev')
+
 if args.device_file is not None:
     pip_install('gitpython', no_ssl_verify=False, site=True)
     os.environ['PATH'] = os.pathsep.join([
@@ -233,7 +235,9 @@ if args.device_file is not None:
 
     import epyqlib.collectdevices
 
-    for group in ('release', 'factory', 'dev'):
+    device_zips = {}
+
+    for group in device_file_groups:
         with tempfile.TemporaryDirectory() as device_dir:
             epyqlib.collectdevices.main(
                 args=[],
@@ -244,6 +248,7 @@ if args.device_file is not None:
 
             zip_path = os.path.join('..', '{}-{}-{}.zip'.format(
                 args.name, group, epyq.__version_tag__))
+            device_zips[group] = os.path.abspath(zip_path)
             with zipfile.ZipFile(file=zip_path, mode='w') as zip:
                 for path in glob.glob(os.path.join(device_dir, '*.epz')):
                     zip.write(filename=path,
@@ -273,13 +278,19 @@ def copy_files(src, dst):
         else:
             shutil.copytree(full_file_name, os.path.join(dst, file_name))
 
-copy_files(os.path.join('build', 'release'), os.path.join('build', 'installer', 'packages', 'com.epcpower.st', 'data'))
+copy_files(os.path.join('build', 'release'), os.path.join('build', 'installer', 'packages', 'com.epcpower.st.main', 'data'))
+for group in device_file_groups:
+    path = os.path.join('build', 'installer', 'packages', 'com.epcpower.st.devices.{}'.format(group), 'data')
+    path = os.path.join(path, 'devices-{}'.format(group))
+    os.makedirs(path)
+    with zipfile.ZipFile(device_zips[group]) as z:
+        z.extractall(path=path)
 
-shutil.copy('COPYING', os.path.join('build', 'installer', 'packages', 'com.epcpower.st', 'meta', 'epyq-COPYING.txt'))
+shutil.copy('COPYING', os.path.join('build', 'installer', 'packages', 'com.epcpower.st.main', 'meta', 'epyq-COPYING.txt'))
 
 
 third_party_license = os.path.join(
-    'build', 'installer', 'packages', 'com.epcpower.st', 'meta',
+    'build', 'installer', 'packages', 'com.epcpower.st.main', 'meta',
     'third_party-LICENSE.txt'
 )
 
@@ -388,5 +399,15 @@ shutil.copy(
     os.path.join('build', 'epyq.exe'),
     os.path.join('..', installer_file)
 )
+
+runit(
+    args=[
+        os.path.join('c:/', 'Qt', 'QtIFW2.0.3', 'bin', 'repogen.exe'),
+        '--packages', os.path.join('installer', 'packages'),
+        'repository'
+    ],
+    cwd='build'
+)
+copy_files(os.path.join('build', 'repository'), os.path.join('..', '{}-repository-{}'.format(args.name, epyq.__version_tag__)))
 
 print('Created {}'.format(installer_file))
