@@ -73,7 +73,6 @@ try:
 except FileNotFoundError:
     pass
 
-
 pip_install('tox')
 import tox
 
@@ -84,6 +83,46 @@ tox_arguments = [
 
 config = tox.session.prepare(tox_arguments)
 tox.session.Session(config).runcommand()
+
+
+import collections
+pip_install('requests')
+zip_repos = collections.OrderedDict([
+    ('venv/src/pysunspec/sunspec/models', 'https://github.com/altendky/models/archive/'
+                 '04e44d84263f8201d31ff886f759b00973e4d95a.zip'),
+])
+
+pip_install('requests')
+import requests
+import zipfile
+import io
+import shutil
+import tempfile
+for name, url in zip_repos.items():
+    try:
+        response = requests.get(url)
+    except requests.exceptions.SSLError:
+        print('')
+        print('        SSL error occurred while requesting:')
+        print('            {}'.format(url))
+        print('')
+        print('        You probably want to use --no-ssl-verify')
+        print('')
+
+        sys.exit(1)
+
+    zip_data = io.BytesIO()
+    zip_data.write(response.content)
+    zip_file = zipfile.ZipFile(zip_data)
+    zip_dir = os.path.split(zip_file.namelist()[0])[0]
+    with tempfile.TemporaryDirectory() as src:
+        zip_file.extractall(path=src)
+        try:
+            shutil.rmtree(os.path.join(src, name))
+        except FileNotFoundError:
+            pass
+        shutil.move(os.path.join(src, zip_dir),
+                    os.path.join(src, name))
 
 
 if sys.platform == 'win32':
