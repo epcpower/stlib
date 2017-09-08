@@ -254,7 +254,7 @@ class TxRx(TreeNode, epyqlib.canneo.QtCanListener):
         self.update_timer.start()
 
     def gui_update(self):
-        # TODO: this is hacky but without it the rx widget would get values
+        # TODO: this is hacky but without it the tx widget would get values
         #       overwritten while they were being edited keeping the user
         #       from actually being able to change them
         if self.rx:
