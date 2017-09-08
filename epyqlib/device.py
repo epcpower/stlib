@@ -508,17 +508,20 @@ class Device:
                 )
                 column = epyqlib.txrx.Columns.indexes.name
                 for view, model in pairs:
-                    proxy = epyqlib.utils.qt.PySortFilterProxyModel(
-                        filter_column=column,
-                    )
-                    proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
-                    proxy.setSourceModel(model)
-                    view.setModel(proxy)
-                    view.set_sorting_enabled(True)
-                    view.sort_by_column(
-                        column=column,
-                        order=Qt.AscendingOrder
-                    )
+                    if model.root.tx:
+                        proxy = epyqlib.utils.qt.PySortFilterProxyModel(
+                            filter_column=column,
+                        )
+                        proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
+                        proxy.setSourceModel(model)
+                        view.setModel(proxy)
+                        view.set_sorting_enabled(True)
+                        view.sort_by_column(
+                            column=column,
+                            order=Qt.AscendingOrder
+                        )
+                    else:
+                        view.setModel(model)
 
         if Elements.nv in self.elements:
             matrix_nv = list(canmatrix.formats.loadp(self.can_path).values())[0]

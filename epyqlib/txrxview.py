@@ -4,7 +4,7 @@ import io
 import os
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtGui import QFontMetrics
-from PyQt5.QtCore import QFile, QFileInfo, QTextStream
+from PyQt5.QtCore import QFile, QFileInfo, QTextStream, QSortFilterProxyModel
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -32,13 +32,17 @@ class TxRxView(QtWidgets.QWidget):
 
         self.resize_columns = epyqlib.txrx.Columns.fill(False)
 
-        self.ui.searchbox.connect_to_view(
-            view=self.ui.tree_view,
-            column=epyqlib.txrx.Columns.indexes.name,
-        )
-
     def setModel(self, model):
         self.ui.tree_view.setModel(model)
+
+        tx = self.nonproxy_model().root.tx
+        if tx:
+            self.ui.searchbox.connect_to_view(
+                view=self.ui.tree_view,
+                column=epyqlib.txrx.Columns.indexes.name,
+            )
+
+        self.ui.searchbox.setHidden(not tx)
 
         self.ui.tree_view.header().setStretchLastSection(False)
 
@@ -63,6 +67,14 @@ class TxRxView(QtWidgets.QWidget):
         self.ui.tree_view.setColumnWidth(epyqlib.txrx.Columns.indexes.id,
                                          self.calculate_max_id_width() +
                                          self.ui.tree_view.indentation())
+
+    # TODO: CAMPid 07943342700734207878034207087
+    def nonproxy_model(self):
+        model = self.ui.tree_view.model()
+        while isinstance(model, QSortFilterProxyModel):
+            model = model.sourceModel()
+
+        return model
 
     # TODO: CAMPid 989849193479134917954791341
     def calculate_max_value_width(self):
