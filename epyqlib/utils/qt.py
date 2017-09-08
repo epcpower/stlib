@@ -678,3 +678,7 @@ def search_view(view, text, column):
         parent = model.index(parent.row(), 0, parent.parent())
         index = model.index(index.row(), index.column(), parent)
         view.setCurrentIndex(index)
+        view.selectionModel().select(
+            index,
+            QtCore.QItemSelectionModel.ClearAndSelect,
+        )
