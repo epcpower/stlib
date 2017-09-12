@@ -50,7 +50,8 @@ def available_buses():
                 else:
                     bus.shutdown()
                     valid.append({'interface': interface,
-                                  'channel': channel})
+                                  'channel': channel,
+                                  'changeable_bitrate': True})
 
             for n in range(1, 17):
                 channel = 'PCAN_LANBUS{}'.format(n)
@@ -61,7 +62,8 @@ def available_buses():
                 else:
                     bus.shutdown()
                     valid.append({'interface': interface,
-                                  'channel': channel})
+                                  'channel': channel,
+                                  'changeable_bitrate': False})
 
         elif interface == 'kvaser':
             # TODO: get the actual number of available devices rather
@@ -77,7 +79,8 @@ def available_buses():
                 else:
                     bus.shutdown()
                     valid.append({'interface': interface,
-                                  'channel': channel})
+                                  'channel': channel,
+                                  'changeable_bitrate': True})
         elif interface == 'socketcan':
             for n in range(9):
                 channel = 'can{}'.format(n)
@@ -88,7 +91,8 @@ def available_buses():
                 else:
                     bus.shutdown()
                     valid.append({'interface': interface,
-                                  'channel': channel})
+                                  'channel': channel,
+                                  'changeable_bitrate': False})
             for n in range(9):
                 channel = 'vcan{}'.format(n)
                 try:
@@ -98,7 +102,8 @@ def available_buses():
                 else:
                     bus.shutdown()
                     valid.append({'interface': interface,
-                                  'channel': channel})
+                                  'channel': channel,
+                                  'changeable_bitrate': False})
         else:
             print('Availability check not implemented for {}'
                   .format(interface), file=sys.stderr)
@@ -107,11 +112,12 @@ def available_buses():
 
 
 class Bus(TreeNode):
-    def __init__(self, interface, channel):
+    def __init__(self, interface, channel, changeable_bitrate=False):
         TreeNode.__init__(self)
 
         self.interface = interface
         self.channel = channel
+        self.changeable_bitrate = changeable_bitrate
 
         self.bitrate = default_bitrate
         self.separator = ' - '
@@ -266,10 +272,18 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
     device_removed = pyqtSignal(epyqlib.device.Device)
 
     def __init__(self, root, parent=None):
-        buses = [{'interface': None, 'channel': None}] + available_buses()
+        buses = [{
+            'interface': None,
+            'channel': None,
+            'changeable_bitrate': False,
+        }] + available_buses()
         for bus in buses:
-            bus = Bus(interface=bus['interface'],
-                      channel=bus['channel'])
+
+            bus = Bus(
+                interface=bus['interface'],
+                channel=bus['channel'],
+                changeable_bitrate=bus['changeable_bitrate'],
+            )
             root.append_child(bus)
             went_offline = functools.partial(self.went_offline, node=bus)
             bus.bus.went_offline.connect(went_offline)
@@ -377,6 +391,17 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         device, = matches
 
         return device
+
+    def flags(self, index):
+        flags = super().flags(index)
+
+        if index.column() == Columns.indexes.bitrate:
+            node = self.node_from_index(index)
+            if isinstance(node, Bus):
+                if not node.changeable_bitrate:
+                    flags &= ~Qt.ItemIsEnabled
+
+        return flags
 
 if __name__ == '__main__':
     import sys
