@@ -196,7 +196,7 @@ class BusProxy(QObject):
     def reset(self):
         if self.bus is not None:
             if isinstance(self.bus, can.interfaces.pcan.PcanBus):
-                self.bus.Reset()
+                self.bus.reset()
                 # TODO: do this a better way
                 # Give PCAN a chance to actually reset and avoid immediate
                 # send failures
