@@ -41,7 +41,8 @@ class DeviceLoadError(Exception):
     pass
 
 
-def collect(devices, output_directory, dry_run, groups=None, device_path=None):
+def collect(devices, output_directory, dry_run, groups=None, device_path=None,
+            in_repo=True):
     if groups is None:
         groups = []
 
@@ -74,12 +75,16 @@ def collect(devices, output_directory, dry_run, groups=None, device_path=None):
                 all_devices.add((values['repository'], values['branch'], values['file']))
             else:
                 dir = os.path.dirname(device_path)
-                repo = git.Repo(dir, search_parent_directories=True)
 
-                sha = '{dirty}-{sha}'.format(
-                    sha=repo.head.commit.hexsha,
-                    dirty='local{}'.format('_dirty' if repo.is_dirty() else ''),
-                )
+                if in_repo:
+                    repo = git.Repo(dir, search_parent_directories=True)
+
+                    sha = '{dirty}-{sha}'.format(
+                        sha=repo.head.commit.hexsha,
+                        dirty='local{}'.format('_dirty' if repo.is_dirty() else ''),
+                    )
+                else:
+                    sha = 'not_applicable'
 
             device_groups = values.get('groups', [])
             if set(device_groups).isdisjoint(set(groups)):

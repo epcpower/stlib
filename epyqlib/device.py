@@ -164,12 +164,12 @@ class Device:
             self.bus.set_bus()
 
     def _init_from_file(self, file, only_for_files=False, **kwargs):
-        extension = os.path.splitext(file)[1]
+        extension = os.path.splitext(file)[1].casefold()
 
-        if extension == '.epz':
+        if extension in ('.epz', '.zip'):
             zip_file = zipfile.ZipFile(file)
             self._init_from_zip(zip_file, **kwargs)
-        elif extension == '.epc':
+        else:
             try:
                 self.config_path = os.path.abspath(file)
                 file = open(file, 'r')
