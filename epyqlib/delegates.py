@@ -62,9 +62,7 @@ def create_combo(index, node, parent):
         widget.setCurrentIndex(index)
 
     view = widget.view()
-    policy = view.sizePolicy()
-    view.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
-    view.setSizePolicy(QtWidgets.QSizePolicy.Fixed, policy.verticalPolicy())
+    view.setMinimumWidth(calculate_combo_view_width(widget))
 
     event = QMouseEvent(QEvent.MouseButtonPress,
                         QPoint(),
@@ -74,6 +72,23 @@ def create_combo(index, node, parent):
     QCoreApplication.postEvent(widget, event)
 
     return widget
+
+
+def calculate_combo_view_width(widget):
+    view = widget.view()
+    metric = view.fontMetrics()
+    scrollbar = view.verticalScrollBar()
+
+    scrollbar_width = 0
+    if scrollbar.isVisibleTo(view):
+        scrollbar_width = scrollbar.width()
+
+    text = (widget.itemText(i) for i in range(widget.count()))
+    text_width = max(metric.width(s) for s in text)
+
+    # consider width of icons, for example
+
+    return text_width + scrollbar_width
 
 
 def create_button(index, node, parent):
