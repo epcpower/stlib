@@ -6,6 +6,7 @@ import epyqlib.widgets.abstractwidget
 import os
 import re
 
+from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtProperty, QFile, QFileInfo, QEvent
 from PyQt5.QtGui import QColor
 from PyQt5.QtXml import QDomDocument
@@ -16,6 +17,16 @@ __license__ = 'GPLv2+'
 
 
 darker_factor = 400
+
+
+class FontChangeEventSignal(QtCore.QObject):
+    triggered = QtCore.pyqtSignal()
+
+    def eventFilter(self, _, event):
+        if event.type() == QtCore.QEvent.FontChange:
+            self.triggered.emit()
+
+        return False
 
 
 def set_attribute_recursive(element, tag_name, attribute,
@@ -92,6 +103,10 @@ class Led(epyqlib.widgets.abstractwidget.AbstractWidget):
         self.manual_off_color = self.on_color.darker(factor=darker_factor)
 
         self.update_svg()
+
+        self.font_event_signal = FontChangeEventSignal()
+        self.ui.label.installEventFilter(self.font_event_signal)
+        self.font_event_signal.triggered.connect(self.update_svg)
 
     @pyqtProperty(bool)
     def label_from_enumeration(self):
