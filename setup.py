@@ -18,6 +18,7 @@ setup(
             'cangenmanual = epyqlib.cangenmanual:_entry_point',
             'updateepc = epyqlib.updateepc:main',
             'genbuildinfo = epyqlib.genbuildinfo:write_build_file',
+            'versionfile = epyqlib.cli.versionfile:cli',
         ]
     },
     install_requires=[
