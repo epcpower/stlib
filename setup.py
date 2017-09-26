@@ -12,7 +12,7 @@ setup(
     entry_points={
         'console_scripts': [
             'collectdevices = epyqlib.collectdevices:main',
-            'contiguouscommits = epyqlib.utils.contiguouscommits:_entry_point',
+            'contiguouscommits = epyqlib.utils.contiguouscommits:_entry_point [dulwich]',
             'epyqflash = epyqlib.flash:_entry_point',
             'patchvenv = epyqlib.patchvenv:main',
             'cangenmanual = epyqlib.cangenmanual:_entry_point',
@@ -22,7 +22,6 @@ setup(
         ]
     },
     install_requires=[
-        'dulwich',
         'gitpython',
         'PyQt5',
         'click',
@@ -32,6 +31,9 @@ setup(
         'deploy': [
             'gitpython',
             'requests',
+        ],
+        'dulwich': [
+            'dulwich',
         ],
     },
 )
