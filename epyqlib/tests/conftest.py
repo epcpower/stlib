@@ -1,3 +1,4 @@
+import contextlib
 import glob
 import os
 import shutil
@@ -5,7 +6,8 @@ import zipfile
 
 import pytest
 
-import epyqlib.collectdevices
+with contextlib.suppress(ImportError):
+    import epyqlib.collectdevices
 import epyqlib.tests.common
 
 
