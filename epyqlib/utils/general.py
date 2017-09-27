@@ -18,6 +18,10 @@ class ExpectedException(Exception):
         return 'This is expected: {}'.format(str(self))
 
 
+class Container:
+    pass
+
+
 def multiparagraph_wrap(s, *args, **kwargs):
     paragraphs = s.split('\n\n')
     return '\n\n'.join(
