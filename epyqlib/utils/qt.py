@@ -8,6 +8,7 @@ import traceback
 
 import epyqlib.utils.general
 
+import attr
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 import PyQt5.uic
@@ -682,3 +683,77 @@ def search_view(view, text, column):
             index,
             QtCore.QItemSelectionModel.ClearAndSelect,
         )
+
+
+@attr.s
+class PyQtify:
+    fields = attr.ib(default=attr.Factory(epyqlib.utils.general.Container))
+
+
+def pyqtify(changed='changed'):
+    def inner(cls):
+        class SignalContainer(PyQt5.QtCore.QObject):
+            for field in attr.fields(cls):
+                locals()[field.name] = PyQt5.QtCore.pyqtSignal('PyQt_PyObject')
+
+        temp = epyqlib.utils.general.Container()
+
+        class Class(cls):
+            temp.before = set(locals())
+            locals()[changed] = SignalContainer()
+            __pyqtify__ = PyQtify()
+
+            for _pyqtify_field in attr.fields(cls):
+                temp.name = _pyqtify_field.name
+                setattr(__pyqtify__.fields, temp.name, _pyqtify_field)
+                del _pyqtify_field
+
+                temp.signal = PyQt5.QtCore.pyqtSignal('PyQt_PyObject')
+                locals()[
+                    '__pyqtify_signal_{}__'.format(temp.name)
+                ] = temp.signal
+
+                temp.override = getattr(
+                    cls,
+                    'pyqtify_{}'.format(temp.name),
+                    None,
+                )
+
+                if temp.override is None:
+                    @PyQt5.QtCore.pyqtProperty(
+                        'PyQt_PyObject',
+                        notify=temp.signal,
+                    )
+                    def _pyqtify_property(self, name=temp.name):
+                        return self.pyqtify_get(name)
+
+                    @_pyqtify_property.setter
+                    def _pyqtify_property(
+                            self,
+                            value,
+                            name=temp.name):
+                        self.pyqtify_set(name, value)
+
+                    locals()[temp.name] = _pyqtify_property
+                    del _pyqtify_property
+                else:
+                    locals()[temp.name] = temp.override
+
+            def pyqtify_get(self, name):
+                return getattr(self.__pyqtify__.fields, name)
+
+            def pyqtify_set(self, name, value):
+                if value != getattr(self.__pyqtify__.fields, name):
+                    setattr(self.__pyqtify__.fields, name, value)
+                    try:
+                        getattr(self.changed, name).emit(value)
+                    except RuntimeError:
+                        pass
+
+            temp.after = set(locals())
+
+        # print(sorted(temp.after - temp.before))
+
+        return Class
+
+    return inner
