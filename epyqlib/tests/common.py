@@ -1,5 +1,7 @@
 import os
 
+import attr
+
 
 library_path = os.path.abspath(os.path.join(
     os.path.dirname(__file__), '..', '..',
@@ -22,3 +24,16 @@ devices = {
     k: os.path.normpath(os.path.join(device_path, v))
     for k, v in devices.items()
 }
+
+@attr.s
+class Values:
+    initial = attr.ib()
+    input = attr.ib()
+    expected = attr.ib()
+    collected = attr.ib(default=attr.Factory(list))
+
+    def collect(self, value):
+        self.collected.append(value)
+
+    def check(self):
+        return all(x == y for x, y in zip(self.expected, self.collected))

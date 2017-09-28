@@ -3,6 +3,7 @@ import itertools
 import attr
 import PyQt5.QtCore
 
+import epyqlib.tests.common
 import epyqlib.utils.qt
 
 
@@ -30,20 +31,6 @@ class P(PyQt5.QtCore.QObject):
         return self._pyqtify_set('c', value)
 
 
-@attr.s
-class Values:
-    initial = attr.ib()
-    input = attr.ib()
-    expected = attr.ib()
-    collected = attr.ib(default=attr.Factory(list))
-
-    def collect(self, value):
-        self.collected.append(value)
-
-    def check(self):
-        return all(x == y for x, y in zip(self.expected, self.collected))
-
-
 def assert_attrs_as_expected(x, values):
     assert attr.asdict(x) == {
         k: tuple(itertools.chain((v.initial,), v.expected))[-1]
@@ -53,17 +40,17 @@ def assert_attrs_as_expected(x, values):
 
 def test_overall(qtbot):
     values = {
-        'a': Values(
+        'a': epyqlib.tests.common.Values(
             initial=1,
             input=[12, 12, 13],
             expected=[12, 13],
         ),
-        'b': Values(
+        'b': epyqlib.tests.common.Values(
             initial=2,
             input=[42, 42, 37],
             expected=[42, 37],
         ),
-        'c': Values(
+        'c': epyqlib.tests.common.Values(
             initial=3,
             input=[4],
             expected=[4],
@@ -135,12 +122,12 @@ class Q(PyQt5.QtCore.QObject):
 
 def test_property_cross_effect(qtbot):
     values = {
-        'a': Values(
+        'a': epyqlib.tests.common.Values(
             initial=10,
             input=[],
             expected=[9],
         ),
-        'b': Values(
+        'b': epyqlib.tests.common.Values(
             initial=20,
             input=[30, 10, 9, 20],
             expected=[30, 10, 9, 20],
