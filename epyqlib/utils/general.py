@@ -19,7 +19,9 @@ class ExpectedException(Exception):
 
 
 class Container:
-    pass
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
 
 def multiparagraph_wrap(s, *args, **kwargs):
