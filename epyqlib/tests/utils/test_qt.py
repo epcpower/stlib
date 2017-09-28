@@ -18,14 +18,14 @@ class P(PyQt5.QtCore.QObject):
 
     @PyQt5.QtCore.pyqtProperty('PyQt_PyObject')
     def pyqtify_c(self):
-        x = self.pyqtify_get('c')
+        x = self._pyqtify_get('c')
         self.get = True
         return x
 
     @pyqtify_c.setter
     def pyqtify_c(self, value):
         self.set = True
-        return self.pyqtify_set('c', value)
+        return self._pyqtify_set('c', value)
 
 
 @attr.s

@@ -688,6 +688,7 @@ def search_view(view, text, column):
 @attr.s
 class PyQtify:
     fields = attr.ib(default=attr.Factory(epyqlib.utils.general.Container))
+    values = attr.ib(default=attr.Factory(epyqlib.utils.general.Container))
 
 
 def pyqtify(changed='changed'):
@@ -701,10 +702,10 @@ def pyqtify(changed='changed'):
             },
         )
 
-        def pyqtify_get(self, name):
+        def _pyqtify_get(self, name):
             return getattr(self.__pyqtify__.fields, name)
 
-        def pyqtify_set(self, name, value):
+        def _pyqtify_set(self, name, value):
             if value != getattr(self.__pyqtify__.fields, name):
                 setattr(self.__pyqtify__.fields, name, value)
                 try:
@@ -715,8 +716,8 @@ def pyqtify(changed='changed'):
         d = {
             changed: SignalContainer(),
             '__pyqtify__': PyQtify(),
-            'pyqtify_get': pyqtify_get,
-            'pyqtify_set': pyqtify_set,
+            '_pyqtify_get': _pyqtify_get,
+            '_pyqtify_set': _pyqtify_set,
         }
 
         for field in attr.fields(cls):
@@ -730,11 +731,11 @@ def pyqtify(changed='changed'):
             if property_ is None:
                 @PyQt5.QtCore.pyqtProperty('PyQt_PyObject', notify=signal)
                 def property_(self, name=field.name):
-                    return self.pyqtify_get(name)
+                    return self._pyqtify_get(name)
 
                 @property_.setter
                 def property_(self, value, name=field.name):
-                    self.pyqtify_set(name, value)
+                    self._pyqtify_set(name, value)
 
             d[field.name] = property_
 
