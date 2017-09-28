@@ -686,19 +686,6 @@ def search_view(view, text, column):
 
 
 @attr.s
-class PyQtifyClass:
-    fields = attr.ib(default=attr.Factory(epyqlib.utils.general.Container))
-
-    @classmethod
-    def fill(cls, attrs_class):
-        return cls(
-            fields=epyqlib.utils.general.Container(**{
-                field.name: field
-                for field in attr.fields(attrs_class)
-            }),
-        )
-
-@attr.s
 class PyQtifyInstance:
     values = attr.ib(default=attr.Factory(epyqlib.utils.general.Container))
 
@@ -748,7 +735,6 @@ def pyqtify(changed='changed'):
 
         d = {
             changed: SignalContainer(),
-            '__pyqtify__': PyQtifyClass.fill(cls),
             '_pyqtify_get': _pyqtify_get,
             '_pyqtify_set': _pyqtify_set,
             '__init__': __init__,
