@@ -53,7 +53,7 @@ class PyQAbstractItemModel(QAbstractItemModel):
             Qt.FontRole: self.data_font,
         }
 
-    def headerData(self, section, orientation, role):
+    def headerData(self, section, orientation, role=Qt.DisplayRole):
         if orientation == Qt.Horizontal and role == Qt.DisplayRole:
             return QVariant(self.headers[section])
         return QVariant()
@@ -135,7 +135,10 @@ class PyQAbstractItemModel(QAbstractItemModel):
 
         return flags
 
-    def index(self, row, column, parent):
+    def index(self, row, column, parent=None):
+        if parent is None:
+            parent = QModelIndex()
+
         # TODO: commented out stuff ought to be good rather than
         #       breaking stuff.
         #
@@ -161,18 +164,12 @@ class PyQAbstractItemModel(QAbstractItemModel):
     def columnCount(self, parent):
         return len(self.headers)
 
-    def rowCount(self, parent):
-        # TODO: this seems pretty particular to my present model
-        #       "the second column should NOT have the same children
-        #       as the first column in a row"
-        #       https://github.com/bgr/PyQt5_modeltest/blob/62bc86edbad065097c4835ceb4eee5fa3754f527/modeltest.py#L222
-        #
-        #       then again, the Qt example does just this
-        #       http://doc.qt.io/qt-5/qtwidgets-itemviews-simpletreemodel-example.html
-        #
-        #       but this breaks the searches on non-zero columns so oh well
-        # if parent.column() > 0:
-        #     return 0
+    def rowCount(self, parent=None):
+        if parent is None:
+            parent = QModelIndex()
+
+        if parent.column() > 0:
+            return 0
 
         node = self.node_from_index(parent)
         if node is None:
