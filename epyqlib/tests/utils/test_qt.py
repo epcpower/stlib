@@ -107,3 +107,58 @@ def test_independence(qtbot):
 
     assert(attr.asdict(a) == ad)
     assert(attr.asdict(b) == bd)
+
+
+@epyqlib.utils.qt.pyqtify()
+@attr.s
+class Q(PyQt5.QtCore.QObject):
+    a = attr.ib()
+    b = attr.ib()
+
+    def __attrs_post_init__(self):
+        super().__init__()
+        self.get = None
+        self.set = None
+
+    @PyQt5.QtCore.pyqtProperty('PyQt_PyObject')
+    def pyqtify_b(self):
+        return self._pyqtify_get('b')
+
+    @pyqtify_b.setter
+    def pyqtify_b(self, value):
+        # self.a = min(self.a, value)
+        if value < self.a:
+            self.a = value
+
+        self._pyqtify_set('b', value)
+
+
+def test_property_cross_effect(qtbot):
+    values = {
+        'a': Values(
+            initial=10,
+            input=[],
+            expected=[9],
+        ),
+        'b': Values(
+            initial=20,
+            input=[30, 10, 9, 20],
+            expected=[30, 10, 9, 20],
+        ),
+    }
+
+    p = Q(**{k: v.initial for k, v in values.items()})
+    fields = attr.fields(Q)
+    assert len(fields) == len(values)
+
+    for name, v in values.items():
+        getattr(p.changed, name).connect(v.collect)
+
+    for name, v in values.items():
+        for value in v.input:
+            setattr(p, name, value)
+
+    for name, v in values.items():
+        assert tuple(v.expected) == tuple(v.collected)
+
+    assert_attrs_as_expected(p, values)
