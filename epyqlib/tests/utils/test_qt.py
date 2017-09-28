@@ -87,3 +87,14 @@ def test_overall(qtbot):
     p.set = False
     p.c = 0
     assert p.set
+
+
+def test_independence(qtbot):
+    ad = {'a': 1, 'b': 2, 'c': 3}
+    a = P(**ad)
+
+    bd = {'a': 10, 'b': 20, 'c': 30}
+    b = P(**bd)
+
+    assert(attr.asdict(a) == ad)
+    assert(attr.asdict(b) == bd)

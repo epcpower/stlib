@@ -686,8 +686,11 @@ def search_view(view, text, column):
 
 
 @attr.s
-class PyQtify:
+class PyQtifyClass:
     fields = attr.ib(default=attr.Factory(epyqlib.utils.general.Container))
+
+@attr.s
+class PyQtifyInstance:
     values = attr.ib(default=attr.Factory(epyqlib.utils.general.Container))
 
 
@@ -702,12 +705,27 @@ def pyqtify(changed='changed'):
             },
         )
 
+        def __init__(self, *args, **kwargs):
+            self.__pyqtify_instance__ = PyQtifyInstance()
+
+            for field in attr.fields(type(self)):
+                setattr(self.__pyqtify_instance__.values, field.name, object())
+
+            # https://bugs.python.org/issue29944
+            # Two argument super() is required since __class__ won't be
+            # created.  The created class below must be saved to a
+            # variable so we can use it in the closure.
+            super(C, self).__init__(*args, **kwargs)
+
+            for k, v in attr.asdict(self).items():
+                setattr(self.__pyqtify_instance__.values, k, v)
+
         def _pyqtify_get(self, name):
-            return getattr(self.__pyqtify__.fields, name)
+            return getattr(self.__pyqtify_instance__.values, name)
 
         def _pyqtify_set(self, name, value):
-            if value != getattr(self.__pyqtify__.fields, name):
-                setattr(self.__pyqtify__.fields, name, value)
+            if value != getattr(self.__pyqtify_instance__.values, name):
+                setattr(self.__pyqtify_instance__.values, name, value)
                 try:
                     getattr(self.changed, name).emit(value)
                 except RuntimeError:
@@ -715,9 +733,10 @@ def pyqtify(changed='changed'):
 
         d = {
             changed: SignalContainer(),
-            '__pyqtify__': PyQtify(),
+            '__pyqtify__': PyQtifyClass(),
             '_pyqtify_get': _pyqtify_get,
             '_pyqtify_set': _pyqtify_set,
+            '__init__': __init__,
         }
 
         for field in attr.fields(cls):
@@ -739,6 +758,9 @@ def pyqtify(changed='changed'):
 
             d[field.name] = property_
 
-        return type(cls)(cls.__name__, (cls,), d)
+        # Variable required here for usage in super() above.
+        C = type(cls)(cls.__name__, (cls,), d)
+
+        return C
 
     return inner
