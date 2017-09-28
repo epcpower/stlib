@@ -719,40 +719,24 @@ def pyqtify(changed='changed'):
             'pyqtify_set': pyqtify_set,
         }
 
-        def pyqtify_get(self, name):
-            return getattr(self.__pyqtify__.fields, name)
-        d['pyqtify_get'] = pyqtify_get
-
-        def pyqtify_set(self, name, value):
-            if value != getattr(self.__pyqtify__.fields, name):
-                setattr(self.__pyqtify__.fields, name, value)
-                try:
-                    getattr(self.changed, name).emit(value)
-                except RuntimeError:
-                    pass
-        d['pyqtify_set'] = pyqtify_set
-
-        for _pyqtify_field in attr.fields(cls):
-            name = _pyqtify_field.name
-            setattr(d['__pyqtify__'].fields, name, _pyqtify_field)
+        for field in attr.fields(cls):
+            setattr(d['__pyqtify__'].fields, field.name, field)
 
             signal = PyQt5.QtCore.pyqtSignal('PyQt_PyObject')
-            d['__pyqtify_signal_{}__'.format(name)] = signal
+            d['__pyqtify_signal_{}__'.format(field.name)] = signal
 
-            override = getattr(cls, 'pyqtify_{}'.format(name), None)
+            property_ = getattr(cls, 'pyqtify_{}'.format(field.name), None)
 
-            if override is None:
+            if property_ is None:
                 @PyQt5.QtCore.pyqtProperty('PyQt_PyObject', notify=signal)
-                def _pyqtify_property(self, name=name):
+                def property_(self, name=field.name):
                     return self.pyqtify_get(name)
 
-                @_pyqtify_property.setter
-                def _pyqtify_property(self, value, name=name):
+                @property_.setter
+                def property_(self, value, name=field.name):
                     self.pyqtify_set(name, value)
 
-                d[name] = _pyqtify_property
-            else:
-                d[name] = override
+            d[field.name] = property_
 
         return type(cls)(cls.__name__, (cls,), d)
 
