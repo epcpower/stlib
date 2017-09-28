@@ -1,7 +1,7 @@
 import epyqlib.utils.general
 
 
-def test_collection():
+def test_container():
     c = epyqlib.utils.general.Container(a=1, b=2)
 
     assert hasattr(c, 'a')
