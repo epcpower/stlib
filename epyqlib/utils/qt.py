@@ -689,9 +689,27 @@ def search_view(view, text, column):
 class PyQtifyClass:
     fields = attr.ib(default=attr.Factory(epyqlib.utils.general.Container))
 
+    @classmethod
+    def fill(cls, attrs_class):
+        return cls(
+            fields=epyqlib.utils.general.Container(**{
+                field.name: field
+                for field in attr.fields(attrs_class)
+            }),
+        )
+
 @attr.s
 class PyQtifyInstance:
     values = attr.ib(default=attr.Factory(epyqlib.utils.general.Container))
+
+    @classmethod
+    def fill(cls, attrs_class):
+        return cls(
+            values=epyqlib.utils.general.Container(**{
+                field.name: None
+                for field in attr.fields(attrs_class)
+            }),
+        )
 
 
 def pyqtify(changed='changed'):
@@ -706,10 +724,7 @@ def pyqtify(changed='changed'):
         )
 
         def __init__(self, *args, **kwargs):
-            self.__pyqtify_instance__ = PyQtifyInstance()
-
-            for field in attr.fields(type(self)):
-                setattr(self.__pyqtify_instance__.values, field.name, object())
+            self.__pyqtify_instance__ = PyQtifyInstance.fill(type(self))
 
             # https://bugs.python.org/issue29944
             # Two argument super() is required since __class__ won't be
@@ -733,15 +748,13 @@ def pyqtify(changed='changed'):
 
         d = {
             changed: SignalContainer(),
-            '__pyqtify__': PyQtifyClass(),
+            '__pyqtify__': PyQtifyClass.fill(cls),
             '_pyqtify_get': _pyqtify_get,
             '_pyqtify_set': _pyqtify_set,
             '__init__': __init__,
         }
 
         for field in attr.fields(cls):
-            setattr(d['__pyqtify__'].fields, field.name, field)
-
             signal = PyQt5.QtCore.pyqtSignal('PyQt_PyObject')
             d['__pyqtify_signal_{}__'.format(field.name)] = signal
 
