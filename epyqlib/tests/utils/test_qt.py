@@ -1,3 +1,5 @@
+import itertools
+
 import attr
 import PyQt5.QtCore
 
@@ -42,6 +44,13 @@ class Values:
         return all(x == y for x, y in zip(self.expected, self.collected))
 
 
+def assert_attrs_as_expected(x, values):
+    assert attr.asdict(x) == {
+        k: tuple(itertools.chain((v.initial,), v.expected))[-1]
+        for k, v in values.items()
+    }
+
+
 def test_overall(qtbot):
     values = {
         'a': Values(
@@ -75,7 +84,7 @@ def test_overall(qtbot):
     for name, v in values.items():
         assert tuple(v.expected) == tuple(v.collected)
 
-    assert attr.asdict(p) == {k: v.input[-1] for k, v in values.items()}
+    assert_attrs_as_expected(p, values)
 
     p.c = object()
     assert p.pyqtify_c is p.c
