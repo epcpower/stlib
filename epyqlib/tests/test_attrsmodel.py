@@ -29,7 +29,7 @@ class Parameter(epyqlib.treenode.TreeNode):
 
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
-class Group(PyQt5.QtCore.QObject, epyqlib.treenode.TreeNode):
+class Group(epyqlib.treenode.TreeNode):
     type = attr.ib(default='test_group', init=False)
     name = attr.ib(default='New Group')
     children = attr.ib(
@@ -76,6 +76,7 @@ def make_a_model():
     group_a_b = Group(name='Group A B')
     parameter_b = Parameter(name='Parameter B', value=42)
     group_c = Group(name='Group C')
+    parameter_d = Parameter(name='Parameter D', value=42)
 
     model.add_child(parent=root, child=group_a)
     model.add_child(parent=group_a, child=parameter_a_a)
@@ -84,6 +85,8 @@ def make_a_model():
     model.add_child(parent=root, child=parameter_b)
 
     model.add_child(parent=root, child=group_c)
+
+    model.add_child(parent=root, child=parameter_d)
 
     return model
 
@@ -239,6 +242,60 @@ def test_data_changed(qtbot):
     parameter.value += 1
 
     assert tuple(values.expected) == tuple(values.collected)
+
+
+def test_other_data_did_not_change(qtbot):
+    model = make_a_model()
+
+    parameter = node_from_name(model, 'Parameter B')
+
+    values = epyqlib.tests.common.Values(
+        initial=42,
+        input=[42, 37],
+        expected=['37'],
+    )
+
+    parameter.value = values.initial
+
+    data_changed = DataChangedCollector(
+        model=model,
+        parameter=parameter,
+        column=1,
+        roles=(PyQt5.QtCore.Qt.DisplayRole,),
+    )
+
+    other_parameter = node_from_name(model, 'Parameter D')
+
+    other_values = epyqlib.tests.common.Values(
+        initial=12,
+        input=[],
+        expected=[],
+    )
+
+    other_parameter.value = other_values.initial
+
+    other_data_changed = DataChangedCollector(
+        model=model,
+        parameter=other_parameter,
+        column=1,
+        roles=(PyQt5.QtCore.Qt.DisplayRole,),
+    )
+
+    model.dataChanged.connect(data_changed.collect)
+    data_changed.collected.connect(values.collect)
+
+    model.dataChanged.connect(other_data_changed.collect)
+    other_data_changed.collected.connect(other_values.collect)
+
+    for value in values.input:
+        parameter.value = value
+
+    model.delete(parameter)
+
+    parameter.value += 1
+
+    assert tuple(values.expected) == tuple(values.collected)
+    assert tuple(other_values.expected) == tuple(other_values.collected)
 
 
 def test_local_drag_n_drop(qtbot):

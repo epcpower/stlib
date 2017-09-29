@@ -713,6 +713,8 @@ def pyqtify(changed='changed'):
         def __init__(self, *args, **kwargs):
             self.__pyqtify_instance__ = PyQtifyInstance.fill(type(self))
 
+            setattr(self, changed, SignalContainer())
+
             # https://bugs.python.org/issue29944
             # Two argument super() is required since __class__ won't be
             # created.  The created class below must be saved to a
@@ -734,7 +736,6 @@ def pyqtify(changed='changed'):
                     pass
 
         d = {
-            changed: SignalContainer(),
             '_pyqtify_get': _pyqtify_get,
             '_pyqtify_set': _pyqtify_set,
             '__init__': __init__,
