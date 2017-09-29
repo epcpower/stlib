@@ -117,6 +117,8 @@ def search_in_column(column, target):
         proxy.index(0, column),
         PyQt5.QtCore.Qt.DisplayRole,
         target,
+        1,
+        PyQt5.QtCore.Qt.MatchRecursive,
     )
 
 
@@ -124,7 +126,6 @@ def test_proxy_search_column_0(qtbot):
     proxy_search_in_column(0, 'Parameter B')
 
 
-@pytest.mark.skip
 def test_proxy_search_column_0_child(qtbot):
     proxy_search_in_column(0, 'Parameter A A')
 
@@ -146,6 +147,8 @@ def proxy_search_in_column(column, target):
         proxy.index(0, column),
         PyQt5.QtCore.Qt.DisplayRole,
         target,
+        1,
+        PyQt5.QtCore.Qt.MatchRecursive,
     )
 
     match_node = model.node_from_index(proxy.mapToSource(index))
@@ -167,6 +170,8 @@ def node_from_name(model, name):
         model.index(0, 0),
         PyQt5.QtCore.Qt.DisplayRole,
         name,
+        1,
+        PyQt5.QtCore.Qt.MatchRecursive,
     )
 
     return model.node_from_index(index)
