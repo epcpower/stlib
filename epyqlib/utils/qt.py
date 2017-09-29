@@ -710,27 +710,31 @@ def pyqtify(changed='changed'):
             },
         )
 
-        class C(cls):
-            def __init__(self, *args, **kwargs):
-                self.__pyqtify_instance__ = PyQtifyInstance.fill(type(self))
+        old_init = cls.__init__
 
-                setattr(self, changed, SignalContainer())
+        def __init__(self, *args, **kwargs):
+            self.__pyqtify_instance__ = PyQtifyInstance.fill(type(self))
 
-                super().__init__(*args, **kwargs)
+            setattr(self, changed, SignalContainer())
 
-                for k, v in attr.asdict(self).items():
-                    self.__pyqtify_instance__.values[k] = v
+            old_init(self, *args, **kwargs)
 
-            def _pyqtify_get(self, name):
-                return self.__pyqtify_instance__.values[name]
+            for k, v in attr.asdict(self).items():
+                self.__pyqtify_instance__.values[k] = v
+        cls.__init__ = __init__
 
-            def _pyqtify_set(self, name, value):
-                if value != self.__pyqtify_instance__.values[name]:
-                    self.__pyqtify_instance__.values[name] = value
-                    try:
-                        getattr(getattr(self, changed), name).emit(value)
-                    except RuntimeError:
-                        pass
+        def _pyqtify_get(self, name):
+            return self.__pyqtify_instance__.values[name]
+        cls._pyqtify_get = _pyqtify_get
+
+        def _pyqtify_set(self, name, value):
+            if value != self.__pyqtify_instance__.values[name]:
+                self.__pyqtify_instance__.values[name] = value
+                try:
+                    getattr(getattr(self, changed), name).emit(value)
+                except RuntimeError:
+                    pass
+        cls._pyqtify_set = _pyqtify_set
 
         for field in attr.fields(cls):
             property_ = getattr(cls, 'pyqtify_{}'.format(field.name), None)
@@ -744,8 +748,8 @@ def pyqtify(changed='changed'):
                 def property_(self, value, name=field.name):
                     self._pyqtify_set(name, value)
 
-            setattr(C, field.name, property_)
+            setattr(cls, field.name, property_)
 
-        return C
+        return cls
 
     return inner

@@ -149,3 +149,14 @@ def test_property_cross_effect(qtbot):
         assert tuple(v.expected) == tuple(v.collected)
 
     assert_attrs_as_expected(p, values)
+
+
+def test_pyqtified_name():
+    assert Q.__name__ == 'Q'
+
+
+def test_pyqtified_module():
+    class C:
+        pass
+
+    assert Q.__module__ == C.__module__
