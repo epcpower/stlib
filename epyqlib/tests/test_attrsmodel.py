@@ -170,6 +170,44 @@ def node_from_name(model, name):
     return model.node_from_index(index)
 
 
+@attr.s
+class DataChangedCollector(PyQt5.QtCore.QObject):
+    collected = PyQt5.QtCore.pyqtSignal('PyQt_PyObject')
+
+    model = attr.ib()
+    parameter = attr.ib()
+    column = attr.ib()
+    roles = attr.ib(default=(PyQt5.QtCore.Qt.DisplayRole,))
+
+    def __attrs_post_init__(self):
+        super().__init__()
+
+    def collect(self, top_left, bottom_right, roles):
+        # TODO: this is overly restrictive in that exactly the one cell
+        #       must be changing rather than just being included in the
+        #       range.
+
+        right_one = all((
+            self.parameter is self.model.node_from_index(top_left),
+            self.parameter is self.model.node_from_index(bottom_right),
+            self.column == top_left.column() == bottom_right.column(),
+            tuple(roles) == self.roles,
+        ))
+
+        if right_one:
+            parameter_index = self.model.index_from_node(self.parameter)
+            parameter_name_index = self.model.index(
+                parameter_index.row(),
+                self.column,
+                parameter_index.parent(),
+            )
+
+            self.collected.emit(self.model.data(
+                parameter_name_index,
+                PyQt5.QtCore.Qt.DisplayRole,
+            ))
+
+
 def test_data_changed(qtbot):
     model = make_a_model()
 
@@ -183,29 +221,15 @@ def test_data_changed(qtbot):
 
     parameter.value = values.initial
 
-    parameter_index = model.index_from_node(parameter)
-    parent = parameter_index.parent()
-    parameter_name_index = model.index(
-        parameter_index.row(),
-        1,
-        parent,
+    data_changed = DataChangedCollector(
+        model=model,
+        parameter=parameter,
+        column=1,
+        roles=(PyQt5.QtCore.Qt.DisplayRole,),
     )
 
-    def collect_data_changed(top_left, bottom_right, roles):
-        right_one = all((
-            parameter is model.node_from_index(top_left),
-            parameter is model.node_from_index(bottom_right),
-            1 == top_left.column() == bottom_right.column(),
-            tuple(roles) == (PyQt5.QtCore.Qt.DisplayRole,),
-        ))
-
-        if right_one:
-            values.collect(model.data(
-                parameter_name_index,
-                PyQt5.QtCore.Qt.DisplayRole,
-            ))
-
-    model.dataChanged.connect(collect_data_changed)
+    model.dataChanged.connect(data_changed.collect)
+    data_changed.collected.connect(values.collect)
 
     for value in values.input:
         parameter.value = value
