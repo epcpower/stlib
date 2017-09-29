@@ -742,13 +742,10 @@ def pyqtify(changed='changed'):
         }
 
         for field in attr.fields(cls):
-            signal = PyQt5.QtCore.pyqtSignal('PyQt_PyObject')
-            d['__pyqtify_signal_{}__'.format(field.name)] = signal
-
             property_ = getattr(cls, 'pyqtify_{}'.format(field.name), None)
 
             if property_ is None:
-                @PyQt5.QtCore.pyqtProperty('PyQt_PyObject', notify=signal)
+                @PyQt5.QtCore.pyqtProperty('PyQt_PyObject')
                 def property_(self, name=field.name):
                     return self._pyqtify_get(name)
 
