@@ -687,15 +687,15 @@ def search_view(view, text, column):
 
 @attr.s
 class PyQtifyInstance:
-    values = attr.ib(default=attr.Factory(epyqlib.utils.general.Container))
+    values = attr.ib(default={})
 
     @classmethod
     def fill(cls, attrs_class):
         return cls(
-            values=epyqlib.utils.general.Container(**{
+            values={
                 field.name: None
                 for field in attr.fields(attrs_class)
-            }),
+            },
         )
 
 
@@ -719,14 +719,14 @@ def pyqtify(changed='changed'):
                 super().__init__(*args, **kwargs)
 
                 for k, v in attr.asdict(self).items():
-                    setattr(self.__pyqtify_instance__.values, k, v)
+                    self.__pyqtify_instance__.values[k] = v
 
             def _pyqtify_get(self, name):
-                return getattr(self.__pyqtify_instance__.values, name)
+                return self.__pyqtify_instance__.values[name]
 
             def _pyqtify_set(self, name, value):
-                if value != getattr(self.__pyqtify_instance__.values, name):
-                    setattr(self.__pyqtify_instance__.values, name, value)
+                if value != self.__pyqtify_instance__.values[name]:
+                    self.__pyqtify_instance__.values[name] = value
                     try:
                         getattr(getattr(self, changed), name).emit(value)
                     except RuntimeError:
