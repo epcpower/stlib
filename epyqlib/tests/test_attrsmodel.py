@@ -52,8 +52,6 @@ Root = epyqlib.attrsmodel.Root(
     valid_types=(Parameter, Group)
 )
 
-types = (Root, Parameter, Group)
-
 columns = epyqlib.attrsmodel.columns(
     (
         (Parameter, 'name'),
