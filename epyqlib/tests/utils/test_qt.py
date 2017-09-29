@@ -162,3 +162,15 @@ def test_pyqtified_module():
         pass
 
     assert Q.__module__ == C.__module__
+
+
+def test_(qtbot):
+    q = Q(a=1, b=2)
+
+    signals = epyqlib.utils.qt.pyqtify_signals(q)
+
+    # TODO: Actually assert they are 'the same'.  Until we know how to
+    #       just access them to make sure they are available
+    signals._pyqtify_signal_a
+    signals.a
+    signals['a']

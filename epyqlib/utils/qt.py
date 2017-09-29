@@ -702,12 +702,39 @@ class PyQtifyInstance:
 
 def pyqtify(property_decorator=lambda: property):
     def inner(cls):
+        names = tuple(field.name for field in attr.fields(cls))
+
+        def __getitem__(self, key):
+            if key not in self.names:
+                raise KeyError(key)
+
+            return getattr(self, signal_name(key))
+
+        def __getattr__(self, name):
+            if name not in self.names:
+                raise AttributeError(
+                    "'{class_name}' object has no attribute '{name}'".format(
+                        class_name=type(self).__name__,
+                        attribute=name,
+                    )
+                )
+
+            return getattr(self, signal_name(name))
+
+        def signal_name(name):
+            return '_pyqtify_signal_{}'.format(name)
+
         SignalContainer = type(
             'SignalContainer',
             (PyQt5.QtCore.QObject,),
             {
-                field.name: PyQt5.QtCore.pyqtSignal('PyQt_PyObject')
-                for field in attr.fields(cls)
+                'names': names,
+                '__getattr__': __getattr__,
+                '__getitem__': __getitem__,
+                **{
+                    signal_name(name): PyQt5.QtCore.pyqtSignal('PyQt_PyObject')
+                    for name in names
+                },
             },
         )
 
@@ -716,7 +743,7 @@ def pyqtify(property_decorator=lambda: property):
         def __init__(self, *args, **kwargs):
             self.__pyqtify_instance__ = PyQtifyInstance.fill(type(self))
 
-            self.__pyqtify_instance__.changed=SignalContainer()
+            self.__pyqtify_instance__.changed = SignalContainer()
 
             old_init(self, *args, **kwargs)
 
@@ -724,19 +751,19 @@ def pyqtify(property_decorator=lambda: property):
                 self.__pyqtify_instance__.values[k] = v
         cls.__init__ = __init__
 
-        for field in attr.fields(cls):
-            property_ = getattr(cls, 'pyqtify_{}'.format(field.name), None)
+        for name in names:
+            property_ = getattr(cls, 'pyqtify_{}'.format(name), None)
 
             if property_ is None:
                 @property_decorator()
-                def property_(self, name=field.name):
+                def property_(self, name=name):
                     return pyqtify_get(self, name)
 
                 @property_.setter
-                def property_(self, value, name=field.name):
+                def property_(self, value, name=name):
                     pyqtify_set(self, name, value)
 
-            setattr(cls, field.name, property_)
+            setattr(cls, name, property_)
 
         return cls
 
@@ -751,7 +778,7 @@ def pyqtify_set(instance, name, value):
     if value != instance.__pyqtify_instance__.values[name]:
         instance.__pyqtify_instance__.values[name] = value
         try:
-            getattr(instance.__pyqtify_instance__.changed, name).emit(value)
+            instance.__pyqtify_instance__.changed[name].emit(value)
         except RuntimeError:
             pass
 
