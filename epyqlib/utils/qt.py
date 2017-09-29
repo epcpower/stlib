@@ -688,6 +688,7 @@ def search_view(view, text, column):
 @attr.s
 class PyQtifyInstance:
     values = attr.ib(default={})
+    changed = attr.ib(default=None)
 
     @classmethod
     def fill(cls, attrs_class):
@@ -699,7 +700,7 @@ class PyQtifyInstance:
         )
 
 
-def pyqtify(changed='changed', property_decorator=lambda: property):
+def pyqtify(property_decorator=lambda: property):
     def inner(cls):
         SignalContainer = type(
             'SignalContainer',
@@ -715,7 +716,7 @@ def pyqtify(changed='changed', property_decorator=lambda: property):
         def __init__(self, *args, **kwargs):
             self.__pyqtify_instance__ = PyQtifyInstance.fill(type(self))
 
-            setattr(self, changed, SignalContainer())
+            self.__pyqtify_instance__.changed=SignalContainer()
 
             old_init(self, *args, **kwargs)
 
@@ -723,33 +724,37 @@ def pyqtify(changed='changed', property_decorator=lambda: property):
                 self.__pyqtify_instance__.values[k] = v
         cls.__init__ = __init__
 
-        def _pyqtify_get(self, name):
-            return self.__pyqtify_instance__.values[name]
-        cls._pyqtify_get = _pyqtify_get
-
-        def _pyqtify_set(self, name, value):
-            if value != self.__pyqtify_instance__.values[name]:
-                self.__pyqtify_instance__.values[name] = value
-                try:
-                    getattr(getattr(self, changed), name).emit(value)
-                except RuntimeError:
-                    pass
-        cls._pyqtify_set = _pyqtify_set
-
         for field in attr.fields(cls):
             property_ = getattr(cls, 'pyqtify_{}'.format(field.name), None)
 
             if property_ is None:
                 @property_decorator()
                 def property_(self, name=field.name):
-                    return self._pyqtify_get(name)
+                    return pyqtify_get(self, name)
 
                 @property_.setter
                 def property_(self, value, name=field.name):
-                    self._pyqtify_set(name, value)
+                    pyqtify_set(self, name, value)
 
             setattr(cls, field.name, property_)
 
         return cls
 
     return inner
+
+
+def pyqtify_get(instance, name):
+    return instance.__pyqtify_instance__.values[name]
+
+
+def pyqtify_set(instance, name, value):
+    if value != instance.__pyqtify_instance__.values[name]:
+        instance.__pyqtify_instance__.values[name] = value
+        try:
+            getattr(instance.__pyqtify_instance__.changed, name).emit(value)
+        except RuntimeError:
+            pass
+
+
+def pyqtify_signals(instance):
+    return instance.__pyqtify_instance__.changed

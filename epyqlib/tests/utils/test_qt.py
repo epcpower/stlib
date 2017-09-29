@@ -21,14 +21,14 @@ class P(PyQt5.QtCore.QObject):
 
     @PyQt5.QtCore.pyqtProperty('PyQt_PyObject')
     def pyqtify_c(self):
-        x = self._pyqtify_get('c')
+        x = epyqlib.utils.qt.pyqtify_get(self, 'c')
         self.get = True
         return x
 
     @pyqtify_c.setter
     def pyqtify_c(self, value):
         self.set = True
-        return self._pyqtify_set('c', value)
+        return epyqlib.utils.qt.pyqtify_set(self, 'c', value)
 
 
 def assert_attrs_as_expected(x, values):
@@ -61,8 +61,9 @@ def test_overall(qtbot):
     fields = attr.fields(P)
     assert len(fields) == len(values)
 
+    signals = epyqlib.utils.qt.pyqtify_signals(p)
     for name, v in values.items():
-        getattr(p.changed, name).connect(v.collect)
+        getattr(signals, name).connect(v.collect)
 
     for name, v in values.items():
         for value in v.input:
@@ -109,7 +110,7 @@ class Q(PyQt5.QtCore.QObject):
 
     @PyQt5.QtCore.pyqtProperty('PyQt_PyObject')
     def pyqtify_b(self):
-        return self._pyqtify_get('b')
+        return epyqlib.utils.qt.pyqtify_get(self, 'b')
 
     @pyqtify_b.setter
     def pyqtify_b(self, value):
@@ -117,7 +118,7 @@ class Q(PyQt5.QtCore.QObject):
         if value < self.a:
             self.a = value
 
-        self._pyqtify_set('b', value)
+        epyqlib.utils.qt.pyqtify_set(self, 'b', value)
 
 
 def test_property_cross_effect(qtbot):
@@ -138,8 +139,9 @@ def test_property_cross_effect(qtbot):
     fields = attr.fields(Q)
     assert len(fields) == len(values)
 
+    signals = epyqlib.utils.qt.pyqtify_signals(p)
     for name, v in values.items():
-        getattr(p.changed, name).connect(v.collect)
+        getattr(signals, name).connect(v.collect)
 
     for name, v in values.items():
         for value in v.input:

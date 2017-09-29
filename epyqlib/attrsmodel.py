@@ -369,7 +369,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             if name is None:
                 continue
 
-            signal = getattr(child.changed, name)
+            signal = getattr(child.__pyqtify_instance__.changed, name)
 
             def slot(_):
                 self.changed(
