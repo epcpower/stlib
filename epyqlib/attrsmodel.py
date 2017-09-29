@@ -6,6 +6,7 @@ import uuid
 
 import attr
 from PyQt5 import QtCore
+import PyQt5.QtCore
 
 import epyqlib.abstractcolumns
 import epyqlib.pyqabstractitemmodel
@@ -237,6 +238,8 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         self.droppable_from = set()
 
+        self.connected_signals = {}
+
         check_uuids(self.root)
 
     @classmethod
@@ -351,6 +354,27 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         row = len(parent.children)
         self.begin_insert_rows(parent, row, row)
         parent.append_child(child)
+
+        connections = {}
+        self.connected_signals[(child, parent)] = connections
+
+        for i, column in enumerate(self.columns):
+            name = column.fields.get(type(child))
+            if name is None:
+                continue
+
+            signal = getattr(child.changed, name)
+
+            def slot(_):
+                self.changed(
+                    child, i,
+                    child, i,
+                    (PyQt5.QtCore.Qt.DisplayRole,),
+                )
+
+            connections[signal] = slot
+            signal.connect(slot)
+
         if child.uuid is None:
             check_uuids(self.root)
 
@@ -359,6 +383,12 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
     def delete(self, node):
         row = node.tree_parent.row_of_child(node)
         self.begin_remove_rows(node.tree_parent, row, row)
+
+        connections = self.connected_signals.pop((node, node.tree_parent))
+
+        for signal, slot in connections.items():
+            signal.disconnect(slot)
+
         node.tree_parent.remove_child(child=node)
         self.end_remove_rows()
 

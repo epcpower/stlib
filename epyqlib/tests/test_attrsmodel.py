@@ -1,8 +1,10 @@
+import attr
 import PyQt5.QtCore
 import PyQt5.QtWidgets
-import attr
+import pytest
 
 import epyqlib.attrsmodel
+import epyqlib.tests.common
 import epyqlib.searchbox
 import epyqlib.treenode
 import epyqlib.utils.general
@@ -13,6 +15,7 @@ __copyright__ = 'Copyright 2017, EPC Power Corp.'
 __license__ = 'GPLv2+'
 
 
+@epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Parameter(epyqlib.treenode.TreeNode):
     type = attr.ib(default='test_parameter', init=False)
@@ -24,8 +27,9 @@ class Parameter(epyqlib.treenode.TreeNode):
         super().__init__()
 
 
+@epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
-class Group(epyqlib.treenode.TreeNode):
+class Group(PyQt5.QtCore.QObject, epyqlib.treenode.TreeNode):
     type = attr.ib(default='test_group', init=False)
     name = attr.ib(default='New Group')
     children = attr.ib(
@@ -118,6 +122,11 @@ def test_proxy_search_column_0(qtbot):
     proxy_search_in_column(0, 'Parameter B')
 
 
+@pytest.mark.skip
+def test_proxy_search_column_0_child(qtbot):
+    proxy_search_in_column(0, 'Parameter A A')
+
+
 def test_proxy_search_column_2(qtbot):
     proxy_search_in_column(1, 42)
 
@@ -149,3 +158,60 @@ def proxy_search_in_column(column, target):
     search_node = model.node_from_index(proxy.mapToSource(index))
 
     assert match_node is search_node
+
+
+def node_from_name(model, name):
+    index, = model.match(
+        model.index(0, 0),
+        PyQt5.QtCore.Qt.DisplayRole,
+        name,
+    )
+
+    return model.node_from_index(index)
+
+
+def test_data_changed(qtbot):
+    model = make_a_model()
+
+    parameter = node_from_name(model, 'Parameter B')
+
+    values = epyqlib.tests.common.Values(
+        initial=42,
+        input=[42, 37],
+        expected=['37'],
+    )
+
+    parameter.value = values.initial
+
+    parameter_index = model.index_from_node(parameter)
+    parent = parameter_index.parent()
+    parameter_name_index = model.index(
+        parameter_index.row(),
+        1,
+        parent,
+    )
+
+    def collect_data_changed(top_left, bottom_right, roles):
+        right_one = all((
+            parameter is model.node_from_index(top_left),
+            parameter is model.node_from_index(bottom_right),
+            1 == top_left.column() == bottom_right.column(),
+            tuple(roles) == (PyQt5.QtCore.Qt.DisplayRole,),
+        ))
+
+        if right_one:
+            values.collect(model.data(
+                parameter_name_index,
+                PyQt5.QtCore.Qt.DisplayRole,
+            ))
+
+    model.dataChanged.connect(collect_data_changed)
+
+    for value in values.input:
+        parameter.value = value
+
+    model.delete(parameter)
+
+    parameter.value += 1
+
+    assert tuple(values.expected) == tuple(values.collected)
