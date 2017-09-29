@@ -710,36 +710,27 @@ def pyqtify(changed='changed'):
             },
         )
 
-        def __init__(self, *args, **kwargs):
-            self.__pyqtify_instance__ = PyQtifyInstance.fill(type(self))
+        class C(cls):
+            def __init__(self, *args, **kwargs):
+                self.__pyqtify_instance__ = PyQtifyInstance.fill(type(self))
 
-            setattr(self, changed, SignalContainer())
+                setattr(self, changed, SignalContainer())
 
-            # https://bugs.python.org/issue29944
-            # Two argument super() is required since __class__ won't be
-            # created.  The created class below must be saved to a
-            # variable so we can use it in the closure.
-            super(C, self).__init__(*args, **kwargs)
+                super().__init__(*args, **kwargs)
 
-            for k, v in attr.asdict(self).items():
-                setattr(self.__pyqtify_instance__.values, k, v)
+                for k, v in attr.asdict(self).items():
+                    setattr(self.__pyqtify_instance__.values, k, v)
 
-        def _pyqtify_get(self, name):
-            return getattr(self.__pyqtify_instance__.values, name)
+            def _pyqtify_get(self, name):
+                return getattr(self.__pyqtify_instance__.values, name)
 
-        def _pyqtify_set(self, name, value):
-            if value != getattr(self.__pyqtify_instance__.values, name):
-                setattr(self.__pyqtify_instance__.values, name, value)
-                try:
-                    getattr(self.changed, name).emit(value)
-                except RuntimeError:
-                    pass
-
-        d = {
-            '_pyqtify_get': _pyqtify_get,
-            '_pyqtify_set': _pyqtify_set,
-            '__init__': __init__,
-        }
+            def _pyqtify_set(self, name, value):
+                if value != getattr(self.__pyqtify_instance__.values, name):
+                    setattr(self.__pyqtify_instance__.values, name, value)
+                    try:
+                        getattr(self.changed, name).emit(value)
+                    except RuntimeError:
+                        pass
 
         for field in attr.fields(cls):
             property_ = getattr(cls, 'pyqtify_{}'.format(field.name), None)
@@ -753,10 +744,7 @@ def pyqtify(changed='changed'):
                 def property_(self, value, name=field.name):
                     self._pyqtify_set(name, value)
 
-            d[field.name] = property_
-
-        # Variable required here for usage in super() above.
-        C = type(cls)(cls.__name__, (cls,), d)
+            setattr(C, field.name, property_)
 
         return C
 
