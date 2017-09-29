@@ -728,7 +728,7 @@ def pyqtify(changed='changed'):
                 if value != getattr(self.__pyqtify_instance__.values, name):
                     setattr(self.__pyqtify_instance__.values, name, value)
                     try:
-                        getattr(self.changed, name).emit(value)
+                        getattr(getattr(self, changed), name).emit(value)
                     except RuntimeError:
                         pass
 
