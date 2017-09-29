@@ -699,7 +699,7 @@ class PyQtifyInstance:
         )
 
 
-def pyqtify(changed='changed'):
+def pyqtify(changed='changed', property_decorator=lambda: property):
     def inner(cls):
         SignalContainer = type(
             'SignalContainer',
@@ -740,7 +740,7 @@ def pyqtify(changed='changed'):
             property_ = getattr(cls, 'pyqtify_{}'.format(field.name), None)
 
             if property_ is None:
-                @PyQt5.QtCore.pyqtProperty('PyQt_PyObject')
+                @property_decorator()
                 def property_(self, name=field.name):
                     return self._pyqtify_get(name)
 

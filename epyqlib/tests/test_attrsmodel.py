@@ -61,20 +61,21 @@ columns = epyqlib.attrsmodel.columns(
 )
 
 
-def make_a_model():
-    root = Root()
+def make_a_model(root_cls=Root, group_cls=Group, parameter_cls=Parameter,
+                 columns=columns):
+    root = root_cls()
 
     model = epyqlib.attrsmodel.Model(
         root=root,
         columns=columns,
     )
 
-    group_a = Group(name='Group A')
-    parameter_a_a = Parameter(name='Parameter A A')
-    group_a_b = Group(name='Group A B')
-    parameter_b = Parameter(name='Parameter B', value=42)
-    group_c = Group(name='Group C')
-    parameter_d = Parameter(name='Parameter D', value=42)
+    group_a = group_cls(name='Group A')
+    parameter_a_a = parameter_cls(name='Parameter A A')
+    group_a_b = group_cls(name='Group A B')
+    parameter_b = parameter_cls(name='Parameter B', value=42)
+    group_c = group_cls(name='Group C')
+    parameter_d = parameter_cls(name='Parameter D', value=42)
 
     model.add_child(parent=root, child=group_a)
     model.add_child(parent=group_a, child=parameter_a_a)
@@ -386,5 +387,66 @@ def test_prepopulated_connections(qtbot):
 
     for value in values.input:
         parameter.value = value
+
+    assert tuple(values.expected) == tuple(values.collected)
+
+
+def test_with_pyqtpropertys(qtbot):
+    @epyqlib.utils.qt.pyqtify(
+        property_decorator=lambda: PyQt5.QtCore.pyqtProperty('PyQt_PyObject'),
+    )
+    @attr.s(hash=False)
+    class Parameter(epyqlib.treenode.TreeNode):
+        type = attr.ib(default='test_parameter', init=False)
+        name = attr.ib(default='New Parameter')
+        value = attr.ib(default=None,
+                        convert=epyqlib.attrsmodel.to_decimal_or_none)
+        uuid = epyqlib.attrsmodel.attr_uuid()
+
+        def __attrs_post_init__(self):
+            super().__init__()
+
+    Root = epyqlib.attrsmodel.Root(
+        default_name='Parameters',
+        valid_types=(Parameter, Group)
+    )
+
+    columns = epyqlib.attrsmodel.columns(
+        ((Parameter, 'name'),),
+        ((Parameter, 'value'),),
+    )
+
+    model = make_a_model(
+        root_cls=Root,
+        parameter_cls=Parameter,
+        columns=columns,
+    )
+
+    parameter = node_from_name(model, 'Parameter B')
+
+    values = epyqlib.tests.common.Values(
+        initial=42,
+        input=[42, 37],
+        expected=['37'],
+    )
+
+    parameter.value = values.initial
+
+    data_changed = DataChangedCollector(
+        model=model,
+        parameter=parameter,
+        column=1,
+        roles=(PyQt5.QtCore.Qt.DisplayRole,),
+    )
+
+    model.dataChanged.connect(data_changed.collect)
+    data_changed.collected.connect(values.collect)
+
+    for value in values.input:
+        parameter.value = value
+
+    model.delete(parameter)
+
+    parameter.value += 1
 
     assert tuple(values.expected) == tuple(values.collected)
