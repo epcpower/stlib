@@ -3,6 +3,7 @@ import decimal
 import json
 import logging
 import uuid
+import weakref
 
 import attr
 from PyQt5 import QtCore
@@ -242,6 +243,15 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         check_uuids(self.root)
 
+        def connect(node, _, root=root):
+            if node is not root:
+                self.pyqtify_connect(node.tree_parent, node)
+
+        self.root.traverse(
+            call_this=connect,
+            internal_nodes=True,
+        )
+
     @classmethod
     def from_json_string(cls, s, columns, types,
                          decoder=Decoder):
@@ -350,13 +360,9 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         return False
 
-    def add_child(self, parent, child):
-        row = len(parent.children)
-        self.begin_insert_rows(parent, row, row)
-        parent.append_child(child)
-
+    def pyqtify_connect(self, parent, child):
         connections = {}
-        self.connected_signals[(child, parent)] = connections
+        self.connected_signals[(parent, child)] = connections
 
         for i, column in enumerate(self.columns):
             name = column.fields.get(type(child))
@@ -375,6 +381,19 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             connections[signal] = slot
             signal.connect(slot)
 
+    def pyqtify_disconnect(self, parent, child):
+        connections = self.connected_signals.pop((parent, child))
+
+        for signal, slot in connections.items():
+            signal.disconnect(slot)
+
+    def add_child(self, parent, child):
+        row = len(parent.children)
+        self.begin_insert_rows(parent, row, row)
+        parent.append_child(child)
+
+        self.pyqtify_connect(parent, child)
+
         if child.uuid is None:
             check_uuids(self.root)
 
@@ -384,10 +403,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         row = node.tree_parent.row_of_child(node)
         self.begin_remove_rows(node.tree_parent, row, row)
 
-        connections = self.connected_signals.pop((node, node.tree_parent))
-
-        for signal, slot in connections.items():
-            signal.disconnect(slot)
+        self.pyqtify_disconnect(node.tree_parent, node)
 
         node.tree_parent.remove_child(child=node)
         self.end_remove_rows()
@@ -433,8 +449,13 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 if not success:
                     return False
 
+                self.pyqtify_disconnect(node.tree_parent, node)
                 node.tree_parent.remove_child(child=node)
+
+                self.index_from_node_cache = weakref.WeakKeyDictionary()
+
                 new_parent.insert_child(row, node)
+                self.pyqtify_connect(new_parent, node)
 
                 self.endMoveRows()
 

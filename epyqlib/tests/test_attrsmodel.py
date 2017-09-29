@@ -239,3 +239,97 @@ def test_data_changed(qtbot):
     parameter.value += 1
 
     assert tuple(values.expected) == tuple(values.collected)
+
+
+def test_local_drag_n_drop(qtbot):
+    model = make_a_model()
+    model.add_drop_sources(model.root)
+
+    parameter = node_from_name(model, 'Parameter B')
+    group = node_from_name(model, 'Group C')
+
+    values = epyqlib.tests.common.Values(
+        initial=42,
+        input=[42, 37, 23],
+        expected=['37', '23'],
+    )
+
+    values_after_drop = epyqlib.tests.common.Values(
+        initial=int(values.expected[-1]),
+        input=[11, 13],
+        expected=['11', '13'],
+    )
+
+    parameter.value = values.initial
+
+    data_changed = DataChangedCollector(
+        model=model,
+        parameter=parameter,
+        column=1,
+        roles=(PyQt5.QtCore.Qt.DisplayRole,),
+    )
+
+    model.dataChanged.connect(data_changed.collect)
+    data_changed.collected.connect(values.collect)
+
+    for value in values.input:
+        parameter.value = value
+
+    assert tuple(values.expected) == tuple(values.collected)
+
+    mime_data = model.mimeData((model.index_from_node(parameter),))
+
+    model.dropMimeData(
+        data=mime_data,
+        action=PyQt5.QtCore.Qt.MoveAction,
+        row=-1,
+        column=0,
+        parent=model.index_from_node(group),
+    )
+
+    data_changed.collected.connect(values_after_drop.collect)
+
+    for value in values_after_drop.input:
+        parameter.value = value
+
+    model.delete(parameter)
+
+    parameter.value += 1
+
+    assert (
+        tuple(values_after_drop.expected)
+        == tuple(values_after_drop.collected)
+    )
+
+
+def test_prepopulated_connections(qtbot):
+    values = epyqlib.tests.common.Values(
+        initial=42,
+        input=[42, 37, 23],
+        expected=['37', '23'],
+    )
+
+    parameter = Parameter(name='Parameter A', value=values.initial)
+
+    root = Root()
+    root.append_child(parameter)
+
+    model = epyqlib.attrsmodel.Model(
+        root=root,
+        columns=columns,
+    )
+
+    data_changed = DataChangedCollector(
+        model=model,
+        parameter=parameter,
+        column=1,
+        roles=(PyQt5.QtCore.Qt.DisplayRole,),
+    )
+
+    model.dataChanged.connect(data_changed.collect)
+    data_changed.collected.connect(values.collect)
+
+    for value in values.input:
+        parameter.value = value
+
+    assert tuple(values.expected) == tuple(values.collected)
