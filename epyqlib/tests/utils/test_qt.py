@@ -2,6 +2,7 @@ import inspect
 import itertools
 
 import attr
+import pytest
 import PyQt5.QtCore
 
 import epyqlib.tests.common
@@ -186,3 +187,65 @@ def test_(qtbot):
     signals._pyqtify_signal_a
     signals.a
     signals['a']
+
+
+def test_resolve_index_to_model():
+    model = PyQt5.QtCore.QStringListModel()
+
+    back_proxy = PyQt5.QtCore.QSortFilterProxyModel()
+    back_proxy.setSourceModel(model)
+
+    middle_proxy = PyQt5.QtCore.QSortFilterProxyModel()
+    middle_proxy.setSourceModel(back_proxy)
+
+    proxy = PyQt5.QtCore.QSortFilterProxyModel()
+    proxy.setSourceModel(middle_proxy)
+
+    view = PyQt5.QtWidgets.QListView()
+    view.setModel(proxy)
+
+    assert (
+        epyqlib.utils.qt.resolve_models(view)
+        == [proxy, middle_proxy, back_proxy, model]
+    )
+
+    strings = ['a', 'b', 'c']
+    model.setStringList(strings)
+    assert model.rowCount() == 3
+    assert model.stringList() == strings
+
+    proxy_first_index = proxy.index(0, 0, PyQt5.QtCore.QModelIndex())
+
+    model_first_index = model.index(0, 0, PyQt5.QtCore.QModelIndex())
+
+    target_data = model.data(model_first_index, PyQt5.QtCore.Qt.DisplayRole)
+
+    assert target_data == 'a'
+
+    with pytest.raises(epyqlib.utils.qt.TargetModelNotReached):
+        epyqlib.utils.qt.resolve_index_to_model(
+            view=view,
+            index=proxy_first_index,
+            target=object(),
+        )
+
+    index, found_model = epyqlib.utils.qt.resolve_index_to_model(
+        view=view,
+        index=proxy_first_index,
+    )
+
+    found_data = model.data(index, PyQt5.QtCore.Qt.DisplayRole)
+
+    assert found_data == target_data
+    assert found_model == model
+
+    proxy_index = epyqlib.utils.qt.resolve_index_from_model(
+        model=model,
+        view=view,
+        index=model_first_index,
+    )
+
+    assert (
+        proxy.data(proxy_index, PyQt5.QtCore.Qt.DisplayRole)
+        == model.data(model_first_index, PyQt5.QtCore.Qt.DisplayRole)
+    )
