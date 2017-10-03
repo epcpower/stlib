@@ -455,3 +455,20 @@ def test_with_pyqtpropertys(qtbot):
     parameter.value += 1
 
     assert tuple(values.expected) == tuple(values.collected)
+
+
+def test_columns():
+    columns = epyqlib.attrsmodel.columns(
+        ((Parameter, 'name'), (Group, 'name')),
+        ((Parameter, 'value'),),
+    )
+
+    name_column = epyqlib.attrsmodel.Column(
+        name='Name',
+        fields={Parameter: 'name', Group: 'name'},
+    )
+
+    assert columns[0] == name_column
+    # TODO: using the human name?  seems kinda bad in code
+    assert columns['Name'] == name_column
+    assert columns[Parameter, 'name'] == name_column

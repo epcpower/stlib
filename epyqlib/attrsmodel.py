@@ -1,4 +1,5 @@
 import collections
+import contextlib
 import decimal
 import json
 import logging
@@ -28,6 +29,30 @@ class Column:
     fields = attr.ib()
 
 
+@attr.s
+class Columns:
+    columns = attr.ib()
+
+    def __getitem__(self, item):
+        if isinstance(item, str):
+            column, = (
+                column
+                for column in self.columns
+                if column.name == item
+            )
+            return column
+
+        if isinstance(item, tuple):
+            column, = (
+                column
+                for column in self.columns
+                if column.fields[item[0]] == item[1]
+            )
+            return column
+
+        return self.columns[item]
+
+
 def columns(*columns):
     def _name(column):
         cls, field_name = column
@@ -40,8 +65,12 @@ def columns(*columns):
 
         return name
 
-    return tuple(Column(name=_name(c[0]), fields=dict(c))
-                 for c in columns)
+    return Columns(
+        columns=tuple(
+            Column(name=_name(c[0]), fields=dict(c))
+            for c in columns
+        ),
+    )
 
 
 @attr.s
