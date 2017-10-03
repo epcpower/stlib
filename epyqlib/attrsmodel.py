@@ -74,47 +74,72 @@ def columns(*columns):
 
 
 @attr.s
-class add_addable_types:
-    attribute_name = attr.ib(default='children')
+class Types:
+    types = attr.ib(
+        convert=(
+            lambda types:
+            collections.OrderedDict((t.__name__, t) for t in types)
+        ),
+        default=(),
+    )
 
-    def __call__(self, class_to_decorate):
-        if hasattr(class_to_decorate, 'addable_types'):
-            raise Exception(
-                'Unable to add addable_types(), it is already defined')
+    def __attrs_post_init__(self):
+        for t in self.types.values():
+            add_addable_types(cls=t, types=self)
 
-        @classmethod
-        def addable_types(cls):
-            if cls.addable_types_cache is None:
-                if not hasattr(cls, self.attribute_name):
-                    return {}
+    def __getitem__(self, item):
+        return tuple(self.types.values())[item]
 
-                types = tuple(
-                    cls if t is None else t
-                    for t in getattr(attr.fields(cls), self.attribute_name)
-                        .metadata['valid_types']
-                )
+    def resolve(self, type_, default=None):
+        if type_ is None and default is not None:
+            return default
 
-                self.addable_types_cache = collections.OrderedDict()
+        if isinstance(type_, str):
+            return self.types[type_]
 
-                for t in types:
-                    type_attribute = attr.fields(t).type
-                    name = type_attribute.default.title()
-                    name = type_attribute.metadata.get('human name', name)
-                    self.addable_types_cache[name] = t
+        return type_
 
-            return self.addable_types_cache
 
-        class_to_decorate.addable_types = addable_types
-        class_to_decorate.addable_types_cache = None
-        class_to_decorate.addable_types()
+def add_addable_types(cls, attribute_name='children', types=None):
+    if types is None:
+        types = Types()
 
-        return class_to_decorate
+    if hasattr(cls, 'addable_types'):
+        raise Exception(
+            'Unable to add addable_types(), it is already defined')
+
+    @classmethod
+    def addable_types(cls):
+        if cls.addable_types_cache is None:
+            if not hasattr(cls, attribute_name):
+                return {}
+
+            resolved_types = tuple(
+                types.resolve(type_=t, default=cls)
+                for t in getattr(attr.fields(cls), attribute_name)
+                    .metadata['valid_types']
+            )
+
+            cls.addable_types_cache = collections.OrderedDict()
+
+            for t in resolved_types:
+                type_attribute = attr.fields(t).type
+                name = type_attribute.default.title()
+                name = type_attribute.metadata.get('human name', name)
+                cls.addable_types_cache[name] = t
+
+        return cls.addable_types_cache
+
+    cls.addable_types = addable_types
+    cls.addable_types_cache = None
+    cls.addable_types()
+
+    return cls
 
 
 def Root(default_name, valid_types):
     valid_types = tuple(valid_types)
 
-    @add_addable_types()
     @epyqlib.utils.qt.pyqtify()
     @attr.s(hash=False)
     class Root(epyqlib.treenode.TreeNode):
