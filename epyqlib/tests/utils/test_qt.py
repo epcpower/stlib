@@ -249,3 +249,19 @@ def test_resolve_index_to_model():
         proxy.data(proxy_index, PyQt5.QtCore.Qt.DisplayRole)
         == model.data(model_first_index, PyQt5.QtCore.Qt.DisplayRole)
     )
+
+
+def test_attrs_no_recurse_in_init():
+    @epyqlib.utils.qt.pyqtify()
+    @attr.s
+    class Child:
+        a = attr.ib(default=42)
+
+    @epyqlib.utils.qt.pyqtify()
+    @attr.s
+    class Parent:
+        child = attr.ib(default=attr.Factory(Child))
+
+    p = Parent()
+
+    assert p.child == Child()

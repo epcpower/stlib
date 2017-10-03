@@ -747,7 +747,7 @@ def pyqtify(property_decorator=lambda: property):
 
             old_init(self, *args, **kwargs)
 
-            for k, v in attr.asdict(self).items():
+            for k, v in attr.asdict(self, recurse=False).items():
                 self.__pyqtify_instance__.values[k] = v
         cls.__init__ = __init__
 
