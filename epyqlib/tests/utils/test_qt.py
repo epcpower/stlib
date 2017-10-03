@@ -1,3 +1,4 @@
+import inspect
 import itertools
 
 import attr
@@ -29,6 +30,17 @@ class P(PyQt5.QtCore.QObject):
     def pyqtify_c(self, value):
         self.set = True
         return epyqlib.utils.qt.pyqtify_set(self, 'c', value)
+
+
+def test_types(qtbot):
+    p = P(a=1, b=2, c=3)
+
+    # TODO: this would be nice but all ideas so far are ugly
+    # assert isinstance(P.a, attr.Attribute)
+
+    assert isinstance(attr.fields(P).a, attr.Attribute)
+    assert isinstance(inspect.getattr_static(p, 'a'), property)
+    assert isinstance(inspect.getattr_static(p, 'c'), PyQt5.QtCore.pyqtProperty)
 
 
 def assert_attrs_as_expected(x, values):
