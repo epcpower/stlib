@@ -787,6 +787,44 @@ def pyqtify_signals(instance):
     return instance.__pyqtify_instance__.changed
 
 
+def pyqtify_passthrough_properties(original, field_names):
+    def inner(cls):
+        old_init = cls.__init__
+
+        def __init__(self, *args, **kwargs):
+            old_init(self, *args, **kwargs)
+
+            original_object = getattr(self, original)
+            signals = epyqlib.utils.qt.pyqtify_signals(self)
+            original_signals = epyqlib.utils.qt.pyqtify_signals(original_object)
+
+            for name in field_names:
+                original_signals[name].connect(signals[name])
+
+        cls.__init__ = __init__
+
+        for name in field_names:
+            @property
+            def property_(self, name=name):
+                original_ = getattr(self, original)
+                if original_ is None:
+                    return None
+
+                return getattr(original_, name)
+
+            @property_.setter
+            def property_(self, value, name=name):
+                original_ = getattr(self, original)
+                if original_ is not None:
+                    setattr(original_, name, value)
+
+            setattr(cls, 'pyqtify_' + name, property_)
+
+        return cls
+
+    return inner
+
+
 class TargetModelNotReached(Exception):
     pass
 
