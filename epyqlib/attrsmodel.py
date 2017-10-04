@@ -469,9 +469,6 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         for signal, (instance, slot) in connections.items():
             signal.__get__(instance).disconnect(slot)
 
-    def add_child(self, parent, child):
-        parent.append_child(child)
-
     def child_added(self, child, row):
         parent = child.tree_parent
         self.begin_insert_rows(parent, row, row)
@@ -482,9 +479,6 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             check_uuids(self.root)
 
         self.end_insert_rows()
-
-    def delete(self, node):
-        node.tree_parent.remove_child(child=node)
 
     def deleted(self, parent, node, row):
         self.begin_remove_rows(parent, row, row)
@@ -527,7 +521,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 return True
             else:
                 new_child = new_parent.child_from(node)
-                self.add_child(new_parent, new_child)
+                new_parent.append_child(new_child)
 
         return False
 

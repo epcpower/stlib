@@ -79,15 +79,15 @@ def make_a_model(root_cls=Root, group_cls=Group, parameter_cls=Parameter,
     group_c = group_cls(name='Group C')
     parameter_d = parameter_cls(name='Parameter D', value=42)
 
-    model.add_child(parent=root, child=group_a)
-    model.add_child(parent=group_a, child=parameter_a_a)
-    model.add_child(parent=group_a, child=group_a_b)
+    root.append_child(group_a)
+    group_a.append_child(parameter_a_a)
+    group_a.append_child(group_a_b)
 
-    model.add_child(parent=root, child=parameter_b)
+    root.append_child(parameter_b)
 
-    model.add_child(parent=root, child=group_c)
+    root.append_child(group_c)
 
-    model.add_child(parent=root, child=parameter_d)
+    root.append_child(parameter_d)
 
     return model
 
@@ -243,7 +243,7 @@ def test_data_changed(qtbot):
     for value in values.input:
         parameter.value = value
 
-    model.delete(parameter)
+    parameter.tree_parent.remove_child(child=parameter)
 
     parameter.value += 1
 
@@ -296,7 +296,7 @@ def test_other_data_did_not_change(qtbot):
     for value in values.input:
         parameter.value = value
 
-    model.delete(parameter)
+    parameter.tree_parent.remove_child(child=parameter)
 
     parameter.value += 1
 
@@ -355,7 +355,7 @@ def test_local_drag_n_drop(qtbot):
     for value in values_after_drop.input:
         parameter.value = value
 
-    model.delete(parameter)
+    parameter.tree_parent.remove_child(child=parameter)
 
     parameter.value += 1
 
@@ -452,7 +452,7 @@ def test_with_pyqtpropertys(qtbot):
     for value in values.input:
         parameter.value = value
 
-    model.delete(parameter)
+    parameter.tree_parent.remove_child(child=parameter)
 
     parameter.value += 1
 
