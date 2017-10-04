@@ -1,6 +1,7 @@
 import collections
 import contextlib
 import decimal
+import inspect
 import json
 import logging
 import uuid
@@ -426,7 +427,10 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             if name is None:
                 continue
 
-            signal = getattr(child.__pyqtify_instance__.changed, name)
+            signal = inspect.getattr_static(
+                obj=child.__pyqtify_instance__.changed,
+                attr='_pyqtify_signal_' + name,
+            )
 
             def slot(_):
                 self.changed(
@@ -436,13 +440,13 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 )
 
             connections[signal] = slot
-            signal.connect(slot)
+            signal.__get__(child.__pyqtify_instance__.changed).connect(slot)
 
     def pyqtify_disconnect(self, parent, child):
         connections = self.connected_signals.pop((parent, child))
 
         for signal, slot in connections.items():
-            signal.disconnect(slot)
+            signal.__get__(child.__pyqtify_instance__.changed).disconnect(slot)
 
     def add_child(self, parent, child):
         row = len(parent.children)
