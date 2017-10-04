@@ -1,3 +1,5 @@
+import inspect
+
 import attr
 import PyQt5.QtCore
 import PyQt5.QtWidgets
@@ -472,3 +474,17 @@ def test_columns():
     # TODO: using the human name?  seems kinda bad in code
     assert columns['Name'] == name_column
     assert columns[Parameter, 'name'] == name_column
+
+
+def test_children_property_retained():
+    @epyqlib.utils.qt.pyqtify()
+    @attr.s(hash=False)
+    class N(epyqlib.treenode.TreeNode):
+        children = attr.ib(default='test_parameter', init=False)
+
+        def __attrs_post_init__(self):
+            super().__init__()
+
+    n = N()
+
+    assert isinstance(inspect.getattr_static(n, 'children'), property)
