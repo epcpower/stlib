@@ -100,13 +100,19 @@ class Types:
         return type_
 
 
+def create_addable_types(types):
+    return collections.OrderedDict((
+        (attr.fields(type_).type.metadata.get('human name', attr.fields(type_).type.default.title()), type_)
+        for type_ in types
+    ))
+
+
 def add_addable_types(cls, attribute_name='children', types=None):
     if types is None:
         types = Types()
 
     if hasattr(cls, 'addable_types'):
-        raise Exception(
-            'Unable to add addable_types(), it is already defined')
+        return
 
     @classmethod
     def addable_types(cls):
@@ -120,13 +126,7 @@ def add_addable_types(cls, attribute_name='children', types=None):
                     .metadata['valid_types']
             )
 
-            cls.addable_types_cache = collections.OrderedDict()
-
-            for t in resolved_types:
-                type_attribute = attr.fields(t).type
-                name = type_attribute.default.title()
-                name = type_attribute.metadata.get('human name', name)
-                cls.addable_types_cache[name] = t
+            cls.addable_types_cache = create_addable_types(resolved_types)
 
         return cls.addable_types_cache
 
