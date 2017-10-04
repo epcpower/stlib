@@ -436,7 +436,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             if name is None:
                 continue
 
-            def slot(_):
+            def slot(_, i=i):
                 self.changed(
                     child, i,
                     child, i,
