@@ -194,6 +194,9 @@ def to_decimal_or_none(s):
     if s is None:
         return None
 
+    if isinstance(s, str) and len(s) == 0:
+        return None
+
     try:
         result = decimal.Decimal(s)
     except decimal.InvalidOperation as e:
