@@ -1,10 +1,17 @@
-#!/usr/bin/env python3
-
-#TODO: """DocString if there is one"""
+import PyQt5.QtCore
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
 __license__ = 'GPLv2+'
+
+
+class Signals(PyQt5.QtCore.QObject):
+    child_added = PyQt5.QtCore.pyqtSignal('PyQt_PyObject', int)
+    child_removed = PyQt5.QtCore.pyqtSignal(
+        'PyQt_PyObject',
+        'PyQt_PyObject',
+        int,
+    )
 
 
 class TreeNode:
@@ -17,6 +24,8 @@ class TreeNode:
         self.set_parent(parent)
         self.children = []
 
+        self.signals = Signals()
+
     def set_parent(self, parent):
         self.tree_parent = parent
         if self.tree_parent is not None:
@@ -25,10 +34,12 @@ class TreeNode:
     def insert_child(self, i, child):
         self.children.insert(i, child)
         child.tree_parent = self
+        self.signals.child_added.emit(child, i)
 
     def append_child(self, child):
         self.children.append(child)
         child.tree_parent = self
+        self.signals.child_added.emit(child, len(self.children) - 1)
 
     def child_at_row(self, row):
         if row < len(self.children):
@@ -45,9 +56,16 @@ class TreeNode:
     def remove_child(self, row=None, child=None):
         if child is None:
             child = self.children[row]
+        elif row is None:
+            row = self.children.index(child)
+
+        tree_parent = child.tree_parent
 
         child.parent = None
+        child.tree_parent = None
         self.children.remove(child)
+
+        self.signals.child_removed.emit(tree_parent, child, row)
 
         return True
 

@@ -30,6 +30,10 @@ class Column:
     fields = attr.ib()
 
 
+class ConsistencyError(Exception):
+    pass
+
+
 @attr.s
 class Columns:
     columns = attr.ib()
@@ -301,9 +305,8 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         check_uuids(self.root)
 
-        def connect(node, _, root=root):
-            if node is not root:
-                self.pyqtify_connect(node.tree_parent, node)
+        def connect(node, _):
+            self.pyqtify_connect(node.tree_parent, node)
 
         self.root.traverse(
             call_this=connect,
@@ -419,18 +422,19 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         return False
 
     def pyqtify_connect(self, parent, child):
+        def key_value(instance, name, slot):
+            signal = inspect.getattr_static(obj=instance, attr=name)
+            return ((signal, (instance, slot)),)
+
         connections = {}
+        if (parent, child) in self.connected_signals:
+            raise ConsistencyError('already connected: {}'.format((parent, child)))
         self.connected_signals[(parent, child)] = connections
 
         for i, column in enumerate(self.columns):
             name = column.fields.get(type(child))
             if name is None:
                 continue
-
-            signal = inspect.getattr_static(
-                obj=child.__pyqtify_instance__.changed,
-                attr='_pyqtify_signal_' + name,
-            )
 
             def slot(_):
                 self.changed(
@@ -439,19 +443,38 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                     (PyQt5.QtCore.Qt.DisplayRole,),
                 )
 
-            connections[signal] = slot
-            signal.__get__(child.__pyqtify_instance__.changed).connect(slot)
+            connections.update(key_value(
+                instance=child.__pyqtify_instance__.changed,
+                name='_pyqtify_signal_' + name,
+                slot=slot,
+            ))
+
+        connections.update(key_value(
+            instance=child.signals,
+            name='child_added',
+            slot=self.child_added,
+        ))
+        connections.update(key_value(
+            instance=child.signals,
+            name='child_removed',
+            slot=self.deleted,
+        ))
+
+        for signal, (instance, slot) in connections.items():
+            signal.__get__(instance).connect(slot)
 
     def pyqtify_disconnect(self, parent, child):
         connections = self.connected_signals.pop((parent, child))
 
-        for signal, slot in connections.items():
-            signal.__get__(child.__pyqtify_instance__.changed).disconnect(slot)
+        for signal, (instance, slot) in connections.items():
+            signal.__get__(instance).disconnect(slot)
 
     def add_child(self, parent, child):
-        row = len(parent.children)
-        self.begin_insert_rows(parent, row, row)
         parent.append_child(child)
+
+    def child_added(self, child, row):
+        parent = child.tree_parent
+        self.begin_insert_rows(parent, row, row)
 
         self.pyqtify_connect(parent, child)
 
@@ -461,12 +484,13 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         self.end_insert_rows()
 
     def delete(self, node):
-        row = node.tree_parent.row_of_child(node)
-        self.begin_remove_rows(node.tree_parent, row, row)
-
-        self.pyqtify_disconnect(node.tree_parent, node)
-
         node.tree_parent.remove_child(child=node)
+
+    def deleted(self, parent, node, row):
+        self.begin_remove_rows(parent, row, row)
+
+        self.pyqtify_disconnect(parent, node)
+
         self.end_remove_rows()
 
     def supportedDropActions(self):
@@ -497,28 +521,8 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             local = node.find_root() == self.root
 
             if local:
-                from_row = node.tree_parent.row_of_child(node)
-
-                success = self.beginMoveRows(
-                    self.index_from_node(node.tree_parent),
-                    from_row,
-                    from_row,
-                    self.index_from_node(new_parent),
-                    row
-                )
-
-                if not success:
-                    return False
-
-                self.pyqtify_disconnect(node.tree_parent, node)
                 node.tree_parent.remove_child(child=node)
-
-                self.index_from_node_cache = weakref.WeakKeyDictionary()
-
                 new_parent.insert_child(row, node)
-                self.pyqtify_connect(new_parent, node)
-
-                self.endMoveRows()
 
                 return True
             else:

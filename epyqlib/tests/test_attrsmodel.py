@@ -488,3 +488,31 @@ def test_children_property_retained():
     n = N()
 
     assert isinstance(inspect.getattr_static(n, 'children'), property)
+
+
+def test_children_changed_signals():
+    model = make_a_model()
+
+    group = node_from_name(model, 'Group C')
+
+    added_items = []
+
+    def added(item, row):
+        added_items.append((item, row))
+
+    removed_items = []
+
+    def removed(parent, item, row):
+        removed_items.append((parent, item, row))
+
+    group.signals.child_added.connect(added)
+    group.signals.child_removed.connect(removed)
+
+    parameter = Parameter()
+    group.append_child(parameter)
+    assert added_items == [(parameter, 0)]
+
+    group.remove_child(child=parameter)
+
+    assert added_items == [(parameter, 0)]
+    assert removed_items == [(group, parameter, 0)]
