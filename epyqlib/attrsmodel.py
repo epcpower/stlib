@@ -471,6 +471,13 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
     def child_added(self, child, row):
         parent = child.tree_parent
+
+        from_index = None
+        if len(parent.children) == 1:
+            from_index = self.index_from_node(parent)
+            persistent_index = PyQt5.QtCore.QPersistentModelIndex(from_index)
+            self.layoutAboutToBeChanged.emit([persistent_index])
+
         self.begin_insert_rows(parent, row, row)
 
         self.pyqtify_connect(parent, child)
@@ -480,12 +487,28 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         self.end_insert_rows()
 
+        if from_index is not None:
+            to_index = self.index_from_node(parent)
+            self.changePersistentIndex(from_index, to_index)
+            self.layoutChanged.emit([persistent_index])
+
     def deleted(self, parent, node, row):
+        from_index = None
+        if len(parent.children) == 1:
+            from_index = self.index_from_node(parent)
+            persistent_index = PyQt5.QtCore.QPersistentModelIndex(from_index)
+            self.layoutAboutToBeChanged.emit([persistent_index])
+
         self.begin_remove_rows(parent, row, row)
 
         self.pyqtify_disconnect(parent, node)
 
         self.end_remove_rows()
+
+        if from_index is not None:
+            to_index = self.index_from_node(parent)
+            self.changePersistentIndex(from_index, to_index)
+            self.layoutChanged.emit([persistent_index])
 
     def supportedDropActions(self):
         return QtCore.Qt.MoveAction
