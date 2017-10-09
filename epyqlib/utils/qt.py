@@ -240,7 +240,7 @@ def create_filter_string(name, extensions):
      )
 
 
-def file_dialog(filters, default=0, save=False, parent=None):
+def file_dialog(filters, default=0, save=False, caption='', parent=None):
     # TODO: CAMPid 9857216134675885472598426718023132
     # filters = [
     #     ('EPC Packages', ['epc', 'epz']),
@@ -257,9 +257,11 @@ def file_dialog(filters, default=0, save=False, parent=None):
         dialog = QtWidgets.QFileDialog.getOpenFileName
 
     file = dialog(
-            parent=parent,
-            filter=filter_string,
-            initialFilter=filter_strings[default])[0]
+        parent=parent,
+        filter=filter_string,
+        initialFilter=filter_strings[default],
+        caption=caption,
+    )[0]
 
     if len(file) == 0:
         file = None
