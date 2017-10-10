@@ -1,6 +1,7 @@
 import functools
 import io
 import os
+import signal
 import sys
 import textwrap
 import time
@@ -871,3 +872,18 @@ def resolve_index_from_model(model, view, index):
         index = model.mapFromSource(index)
 
     return index
+
+
+def sigint_handler(signal_number, stack_frame):
+    QtWidgets.QApplication.exit(128 + signal_number)
+
+
+def setup_sigint():
+    signal.signal(signal.SIGINT, sigint_handler)
+
+    # Regularly give Python a chance to receive signals such as ctrl+c
+    timer = QtCore.QTimer()
+    timer.start(200)
+    timer.timeout.connect(lambda: None)
+
+    return timer
