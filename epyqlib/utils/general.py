@@ -1,8 +1,10 @@
 import collections
 import enum
 import itertools
+import logging
 import math
 import os
+import traceback
 import textwrap
 import time
 import zipfile
@@ -11,6 +13,8 @@ import attr
 
 __copyright__ = 'Copyright 2017, EPC Power Corp.'
 __license__ = 'GPLv2+'
+
+logger = logging.getLogger()
 
 
 class ExpectedException(Exception):
@@ -223,3 +227,9 @@ class Collector(list):
             return payload
 
         return f
+
+
+def exception_logger(excType, excValue, tracebackobj):
+    logger.error('Uncaught exception hooked:\n{}'.format(
+         ''.join(traceback.format_exception(excType, excValue, tracebackobj))
+    ))
