@@ -42,6 +42,8 @@ def exception_message_box_register_parent(parent):
 
 
 def exception_message_box(excType=None, excValue=None, tracebackobj=None):
+    epyqlib.utils.general.exception_logger(excType, excValue, tracebackobj)
+
     def join(iterable):
         return ''.join(iterable).strip()
 
