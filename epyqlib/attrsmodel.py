@@ -107,7 +107,13 @@ class Types:
 
 def create_addable_types(types):
     return collections.OrderedDict((
-        (attr.fields(type_).type.metadata.get('human name', attr.fields(type_).type.default.title()), type_)
+        (
+            attr.fields(type_).type.metadata.get(
+                'human name',
+                attr.fields(type_).type.default.title(),
+            ),
+            type_,
+        )
         for type_ in types
     ))
 
