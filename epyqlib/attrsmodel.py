@@ -116,7 +116,7 @@ def add_addable_types(cls, attribute_name='children', types=None):
     if types is None:
         types = Types()
 
-    if hasattr(cls, 'addable_types'):
+    if hasattr(cls, 'addable_types') or hasattr(cls, 'all_addable_types'):
         return
 
     @classmethod
@@ -136,6 +136,7 @@ def add_addable_types(cls, attribute_name='children', types=None):
         return cls.addable_types_cache
 
     cls.addable_types = addable_types
+    cls.all_addable_types = addable_types
     cls.addable_types_cache = None
     cls.addable_types()
 
