@@ -224,6 +224,19 @@ def to_decimal_or_none(s):
     return result
 
 
+def to_str_or_none(s):
+    if s is None:
+        return None
+
+    if isinstance(s, str):
+        if len(s) == 0:
+            return None
+
+        return s
+
+    return str(s)
+
+
 def two_state_checkbox(v):
     return v in (QtCore.Qt.Checked, True)
 
