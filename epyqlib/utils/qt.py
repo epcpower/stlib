@@ -690,6 +690,10 @@ def search_view(view, text, column):
         )
 
 
+class NotAPyQtifyInstance(Exception):
+    pass
+
+
 @attr.s
 class PyQtifyInstance:
     display_name = attr.ib()
@@ -762,8 +766,6 @@ def pyqtify(name=None, property_decorator=lambda: property):
 
             old_init(self, *args, **kwargs)
 
-            for k, v in attr.asdict(self, recurse=False).items():
-                self.__pyqtify_instance__.values[k] = v
         cls.__init__ = __init__
 
         for name_ in names:
@@ -799,7 +801,12 @@ def pyqtify_set(instance, name, value):
 
 
 def pyqtify_signals(instance):
-    return instance.__pyqtify_instance__.changed
+    try:
+        instance = instance.__pyqtify_instance__
+    except AttributeError as e:
+        raise NotAPyQtifyInstance from e
+
+    return instance.changed
 
 
 def pyqtify_passthrough_properties(original, field_names):
@@ -811,10 +818,23 @@ def pyqtify_passthrough_properties(original, field_names):
 
             original_object = getattr(self, original)
             signals = epyqlib.utils.qt.pyqtify_signals(self)
-            original_signals = epyqlib.utils.qt.pyqtify_signals(original_object)
 
-            for name in field_names:
-                original_signals[name].connect(signals[name])
+            def original_changed(new_original, self=self):
+                # TODO: need to be disconnecting as well
+                signals = epyqlib.utils.qt.pyqtify_signals(self)
+
+                try:
+                    new_original_signals = (
+                        epyqlib.utils.qt.pyqtify_signals(new_original)
+                    )
+                except NotAPyQtifyInstance:
+                    pass
+                else:
+                    for name in field_names:
+                        new_original_signals[name].connect(signals[name])
+
+            getattr(signals, original).connect(original_changed)
+            original_changed(original_object)
 
         cls.__init__ = __init__
 

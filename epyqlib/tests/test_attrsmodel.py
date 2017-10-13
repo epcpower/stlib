@@ -516,3 +516,105 @@ def test_children_changed_signals():
 
     assert added_items == [(parameter, 0)]
     assert removed_items == [(group, parameter, 0)]
+
+
+@epyqlib.utils.qt.pyqtify()
+@epyqlib.utils.qt.pyqtify_passthrough_properties(
+    original='original',
+    field_names=('value',),
+)
+@attr.s(hash=False)
+class PassThrough(epyqlib.treenode.TreeNode):
+    original = attr.ib()
+    value = attr.ib()
+    uuid = epyqlib.attrsmodel.attr_uuid()
+
+    def __attrs_post_init__(self):
+        super().__init__()
+
+PassThroughRoot = epyqlib.attrsmodel.Root(
+    default_name='Pass Through',
+    valid_types=(Parameter, PassThrough)
+)
+
+
+def test_original_signals(qtbot):
+    root = PassThroughRoot()
+
+    columns = epyqlib.attrsmodel.columns(
+        ((Parameter, 'name'),),
+        (
+            (Parameter, 'value'),
+            (PassThrough, 'value'),
+        ),
+    )
+
+    model = epyqlib.attrsmodel.Model(
+        root=root,
+        columns=columns,
+    )
+
+    original = Parameter()
+    passthrough_a = PassThrough(original=None, value=None)
+    passthrough_b = PassThrough(original=original, value=None)
+
+    root.append_child(original)
+    root.append_child(passthrough_a)
+    root.append_child(passthrough_b)
+
+    common_expected = ['5']
+
+    values = {
+        'original': epyqlib.tests.common.Values(
+            initial=None,
+            input=None,
+            expected=common_expected,
+        ),
+        'a': epyqlib.tests.common.Values(
+            initial=None,
+            input=None,
+            expected=common_expected,
+        ),
+        'b': epyqlib.tests.common.Values(
+            initial=None,
+            input=None,
+            expected=common_expected,
+        ),
+    }
+
+    column = 1
+    collectors = {
+        'original': DataChangedCollector(
+            model=model,
+            parameter=original,
+            column=column,
+            roles=(PyQt5.QtCore.Qt.DisplayRole,),
+        ),
+        'a': DataChangedCollector(
+            model=model,
+            parameter=passthrough_a,
+            column=column,
+            roles=(PyQt5.QtCore.Qt.DisplayRole,),
+        ),
+        'b': DataChangedCollector(
+            model=model,
+            parameter=passthrough_b,
+            column=column,
+            roles=(PyQt5.QtCore.Qt.DisplayRole,),
+        ),
+    }
+
+    for name in values:
+        model.dataChanged.connect(collectors[name].collect)
+        collectors[name].collected.connect(values[name].collect)
+
+    passthrough_a.original = original
+
+    assert passthrough_a.value == passthrough_b.value == original.value
+
+    passthrough_a.value = 5
+
+    assert passthrough_a.value == passthrough_b.value == original.value
+
+    for name, value in values.items():
+        assert tuple(value.expected) == tuple(value.collected)
