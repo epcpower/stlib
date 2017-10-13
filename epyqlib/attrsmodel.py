@@ -190,6 +190,13 @@ def Root(default_name, valid_types):
         def can_drop_on(self, node):
             return isinstance(node, tuple(self.addable_types().values()))
 
+        @staticmethod
+        def can_delete(node=None):
+            if node is None:
+                return False
+
+            return True
+
     return Root
 
 
@@ -295,6 +302,15 @@ def check_uuids(*roots):
 
     for root in set(roots):
         root.traverse(call_this=set_nones, payload=uuids, internal_nodes=True)
+
+
+def childless_can_delete(self, node=None):
+    if node is not None:
+        raise ConsistencyError(
+            'No children to be considered'
+        )
+
+    return self.tree_parent.can_delete(node=self)
 
 
 class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
