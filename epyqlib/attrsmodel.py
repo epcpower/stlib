@@ -386,7 +386,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         return getattr(attr.fields(t), name)
 
-    def data_display(self, index):
+    def data_display(self, index, replace_none='-'):
         field = self.get_field(index)
 
         if field is None:
@@ -399,12 +399,12 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         data = getattr(node, field.name)
         if data is None:
-            return '-'
+            return replace_none
 
         return str(data)
 
     def data_edit(self, index):
-        return self.data_display(index)
+        return self.data_display(index, replace_none='')
 
     def data_check_state(self, index):
         node = self.node_from_index(index)
