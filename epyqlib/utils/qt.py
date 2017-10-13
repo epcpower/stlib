@@ -692,12 +692,14 @@ def search_view(view, text, column):
 
 @attr.s
 class PyQtifyInstance:
+    display_name = attr.ib()
     values = attr.ib(default={})
     changed = attr.ib(default=None)
 
     @classmethod
-    def fill(cls, attrs_class):
+    def fill(cls, display_name, attrs_class):
         return cls(
+            display_name=display_name,
             values={
                 field.name: None
                 for field in attr.fields(attrs_class)
@@ -705,8 +707,13 @@ class PyQtifyInstance:
         )
 
 
-def pyqtify(property_decorator=lambda: property):
+def pyqtify(name=None, property_decorator=lambda: property):
     def inner(cls):
+        if name is None:
+            display_name = cls.__name__
+        else:
+            display_name = name
+
         names = tuple(field.name for field in attr.fields(cls))
 
         def __getitem__(self, key):
@@ -746,7 +753,10 @@ def pyqtify(property_decorator=lambda: property):
         old_init = cls.__init__
 
         def __init__(self, *args, **kwargs):
-            self.__pyqtify_instance__ = PyQtifyInstance.fill(type(self))
+            self.__pyqtify_instance__ = PyQtifyInstance.fill(
+                display_name=display_name,
+                attrs_class=type(self),
+            )
 
             self.__pyqtify_instance__.changed = SignalContainer()
 
@@ -756,19 +766,19 @@ def pyqtify(property_decorator=lambda: property):
                 self.__pyqtify_instance__.values[k] = v
         cls.__init__ = __init__
 
-        for name in names:
-            property_ = getattr(cls, 'pyqtify_{}'.format(name), None)
+        for name_ in names:
+            property_ = getattr(cls, 'pyqtify_{}'.format(name_), None)
 
             if property_ is None:
                 @property_decorator()
-                def property_(self, name=name):
+                def property_(self, name=name_):
                     return pyqtify_get(self, name)
 
                 @property_.setter
-                def property_(self, value, name=name):
+                def property_(self, value, name=name_):
                     pyqtify_set(self, name, value)
 
-            setattr(cls, name, property_)
+            setattr(cls, name_, property_)
 
         return cls
 
