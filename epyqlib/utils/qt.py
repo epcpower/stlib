@@ -462,12 +462,14 @@ class Dialog(QtWidgets.QDialog):
 
 def dialog(parent, message, title=None, icon=None,
            rich_text=False, details='', details_rich_text=False,
-           cancellable=False):
+           cancellable=False, modal=True):
     box = Dialog(
         parent=parent,
         cancellable=cancellable,
         details=len(details) > 0,
     )
+
+    box.setModal(modal)
 
     if rich_text:
         box.set_html(message)
@@ -496,7 +498,11 @@ def dialog(parent, message, title=None, icon=None,
 
     box.finished.connect(box.deleteLater)
 
-    return box.exec()
+    if modal:
+        return box.exec()
+
+    box.show()
+    return
 
 
 def dialog_from_file(parent, title, file_name):
