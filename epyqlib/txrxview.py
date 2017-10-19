@@ -59,7 +59,11 @@ class TxRxView(QtWidgets.QWidget):
 
         self.ui.tree_view.setItemDelegateForColumn(
             epyqlib.txrx.Columns.indexes.value,
-            epyqlib.delegates.ByFunction(model=model, parent=self)
+            epyqlib.delegates.ByFunction(
+                model=self.nonproxy_model(),
+                proxy=model,
+                parent=self,
+            )
         )
 
         self.ui.tree_view.setColumnWidth(epyqlib.txrx.Columns.indexes.value,
