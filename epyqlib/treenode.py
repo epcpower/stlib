@@ -24,7 +24,7 @@ class TreeNode:
         self.set_parent(parent)
         self.children = []
 
-        self.signals = Signals()
+        self.pyqt_signals = Signals()
 
     def set_parent(self, parent):
         self.tree_parent = parent
@@ -34,12 +34,12 @@ class TreeNode:
     def insert_child(self, i, child):
         self.children.insert(i, child)
         child.tree_parent = self
-        self.signals.child_added.emit(child, i)
+        self.pyqt_signals.child_added.emit(child, i)
 
     def append_child(self, child):
         self.children.append(child)
         child.tree_parent = self
-        self.signals.child_added.emit(child, len(self.children) - 1)
+        self.pyqt_signals.child_added.emit(child, len(self.children) - 1)
 
     def child_at_row(self, row):
         if row < len(self.children):
@@ -65,7 +65,7 @@ class TreeNode:
         child.tree_parent = None
         self.children.remove(child)
 
-        self.signals.child_removed.emit(tree_parent, child, row)
+        self.pyqt_signals.child_removed.emit(tree_parent, child, row)
 
         return True
 

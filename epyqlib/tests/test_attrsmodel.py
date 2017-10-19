@@ -505,8 +505,8 @@ def test_children_changed_signals():
     def removed(parent, item, row):
         removed_items.append((parent, item, row))
 
-    group.signals.child_added.connect(added)
-    group.signals.child_removed.connect(removed)
+    group.pyqt_signals.child_added.connect(added)
+    group.pyqt_signals.child_removed.connect(removed)
 
     parameter = Parameter()
     group.append_child(parameter)

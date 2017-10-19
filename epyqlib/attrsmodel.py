@@ -486,12 +486,12 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             ))
 
         connections.update(key_value(
-            instance=child.signals,
+            instance=child.pyqt_signals,
             name='child_added',
             slot=self.child_added,
         ))
         connections.update(key_value(
-            instance=child.signals,
+            instance=child.pyqt_signals,
             name='child_removed',
             slot=self.deleted,
         ))
