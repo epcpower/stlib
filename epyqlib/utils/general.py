@@ -233,3 +233,22 @@ def exception_logger(excType, excValue, tracebackobj):
     logger.error('Uncaught exception hooked:\n{}'.format(
          ''.join(traceback.format_exception(excType, excValue, tracebackobj))
     ))
+
+
+@attr.s
+class TypeMap:
+    types = attr.ib(default=attr.Factory(dict), init=False)
+
+    def __call__(self, wrapped):
+        def inner(cls):
+            self.types[wrapped] = cls
+
+            return cls
+
+        return inner
+
+    def __getitem__(self, item):
+        return self.types[item]
+
+    def wrap(self, wrapped):
+        return self.types[type(wrapped)](wrapped=wrapped)
