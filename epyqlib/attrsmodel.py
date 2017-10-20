@@ -8,6 +8,9 @@ import uuid
 import weakref
 
 import attr
+import graham
+import graham.fields
+import marshmallow
 from PyQt5 import QtCore
 import PyQt5.QtCore
 
@@ -102,16 +105,16 @@ class Types:
         if isinstance(type_, str):
             return self.types[type_]
 
+        if isinstance(type_, marshmallow.Schema):
+            return type_.data_class
+
         return type_
 
 
 def create_addable_types(types):
     return collections.OrderedDict((
         (
-            attr.fields(type_).type.metadata.get(
-                'human name',
-                attr.fields(type_).type.default.title(),
-            ),
+            type_.__name__,
             type_,
         )
         for type_ in types
@@ -128,13 +131,13 @@ def add_addable_types(cls, attribute_name='children', types=None):
     @classmethod
     def addable_types(cls):
         if cls.addable_types_cache is None:
-            if not hasattr(cls, attribute_name):
+            field = graham.schema(cls).fields.get(attribute_name)
+            if field is None:
                 return {}
 
             resolved_types = tuple(
-                types.resolve(type_=t, default=cls)
-                for t in getattr(attr.fields(cls), attribute_name)
-                    .metadata['valid_types']
+                types.resolve(type_=t.nested, default=cls)
+                for t in field.instances
             )
 
             cls.addable_types_cache = create_addable_types(resolved_types)
@@ -150,42 +153,34 @@ def add_addable_types(cls, attribute_name='children', types=None):
 
 
 def Root(default_name, valid_types):
-    valid_types = tuple(valid_types)
-
+    @graham.schemify(tag='root')
     @epyqlib.utils.qt.pyqtify()
     @attr.s(hash=False)
     class Root(epyqlib.treenode.TreeNode):
-        type = attr.ib(default='root', init=False)
-        name = attr.ib(default=default_name)
+        name = attr.ib(
+            default=default_name,
+            metadata=graham.create_metadata(
+                field=marshmallow.fields.String(),
+            ),
+        )
         children = attr.ib(
             default=attr.Factory(list),
             metadata={
-                'ignore': True,
-                'valid_types': valid_types
-            }
+                **graham.create_metadata(
+                    field=graham.fields.MixedList(fields=(
+                        marshmallow.fields.Nested(graham.schema(type_))
+                        for type_ in valid_types
+                        # marshmallow.fields.Nested('Group'),
+                        # marshmallow.fields.Nested(graham.schema(Leaf)),
+                    )),
+                ),
+            },
         )
         uuid = attr_uuid()
 
         def __attrs_post_init__(self):
             super().__init__()
 
-        @classmethod
-        def from_json(cls, obj):
-            children = obj.pop('children')
-            node = cls(**obj)
-
-            for child in children:
-                node.append_child(child)
-
-            return node
-
-        def to_json(self):
-            return attr.asdict(
-                self,
-                recurse=False,
-                dict_factory=collections.OrderedDict,
-                filter=lambda a, _: a.metadata.get('to_file', True)
-            )
 
         def can_drop_on(self, node):
             return isinstance(node, tuple(self.addable_types().values()))
@@ -200,12 +195,26 @@ def Root(default_name, valid_types):
     return Root
 
 
-def attr_uuid(*args, **kwargs):
+def convert_uuid(x):
+    if x is None or isinstance(x, uuid.UUID):
+        return x
+
+    return uuid.UUID(x)
+
+
+def attr_uuid(metadata=None):
+    if metadata is None:
+        metadata = {}
+
     return attr.ib(
         default=None,
-        convert=lambda x: x if x is None else uuid.UUID(x),
-        *args,
-        **kwargs
+        convert=convert_uuid,
+        metadata={
+            **metadata,
+            **graham.create_metadata(
+                field=marshmallow.fields.UUID(),
+            ),
+        },
     )
 
 
@@ -245,51 +254,6 @@ def ignored_attribute_filter(attribute):
     return not attribute.metadata.get('ignore', False)
 
 
-class Decoder(json.JSONDecoder):
-    types = ()
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(object_hook=self.object_hook,
-                         parse_float=decimal.Decimal,
-                         parse_int=decimal.Decimal,
-                         *args,
-                         **kwargs)
-
-    def object_hook(self, obj):
-        obj_type = obj.get('type', None)
-
-        if isinstance(obj, list):
-            return obj
-
-        for t in self.types:
-            if obj_type == attr.fields(t).type.default:
-                obj.pop('type')
-                return t.from_json(obj)
-
-        raise Exception('Unexpected object found: {}'.format(obj))
-
-
-class Encoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, list):
-            return obj
-
-        elif type(obj) == epyqlib.treenode.TreeNode:
-            if obj.tree_parent is None:
-                return [self.default(c) for c in obj.children]
-
-        if isinstance(obj, decimal.Decimal):
-            i = int(obj)
-            if i == obj:
-                d = i
-            else:
-                d = float(obj)
-        elif isinstance(obj, uuid.UUID):
-            d = str(obj)
-        else:
-            d = obj.to_json()
-
-        return d
 
 
 def check_uuids(*roots):
@@ -349,26 +313,6 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             internal_nodes=True,
         )
 
-    @classmethod
-    def from_json_string(cls, s, columns, types,
-                         decoder=Decoder):
-        # Ugly but maintains the name 'types' both for the parameter
-        # and in D.
-        t = types
-        del types
-
-        class D(Decoder):
-            types = t
-
-        root = json.loads(s, cls=D)
-
-        return cls(
-            root=root,
-            columns=columns
-        )
-
-    def to_json_string(self):
-        return json.dumps(self.root, cls=Encoder, indent=4)
 
     def add_drop_sources(self, *sources):
         self.droppable_from.update(sources)
@@ -621,3 +565,8 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             new_parent.name, row, can_drop))
 
         return can_drop
+
+
+class Reference(marshmallow.fields.UUID):
+    def _serialize(self, value, attr, obj):
+        return super()._serialize(value.uuid, attr, obj)

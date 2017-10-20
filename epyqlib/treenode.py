@@ -15,16 +15,29 @@ class Signals(PyQt5.QtCore.QObject):
 
 
 class TreeNode:
-    def __init__(self,  tx=False, parent=None):
+    def __init__(self, tx=False, parent=None, children=None):
         self.last = None
 
         self.tx = tx
 
         self.tree_parent = None
         self.set_parent(parent)
-        self.children = []
 
         self.pyqt_signals = Signals()
+
+        # TODO: this isn't a good way to handle predefined children
+        #       in an inherited class
+        if children is None:
+            if hasattr(self, 'children'):
+                children = self.children
+
+        if children is None:
+                self.children = []
+        else:
+            children = self.children
+            self.children = []
+            for child in children:
+                self.append_child(child)
 
     def set_parent(self, parent):
         self.tree_parent = parent

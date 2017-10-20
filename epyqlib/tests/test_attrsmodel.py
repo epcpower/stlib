@@ -1,6 +1,7 @@
 import inspect
 
 import attr
+import graham
 import PyQt5.QtCore
 import PyQt5.QtWidgets
 import pytest
@@ -17,6 +18,7 @@ __copyright__ = 'Copyright 2017, EPC Power Corp.'
 __license__ = 'GPLv2+'
 
 
+@graham.schemify('parameter')
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Parameter(epyqlib.treenode.TreeNode):
@@ -29,6 +31,7 @@ class Parameter(epyqlib.treenode.TreeNode):
         super().__init__()
 
 
+@graham.schemify('group')
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Group(epyqlib.treenode.TreeNode):
@@ -399,6 +402,7 @@ def test_prepopulated_connections(qtbot):
 
 
 def test_with_pyqtpropertys(qtbot):
+    @graham.schemify('parameter')
     @epyqlib.utils.qt.pyqtify(
         property_decorator=lambda: PyQt5.QtCore.pyqtProperty('PyQt_PyObject'),
     )
@@ -480,7 +484,7 @@ def test_children_property_retained():
     @epyqlib.utils.qt.pyqtify()
     @attr.s(hash=False)
     class N(epyqlib.treenode.TreeNode):
-        children = attr.ib(default='test_parameter', init=False)
+        children = attr.ib(default=attr.Factory(list), init=False)
 
         def __attrs_post_init__(self):
             super().__init__()
@@ -518,6 +522,7 @@ def test_children_changed_signals():
     assert removed_items == [(group, parameter, 0)]
 
 
+@graham.schemify('pass_through')
 @epyqlib.utils.qt.pyqtify()
 @epyqlib.utils.qt.pyqtify_passthrough_properties(
     original='original',
@@ -525,8 +530,12 @@ def test_children_changed_signals():
 )
 @attr.s(hash=False)
 class PassThrough(epyqlib.treenode.TreeNode):
-    original = attr.ib()
-    value = attr.ib()
+    original = attr.ib(
+        metadata=graham.create_metadata(
+            field=epyqlib.attrsmodel.Reference(),
+        ),
+    )
+    value = attr.ib(default=None)
     uuid = epyqlib.attrsmodel.attr_uuid()
 
     def __attrs_post_init__(self):
