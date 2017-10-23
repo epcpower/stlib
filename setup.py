@@ -23,6 +23,7 @@ setup(
     },
     install_requires=[
         'gitpython',
+        'graham',
         'PyQt5',
         'click',
         'python-docx',
