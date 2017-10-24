@@ -185,13 +185,13 @@ class BusProxy(QObject):
             self.went_offline.emit()
 
         if isinstance(self.bus, can.BusABC):
-            self.notifier.moveToThread(None)
-            self.tx_notifier.moveToThread(None)
+            self.notifier.message_received_signal.moveToThread(None)
+            self.tx_notifier.message_received_signal.moveToThread(None)
         else:
             app = QApplication.instance()
             if app is not None:
-                self.notifier.moveToThread(app.thread())
-                self.tx_notifier.moveToThread(app.thread())
+                self.notifier.message_received_signal.moveToThread(app.thread())
+                self.tx_notifier.message_received_signal.moveToThread(app.thread())
 
     def reset(self):
         if self.bus is not None:

@@ -7,10 +7,12 @@ import itertools
 import locale
 import logging
 import math
-from PyQt5.QtCore import (QObject, pyqtSignal, pyqtSlot, QTimer, Qt)
+from PyQt5.QtCore import (QObject, pyqtSignal, QTimer, Qt)
 import re
 import struct
 import sys
+
+import epyqlib.utils.qt
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -145,13 +147,10 @@ def signals_to_bytes(length, signals, data):
     )
 
 
-class Signal(QObject):
-    # TODO: but some (progress bar, etc) require an int!
-    value_changed = pyqtSignal(float)
-
+class Signal:
     def __init__(self, signal, frame, connect=None, parent=None):
-        # TODO: what about QObject parameters
-        QObject.__init__(self, parent=parent)
+        # TODO: but some (progress bar, etc) require an int!
+        self.value_changed = epyqlib.utils.qt.signal_proxy(float)
 
         # self._attributes = signal._attributes # {dict} {'GenSigStartValue': '0.0', 'LongName': 'Enable'}
         try:
@@ -450,12 +449,10 @@ def locale_format(format, value):
     return locale.format(format, value, grouping=True)
 
 
-class QtCanListener(QObject, can.Listener):
-    message_received_signal = pyqtSignal(can.Message)
-
+class QtCanListener(can.Listener):
     def __init__(self, receiver=None, parent=None):
-        QObject.__init__(self, parent=parent)
         can.Listener.__init__(self)
+        self.message_received_signal = epyqlib.utils.qt.signal_proxy(can.Message)
 
         if receiver is not None:
             self.receiver(receiver)
@@ -477,12 +474,11 @@ class QtCanListener(QObject, can.Listener):
 
 
 class Frame(QtCanListener):
-    send = pyqtSignal(can.Message, 'PyQt_PyObject')
-
     def __init__(self, frame, multiplex_value=None,
                  signal_class=Signal, set_value_to_default=True,
                  mux_frame=None, strip_summary=True, parent=None):
         QtCanListener.__init__(self, self.message_received, parent=parent)
+        self.send = epyqlib.utils.qt.signal_proxy(can.Message, 'PyQt_PyObject')
 
         self.mux_frame = mux_frame
 
@@ -609,7 +605,6 @@ class Frame(QtCanListener):
             for s, v in zip(self.signals, unpacked):
                 s.set_value(v)
 
-    @pyqtSlot()
     def _send(self, update=False):
         if update:
             self.data = self.pack(self)
@@ -661,7 +656,6 @@ class Frame(QtCanListener):
                            dlc=self.size,
                            data=data)
 
-    @pyqtSlot(can.Message)
     def message_received(self, msg):
         if (msg.arbitration_id == self.id and
                 bool(msg.id_type) == self.extended):
@@ -895,7 +889,6 @@ class Neo(QtCanListener):
 
         return (frame, multiplex_value)
 
-    @pyqtSlot(can.Message)
     def message_received(self, msg):
         frame = self.frame_by_id(msg.arbitration_id)
         if frame is not None:

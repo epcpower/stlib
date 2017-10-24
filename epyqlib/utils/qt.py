@@ -925,3 +925,44 @@ def setup_sigint():
     timer.timeout.connect(lambda: None)
 
     return timer
+
+
+class _SignalProxy(QtCore.QObject):
+    def connect(self, *args, **kwargs):
+        self.signal.connect(*args, **kwargs)
+
+    def disconnect(self, *args, **kwargs):
+        self.signal.connect(*args, **kwargs)
+
+    def emit(self, *args, **kwargs):
+        self.signal.emit(*args, **kwargs)
+
+    # def moveToThread(self, *args, **kwargs):
+    #     self.signal.moveToThread(*args, **kwargs)
+
+# import weakref
+# class _SignalProxy(QtCore.QObject):
+#     def __init__(self, *args, **kwargs):
+#         super().__init__()
+#         self.values = weakref.WeakKeyDictionary()
+#
+#         self.args = args
+#         self.kwargs = kwargs
+#
+#     def __get__(self, instance, owner):
+#         # print('in __get__()')
+#
+#         if instance is None:
+#             return self
+#
+#         return self.values.setdefault(
+#             instance,
+#             QtCore.pyqtSignal(*self.args, **self.kwargs),
+#         )
+
+
+def signal_proxy(*types):
+    class SignalProxy(_SignalProxy):
+        signal = QtCore.pyqtSignal(*types)
+
+    return SignalProxy()

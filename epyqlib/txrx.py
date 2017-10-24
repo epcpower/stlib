@@ -4,8 +4,7 @@ import epyqlib.pyqabstractitemmodel
 from epyqlib.abstractcolumns import AbstractColumns
 import epyqlib.canneo
 from epyqlib.treenode import TreeNode
-from PyQt5.QtCore import (Qt, QVariant, QModelIndex, pyqtSignal, pyqtSlot,
-                          QTimer)
+from PyQt5.QtCore import (Qt, QVariant, QModelIndex, pyqtSignal, QTimer)
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -184,7 +183,6 @@ class MessageNode(epyqlib.canneo.Frame, TreeNode):
                 self, Columns.indexes.count,
                 [Qt.DisplayRole])
 
-    @pyqtSlot(can.Message)
     def message_received(self, msg):
         super().message_received(msg=msg)
 
@@ -204,14 +202,24 @@ class MessageNode(epyqlib.canneo.Frame, TreeNode):
 
 
 class TxRx(TreeNode, epyqlib.canneo.QtCanListener):
-    # TODO: just Rx?
-    changed = pyqtSignal(TreeNode, int, TreeNode, int, list)
-    begin_insert_rows = pyqtSignal(TreeNode, int, int)
-    end_insert_rows = pyqtSignal()
-
     def __init__(self, tx, neo=None, bus=None, parent=None):
         TreeNode.__init__(self)
         epyqlib.canneo.QtCanListener.__init__(self, parent=parent)
+
+        # TODO: just Rx?
+        self.changed = epyqlib.utils.qt.signal_proxy(
+            TreeNode,
+            int,
+            TreeNode,
+            int,
+            list,
+        )
+        self.begin_insert_rows = epyqlib.utils.qt.signal_proxy(
+            TreeNode,
+            int,
+            int,
+        )
+        self.end_insert_rows = epyqlib.utils.qt.signal_proxy()
 
         self.bus = bus
 
@@ -309,7 +317,6 @@ class TxRx(TreeNode, epyqlib.canneo.QtCanListener):
                 message.id_type,
                 multiplex_value)
 
-    @pyqtSlot(can.Message)
     def message_received(self, msg):
         id = self.generate_id(message=msg)
 
@@ -334,7 +341,6 @@ class TxRx(TreeNode, epyqlib.canneo.QtCanListener):
         #         child, Columns.indexes.value,
         #         [Qt.DisplayRole])
 
-    @pyqtSlot(can.Message)
     def message_sent(self, message):
         id = self.generate_id(message=message)
 
@@ -357,7 +363,6 @@ class TxRx(TreeNode, epyqlib.canneo.QtCanListener):
         # TODO: actually identify the object
         return '-'
 
-    @pyqtSlot(can.Message, 'PyQt_PyObject')
     def send(self, message, on_success=None):
         self.bus.send(message, on_success=on_success)
 

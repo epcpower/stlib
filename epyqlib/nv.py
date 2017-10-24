@@ -76,14 +76,20 @@ class Group(TreeNode):
 
 
 class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
-    changed = pyqtSignal(TreeNode, int, TreeNode, int, list)
-    activity_started = pyqtSignal(str)
-    activity_ended = pyqtSignal(str)
-
     def __init__(self, neo, bus, stop_cyclic=None, start_cyclic=None,
                  configuration=None, hierarchy=None, parent=None):
         TreeNode.__init__(self)
         epyqlib.canneo.QtCanListener.__init__(self, parent=parent)
+
+        self.changed = epyqlib.utils.qt.signal_proxy(
+            TreeNode,
+            int,
+            TreeNode,
+            int,
+            list,
+        )
+        self.activity_started = epyqlib.utils.qt.signal_proxy(str)
+        self.activity_ended = epyqlib.utils.qt.signal_proxy(str)
 
         if configuration is None:
             configuration = 'original'
@@ -195,7 +201,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 if nv.name not in [self.configuration.to_nv_command]:
                     self.nv_by_path[nv.signal_path()] = nv
                     frame.parameter_signals.append(nv)
-                    nv.changed.connect(self.changed)
+                    nv.changed.connect(self.changed.signal)
 
                 nv.frame.status_frame = self.status_frames[value]
                 self.status_frames[value].set_frame = nv.frame
@@ -406,7 +412,6 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
         return d
 
-    @pyqtSlot(can.Message)
     def message_received(self, msg):
         if (msg.arbitration_id == self.status_frames[0].id
                 and msg.id_type == self.status_frames[0].extended):
@@ -534,12 +539,18 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
 
 class Nv(epyqlib.canneo.Signal, TreeNode):
-    changed = pyqtSignal(TreeNode, int, TreeNode, int, list)
-
     def __init__(self, signal, frame, parent=None):
         epyqlib.canneo.Signal.__init__(self, signal=signal, frame=frame,
                                     parent=parent)
         TreeNode.__init__(self)
+
+        self.changed = epyqlib.utils.qt.signal_proxy(
+            TreeNode,
+            int,
+            TreeNode,
+            int,
+            list,
+        )
 
         default = self.default_value
         if default is None:
@@ -649,8 +660,6 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
 
 
 class Frame(epyqlib.canneo.Frame, TreeNode):
-    _send = pyqtSignal(tuple)
-
     def __init__(self, message=None, tx=False, frame=None,
                  multiplex_value=None, signal_class=Nv, mux_frame=None,
                  parent=None, **kwargs):
@@ -662,6 +671,8 @@ class Frame(epyqlib.canneo.Frame, TreeNode):
                                    parent=parent,
                                    **kwargs)
         TreeNode.__init__(self, parent)
+
+        self._send = epyqlib.utils.qt.signal_proxy(tuple)
 
         for signal in self.signals:
             if signal.name in ("ReadParam_command", "ReadParam_status"):
