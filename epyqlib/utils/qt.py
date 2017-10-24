@@ -947,17 +947,15 @@ class Signal:
             d = {}
             setattr(instance, self.attribute_name, d)
 
-        key = (self.object_cls, instance)
-        o = d.get(key)
+        o = d.get(self.object_cls)
         if o is None:
             o = self.object_cls()
-            d[key] = o
+            d[self.object_cls] = o
 
         return o.signal
 
     def object(self, instance):
-        key = (self.object_cls, instance)
-        return getattr(instance, self.attribute_name)[key]
+        return getattr(instance, self.attribute_name)[self.object_cls]
 
 
 Signal.attribute_name = '__' + '_'.join(
