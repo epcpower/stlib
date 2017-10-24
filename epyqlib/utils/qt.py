@@ -6,6 +6,7 @@ import sys
 import textwrap
 import time
 import traceback
+import weakref
 
 import epyqlib.utils.general
 
@@ -927,42 +928,38 @@ def setup_sigint():
     return timer
 
 
-class _SignalProxy(QtCore.QObject):
-    def connect(self, *args, **kwargs):
-        self.signal.connect(*args, **kwargs)
+class Signal:
+    attribute_name = None
 
-    def disconnect(self, *args, **kwargs):
-        self.signal.connect(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        class _SignalQObject(QtCore.QObject):
+            signal = QtCore.pyqtSignal(*args, **kwargs)
 
-    def emit(self, *args, **kwargs):
-        self.signal.emit(*args, **kwargs)
+        self.object_cls = _SignalQObject
 
-    # def moveToThread(self, *args, **kwargs):
-    #     self.signal.moveToThread(*args, **kwargs)
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
 
-# import weakref
-# class _SignalProxy(QtCore.QObject):
-#     def __init__(self, *args, **kwargs):
-#         super().__init__()
-#         self.values = weakref.WeakKeyDictionary()
-#
-#         self.args = args
-#         self.kwargs = kwargs
-#
-#     def __get__(self, instance, owner):
-#         # print('in __get__()')
-#
-#         if instance is None:
-#             return self
-#
-#         return self.values.setdefault(
-#             instance,
-#             QtCore.pyqtSignal(*self.args, **self.kwargs),
-#         )
+        d = getattr(instance, self.attribute_name, None)
+
+        if d is None:
+            d = {}
+            setattr(instance, self.attribute_name, d)
+
+        key = (self.object_cls, instance)
+        o = d.get(key)
+        if o is None:
+            o = self.object_cls()
+            d[key] = o
+
+        return o.signal
+
+    def move_to_thread(self, instance, thread):
+        key = (self.object_cls, instance)
+        getattr(instance, self.attribute_name)[key].moveToThread(thread)
 
 
-def signal_proxy(*types):
-    class SignalProxy(_SignalProxy):
-        signal = QtCore.pyqtSignal(*types)
-
-    return SignalProxy()
+Signal.attribute_name = '__' + '_'.join(
+    Signal.__module__.split('.') + [Signal.__qualname__]
+)

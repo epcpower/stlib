@@ -202,24 +202,24 @@ class MessageNode(epyqlib.canneo.Frame, TreeNode):
 
 
 class TxRx(TreeNode, epyqlib.canneo.QtCanListener):
+    # TODO: just Rx?
+    changed = epyqlib.utils.qt.Signal(
+        TreeNode,
+        int,
+        TreeNode,
+        int,
+        list,
+    )
+    begin_insert_rows = epyqlib.utils.qt.Signal(
+        TreeNode,
+        int,
+        int,
+    )
+    end_insert_rows = epyqlib.utils.qt.Signal()
+
     def __init__(self, tx, neo=None, bus=None, parent=None):
         TreeNode.__init__(self)
         epyqlib.canneo.QtCanListener.__init__(self, parent=parent)
-
-        # TODO: just Rx?
-        self.changed = epyqlib.utils.qt.signal_proxy(
-            TreeNode,
-            int,
-            TreeNode,
-            int,
-            list,
-        )
-        self.begin_insert_rows = epyqlib.utils.qt.signal_proxy(
-            TreeNode,
-            int,
-            int,
-        )
-        self.end_insert_rows = epyqlib.utils.qt.signal_proxy()
 
         self.bus = bus
 

@@ -148,10 +148,10 @@ def signals_to_bytes(length, signals, data):
 
 
 class Signal:
-    def __init__(self, signal, frame, connect=None, parent=None):
-        # TODO: but some (progress bar, etc) require an int!
-        self.value_changed = epyqlib.utils.qt.signal_proxy(float)
+    # TODO: but some (progress bar, etc) require an int!
+    value_changed = epyqlib.utils.qt.Signal(float)
 
+    def __init__(self, signal, frame, connect=None, parent=None):
         # self._attributes = signal._attributes # {dict} {'GenSigStartValue': '0.0', 'LongName': 'Enable'}
         try:
             self.default_value = signal._attributes['GenSigStartValue']
@@ -450,9 +450,10 @@ def locale_format(format, value):
 
 
 class QtCanListener(can.Listener):
+    message_received_signal = epyqlib.utils.qt.Signal(can.Message)
+
     def __init__(self, receiver=None, parent=None):
         can.Listener.__init__(self)
-        self.message_received_signal = epyqlib.utils.qt.signal_proxy(can.Message)
 
         if receiver is not None:
             self.receiver(receiver)
@@ -472,13 +473,17 @@ class QtCanListener(can.Listener):
 
         self.message_received_signal.emit(msg)
 
+    def move_to_thread(self, thread):
+        type(self).message_received_signal.move_to_thread(self, thread)
+
 
 class Frame(QtCanListener):
+    send = epyqlib.utils.qt.Signal(can.Message, 'PyQt_PyObject')
+
     def __init__(self, frame, multiplex_value=None,
                  signal_class=Signal, set_value_to_default=True,
                  mux_frame=None, strip_summary=True, parent=None):
         QtCanListener.__init__(self, self.message_received, parent=parent)
-        self.send = epyqlib.utils.qt.signal_proxy(can.Message, 'PyQt_PyObject')
 
         self.mux_frame = mux_frame
 
