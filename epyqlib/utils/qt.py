@@ -955,9 +955,9 @@ class Signal:
 
         return o.signal
 
-    def move_to_thread(self, instance, thread):
+    def object(self, instance):
         key = (self.object_cls, instance)
-        getattr(instance, self.attribute_name)[key].moveToThread(thread)
+        return getattr(instance, self.attribute_name)[key]
 
 
 Signal.attribute_name = '__' + '_'.join(

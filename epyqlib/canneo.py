@@ -474,7 +474,7 @@ class QtCanListener(can.Listener):
         self.message_received_signal.emit(msg)
 
     def move_to_thread(self, thread):
-        type(self).message_received_signal.move_to_thread(self, thread)
+        type(self).message_received_signal.object(self).moveToThread(thread)
 
 
 class Frame(QtCanListener):
