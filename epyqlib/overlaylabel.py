@@ -8,7 +8,7 @@ import io
 import os
 import weakref
 from PyQt5 import QtWidgets, uic
-from PyQt5.QtCore import (pyqtProperty, pyqtSignal, pyqtSlot, Qt, QFile,
+from PyQt5.QtCore import (pyqtProperty, pyqtSlot, Qt, QFile,
                           QFileInfo, QTextStream)
 from PyQt5.QtGui import QFontMetrics
 

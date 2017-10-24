@@ -7,7 +7,7 @@ import itertools
 import locale
 import logging
 import math
-from PyQt5.QtCore import (QObject, pyqtSignal, QTimer, Qt)
+from PyQt5.QtCore import (QObject, QTimer, Qt)
 import re
 import struct
 import sys

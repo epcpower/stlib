@@ -8,21 +8,19 @@ import logging
 import time
 
 from epyqlib.canneo import QtCanListener
+import epyqlib.utils.qt
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QObject, pyqtSignal
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
 __license__ = 'GPLv2+'
 
 
-class BusProxy(QObject):
-    went_offline = pyqtSignal()
+class BusProxy:
+    went_offline = epyqlib.utils.qt.Signal()
 
     def __init__(self, bus=None, timeout=0.1, transmit=True, filters=None,
-                 auto_disconnect=True, parent=None):
-        QObject.__init__(self, parent=parent)
-
+                 auto_disconnect=True):
         self.filters = filters
         self.auto_disconnect = auto_disconnect
 
