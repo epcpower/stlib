@@ -206,7 +206,7 @@ def convert_uuid(x):
     return uuid.UUID(x)
 
 
-def attr_uuid(metadata=None):
+def attr_uuid(metadata=None, **field_options):
     if metadata is None:
         metadata = {}
 
@@ -216,7 +216,7 @@ def attr_uuid(metadata=None):
         metadata={
             **metadata,
             **graham.create_metadata(
-                field=marshmallow.fields.UUID(),
+                field=marshmallow.fields.UUID(**field_options),
             ),
         },
     )
