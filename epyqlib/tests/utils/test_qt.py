@@ -265,3 +265,33 @@ def test_attrs_no_recurse_in_init():
     p = Parent()
 
     assert p.child == Child()
+
+
+def test_signal_independence():
+    class C:
+        a = epyqlib.utils.qt.Signal(int)
+        b = epyqlib.utils.qt.Signal(int)
+
+    value_checkers = {
+        'a': epyqlib.tests.common.Values(
+            initial=None,
+            input=[1, 2, 3],
+            expected=[1, 2, 3],
+        ),
+        'b': epyqlib.tests.common.Values(
+            initial=None,
+            input=[10, 20, 30],
+            expected=[10, 20, 30],
+        ),
+    }
+
+    c = C()
+    for name, checker in value_checkers.items():
+        getattr(c, name).connect(checker.collect)
+
+    for name, checker in value_checkers.items():
+        for value in checker.input:
+            getattr(c, name).emit(value)
+
+    for name, checker in value_checkers.items():
+        assert tuple(checker.expected) == tuple(checker.collected)
