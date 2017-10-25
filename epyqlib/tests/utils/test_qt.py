@@ -295,3 +295,59 @@ def test_signal_independence():
 
     for name, checker in value_checkers.items():
         assert tuple(checker.expected) == tuple(checker.collected)
+
+
+def test_signal_chaining():
+    class C:
+        a = epyqlib.utils.qt.Signal(int)
+        b = epyqlib.utils.qt.Signal(int)
+
+    input = [1, 2, 3]
+
+    value_checkers = {
+        'a': epyqlib.tests.common.Values(
+            initial=None,
+            input=input,
+            expected=input,
+        ),
+        'b': epyqlib.tests.common.Values(
+            initial=None,
+            input=None,
+            expected=input,
+        ),
+    }
+
+    c = C()
+    c.a.connect(c.b)
+
+    for name, checker in value_checkers.items():
+        getattr(c, name).connect(checker.collect)
+
+    for value in value_checkers['a'].input:
+        c.a.emit(value)
+
+    for name, checker in value_checkers.items():
+        assert tuple(checker.expected) == tuple(checker.collected)
+
+
+# def test_signal_repr():
+#     class C:
+#         signal = epyqlib.utils.qt.Signal()
+#
+#     c = C()
+#
+#     expected = (
+#         '<bound PYQT_SIGNAL signal of _SignalQObject object at 0x'
+#         ' of C object at 0x'
+#     )
+#
+#     actual = repr(c.signal)
+#     print(actual)
+#     actual = actual.split()
+#
+#     for index in (-1, -6):
+#         actual[index] = actual[index][:2]
+#
+#     actual = ' '.join(actual)
+#
+#     assert actual == expected

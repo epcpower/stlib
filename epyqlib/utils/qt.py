@@ -928,6 +928,38 @@ def setup_sigint():
     return timer
 
 
+# class SignalWrapper(PyQt5.QtCore.pyqtBoundSignal):
+#     def __init__(self, owner, wrapped):
+#         self.wrapped = wrapped
+#         self.owner = owner
+#
+#     def __getattribute__(self, item):
+#         if item == '__repr__':
+#             return super().__getattribute__(item)
+#
+#         wrapped = super().__getattribute__('wrapped')
+#         return getattr(wrapped, item)
+#
+#     def __repr__(self):
+#         owner = super().__getattribute__('owner')
+#         wrapped = super().__getattribute__('wrapped')
+#
+#         return '<{} of {}>'.format(
+#             repr(wrapped)[1:-1],
+#             repr(owner).rsplit('.', 1)[1][:-1],
+#         )
+#
+#
+# def signal_repr(self):
+#     owner = super().__getattribute__('owner')
+#     wrapped = super().__getattribute__('wrapped')
+#
+#     return '<{} of {}>'.format(
+#         repr(wrapped)[1:-1],
+#         repr(owner).rsplit('.', 1)[1][:-1],
+#     )
+
+
 class Signal:
     attribute_name = None
 
@@ -952,7 +984,10 @@ class Signal:
             o = self.object_cls()
             d[self.object_cls] = o
 
-        return o.signal
+        signal = o.signal
+        # signal.__repr__ = signal_repr
+        # return SignalWrapper(owner=instance, wrapped=o.signal)
+        return signal
 
     def object(self, instance):
         return getattr(instance, self.attribute_name)[self.object_cls]
