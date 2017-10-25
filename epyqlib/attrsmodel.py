@@ -206,12 +206,12 @@ def convert_uuid(x):
     return uuid.UUID(x)
 
 
-def attr_uuid(metadata=None, **field_options):
+def attr_uuid(metadata=None, default=attr.Factory(uuid.uuid4), **field_options):
     if metadata is None:
         metadata = {}
 
     return attr.ib(
-        default=None,
+        default=default,
         convert=convert_uuid,
         metadata={
             **metadata,
