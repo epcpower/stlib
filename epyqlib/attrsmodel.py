@@ -37,6 +37,10 @@ class ConsistencyError(Exception):
     pass
 
 
+class NotFoundError(Exception):
+    pass
+
+
 @attr.s
 class Columns:
     columns = attr.ib()
@@ -551,6 +555,9 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 payload=nodes,
                 internal_nodes=True
             )
+
+        if len(nodes) == 0:
+            raise NotFoundError('''UUID '{}' not found'''.format(u))
 
         [node] = nodes
 
