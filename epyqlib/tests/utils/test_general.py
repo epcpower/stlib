@@ -37,9 +37,27 @@ def test_cameled_to_spaced():
     assert result == expected
 
 
+def test_cameled_to_spaced_acronym():
+    name = 'ABCDefGhi'
+    expected = 'ABC Def Ghi'
+
+    result = epyqlib.utils.general.cameled_to_spaced(name)
+
+    assert result == expected
+
+
 def test_underscored_camel_to_title_spaced():
     name = 'abcDeFghIjk_lmnOp'
     expected = 'Abc De Fgh Ijk Lmn Op'
+
+    result = epyqlib.utils.general.underscored_camel_to_title_spaced(name)
+
+    assert result == expected
+
+
+def test_underscored_camel_to_title_spaced_acronym():
+    name = 'ABCDefGhi_lmn'
+    expected = 'ABC Def Ghi Lmn'
 
     result = epyqlib.utils.general.underscored_camel_to_title_spaced(name)
 

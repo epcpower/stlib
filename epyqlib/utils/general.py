@@ -280,7 +280,11 @@ def underscored_camel_to_upper_camel(name):
 def cameled_to_spaced(name):
     upper_indexes = itertools.chain(
         (0,),
-        (i for i, c in enumerate(name) if c.isupper()),
+        (
+            i
+            for i, (c, next_c) in enumerate(pairwise(name))
+            if c.isupper() and next_c.islower()
+        ),
         (len(name),),
     )
 
