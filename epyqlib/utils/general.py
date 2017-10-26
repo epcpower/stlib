@@ -250,8 +250,8 @@ class TypeMap:
     def __getitem__(self, item):
         return self.types[item]
 
-    def wrap(self, wrapped):
-        return self.types[type(wrapped)](wrapped=wrapped)
+    def wrap(self, wrapped, *args, **kwargs):
+        return self.types[type(wrapped)](wrapped=wrapped, *args, **kwargs)
 
 
 def spaced_to_camel(name, upper):
