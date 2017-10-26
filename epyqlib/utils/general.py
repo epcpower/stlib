@@ -267,3 +267,34 @@ def spaced_to_lower_camel(name):
 
 def spaced_to_upper_camel(name):
     return name[0].upper() + spaced_to_lower_camel(name[1:])
+
+
+def underscored_to_upper_camel(name):
+    return ''.join(w.title() for w in name.split('_'))
+
+
+def underscored_camel_to_upper_camel(name):
+    return ''.join(w[:1].upper() + w[1:] for w in name.split('_'))
+
+
+def cameled_to_spaced(name):
+    upper_indexes = itertools.chain(
+        (0,),
+        (i for i, c in enumerate(name) if c.isupper()),
+        (len(name),),
+    )
+
+    words = (
+        name[start:end]
+        for start, end in pairwise(upper_indexes)
+        if end > start
+    )
+
+    return ' '.join(words)
+
+
+def underscored_camel_to_title_spaced(name):
+    result = underscored_camel_to_upper_camel(name)
+    result = cameled_to_spaced(result)
+
+    return result
