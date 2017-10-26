@@ -254,19 +254,28 @@ class TypeMap:
         return self.types[type(wrapped)](wrapped=wrapped)
 
 
-def spaced_to_lower_camel(name):
+def spaced_to_camel(name, upper):
     segments = name.split(' ')
+
+    if not upper:
+        segments[0] = segments[0].lower()
+
     segments = itertools.chain(
-        segments[0].lower(),
+        segments[0],
         *(''.join(itertools.chain(
-            c[0].upper(), c[1:].lower(),
+            c[0].upper(), c[1:],
         )) for c in segments[1:]),
     )
+
     return ''.join(segments)
 
 
+def spaced_to_lower_camel(name):
+    return spaced_to_camel(name=name, upper=False)
+
+
 def spaced_to_upper_camel(name):
-    return name[0].upper() + spaced_to_lower_camel(name[1:])
+    return spaced_to_camel(name=name, upper=True)
 
 
 def underscored_to_upper_camel(name):

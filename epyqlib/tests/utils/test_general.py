@@ -10,6 +10,24 @@ def test_container():
     assert c.b == 2
 
 
+def test_spaced_to_lower_camel():
+    name = 'ABC Def ghi LM1'
+    expected = 'abcDefGhiLM1'
+
+    result = epyqlib.utils.general.spaced_to_lower_camel(name)
+
+    assert result == expected
+
+
+def test_spaced_to_upper_camel():
+    name = 'ABC Def ghi LM1'
+    expected = 'ABCDefGhiLM1'
+
+    result = epyqlib.utils.general.spaced_to_upper_camel(name)
+
+    assert result == expected
+
+
 def test_underscored_to_upper_camel():
     name = 'abc_de_fgh_IJK'
     expected = 'AbcDeFghIjk'
