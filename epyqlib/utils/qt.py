@@ -62,10 +62,11 @@ def exception_message_box(excType=None, excValue=None, tracebackobj=None):
     custom_exception_message_box(
         brief=brief,
         extended=extended,
+        stderr=False,
     )
 
 
-def custom_exception_message_box(brief, extended=''):
+def custom_exception_message_box(brief, extended='', **kwargs):
     email = "kyle.altendorf@epcpower.com"
 
     brief = textwrap.dedent('''\
@@ -77,7 +78,7 @@ def custom_exception_message_box(brief, extended=''):
         brief=brief,
     )
 
-    raw_exception_message_box(brief=brief, extended=extended)
+    raw_exception_message_box(brief=brief, extended=extended, **kwargs)
 
 
 def raw_exception_message_box(brief, extended, stderr=True):
