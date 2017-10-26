@@ -35,6 +35,16 @@ symbol_files = {
     for k, v in symbol_files.items()
 }
 
+hierarchy_files = {
+    'customer': os.path.join('customer', 'EPC_DG_ID247.parameters.json'),
+    'factory': os.path.join('factory', 'EPC_DG_ID247_FACTORY.parameters.json'),
+}
+
+hierarchy_files = {
+    k: os.path.normpath(os.path.join(device_path, v))
+    for k, v in hierarchy_files.items()
+}
+
 
 @attr.s
 class Values:
