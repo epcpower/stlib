@@ -250,6 +250,21 @@ def to_str_or_none(s):
     return str(s)
 
 
+def to_int_or_none(s):
+    if s is None:
+        return None
+
+    if isinstance(s, str) and len(s) == 0:
+        return None
+
+    try:
+        result = int(s)
+    except ValueError as e:
+        raise ValueError('Invalid number: {}'.format(repr(s))) from e
+
+    return result
+
+
 def two_state_checkbox(v):
     return v in (QtCore.Qt.Checked, True)
 
