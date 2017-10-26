@@ -278,19 +278,23 @@ def underscored_camel_to_upper_camel(name):
 
 
 def cameled_to_spaced(name):
-    upper_indexes = itertools.chain(
-        (0,),
-        (
+    word_indexes = sorted(
+        (0, len(name))
+        + tuple(
             i
             for i, (c, next_c) in enumerate(pairwise(name))
             if c.isupper() and next_c.islower()
-        ),
-        (len(name),),
+        )
+        + tuple(
+            i + 1
+            for i, (prev_c, c) in enumerate(pairwise(name))
+            if not prev_c.isupper() and c.isupper()
+        )
     )
 
     words = (
         name[start:end]
-        for start, end in pairwise(upper_indexes)
+        for start, end in pairwise(word_indexes)
         if end > start
     )
 
