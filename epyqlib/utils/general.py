@@ -261,9 +261,9 @@ def spaced_to_camel(name, upper):
         segments[0] = segments[0].lower()
 
     segments = itertools.chain(
-        segments[0],
+        segments[:1],
         *(''.join(itertools.chain(
-            c[0].upper(), c[1:],
+            c[:1].upper(), c[1:],
         )) for c in segments[1:]),
     )
 
