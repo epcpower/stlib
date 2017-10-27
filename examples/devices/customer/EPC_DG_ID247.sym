@@ -2,17 +2,6 @@ FormatVersion=5.0 // Do not edit this line!
 Title="EPC_DG_ID247"
 
 {ENUMS}
-enum State(0="Power On Reset", 1="Ready", 2="Following", 3="Fault", 
-  4="Forming", 5="Reconnect Delay", 6="N/A", 7="Area EPS Lost", 8="Charging", 
-  9="N/A", 10="N/A", 11="N/A", 12="N/A", 13="N/A", 14="N/A", 15="N/A")
-enum Relay(0="Open", 1="Closed", 2="Error", 3="N/A")
-enum PowerAvail(0="None", 1="Available", 2="Error", 3="N/A")
-enum IGBTsEnabled(0="Disabled", 1="Enabled", 2="Error", 3="N/A")
-enum WakeUpSignal(0="Not Active", 1="Active", 2="Error", 3="N/A")
-enum Enable(0="Disable", 1="Enable", 2="Error", 3="N/A")
-enum MessageValid(0="Invalid", 1="Valid", 2="Error", 3="N/A")
-enum FaultClear(0="Normal", 1="Clear Faults", 2="Error", 3="N/A")
-enum WarningClear(0="Normal", 1="Clear Warnings", 2="Error", 3="N/A")
 enum Baudrate(0="125K", 1="250K", 2="500K", 3="1M")
 enum BridgeFlt(0="Normal", 1="FLT_A", 2="N/A", 3="FLT_C", 4="OverVoltage", 
   5="FLT_B", 6="Overcurrent", 7="5V")
@@ -21,28 +10,39 @@ enum ControlSource(0="CAN", 1="Modbus")
 enum DIOInverted(0="Normal", 1="Inverted", 2="Error", 3="N/A")
 // Control digital outputs from CAN interface
 enum DOController(0="Application", 1="CAN")
+enum DcLegType(0="Voltage Control", 1="Current Control", 2="MPPT", 4="Disabled")
+enum Enable(0="Disable", 1="Enable", 2="Error", 3="N/A")
 enum EnableSplitPhase(0="Normal - Three Phase Mode", 
   1="Enable Split Phase Mode", 2="Error", 3="N/A")
 enum EnableUPSMode(0="Disable", 1="Enable", 2="Error", 3="N/A")
 enum FANTYPE(0="variable speed", 1="on/off")
 enum Fault(0="Normal", 1="Fault Active", 2="Error", 3="N/A")
+enum FaultClear(0="Normal", 1="Clear Faults", 2="Error", 3="N/A")
 enum FaultConfig(0="Warning", 1="Fault", 2="Disabled", 3="N/A")
+enum IGBTsEnabled(0="Disabled", 1="Enabled", 2="Error", 3="N/A")
 enum InvertHwEnable(0="No invert", 1="Invert", 2="Error", 3="N/A")
 enum LVMTYPE(0="Line-Line", 1="Line-Neutral", 2="Error", 3="N/A")
 enum LineVoltagePresent(0="No_Voltage", 1="Voltage_Detected", 2="Error", 
   3="N/A")
+enum MessageValid(0="Invalid", 1="Valid", 2="Error", 3="N/A")
 enum OnOff(0="off", 1="on", 2="Error", 3="N/A")
 enum PhaseRotation(0="Negative", 1="Positive", 2="Error", 3="N/A")
+enum PowerAvail(0="None", 1="Available", 2="Error", 3="N/A")
 enum ReadNV(0="Write", 1="Read", 2="Error", 3="N/A")
+enum Relay(0="Open", 1="Closed", 2="Error", 3="N/A")
 enum RelayCommand(0="Normal", 1="Force On", 2="Error", 3="N/A")
 enum RemoteVoltageSense(0="Use Local Sense", 1="Use Remote Sense", 2="Error", 
   3="N/A")
 enum SerialBaud(0="115200", 1="57600", 2="38400", 3="19200", 4="9600", 
   5="4800", 6="2400")
 enum SerialProtocol(0="N81", 1="N82", 2="E81", 3="O81")
+enum State(0="Power On Reset", 1="Ready", 2="Following", 3="Fault", 
+  4="Forming", 5="Reconnect Delay", 6="N/A", 7="Area EPS Lost", 8="Charging", 
+  9="N/A", 10="N/A", 11="N/A", 12="N/A", 13="N/A", 14="N/A", 15="N/A")
 enum Status(0="Not Active", 1="Active", 2="Error", 3="N/A")
 enum WARNING(0="Normal", 1="Warning Active", 2="Error", 3="N/A")
-enum DcLegType(0="Voltage Control", 1="Current Control", 2="MPPT", 4="Disabled")
+enum WakeUpSignal(0="Not Active", 1="Active", 2="Error", 3="N/A")
+enum WarningClear(0="Normal", 1="Clear Warnings", 2="Error", 3="N/A")
 
 {SEND}
 
