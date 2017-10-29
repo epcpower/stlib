@@ -56,15 +56,13 @@ def attribute(*args, attribute, **kwargs):
 
 
 def data_processor(data_field, attribute_field):
-    f = str
-
     attributes = data_field.metadata.get(metadata_key)
     if attributes is not None:
         d = getattr(attributes, attribute_field.name)
         if d is not None:
-            f = d
+            return d
 
-    return f
+    return None
 
 
 @attr.s
@@ -400,12 +398,14 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         node = self.node_from_index(index)
 
         data = getattr(node, field.name)
-        data = data_processor(field, Attributes.data_display)(data)
+        processor = data_processor(field, Attributes.data_display)
+        if processor is not None:
+            return processor(data)
 
         if data is None:
             return replace_none
 
-        return data
+        return str(data)
 
     def data_edit(self, index):
         return self.data_display(index, replace_none='')
