@@ -42,6 +42,20 @@ class NotFoundError(Exception):
 
 
 @attr.s
+class Attributes:
+    data_display = attr.ib(default=None)
+
+
+metadata_key = object()
+
+
+def attribute(*args, attribute, **kwargs):
+    attribute.metadata[metadata_key] = Attributes(*args, **kwargs)
+
+    return attribute
+
+
+@attr.s
 class Columns:
     columns = attr.ib()
 
