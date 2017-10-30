@@ -315,3 +315,9 @@ def underscored_camel_to_title_spaced(name):
     result = cameled_to_spaced(result)
 
     return result
+
+
+def identifier_path(it):
+    return '__' + '_'.join(
+        it.__module__.split('.') + [it.__qualname__]
+    )

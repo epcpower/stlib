@@ -994,6 +994,4 @@ class Signal:
         return getattr(instance, self.attribute_name)[self.object_cls]
 
 
-Signal.attribute_name = '__' + '_'.join(
-    Signal.__module__.split('.') + [Signal.__qualname__]
-)
+Signal.attribute_name = epyqlib.utils.general.identifier_path(Signal)
