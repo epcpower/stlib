@@ -19,6 +19,7 @@ __license__ = 'GPLv2+'
 
 
 @graham.schemify('parameter')
+@epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Parameter(epyqlib.treenode.TreeNode):
@@ -32,6 +33,7 @@ class Parameter(epyqlib.treenode.TreeNode):
 
 
 @graham.schemify('group')
+@epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Group(epyqlib.treenode.TreeNode):
@@ -403,6 +405,7 @@ def test_prepopulated_connections(qtbot):
 
 def test_with_pyqtpropertys(qtbot):
     @graham.schemify('parameter')
+    @epyqlib.attrsmodel.ify()
     @epyqlib.utils.qt.pyqtify(
         property_decorator=lambda: PyQt5.QtCore.pyqtProperty('PyQt_PyObject'),
     )
@@ -481,6 +484,7 @@ def test_columns():
 
 
 def test_children_property_retained():
+    @epyqlib.attrsmodel.ify()
     @epyqlib.utils.qt.pyqtify()
     @attr.s(hash=False)
     class N(epyqlib.treenode.TreeNode):
@@ -523,6 +527,7 @@ def test_children_changed_signals():
 
 
 @graham.schemify('pass_through')
+@epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @epyqlib.utils.qt.pyqtify_passthrough_properties(
     original='original',

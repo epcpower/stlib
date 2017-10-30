@@ -42,11 +42,60 @@ class NotFoundError(Exception):
 
 
 @attr.s
-class Attributes:
+class Metadata:
     data_display = attr.ib(default=None)
 
 
 metadata_key = object()
+
+
+@attr.s
+class Attributes:
+    fields = attr.ib()
+
+
+def ify():
+    def inner(cls):
+        Fields = attr.s(type(
+            'Fields',
+            (),
+            collections.OrderedDict((
+                (field.name, attr.ib(default=attr.Factory(Metadata)))
+                for field in attr.fields(cls)
+            )),
+        ))
+
+        field_metadata = {}
+        for field in attr.fields(cls):
+            metadata = field.metadata.get(metadata_key)
+            if metadata is not None:
+                field_metadata[field.name] = metadata
+
+        setattr(
+            cls,
+            attribute_name,
+            Attributes(
+                fields=Fields(**field_metadata),
+            ),
+        )
+
+        return cls
+
+    return inner
+
+
+attribute_name = epyqlib.utils.general.identifier_path(Attributes)
+
+
+def attributes(cls):
+    return getattr(cls, attribute_name)
+
+
+def fields(cls):
+    return tuple(
+        getattr(attributes(cls).fields, field.name)
+        for field in attr.fields(cls)
+    )
 
 
 def attrib(*args, attribute, **kwargs):
@@ -54,19 +103,16 @@ def attrib(*args, attribute, **kwargs):
     if len(attribute.metadata) == 0:
         attribute.metadata = {}
 
-    attribute.metadata[metadata_key] = Attributes(*args, **kwargs)
+    attribute.metadata[metadata_key] = Metadata(*args, **kwargs)
 
     return attribute
 
 
-def data_processor(data_field, attribute_field):
-    attributes = data_field.metadata.get(metadata_key)
-    if attributes is not None:
-        d = getattr(attributes, attribute_field.name)
-        if d is not None:
-            return d
+def data_processor(cls, data_field, attribute_field):
+    metadata = getattr(attributes(cls).fields, data_field.name)
+    d = getattr(metadata, attribute_field.name)
 
-    return None
+    return d
 
 
 @attr.s
@@ -186,6 +232,7 @@ def add_addable_types(cls, attribute_name='children', types=None):
 
 def Root(default_name, valid_types):
     @graham.schemify(tag='root')
+    @epyqlib.attrsmodel.ify()
     @epyqlib.utils.qt.pyqtify()
     @attr.s(hash=False)
     class Root(epyqlib.treenode.TreeNode):
@@ -405,7 +452,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         node = self.node_from_index(index)
 
         data = getattr(node, field.name)
-        processor = data_processor(field, Attributes.data_display)
+        processor = data_processor(type(node), field, Metadata.data_display)
         if processor is not None:
             return processor(data)
 
