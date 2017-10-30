@@ -191,23 +191,25 @@ def Root(default_name, valid_types):
     class Root(epyqlib.treenode.TreeNode):
         name = attr.ib(
             default=default_name,
-            metadata=graham.create_metadata(
-                field=marshmallow.fields.String(),
-            ),
         )
+        graham.attrib(
+            attribute=name,
+            field=marshmallow.fields.String(),
+        )
+
         children = attr.ib(
             default=attr.Factory(list),
-            metadata={
-                **graham.create_metadata(
-                    field=graham.fields.MixedList(fields=(
-                        marshmallow.fields.Nested(graham.schema(type_))
-                        for type_ in valid_types
-                        # marshmallow.fields.Nested('Group'),
-                        # marshmallow.fields.Nested(graham.schema(Leaf)),
-                    )),
-                ),
-            },
         )
+        graham.attrib(
+            attribute=children,
+            field=graham.fields.MixedList(fields=(
+                marshmallow.fields.Nested(graham.schema(type_))
+                for type_ in valid_types
+                # marshmallow.fields.Nested('Group'),
+                # marshmallow.fields.Nested(graham.schema(Leaf)),
+            )),
+        )
+
         uuid = attr_uuid()
 
         def __attrs_post_init__(self):
@@ -238,16 +240,17 @@ def attr_uuid(metadata=None, default=attr.Factory(uuid.uuid4), **field_options):
     if metadata is None:
         metadata = {}
 
-    return attr.ib(
+    attribute = attr.ib(
         default=default,
         convert=convert_uuid,
-        metadata={
-            **metadata,
-            **graham.create_metadata(
-                field=marshmallow.fields.UUID(**field_options),
-            ),
-        },
+        metadata=metadata,
     )
+    graham.attrib(
+        attribute=attribute,
+        field=marshmallow.fields.UUID(**field_options),
+    )
+
+    return attribute
 
 
 def to_decimal_or_none(s):
