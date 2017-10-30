@@ -49,7 +49,11 @@ class Attributes:
 metadata_key = object()
 
 
-def attribute(*args, attribute, **kwargs):
+def attrib(*args, attribute, **kwargs):
+    # https://github.com/python-attrs/attrs/issues/278
+    if len(attribute.metadata) == 0:
+        attribute.metadata = {}
+
     attribute.metadata[metadata_key] = Attributes(*args, **kwargs)
 
     return attribute
