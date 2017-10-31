@@ -44,6 +44,9 @@ class NotFoundError(Exception):
 @attr.s
 class Metadata:
     data_display = attr.ib(default=None)
+    editable = attr.ib(default=True)
+    human_name = attr.ib(default=None)
+    convert = attr.ib(default=None)
 
 
 metadata_key = object()
@@ -60,16 +63,23 @@ def ify():
             'Fields',
             (),
             collections.OrderedDict((
-                (field.name, attr.ib(default=attr.Factory(Metadata)))
+                (field.name, attr.ib())
                 for field in attr.fields(cls)
             )),
         ))
 
-        field_metadata = {}
+        field_metadata = collections.defaultdict(dict)
         for field in attr.fields(cls):
             metadata = field.metadata.get(metadata_key)
-            if metadata is not None:
-                field_metadata[field.name] = metadata
+            if metadata is None:
+                metadata = Metadata()
+            else:
+                metadata = attr.evolve(metadata)
+
+            if metadata.convert is None:
+                metadata.convert = field.convert
+
+            field_metadata[field.name] = metadata
 
         setattr(
             cls,
@@ -92,10 +102,7 @@ def attributes(cls):
 
 
 def fields(cls):
-    return tuple(
-        getattr(attributes(cls).fields, field.name)
-        for field in attr.fields(cls)
-    )
+    return attributes(cls).fields
 
 
 def attrib(*args, attribute, **kwargs):
@@ -143,11 +150,11 @@ def columns(*columns):
     def _name(column):
         cls, field_name = column
 
-        field = getattr(attr.fields(cls), field_name)
-        name = field.metadata.get('human name')
+        field = getattr(fields(cls), field_name)
+        name = field.human_name
 
         if name is None:
-            name = field.name.replace('_', ' ').title()
+            name = field_name.replace('_', ' ').title()
 
         return name
 
@@ -347,12 +354,6 @@ def two_state_checkbox(v):
     return v in (QtCore.Qt.Checked, True)
 
 
-def ignored_attribute_filter(attribute):
-    return not attribute.metadata.get('ignore', False)
-
-
-
-
 def check_uuids(*roots):
     def collect(node, uuids):
         if node.uuid is not None:
@@ -421,9 +422,11 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         field = self.get_field(index)
 
         if field is not None:
+            node = self.node_from_index(index)
+
             if field.convert is two_state_checkbox:
                 flags |= QtCore.Qt.ItemIsUserCheckable
-            elif field.metadata.get('editable', True):
+            elif getattr(fields(node), field.name).editable:
                 flags |= QtCore.Qt.ItemIsEditable
 
             flags |= QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled
