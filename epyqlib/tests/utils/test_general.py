@@ -56,7 +56,7 @@ def test_cameled_to_spaced():
 
 
 def test_cameled_to_spaced_acronym():
-    name = 'XY1ABCDefGhiJKLMnOP1'
+    name = ' XY1ABCDefGhiJKLMnOP1 '
     expected = 'XY1 ABC Def Ghi JKL Mn OP1'
 
     result = epyqlib.utils.general.cameled_to_spaced(name)

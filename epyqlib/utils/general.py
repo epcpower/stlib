@@ -307,7 +307,7 @@ def cameled_to_spaced(name):
         if end > start
     )
 
-    return ' '.join(words)
+    return ' '.join(words).strip()
 
 
 def underscored_camel_to_title_spaced(name):
