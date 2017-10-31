@@ -47,8 +47,17 @@ def test_underscored_camel_to_upper_camel():
 
 
 def test_cameled_to_spaced():
-    name = 'abcDeFghIjk'
-    expected = 'abc De Fgh Ijk'
+    name = 'abcDeFghIjk - lmnOp'
+    expected = 'abc De Fgh Ijk - lmn Op'
+
+    result = epyqlib.utils.general.cameled_to_spaced(name)
+
+    assert result == expected
+
+
+def test_cameled_to_spaced_dashed():
+    name = 'ABC - DefGhi'
+    expected = 'ABC - Def Ghi'
 
     result = epyqlib.utils.general.cameled_to_spaced(name)
 
