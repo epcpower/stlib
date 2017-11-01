@@ -19,6 +19,7 @@ setup(
             'updateepc = epyqlib.updateepc:main',
             'genbuildinfo = epyqlib.genbuildinfo:write_build_file',
             'versionfile = epyqlib.cli.versionfile:cli',
+            'generateversion = epyqlib.cli.generateversion:cli',
         ]
     },
     install_requires=[
