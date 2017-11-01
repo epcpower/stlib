@@ -349,25 +349,38 @@ class DialogUi:
         self.message = FittedTextBrowser(parent)
         self.details = FittedTextBrowser(parent)
         self.copy = QtWidgets.QPushButton(parent)
+        self.save = QtWidgets.QPushButton(parent)
         self.show_details = QtWidgets.QPushButton(parent)
         self.buttons = QtWidgets.QDialogButtonBox(parent)
 
-        self.copy.setText('Copy To Clipboard')
+        self.copy.setText('To Clipboard')
+        self.save.setText('To File')
         self.show_details.setText('Details...')
 
         self.layout.addWidget(self.icon, 0, 0, 2, 1)
-        self.layout.addWidget(self.message, 0, 1, 1, 3)
-        self.layout.addWidget(self.details, 1, 1, 1, 3)
+        self.layout.addWidget(self.message, 0, 1, 1, 4)
+        self.layout.addWidget(self.details, 1, 1, 1, 4)
         self.layout.addWidget(self.copy, 2, 1)
-        self.layout.addWidget(self.show_details, 2, 2)
-        self.layout.addWidget(self.buttons, 2, 3)
+        self.layout.addWidget(self.save, 2, 2)
+        self.layout.addWidget(self.show_details, 2, 3)
+        self.layout.addWidget(self.buttons, 2, 4)
 
-        self.layout.setColumnStretch(3, 1)
+        self.layout.setColumnStretch(4, 1)
 
 
 class Dialog(QtWidgets.QDialog):
-    def __init__(self, *args, cancellable=False, details=False, **kwargs):
+    def __init__(self, *args, cancellable=False, details=False,
+                 save_filters=None, save_caption=None, **kwargs):
         super().__init__(*args, **kwargs)
+
+        self.save_filters = save_filters
+        if self.save_filters is None:
+            self.save_filters = (
+                ('Text', ['txt']),
+                ('All Files', ['*'])
+            )
+
+        self.save_caption = save_caption
 
         self.ui = DialogUi(parent=self)
 
@@ -378,6 +391,7 @@ class Dialog(QtWidgets.QDialog):
         self.ui.buttons.rejected.connect(self.reject)
 
         self.ui.copy.clicked.connect(self.copy)
+        self.ui.save.clicked.connect(self.save)
         self.ui.show_details.clicked.connect(self.show_details)
 
         self.setLayout(self.ui.layout)
@@ -401,20 +415,45 @@ class Dialog(QtWidgets.QDialog):
         self.minimum_size = self.minimumSize()
         self.maximum_size = self.maximumSize()
 
-    def copy(self):
-        f = textwrap.dedent('''\
+    def all_as_text(self):
+        message = self.ui.message.toPlainText().strip()
+        details = self.ui.details.toPlainText().strip()
+
+        if len(details) == 0:
+            return message + '\n'
+
+        return textwrap.dedent('''\
             {message}
-            
+
              - - - - Details:
-            
+
             {details}
             '''
-        ).format(
-            message=self.ui.message.toPlainText(),
-            details=self.ui.details.toPlainText(),
+                            ).format(
+            message=message,
+            details=details,
         )
 
-        QtWidgets.QApplication.clipboard().setText(f)
+    def copy(self):
+        QtWidgets.QApplication.clipboard().setText(self.all_as_text())
+
+    def save(self):
+        extras = {}
+        if self.save_caption is not None:
+            extras['caption'] = self.save_caption
+
+        path = epyqlib.utils.qt.file_dialog(
+            filters=self.save_filters,
+            parent=self,
+            save=True,
+            **extras,
+        )
+
+        if path is None:
+            return
+
+        with open(path, 'w') as f:
+            f.write(self.all_as_text())
 
     def show_details(self):
         to_be_visible = not self.ui.details.isVisible()
@@ -464,11 +503,12 @@ class Dialog(QtWidgets.QDialog):
 
 def dialog(parent, message, title=None, icon=None,
            rich_text=False, details='', details_rich_text=False,
-           cancellable=False, modal=True):
+           cancellable=False, modal=True, **kwargs):
     box = Dialog(
         parent=parent,
         cancellable=cancellable,
         details=len(details) > 0,
+        **kwargs,
     )
 
     box.setModal(modal)
