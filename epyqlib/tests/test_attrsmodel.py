@@ -1,4 +1,6 @@
+import collections
 import inspect
+import itertools
 
 import attr
 import graham
@@ -66,6 +68,61 @@ columns = epyqlib.attrsmodel.columns(
     ),
     ((Parameter, 'value'),),
 )
+
+
+def columns_to_code(c):
+    columns = collections.defaultdict(list)
+
+    for x in c:
+        columns[x[1]].append(x[0])
+
+    code = []
+
+    for name, types in columns.items():
+        if len(types) == 0:
+            pass
+        elif len(types) == 1:
+            code.append(f"(({types[0].__name__}, '{name}'),),")
+        else:
+            type_code = ', '.join(sorted(cls.__name__ for cls in types))
+            type_code = f'({type_code})'
+            code.append(f"tuple((x, '{name}') for x in {type_code}),")
+
+    # with this you can copy/paste to fill in the missing columns
+    return '\n' + '\n'.join(code)
+
+
+def all_fields_in_columns(types, root_type, columns):
+    fields = set()
+
+    for cls in types:
+        if cls is root_type:
+            continue
+
+        for field in epyqlib.attrsmodel.fields(cls):
+            if field.no_column:
+                continue
+
+            fields.add((cls, field.name))
+
+    columns_list = [
+        tuple(x)
+        for x in itertools.chain(*(
+            column.items()
+            for column in columns
+        ))
+        if x[0] is not root_type
+    ]
+
+    columns = set(columns_list)
+
+    assert len(columns_list) == len(columns)
+
+    extra = columns - fields
+    missing = fields - columns
+
+    assert extra == set()
+    assert missing == set(), columns_to_code(missing)
 
 
 def make_a_model(root_cls=Root, group_cls=Group, parameter_cls=Parameter,

@@ -32,6 +32,12 @@ class Column:
     name = attr.ib()
     fields = attr.ib()
 
+    def __iter__(self):
+        return iter(self.fields)
+
+    def items(self):
+        return self.fields.items()
+
 
 class ConsistencyError(Exception):
     pass
@@ -43,10 +49,12 @@ class NotFoundError(Exception):
 
 @attr.s
 class Metadata:
+    name = attr.ib(default=None)
     data_display = attr.ib(default=None)
     editable = attr.ib(default=True)
     human_name = attr.ib(default=None)
     convert = attr.ib(default=None)
+    no_column = attr.ib(default=False)
 
 
 metadata_key = object()
@@ -59,22 +67,30 @@ class Attributes:
 
 def ify():
     def inner(cls):
-        Fields = attr.s(type(
-            'Fields',
-            (),
-            collections.OrderedDict((
-                (field.name, attr.ib())
-                for field in attr.fields(cls)
-            )),
-        ))
+        class Fields:
+            def __iter__(self):
+                return (
+                    getattr(self, field.name)
+                    for field in attr.fields(type(self))
+                )
+
+        for field in attr.fields(cls):
+            setattr(Fields, field.name, attr.ib())
+
+        Fields = attr.s(Fields)
 
         field_metadata = collections.defaultdict(dict)
         for field in attr.fields(cls):
             metadata = field.metadata.get(metadata_key)
+
+            extras = {}
+            if field.name == 'children':
+                extras['no_column'] = True
+
             if metadata is None:
-                metadata = Metadata()
+                metadata = Metadata(name=field.name, **extras)
             else:
-                metadata = attr.evolve(metadata)
+                metadata = attr.evolve(metadata, name=field.name, **extras)
 
             if metadata.convert is None:
                 metadata.convert = field.convert
@@ -125,6 +141,9 @@ def data_processor(cls, data_field, attribute_field):
 @attr.s
 class Columns:
     columns = attr.ib()
+
+    def __iter__(self):
+        return iter(self.columns)
 
     def __getitem__(self, item):
         if isinstance(item, str):
@@ -302,6 +321,10 @@ def attr_uuid(metadata=None, default=attr.Factory(uuid.uuid4), **field_options):
     graham.attrib(
         attribute=attribute,
         field=marshmallow.fields.UUID(**field_options),
+    )
+    attrib(
+        attribute=attribute,
+        human_name='UUID',
     )
 
     return attribute
