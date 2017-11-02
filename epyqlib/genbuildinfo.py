@@ -32,7 +32,7 @@ def write_build_file(target):
             'build_version': 'APPVEYOR_BUILD_VERSION',
             'job_id': 'APPVEYOR_JOB_ID',
         }
-        values = {k: os.environ[v] for k, v in mapping.items()}
+        values.update({k: os.environ[v] for k, v in mapping.items()})
         values['job_url'] = (
             'https://ci.appveyor.com/'
             'project/{account}/{slug}/build/job/{id}'.format(
