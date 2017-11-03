@@ -59,7 +59,7 @@ Mux=LVM_ClearingTimes1 0,14 1 	// Line Voltage Monitor fault times.
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=VUnder45pct unsigned 16,16 /u:ms /min:1 /max:160 /d:160	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains under 45 percent of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
 Var=V45to60pct unsigned 32,16 /u:ms /min:1 /max:11000 /d:1000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between 50 and 88 percent of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
-Var=V60toUVThresh unsigned 48,16 /u:ms /min:1 /max:21000 /d:2000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between 60 and the undervoltage threshold of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
+Var=V60toUVThresh unsigned 48,16 /u:ms /min:1 /max:21000 /d:2000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between 60 and the undervoltage threshold percent of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
 
 [ParameterQuery]
 DLC=8
@@ -95,7 +95,7 @@ DLC=8
 Mux=Fault_Config 0,14 6 	// Allows configuration of various fault conditions to either trip the inverter, or provide a warning status via CAN
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=FilterOvertemp unsigned 22,2 /max:2 /e:FaultConfig /d:1	// Configures action to take when filter overtemperature is detected.
-Var=FanCircuit unsigned 20,2 /max:2 /e:FaultConfig /d:1	// Configured action to take when monitored fan circuit input is lost.  <factory>
+Var=FanCircuit unsigned 20,2 /max:1 /e:FaultConfig /d:1	// Configured action to take when monitored fan circuit input is lost.  <factory>
 
 [ParameterQuery]
 DLC=8
@@ -328,7 +328,7 @@ Var=time unsigned 16,16 /u:ns /min:800 /max:2500 /d:1400
 DLC=8
 Mux=Fan_Coolant 0,14 0027h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=tempSetpoint unsigned 16,16 /u:C /max:100 /d:35
+Var=tempSetpoint unsigned 16,16 /u:C /max:40 /d:35
 
 [ParameterQuery]
 DLC=8
@@ -457,6 +457,7 @@ Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=r signed 32,32 /f:1E-006 /p:6 /d:0.1
 
 [ParameterQuery]
+DLC=8
 Mux=CurrentControlBuckGains 0,14 003Ch	// <factory> 
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
 Var=Kp signed 16,16 /f:0.001 /p:3	// Proportional Gain
@@ -1241,8 +1242,8 @@ Var=ReadParam_command unsigned 14,2 /e:ReadNV
 [ParameterQuery]
 DLC=8
 Mux=DcControlDroop 0,14 0135h
-Var=resistance unsigned 16,16 /u:V/A /f:2E-005 /p:3
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=resistance unsigned 16,16 /u:V/A /f:2E-005 /p:3
 
 [ParameterQuery]
 DLC=8
@@ -1365,7 +1366,7 @@ DLC=8
 Mux=LVM_ClearingTimes1 0,14 1 	// Line Voltage Monitor fault times.
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=VUnder45pct unsigned 16,16 /u:ms /min:1 /max:160 /d:160	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains under 45 percent of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
-Var=V45to60pct unsigned 32,16 /u:ms /min:1 /max:11000 /d:1000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between 50 and 60 percent of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
+Var=V45to60pct unsigned 32,16 /u:ms /min:1 /max:11000 /d:1000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between 50 and 88 percent of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
 Var=V60toUVThresh unsigned 48,16 /u:ms /min:1 /max:21000 /d:2000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between 60 and the undervoltage threshold percent of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
 
 [ParameterResponse]
@@ -1431,7 +1432,7 @@ Var=K2Close unsigned 32,16 /u:ms /max:2000 /d:20	// Maximum time required for th
 DLC=8
 Mux=HardwareDef1 0,14 000Ah
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=DeviceOvertempLimit unsigned 16,16 /u:C /max:160 /d:150	// <factory>
+Var=DeviceOvertempLimit unsigned 16,16 /u:C /max:200 /d:150	// <factory>
 Var=EnableCalcIDCTrip unsigned 36,2 /max:1 /e:Enable /d:1 /ln:"Calc. IDC trip"	// Enable trip on calculated IDC <factory>
 Var=EnablePumpControl unsigned 38,2 /max:1 /e:Enable /d:1 /ln:"Enable Pump Control"
 
@@ -1629,7 +1630,7 @@ Var=minPulseTime unsigned 16,16 /u:ns /max:8000 /d:4000
 DLC=8
 Mux=Deadtime 0,14 0026h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=time unsigned 16,16 /u:ns /min:800 /max:1500 /d:1400
+Var=time unsigned 16,16 /u:ns /min:800 /max:2500 /d:1400
 
 [ParameterResponse]
 DLC=8
@@ -1680,7 +1681,7 @@ Var=EnableUPSMode unsigned 28,2 /max:1 /e:EnableUPSMode /ln:"UPS Mode"	// Enable
 Var=UseVoltageSenseAsRemote unsigned 30,2 /max:1 /e:RemoteVoltageSense /ln:"Use VSense as remote"	// Use local voltage sense input as either local or remote reference.
 Var=EnableAC unsigned 34,2 /max:1 /e:Enable	// Enable AC power stage
 Var=EnableDC unsigned 36,2 /max:1 /e:Enable /d:1	// Enable DC power stage 
-Var=EnableDcControl unsigned 38,2 /e:Enable
+Var=EnableDcControl unsigned 38,2 /e:Enable /d:1 // <factory>
 
 [ParameterResponse]
 DLC=8
@@ -1764,6 +1765,7 @@ Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=r signed 32,32 /f:1E-006 /p:6 /d:0.1
 
 [ParameterResponse]
+DLC=8
 Mux=CurrentControlBuckGains 0,14 003Ch	// <factory>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Kp signed 16,16 /f:0.001 /p:3	// Proportional Gain
@@ -1931,7 +1933,7 @@ DLC=8
 Mux=UserSettings 0,14 0072h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=OverVoltageDC unsigned 16,16 /u:V /max:1350 /p:0 /d:1100	// User Settable Over Voltage Limit
-Var=UnderVoltageDC unsigned 32,16 /u:V /max:800 /d:705	// User Settable Under Voltage Limit
+Var=UnderVoltageDC unsigned 32,16 /u:V /max:1350 /d:705	// User Settable Under Voltage Limit
 
 [ParameterResponse]
 DLC=8
@@ -2576,7 +2578,7 @@ DLC=8
 Mux=PrechargeVoltage 0,14 0139h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=VoltageMin unsigned 16,16 /u:VDC /d:200 // <factory> Minimum voltage the bus must reach for precharge to be successful
-Var=VotlageDeltaMin unsigned 32,16 /u:VDC /d:5 // <factory> minimum voltage rise required for precharge to be successful
+Var=VoltageDeltaMin unsigned 32,16 /u:VDC /d:5 // <factory> minimum voltage rise required for precharge to be successful
 
 [ParameterResponse]
 DLC=8
