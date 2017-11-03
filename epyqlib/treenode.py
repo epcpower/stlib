@@ -108,6 +108,13 @@ class TreeNode:
 
         return root
 
+    def children_by_attribute(self, value, name):
+        return [
+            child
+            for child in self.children
+            if hasattr(child, name) and getattr(child, name) == value
+        ]
+
     def __len__(self):
         return len(self.children)
 
