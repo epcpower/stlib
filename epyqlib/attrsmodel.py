@@ -299,6 +299,30 @@ def Root(default_name, valid_types):
 
             return True
 
+        def node_from_uuid(self, target_uuid, attribute_name='uuid'):
+            def uuid_matches(node, matches):
+                if not hasattr(node, attribute_name):
+                    return
+
+                if getattr(node, attribute_name) == target_uuid:
+                    matches.add(node)
+
+            nodes = set()
+            self.traverse(
+                call_this=uuid_matches,
+                payload=nodes,
+                internal_nodes=True
+            )
+
+            if len(nodes) == 0:
+                raise NotFoundError(
+                    '''UUID '{}' not found'''.format(target_uuid)
+                )
+
+            node, = nodes
+
+            return node
+
     return Root
 
 
