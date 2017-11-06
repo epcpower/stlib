@@ -89,6 +89,12 @@ class MetaEnum(epyqlib.utils.general.AutoNumberIntEnum):
     maximum = 4
 
 
+@attr.s
+@epyqlib.utils.general.enumerated_attrs(MetaEnum, default=None)
+class Meta:
+    pass
+
+
 class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
     changed = epyqlib.utils.qt.Signal(
         TreeNode,
@@ -586,7 +592,7 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
 
         self.clear(mark_modified=False)
 
-        # self.meta = Meta()
+        self.meta = Meta()
 
         self.fields = Columns(
             name='{}:{}'.format(self.frame.mux_name, self.name),
@@ -611,10 +617,13 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
 
     def get_human_value(self, for_file=False, column=None):
         column_name = Columns().index_from_attribute(column)
-        if column_name == MetaEnum.value:
-            return super().get_human_value(for_file=False, column=None)
+        if column_name == MetaEnum.value.name:
+            return super().get_human_value(for_file=False)
 
-        return getattr(self.fields, column_name)
+        return super().get_human_value(
+            for_file=False,
+            value=getattr(self.meta, column_name),
+        )
 
     def signal_path(self):
         return self.frame.signal_path() + (self.name,)
@@ -673,7 +682,13 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         if meta == MetaEnum.value:
             return self.set_data(data=data, *args, **kwargs)
 
-        setattr(self.fields, meta.name, data)
+        if data is not None:
+            data = self.calc_human_value(data)
+
+        setattr(self.meta, meta.name, data)
+        print(repr(data))
+        print(repr('{:08X}'.format(data)))
+        setattr(self.fields, meta.name, '{:08X}'.format(data))
         return True
 
     def can_be_cleared(self):
@@ -848,6 +863,9 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         ))
         if use_dash:
             return '-'
+
+        if isinstance(node, Nv) and column == 7:
+            print(node.name, column, repr(super_result))
 
         return super_result
 

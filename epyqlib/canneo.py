@@ -27,6 +27,9 @@ class NotFoundError(Exception):
     pass
 
 
+nothing = object()
+
+
 @functools.lru_cache(4096)
 def pack_bitstring(length, is_float, value, signed):
     if is_float:
@@ -243,16 +246,19 @@ class Signal:
     def from_human(self, value):
         return round((value - self.offset) / self.factor)
 
-    def get_human_value(self, for_file=False, column=None):
+    def get_human_value(self, for_file=False, column=None, value=nothing):
+        if value is nothing:
+            value = self.value
+
         # TODO: handle offset
-        if self.value is None:
+        if value is None:
             return None
 
-        value = self.to_human(self.value)
+        value = self.to_human(value)
 
         return self.format_float(value, for_file=for_file)
 
-    def set_human_value(self, raw_value, force=False, check_range=False):
+    def calc_human_value(self, raw_value):
         # TODO: handle offset
         locale.setlocale(locale.LC_ALL, '')
 
@@ -281,9 +287,16 @@ class Signal:
         if value is not None:
             value = self.from_human(value)
 
-        self.set_value(value=value,
-                       force=force,
-                       check_range=check_range)
+        return value
+
+    def set_human_value(self, raw_value, force=False, check_range=False):
+            value = self.calc_human_value(raw_value)
+
+            self.set_value(
+                value=value,
+                force=force,
+                check_range=check_range,
+            )
 
     def enumeration_string(self, value, include_value=False):
         format = (self.enumeration_format_re['format']
