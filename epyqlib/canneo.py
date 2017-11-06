@@ -197,6 +197,7 @@ class Signal:
         self.start_bit = int(signal.getStartbit()) # {int} 0
         self.unit = signal._unit # {str} ''
         self.enumeration = {int(k): v for k, v in signal._values.items()} # {dict} {'0': 'Disable', '2': 'Error', '1': 'Enable', '3': 'N/A'}
+        self.enumeration_name = signal.enumeration
         self.signed = signal._is_signed
         if self.multiplex is True:
             self.signed = False
@@ -242,7 +243,7 @@ class Signal:
     def from_human(self, value):
         return round((value - self.offset) / self.factor)
 
-    def get_human_value(self, for_file=False):
+    def get_human_value(self, for_file=False, column=None):
         # TODO: handle offset
         if self.value is None:
             return None

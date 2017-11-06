@@ -83,7 +83,7 @@ class PyQAbstractItemModel(QAbstractItemModel):
         node = index.internalPointer()
         if hasattr(node, 'get_human_value'):
             if callable(node.get_human_value):
-                value = node.get_human_value()
+                value = node.get_human_value(column=index.column())
             else:
                 value = ''
         else:

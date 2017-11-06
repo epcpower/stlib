@@ -56,8 +56,8 @@ class NvView(QtWidgets.QWidget):
         self.resize_columns = epyqlib.nv.Columns(
             name=True,
             value=True,
-            min=True,
-            max=True,
+            minimum=True,
+            maximum=True,
             comment=True,
         )
 
@@ -298,22 +298,25 @@ class NvView(QtWidgets.QWidget):
             for node in selected_nodes:
                 model.clear_node(node)
 
-    def update_signals(self, d, only_these):
+    def update_signals(self, arg, only_these):
+        d, meta = arg
         model = self.nonproxy_model()
 
         frame = next(iter(d)).frame
 
         signals = set(only_these) & set(frame.set_frame.parameter_signals)
 
+        print('update_signals: meta={} ({})'.format(repr(meta), type(meta)))
+
         for signal in signals:
             if signal.status_signal in d:
                 value = d[signal.status_signal]
-                signal.set_data(value, check_range=False)
+                signal.set_meta(value, meta=meta, check_range=False)
 
         for signal in frame.set_frame.parameter_signals:
             model.dynamic_columns_changed(
                 signal,
-                columns=(epyqlib.nv.Columns.indexes.value,)
+                columns=(getattr(epyqlib.nv.Columns.indexes, meta.name),)
             )
 
 

@@ -542,19 +542,6 @@ class Device:
                 hierarchy=hierarchy,
             )
 
-            if 'parameter_defaults' in self.raw_dict:
-                parameter_defaults_path = os.path.join(
-                    os.path.dirname(self.config_path),
-                    self.raw_dict['parameter_defaults']
-                )
-                with open(parameter_defaults_path) as f:
-                    self.nvs.defaults_from_dict(json.load(f))
-                    for nv in self.nvs.all_nv():
-                        if isinstance(nv, epyqlib.nv.Nv):
-                            if nv.default_value is not None:
-                                nv.fields.default = nv.format_strings(
-                                    value=int(nv.default_value))[0]
-
             self.widget_frames_nv = epyqlib.canneo.Neo(
                 matrix=matrix_nv,
                 frame_class=epyqlib.nv.Frame,
@@ -741,7 +728,9 @@ class Device:
 
                             def read(nv_signal=nv_signal):
                                 d = self.nvs.protocol.read(
-                                    nv_signal=nv_signal)
+                                    nv_signal=nv_signal,
+                                    meta=epyqlib.nv.MetaEnum.value,
+                                )
 
                                 d.addErrback(ignore_timeout)
 

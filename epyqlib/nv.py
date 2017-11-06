@@ -4,10 +4,12 @@
 
 import attr
 import can
+import enum
 from epyqlib.abstractcolumns import AbstractColumns
 import epyqlib.canneo
 import epyqlib.twisted.busproxy
 import epyqlib.twisted.nvs
+import epyqlib.utils.general
 import epyqlib.utils.twisted
 import json
 import epyqlib.pyqabstractitemmodel
@@ -27,7 +29,8 @@ __license__ = 'GPLv2+'
 
 class Columns(AbstractColumns):
     _members = ['name', 'read_only', 'factory', 'value', 'saturate', 'reset',
-                'clear', 'default', 'min', 'max', 'comment']
+                'clear', 'user_default', 'factory_default', 'minimum',
+                'maximum', 'comment']
 
 Columns.indexes = Columns.indexes()
 
@@ -47,6 +50,7 @@ class Configuration:
     to_nv_command = attr.ib()
     to_nv_status = attr.ib()
     read_write_signal = attr.ib()
+    meta_signal = attr.ib()
 
 
 configurations = {
@@ -55,14 +59,16 @@ configurations = {
         status_frame='StatusNVParam',
         to_nv_command='SaveToEE_command',
         to_nv_status='SaveToEE_status',
-        read_write_signal='ReadParam_command'
+        read_write_signal='ReadParam_command',
+        meta_signal=None,
     ),
     'j1939': Configuration(
         set_frame='ParameterQuery',
         status_frame='ParameterResponse',
         to_nv_command='SaveToEE_command',
         to_nv_status='SaveToEE_status',
-        read_write_signal='ReadParam_command'
+        read_write_signal='ReadParam_command',
+        meta_signal='Meta',
     )
 }
 
@@ -73,6 +79,14 @@ class Group(TreeNode):
 
     def __attrs_post_init__(self):
         super().__init__()
+
+
+class MetaEnum(epyqlib.utils.general.AutoNumberIntEnum):
+    value = 0
+    user_default = 1
+    factory_default = 2
+    minimum = 3
+    maximum = 4
 
 
 class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
@@ -167,6 +181,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 s for s in signals
                 if s.name not in [
                     self.configuration.read_write_signal,
+                    self.configuration.meta_signal,
                     '{}_MUX'.format(self.configuration.set_frame)
                 ]
             ]
@@ -188,10 +203,16 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     if signals is None:
                         signals = all_signals
 
-                    d = self.protocol.write_multiple(
-                        nv_signals=signals,
-                        priority=epyqlib.twisted.nvs.Priority.user
-                    )
+                    d = twisted.internet.defer.Deferred()
+                    d.callback(None)
+
+                    for enumerator in MetaEnum:
+                        print(enumerator)
+                        d.addCallback(lambda _: self.protocol.write_multiple(
+                            nv_signals=signals,
+                            meta=enumerator,
+                            priority=epyqlib.twisted.nvs.Priority.user
+                        ))
                     d.addErrback(ignore_timeout)
 
                 frame._send.connect(send)
@@ -368,11 +389,13 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     d.addCallback(callback)
 
         def handle_frame(frame, signals):
-                frame.update_from_signals()
+            frame.update_from_signals()
+            for enumerator in MetaEnum:
                 if read:
                     d.addCallback(
-                        lambda _: self.protocol.read_multiple(
+                        lambda _, enumerator=enumerator: self.protocol.read_multiple(
                             nv_signals=signals,
+                            meta=enumerator,
                             priority=epyqlib.twisted.nvs.Priority.user,
                             passive=True,
                             all_values=True,
@@ -380,8 +403,9 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     )
                 elif frame.read_write.min <= 0:
                     d.addCallback(
-                        lambda _: self.protocol.write_multiple(
+                        lambda _, enumerator=enumerator: self.protocol.write_multiple(
                             nv_signals=signals,
+                            meta=enumerator,
                             priority=epyqlib.twisted.nvs.Priority.user,
                             passive=True,
                             all_values=True,
@@ -562,12 +586,11 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
 
         self.clear(mark_modified=False)
 
+        # self.meta = Meta()
+
         self.fields = Columns(
             name='{}:{}'.format(self.frame.mux_name, self.name),
             value=self.full_string,
-            min=self.format_float(value=self.min),
-            max=self.format_float(value=self.max),
-            default=self.format_strings(value=int(default))[0],
             comment=self.comment,
         )
 
@@ -578,11 +601,20 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         if column_end is None:
             column_end = column_start
 
+        # self.meta.value = self.value
+
         self.changed.emit(
             self, column_start,
             self, column_end,
             list(roles),
         )
+
+    def get_human_value(self, for_file=False, column=None):
+        column_name = Columns().index_from_attribute(column)
+        if column_name == MetaEnum.value:
+            return super().get_human_value(for_file=False, column=None)
+
+        return getattr(self.fields, column_name)
 
     def signal_path(self):
         return self.frame.signal_path() + (self.name,)
@@ -635,6 +667,13 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
                 self.reset_value = reset_value
         self.fields.value = self.full_string
 
+        return True
+
+    def set_meta(self, data, meta, *args, **kwargs):
+        if meta == MetaEnum.value:
+            return self.set_data(data=data, *args, **kwargs)
+
+        setattr(self.fields, meta.name, data)
         return True
 
     def can_be_cleared(self):
@@ -715,7 +754,8 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
     def __init__(self, root, parent=None):
         editable_columns = Columns.fill(False)
-        editable_columns.value = True
+        for enumerator in MetaEnum:
+            setattr(editable_columns, enumerator.name, True)
 
         epyqlib.pyqabstractitemmodel.PyQAbstractItemModel.__init__(
                 self, root=root, editable_columns=editable_columns,
@@ -725,9 +765,10 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         self.headers = Columns(name='Name',
                                value='Value',
-                               min='Min',
-                               max='Max',
-                               default='Default',
+                               minimum='Min',
+                               maximum='Max',
+                               user_default='User Default',
+                               factory_default='Factory Default',
                                comment='Comment')
 
         root.activity_started.connect(self.activity_started)
@@ -740,6 +781,11 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             factory=Icon(character='\uf084', check='is_factory'),
             read_only=Icon(character='\uf023', check='is_read_only')
         )
+
+        self.meta_columns = {
+            getattr(Columns.indexes, enumerator.name)
+            for enumerator in MetaEnum
+        }
 
         self.icon_columns = set(
             index
@@ -781,19 +827,29 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         return None
 
     def data_display(self, index):
+        node = self.node_from_index(index)
         column = index.column()
         icon = self.icons[column]
         if icon is not None:
             if self.force_action_decorations:
                 return icon.character
             else:
-                node = self.node_from_index(index)
                 if isinstance(node, epyqlib.nv.Nv):
                     check = getattr(node, icon.check)
                     if check():
                         return icon.character
 
-        return super().data_display(index)
+        super_result = super().data_display(index)
+
+        use_dash = all((
+            super_result is None,
+            column in self.meta_columns,
+            isinstance(node, Nv),
+        ))
+        if use_dash:
+            return '-'
+
+        return super_result
 
     def data_tool_tip(self, index):
         if index.column() == Columns.indexes.saturate:
@@ -843,11 +899,16 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         self.check_range = state == Qt.Checked
 
     def setData(self, index, data, role=None):
-        if index.column() == Columns.indexes.value:
+        column = index.column()
+        if column in self.meta_columns:
             if role == Qt.EditRole:
                 node = self.node_from_index(index)
-                success = node.set_data(
+                success = node.set_meta(
                     data,
+                    meta=getattr(
+                        MetaEnum,
+                        Columns().index_from_attribute(column),
+                    ),
                     mark_modified=True,
                     check_range=self.check_range,
                 )

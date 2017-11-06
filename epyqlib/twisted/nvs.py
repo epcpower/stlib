@@ -70,6 +70,7 @@ class Priority(enum.IntEnum):
 class Request:
     priority = attr.ib()
     read = attr.ib(cmp=False)
+    meta = attr.ib(cmp=False)
     signals = attr.ib(cmp=False)
     deferred = attr.ib(cmp=False)
     passive = attr.ib(cmp=False)
@@ -127,29 +128,31 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
         self._active = False
         self._get()
 
-    def read(self, nv_signal, priority=Priority.background, passive=False,
+    def read(self, nv_signal, meta, priority=Priority.background, passive=False,
              all_values=False):
         return self._read_write_request(
             nv_signals=(nv_signal,),
             read=True,
+            meta=meta,
             priority=priority,
             passive=passive,
             all_values=all_values,
         )
 
-    def read_multiple(self, nv_signals, priority=Priority.background,
+    def read_multiple(self, nv_signals, meta, priority=Priority.background,
                       passive=False, all_values=False):
         # TODO: make sure all signals are from the same frame
         return self._read_write_request(
             nv_signals=nv_signals,
             read=True,
+            meta=meta,
             priority=priority,
             passive=passive,
             all_values=all_values,
         )
 
-    def write(self, nv_signal, priority=Priority.background, passive=False,
-              ignore_read_only=False, all_values=False):
+    def write(self, nv_signal, meta, priority=Priority.background,
+              passive=False, ignore_read_only=False, all_values=False):
         # TODO: make sure all signals are from the same frame
         if nv_signal.frame.read_write.min > 0:
             if ignore_read_only:
@@ -160,12 +163,13 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
         return self._read_write_request(
             nv_signals=(nv_signal,),
             read=False,
+            meta=meta,
             priority=priority,
             passive=passive,
             all_values=all_values,
         )
 
-    def write_multiple(self, nv_signals, priority=Priority.background,
+    def write_multiple(self, nv_signals, meta, priority=Priority.background,
                        passive=False, ignore_read_only=False, all_values=False):
         if tuple(nv_signals)[0].frame.read_write.min > 0:
             if ignore_read_only:
@@ -176,12 +180,13 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
         return self._read_write_request(
             nv_signals=nv_signals,
             read=False,
+            meta=meta,
             priority=priority,
             passive=passive,
             all_values=all_values,
         )
 
-    def _read_write_request(self, nv_signals, read, priority, passive,
+    def _read_write_request(self, nv_signals, read, meta, priority, passive,
                             all_values):
         deferred = twisted.internet.defer.Deferred()
 
@@ -192,6 +197,7 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
 
         self._put(Request(
             read=read,
+            meta=meta,
             signals=nv_signals,
             deferred=deferred,
             priority=priority,
@@ -226,7 +232,7 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
 
     def _read_before_write(self, request):
         nonskip = {
-            s: s.value
+            s: getattr(s.fields, request.meta.name)
             for s in request.signals
         }
 
@@ -241,7 +247,8 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
             d = twisted.internet.defer.Deferred()
             d.callback(None)
 
-            def read_then_write(values, nonskip=nonskip):
+            def read_then_write(args, nonskip=nonskip):
+                values, meta = args
                 data = {k: v for k, v in nonskip.items()}
                 for s, v in values.items():
                     s = s.set_signal
@@ -251,19 +258,22 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
 
                 return self.write_multiple(
                     nv_signals=data,
+                    meta=request.meta,
                     all_values=True,
                 )
 
-            def write_response(values, nonskip=nonskip, request=request):
+            def write_response(args, nonskip=nonskip, request=request):
+                values, meta = args
                 data = {
                     signal.status_signal: values[signal.status_signal]
                     for signal in nonskip
                 }
 
-                request.deferred.callback(data)
+                request.deferred.callback((data, request.meta))
 
             d.addCallback(lambda _: self.read_multiple(
                 request.frame.parameter_signals,
+                meta=request.meta,
                 all_values=True
             ))
             d.addCallback(read_then_write)
@@ -283,6 +293,8 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
         for signal in request.frame.signals:
             if signal is request.frame.read_write:
                 data[signal] = read_write
+            elif signal.enumeration_name == 'Meta':
+                data[signal] = request.meta.value
             elif signal not in request.frame.parameter_signals:
                 data[signal] = signal.value
             elif signal in request.signals and not request.read:
@@ -303,7 +315,12 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
                 )
                 data[signal] = v
 
-            data[signal] = int(data[signal])
+            # TODO: really really just get the data processed right
+            try:
+                data[signal] = int(data[signal])
+            except ValueError:
+                data[signal] = int(data[signal], 16)
+
 
         data = request.frame.update_from_signals(
             data=data.values(),
@@ -353,6 +370,16 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
         )
         if response_mux_value != mux:
             return
+        meta_mux_value = tuple(
+            v for k, v in signals.items()
+            if k.enumeration_name == 'Meta'
+        )
+        if len(meta_mux_value) == 1:
+            meta_mux_value, = meta_mux_value
+            if meta_mux_value != request.meta.value:
+                print(' -- skipping due to unmatched meta')
+                return
+
         response_read_write_value, = (v for k, v in signals.items() if k.name
                                       == 'ReadParam_status')
         # TODO: handle the enumeration
@@ -369,7 +396,7 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
             raw_value = signals[status_signal]
             value = status_signal.to_human(value=raw_value)
 
-        self.callback(value)
+        self.callback(value, request.meta)
 
     def send_failed(self):
         self.cancel_queued = True
@@ -390,10 +417,10 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
         deferred = self._transaction_over()
         deferred.errback(e)
 
-    def callback(self, payload):
+    def callback(self, payload, meta):
         deferred = self._transaction_over()
         logger.debug('calling back for {}'.format(deferred))
-        deferred.callback(payload)
+        deferred.callback((payload, meta))
 
     def errback(self, payload):
         deferred = self._transaction_over()

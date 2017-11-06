@@ -55,7 +55,8 @@ def test_secret_masked(qtbot):
 
     assert len(secret_nv) > 0
     for nv in secret_nv:
-        assert nv.fields.default == secret_mask
+        assert nv.fields.user_default == secret_mask
+        assert nv.fields.factor_default == secret_mask
         nv.set_human_value('1234')
         assert nv.fields.value == secret_mask
 
