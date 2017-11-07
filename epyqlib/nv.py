@@ -90,7 +90,7 @@ class MetaEnum(epyqlib.utils.general.AutoNumberIntEnum):
 
 
 @attr.s
-@epyqlib.utils.general.enumerated_attrs(MetaEnum)
+@epyqlib.utils.general.enumerated_attrs(MetaEnum, default=None)
 class Meta:
     pass
 
@@ -577,49 +577,59 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         list,
     )
 
-    def __init__(self, signal, frame, parent=None, is_meta=False):
+    def __init__(self, signal, frame, parent=None, meta=None, meta_value=None):
         epyqlib.canneo.Signal.__init__(self, signal=signal, frame=frame,
                                     parent=parent)
         TreeNode.__init__(self)
+
+        if meta_value is None:
+            self.meta_value = MetaEnum.value
+        else:
+            self.meta_value = meta_value
 
         default = self.default_value
         if default is None:
             default = 0
 
-        if not is_meta:
+        if self.frame is not None:
             self.factory = '<factory>' in (self.comment + self.frame.comment)
 
         self.reset_value = None
 
         self.clear(mark_modified=False)
 
-        if is_meta:
-            self.meta = None
-        else:
-            self.meta = Meta(
-                value=None,
-                user_default=Nv(signal, frame=None, is_meta=True),
-                factory_default=Nv(signal, frame=None, is_meta=True),
-                minimum=Nv(signal, frame=None, is_meta=True),
-                maximum=Nv(signal, frame=None, is_meta=True),
-            )
-            self.meta.user_default.set_value(None)
-            self.meta.factory_default.set_value(None)
-            self.meta.minimum.set_value(None)
-            self.meta.maximum.set_value(None)
-
         self.fields = Columns(
             value=self.full_string,
             comment=self.comment,
         )
-        if not is_meta:
+        if self.frame is not None:
             self.fields.name = '{}:{}'.format(self.frame.mux_name, self.name)
 
-        if not is_meta:
-            self.fields.user_default = self.meta.user_default.full_string
-            self.fields.factory_default = self.meta.factory_default.full_string
-            self.fields.minimum = self.meta.minimum.full_string
-            self.fields.maximum = self.meta.maximum.full_string
+        self.meta = meta
+        if self.meta is None:
+            self.meta = Meta()
+
+            metas = (
+                MetaEnum.user_default,
+                MetaEnum.factory_default,
+                MetaEnum.minimum,
+                MetaEnum.maximum,
+            )
+            for meta in metas:
+                setattr(
+                    self.meta,
+                    meta.name,
+                    Nv(signal, frame=None, meta=self.meta, meta_value=meta)
+                )
+
+            for meta in metas:
+                getattr(self.meta, meta.name).set_value(None)
+
+                setattr(
+                    self.fields,
+                    meta.name,
+                    getattr(self.meta, meta.name).full_string,
+                )
 
     def _changed(self, column_start=None, column_end=None, roles=(
             Columns.indexes.value,)):
@@ -637,6 +647,8 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         )
 
     def get_human_value(self, for_file=False, column=None):
+        if column is None:
+            column = Columns.indexes.value
         column_name = Columns().index_from_attribute(column)
         if column_name == MetaEnum.value.name:
             return super().get_human_value(for_file=False)
@@ -675,10 +687,31 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
 
     def set_value(self, value, force=False, check_range=False):
         self.reset_value = value
-        epyqlib.canneo.Signal.set_value(self,
-                                        value=value,
-                                        force=force,
-                                        check_range=check_range)
+
+        min_max = {MetaEnum.minimum, MetaEnum.maximum}
+
+        if self.meta is not None:
+            extras = {}
+            if self.meta.minimum.value is None or self.meta_value in min_max:
+                extras['minimum'] = self.to_human(self.raw_minimum)
+            else:
+                extras['minimum'] = self.meta.minimum.to_human(
+                    self.meta.minimum.value,
+                )
+
+            if self.meta.maximum.value is None or self.meta_value in min_max:
+                extras['maximum'] = self.to_human(self.raw_maximum)
+            else:
+                extras['maximum'] = self.meta.maximum.to_human(
+                    self.meta.maximum.value,
+                )
+
+        super().set_value(
+            value=value,
+            force=force,
+            check_range=check_range,
+            **extras,
+        )
         self.fields.value = self.full_string
         self._changed()
 

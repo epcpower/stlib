@@ -194,6 +194,8 @@ class Signal:
         else:
             self.multiplex = signal._multiplex # {NoneType} None
 
+        self.raw_minimum, self.raw_maximum = signal.calculateRawRange()
+
         self.name = signal._name # {str} 'Enable_command'
         # self._receiver = signal._receiver # {str} ''
         self.signal_size = int(signal._signalsize) # {int} 2
@@ -340,7 +342,14 @@ class Signal:
 
         return self.decimal_places
 
-    def set_value(self, value, force=False, check_range=False):
+    def set_value(self, value, force=False, check_range=False, minimum=None,
+                  maximum=None):
+        if minimum is None:
+            minimum = self.min
+
+        if maximum is None:
+            maximum = self.max
+
         value_parameter = value
         if type(value) is float and math.isnan(value):
             return
@@ -351,10 +360,10 @@ class Signal:
             #       needed
             if check_range:
                 human_value = self.to_human(value)
-                if not self.min <= human_value <= self.max:
+                if not minimum <= human_value <= maximum:
                     raise OutOfRangeError('{} not in range [{}, {}]'.format(
                         *[self.format_float(f) for f
-                          in (human_value, self.min, self.max)]))
+                          in (human_value, minimum, maximum)]))
             self.value = value
 
             if value not in self.enumeration:
