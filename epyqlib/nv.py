@@ -90,7 +90,7 @@ class MetaEnum(epyqlib.utils.general.AutoNumberIntEnum):
 
 
 @attr.s
-@epyqlib.utils.general.enumerated_attrs(MetaEnum, default=None)
+@epyqlib.utils.general.enumerated_attrs(MetaEnum)
 class Meta:
     pass
 
@@ -577,7 +577,7 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         list,
     )
 
-    def __init__(self, signal, frame, parent=None):
+    def __init__(self, signal, frame, parent=None, is_meta=False):
         epyqlib.canneo.Signal.__init__(self, signal=signal, frame=frame,
                                     parent=parent)
         TreeNode.__init__(self)
@@ -586,19 +586,40 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         if default is None:
             default = 0
 
-        self.factory = '<factory>' in (self.comment + self.frame.comment)
+        if not is_meta:
+            self.factory = '<factory>' in (self.comment + self.frame.comment)
 
         self.reset_value = None
 
         self.clear(mark_modified=False)
 
-        self.meta = Meta()
+        if is_meta:
+            self.meta = None
+        else:
+            self.meta = Meta(
+                value=None,
+                user_default=Nv(signal, frame=None, is_meta=True),
+                factory_default=Nv(signal, frame=None, is_meta=True),
+                minimum=Nv(signal, frame=None, is_meta=True),
+                maximum=Nv(signal, frame=None, is_meta=True),
+            )
+            self.meta.user_default.set_value(None)
+            self.meta.factory_default.set_value(None)
+            self.meta.minimum.set_value(None)
+            self.meta.maximum.set_value(None)
 
         self.fields = Columns(
-            name='{}:{}'.format(self.frame.mux_name, self.name),
             value=self.full_string,
             comment=self.comment,
         )
+        if not is_meta:
+            self.fields.name = '{}:{}'.format(self.frame.mux_name, self.name)
+
+        if not is_meta:
+            self.fields.user_default = self.meta.user_default.full_string
+            self.fields.factory_default = self.meta.factory_default.full_string
+            self.fields.minimum = self.meta.minimum.full_string
+            self.fields.maximum = self.meta.maximum.full_string
 
     def _changed(self, column_start=None, column_end=None, roles=(
             Columns.indexes.value,)):
@@ -620,9 +641,9 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         if column_name == MetaEnum.value.name:
             return super().get_human_value(for_file=False)
 
-        return super().get_human_value(
-            for_file=False,
-            value=getattr(self.meta, column_name),
+        return getattr(self.meta, column_name).get_human_value(
+            for_file=for_file,
+            column=Columns.indexes.value,
         )
 
     def signal_path(self):
@@ -682,14 +703,16 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         if meta == MetaEnum.value:
             return self.set_data(data=data, *args, **kwargs)
 
-        if data is not None:
-            data = self.calc_human_value(data)
+        meta_signal = getattr(self.meta, meta.name)
 
-        setattr(self.meta, meta.name, data)
-        print(repr(data))
-        print(repr('{:08X}'.format(data)))
-        setattr(self.fields, meta.name, '{:08X}'.format(data))
-        return True
+        result = meta_signal.set_data(
+            data=data,
+            *args,
+            **kwargs,
+        )
+        setattr(self.fields, meta.name, meta_signal.full_string)
+
+        return result
 
     def can_be_cleared(self):
         return self.value is not None
@@ -855,17 +878,6 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                         return icon.character
 
         super_result = super().data_display(index)
-
-        use_dash = all((
-            super_result is None,
-            column in self.meta_columns,
-            isinstance(node, Nv),
-        ))
-        if use_dash:
-            return '-'
-
-        if isinstance(node, Nv) and column == 7:
-            print(node.name, column, repr(super_result))
 
         return super_result
 

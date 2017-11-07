@@ -8,6 +8,7 @@ import attr
 import twisted.internet.defer
 import twisted.protocols.policies
 
+import epyqlib.nv
 import epyqlib.utils.general
 
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -232,7 +233,11 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
 
     def _read_before_write(self, request):
         nonskip = {
-            s: getattr(s.fields, request.meta.name)
+            s: (
+                s.value
+                if request.meta == epyqlib.nv.MetaEnum.value
+                else getattr(s.meta, request.meta.name).value
+            )
             for s in request.signals
         }
 
@@ -315,12 +320,7 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
                 )
                 data[signal] = v
 
-            # TODO: really really just get the data processed right
-            try:
-                data[signal] = int(data[signal])
-            except ValueError:
-                data[signal] = int(data[signal], 16)
-
+            data[signal] = int(data[signal])
 
         data = request.frame.update_from_signals(
             data=data.values(),

@@ -212,8 +212,9 @@ class Signal:
         self.scaled_value = None
 
         self.frame = frame
-        # TODO: put this into the frame!
-        self.frame.signals.append(self)
+        if self.frame is not None:
+            # TODO: put this into the frame!
+            self.frame.signals.append(self)
 
         self.enumeration_format_re = {'re': '^\[(\d+)\]',
                                       'format': '[{v}] {s}',
@@ -236,7 +237,7 @@ class Signal:
         return '{name}: sb:{start_bit}, osb:{ordering_start_bit}, len:{length}'.format(
             name=self.name,
             start_bit=self.start_bit,
-            ordering_start_bit=self.ordering_start_bit,
+            ordering_start_bit=getattr(self, 'ordering_start_bit', '-'),
             length=self.signal_size
         )
 

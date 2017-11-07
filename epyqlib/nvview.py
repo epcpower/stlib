@@ -159,10 +159,15 @@ class NvView(QtWidgets.QWidget):
                 self.ui.tree_view.header().setSectionResizeMode(
                     i, QtWidgets.QHeaderView.ResizeToContents)
 
-        self.ui.tree_view.setItemDelegateForColumn(
-            epyqlib.nv.Columns.indexes.value,
-            epyqlib.delegates.ByFunction(model=model, proxy=proxy, parent=self)
-        )
+        for column in model.meta_columns:
+            self.ui.tree_view.setItemDelegateForColumn(
+                column,
+                epyqlib.delegates.ByFunction(
+                    model=model,
+                    proxy=proxy,
+                    parent=self,
+                )
+            )
 
         self.ui.tree_view.setColumnHidden(
             epyqlib.nv.Columns.indexes.factory,
@@ -305,8 +310,6 @@ class NvView(QtWidgets.QWidget):
         frame = next(iter(d)).frame
 
         signals = set(only_these) & set(frame.set_frame.parameter_signals)
-
-        print('update_signals: meta={} ({})'.format(repr(meta), type(meta)))
 
         for signal in signals:
             if signal.status_signal in d:
