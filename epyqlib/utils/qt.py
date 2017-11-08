@@ -812,7 +812,16 @@ def pyqtify(name=None, property_decorator=lambda: property):
 
             self.__pyqtify_instance__.changed = SignalContainer()
 
-            old_init(self, *args, **kwargs)
+            try:
+                old_init(self, *args, **kwargs)
+            except TypeError as e:
+                raise TypeError(
+                    '.'.join((
+                        type(self).__module__,
+                        type(self).__qualname__,
+                        e.args[0],
+                    )),
+                ) from e
 
         cls.__init__ = __init__
 
