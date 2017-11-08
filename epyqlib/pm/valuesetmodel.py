@@ -1,3 +1,5 @@
+import pathlib
+
 import attr
 import graham
 import marshmallow
@@ -7,6 +9,10 @@ import epyqlib.pm.parametermodel
 import epyqlib.treenode
 
 
+class SaveCancelled(Exception):
+    pass
+
+
 def create_blank(parameter_model=None):
     value_set = ValueSet(parameter_model=parameter_model)
     _post_load(value_set)
@@ -14,14 +20,38 @@ def create_blank(parameter_model=None):
     return value_set
 
 
-def _post_load(value_set):
-    if value_set.path is None:
+def loads(s, path=None):
+    root = graham.schema(Root).loads(s).data
+    value_set = ValueSet(path=path)
+
+    if path is not None:
+        value_set.path = pathlib.Path(path).absolute()
+
+    _post_load(value_set, root=root)
+
+    return value_set
+
+
+def load(f):
+    value_set = loads(f.read(), path=f.name)
+
+    return value_set
+
+
+def loadp(path):
+    with open(path) as f:
+        return load(f)
+
+
+def _post_load(value_set, root=None):
+    if root is None:
+        root = Root()
+
+    if value_set.model is None:
         value_set.model = epyqlib.attrsmodel.Model(
-            root=Root(),
+            root=root,
             columns=columns,
         )
-    else:
-        raise NotImplementedError()
 
     if value_set.parameter_model is not None:
         def traverse(node, _):
@@ -45,7 +75,7 @@ def name_attrib():
     )
     graham.attrib(
         attribute=attrib,
-        field=marshmallow.fields.String(dump_only=True),
+        field=marshmallow.fields.String(),
     )
 
     return attrib
@@ -115,9 +145,37 @@ types = epyqlib.attrsmodel.Types(
 
 @attr.s
 class ValueSet:
-    parameter_model = attr.ib()
+    parameter_model = attr.ib(default=None)
     model = attr.ib(default=None)
     path = attr.ib(default=None)
+    filters = attr.ib(
+        default=(
+            ('Parameter Value Set', ['pmvs']),
+            ('All Files', ['*']),
+        )
+    )
+
+    def save(self, parent=None):
+        if self.path is None:
+            path = epyqlib.utils.qt.file_dialog(
+                filters=self.filters,
+                parent=parent,
+                save=True,
+                caption='Save Value Set As',
+            )
+
+            if path is None:
+                raise SaveCancelled()
+
+            self.path = pathlib.Path(path)
+
+        s = graham.dumps(self.model.root, indent=4).data
+
+        with open(self.path, 'w') as f:
+            f.write(s)
+
+            if not s.endswith('\n'):
+                f.write('\n')
 
 
 # TODO: CAMPid 943896754217967154269254167
