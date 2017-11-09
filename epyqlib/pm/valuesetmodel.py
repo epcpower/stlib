@@ -53,20 +53,35 @@ def _post_load(value_set, root=None):
             columns=columns,
         )
 
-    if value_set.parameter_model is not None:
-        def traverse(node, _):
-            if isinstance(node, epyqlib.pm.parametermodel.Parameter):
-                value_set.model.root.append_child(
-                    Parameter(
-                        name=node.name,
-                        parameter_uuid=node.uuid,
-                    ),
-                )
 
-        value_set.parameter_model.root.traverse(
-            call_this=traverse,
-            internal_nodes=False,
-        )
+def copy_parameter_data(value_set, human_names=True, base_node=None):
+    def traverse(node, _):
+        if isinstance(node, epyqlib.pm.parametermodel.Parameter):
+            if human_names:
+                name = node.name
+            else:
+                name = ':'.join((
+                    node.original_multiplexer_name,
+                    node.original_signal_name,
+                ))
+
+            value_set.model.root.append_child(
+                Parameter(
+                    name=name,
+                    parameter_uuid=node.uuid,
+                    factory_default=node.default,
+                    minimum=node.minimum,
+                    maximum=node.maximum,
+                ),
+            )
+
+    if base_node is None:
+        base_node = value_set.parameter_model.root
+
+    base_node.traverse(
+        call_this=traverse,
+        internal_nodes=False,
+    )
 
 
 def name_attrib():
