@@ -64,6 +64,8 @@ class NvView(QtWidgets.QWidget):
         self.resize_columns = epyqlib.nv.Columns(
             name=True,
             value=True,
+            user_default=True,
+            factory_default=True,
             minimum=True,
             maximum=True,
             comment=True,
