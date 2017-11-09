@@ -90,7 +90,14 @@ def ify():
             if metadata is None:
                 metadata = Metadata(name=field.name, **extras)
             else:
-                metadata = attr.evolve(metadata, name=field.name, **extras)
+                # TODO: remove this backwards compat and just use recent
+                #       attrs everywhere
+                evolve = getattr(attr, 'evolve', attr.assoc)
+                metadata = evolve(
+                    metadata,
+                    name=field.name,
+                    **extras,
+                )
 
             if metadata.convert is None:
                 metadata.convert = field.convert
@@ -298,6 +305,20 @@ def Root(default_name, valid_types):
                 return False
 
             return True
+
+        def nodes_by_filter(self, f):
+            def matches(node, matches):
+                if f(node):
+                    matches.add(node)
+
+            nodes = set()
+            self.traverse(
+                call_this=matches,
+                payload=nodes,
+                internal_nodes=True
+            )
+
+            return nodes
 
         def nodes_by_attribute(self, attribute_value, attribute_name):
             def matches(node, matches):

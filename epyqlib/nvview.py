@@ -21,7 +21,9 @@ __license__ = 'GPLv2+'
 class NvView(QtWidgets.QWidget):
     module_to_nv = pyqtSignal()
     read_from_file = pyqtSignal()
+    read_from_value_set_file = pyqtSignal()
     write_to_file = pyqtSignal()
+    write_to_value_set_file = pyqtSignal()
 
     def __init__(self, parent=None, in_designer=False):
         QtWidgets.QWidget.__init__(self, parent=parent)
@@ -45,7 +47,13 @@ class NvView(QtWidgets.QWidget):
         self.ui.write_to_module_button.clicked.connect(self.write_to_module)
         self.ui.read_from_module_button.clicked.connect(self.read_from_module)
         self.ui.write_to_file_button.clicked.connect(self.write_to_file)
+        self.ui.write_to_value_set_file_button.clicked.connect(
+            self.write_to_value_set_file,
+        )
         self.ui.read_from_file_button.clicked.connect(self.read_from_file)
+        self.ui.read_from_value_set_file_button.clicked.connect(
+            self.read_from_value_set_file,
+        )
 
         view = self.ui.tree_view
         view.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -148,11 +156,23 @@ class NvView(QtWidgets.QWidget):
         )
         self.ui.read_from_file.connect(read_from_file)
 
+        read_from_value_set_file = functools.partial(
+            model.read_from_value_set_file,
+            parent=self
+        )
+        self.ui.read_from_value_set_file.connect(read_from_value_set_file)
+
         write_to_file = functools.partial(
             model.write_to_file,
             parent=self
         )
         self.ui.write_to_file.connect(write_to_file)
+
+        write_to_value_set_file = functools.partial(
+            model.write_to_value_set_file,
+            parent=self
+        )
+        self.ui.write_to_value_set_file.connect(write_to_value_set_file)
 
         for i in epyqlib.nv.Columns.indexes:
             if self.resize_columns[i]:

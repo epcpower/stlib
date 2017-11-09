@@ -6,11 +6,14 @@ import attr
 import can
 import enum
 from epyqlib.abstractcolumns import AbstractColumns
+import epyqlib.attrsmodel
 import epyqlib.canneo
+import epyqlib.pm.valuesetmodel
 import epyqlib.twisted.busproxy
 import epyqlib.twisted.nvs
 import epyqlib.utils.general
 import epyqlib.utils.twisted
+import itertools
 import json
 import epyqlib.pyqabstractitemmodel
 from epyqlib.treenode import TreeNode
@@ -475,6 +478,27 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
         return d
 
+    def to_value_set(self, include_secrets=False):
+        value_set = epyqlib.pm.valuesetmodel.create_blank()
+
+        for child in self.all_nv():
+            if include_secrets or not child.secret:
+                parameter = epyqlib.pm.valuesetmodel.Parameter(
+                    name=child.fields.name,
+                    value=child.get_human_value(for_file=True),
+                    user_default=child.meta.user_default.get_human_value(
+                        for_file=True
+                    ),
+                    factory_default=child.meta.factory_default.get_human_value(
+                        for_file=True
+                    ),
+                    minimum=child.meta.minimum.get_human_value(for_file=True),
+                    maximum=child.meta.maximum.get_human_value(for_file=True),
+                )
+                value_set.model.root.append_child(parameter)
+
+        return value_set
+
     def from_dict(self, d):
         only_in_file = list(d.keys())
 
@@ -490,6 +514,77 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         for name in only_in_file:
             print("Unrecognized NV value named '{}' found when loading "
                   "from dict".format(name))
+
+    def from_value_set(self, value_set):
+        only_in_file = value_set.model.root.nodes_by_filter(
+            f=lambda node: isinstance(node, epyqlib.pm.valuesetmodel.Parameter),
+        )
+        only_in_file = {
+            parameter.name
+            for parameter in only_in_file
+        }
+        only_in_file = {
+            (name, meta)
+            for name, meta in itertools.product(
+                only_in_file,
+                epyqlib.nv.MetaEnum,
+            )
+        }
+
+        for child in self.all_nv():
+            name = child.fields.name
+
+            try:
+                parameters = value_set.model.root.nodes_by_attribute(
+                    attribute_value=name,
+                    attribute_name='name',
+                )
+            except epyqlib.attrsmodel.NotFoundError:
+                parameters = []
+
+
+            not_found_format = (
+                "Nv value named '{}' ({{}}) not found when loading "
+                "from value set".format(name)
+            )
+
+            if len(parameters) == 1:
+                parameter, = parameters
+
+                if parameter.value is not None:
+                    child.set_human_value(parameter.value)
+                    only_in_file.discard((name, 'value'))
+                else:
+                    print(not_found_format.format('value'))
+
+                for meta in MetaEnum:
+                    if meta == MetaEnum.value:
+                        continue
+
+                    v = getattr(parameter, meta.name)
+                    if v is not None:
+                        child.set_meta(
+                            data=v,
+                            meta=meta,
+                            check_range=False,
+                        )
+                        only_in_file.discard((name, meta))
+                    else:
+                        print(not_found_format.format(meta.name))
+            elif len(parameters) > 1:
+                print(
+                    "Nv value named '{}' occurred {} times when loading "
+                    "from value set".format(name, len(parameters)),
+                )
+            else:
+                print(
+                    "Nv value named '{}' not found when loading from "
+                    "value set".format(name),
+                )
+
+        for name, meta in sorted(only_in_file):
+            print("Unrecognized NV value named '{}' ({}) found when loading "
+                  "from value set".format(name, meta.name))
 
     def defaults_from_dict(self, d):
         only_in_file = list(d.keys())
@@ -1023,6 +1118,28 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 )
 
     @pyqtSlot()
+    def write_to_value_set_file(self, parent=None):
+        filters = epyqlib.pm.valuesetmodel.ValueSet.filters.default
+        path = epyqlib.utils.qt.file_dialog(
+            filters,
+            save=True,
+            parent=parent,
+        )
+
+        if path is not None:
+            value_set = self.root.to_value_set()
+            value_set.path = path
+
+            try:
+                value_set.save()
+            except epyqlib.pm.valuesetmodel.SaveCancelled:
+                message = 'Save cancelled'
+            else:
+                message = 'Saved to "{}"'.format(path)
+
+        self.activity_ended.emit(message)
+
+    @pyqtSlot()
     def read_from_file(self, parent=None):
         filters = [
             ('EPC Parameters', ['epp']),
@@ -1042,6 +1159,22 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 self.activity_ended.emit(
                     'Loaded from "{}"'.format(filename)
                 )
+
+    @pyqtSlot()
+    def read_from_value_set_file(self, parent=None):
+        filters = epyqlib.pm.valuesetmodel.ValueSet.filters.default
+        path = epyqlib.utils.qt.file_dialog(filters, parent=parent)
+
+        if path is None:
+            return
+
+        value_set = epyqlib.pm.valuesetmodel.loadp(path)
+
+        self.root.from_value_set(value_set)
+
+        self.activity_ended.emit(
+            'Loaded value set from "{}"'.format(path),
+        )
 
 
 if __name__ == '__main__':
