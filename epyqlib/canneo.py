@@ -686,10 +686,13 @@ class Frame(QtCanListener):
                            data=data)
 
     def message_received(self, msg):
+        unpacked = False
+
         if (msg.arbitration_id == self.id and
                 bool(msg.id_type) == self.extended):
             if self.mux_frame is None:
                 self.unpack(msg.data)
+                unpacked = True
             elif self.mux_frame is self:
                 # print(self, self.name, self.mux_name, self.mux_frame, self.mux_frame.name, self.mux_frame.mux_name)
 
@@ -697,11 +700,16 @@ class Frame(QtCanListener):
                 mux_signal, = unpacked
 
                 # TODO: this if added to avoid exceptions temporarily
-                if mux_signal.value not in self.multiplex_frames:
-                    return
-                self.multiplex_frames[mux_signal.value].message_received(msg)
+                if mux_signal.value in self.multiplex_frames:
+                    unpacked = (
+                        self.multiplex_frames[mux_signal.value]
+                            .message_received(msg)
+                    )
             else:
                 self.unpack(msg.data)
+                unpacked = True
+
+        return unpacked
 
     def terminate(self):
         callers = tuple(r for r in self._cyclic_requests)

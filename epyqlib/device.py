@@ -46,7 +46,9 @@ from epyqlib.widgets.abstractwidget import AbstractWidget
 from PyQt5 import uic
 from PyQt5.QtCore import (pyqtSlot, Qt, QFile, QFileInfo, QTextStream, QObject,
                           QSortFilterProxyModel, QIODevice)
-from PyQt5.QtWidgets import QWidget, QMessageBox, QInputDialog, QLineEdit
+from PyQt5.QtWidgets import (
+    QWidget, QMessageBox, QInputDialog, QLineEdit, QVBoxLayout)
+from PyQt5 import QtCore
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -634,16 +636,8 @@ class Device:
 
             self.ui.tabs.currentChanged.connect(tab_changed)
 
-        self.ui.offline_overlay = epyqlib.overlaylabel.OverlayLabel(parent=self.ui)
-        self.ui.offline_overlay.label.setText('offline')
-
         self.ui.tabs.setCurrentIndex(0)
 
-
-
-        notifier = self.bus.notifier
-        for notifiee in notifiees:
-            notifier.add(notifiee)
 
         def flatten(dict_node):
             flat = set()
@@ -768,6 +762,37 @@ class Device:
                                           signal=widget.edit)
                                 break
 
+        monitor_matrix = list(
+            canmatrix.formats.loadp(self.can_path).values()
+        )[0]
+        monitor_frames = epyqlib.canneo.Neo(matrix=monitor_matrix)
+        monitor_frame = monitor_frames.frame_by_name('StatusBits')
+
+        self.connection_monitor = FrameTimeout(frame=monitor_frame)
+        self.connection_monitor.lost.connect(lambda: print('converter lost'))
+        self.connection_monitor.found.connect(lambda: print('converter found'))
+
+        self.overlay_widget = epyqlib.overlaylabel.OverlayWidget(
+            parent=self.ui,
+        )
+        layout = QVBoxLayout()
+        self.overlay_widget.setLayout(layout)
+
+        self.ui.offline_overlay = epyqlib.overlaylabel.OverlayLabel()
+        self.ui.offline_overlay.label.setText('offline')
+        layout.addWidget(self.ui.offline_overlay)
+
+
+        self.ui.connection_monitor_overlay = epyqlib.overlaylabel.OverlayLabel()
+        layout.addWidget(self.ui.connection_monitor_overlay)
+
+        self.connection_monitor.lost.connect(self.connection_status_changed)
+        self.connection_monitor.found.connect(self.connection_status_changed)
+
+        self.connection_monitor.start()
+
+        notifiees.append(self.connection_monitor)
+
         self.bus_status_changed(online=False, transmit=False)
 
         all_signals = set()
@@ -818,6 +843,9 @@ class Device:
                 icon=QMessageBox.Information,
             )
 
+        for notifiee in notifiees:
+            self.bus.notifier.add(notifiee)
+
         self.extension.post()
 
     def absolute_path(self, path=''):
@@ -847,6 +875,16 @@ class Device:
         self.ui.offline_overlay.setVisible(len(text) > 0)
         self.ui.offline_overlay.setStyleSheet(style)
 
+    def connection_status_changed(self):
+        present = self.connection_monitor.present
+
+        text = 'lost'
+        if present:
+            text = ''
+
+        self.ui.connection_monitor_overlay.label.setText(text)
+        self.ui.connection_monitor_overlay.setVisible(len(text) > 0)
+
     def terminate(self):
         self.neo_frames.terminate()
         try:
@@ -857,6 +895,45 @@ class Device:
         if self.nv_looping_set is not None:
             self.nv_looping_set.stop()
         logging.debug('{} terminated'.format(object.__repr__(self)))
+
+
+class FrameTimeout(epyqlib.canneo.QtCanListener):
+    lost = epyqlib.utils.qt.Signal()
+    found = epyqlib.utils.qt.Signal()
+
+    def __init__(self, frame, relative=lambda t: 5 * t, absolute=0.5,
+                 parent=None):
+        super().__init__(self.message_received, parent=parent)
+
+        self.frame = frame
+
+        self.timeout = 1000 * max(
+            absolute,
+            relative(float(self.frame.cycle_time) / 1000),
+        )
+
+        self.present = False
+
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self._lost)
+
+    def _lost(self):
+        self.timer.stop()
+        self.present = False
+        self.lost.emit()
+
+    def start(self):
+        self._lost()
+
+    def message_received(self, msg):
+        if not self.frame.message_received(msg):
+            return
+
+        self.timer.start(self.timeout)
+
+        if not self.present:
+            self.present = True
+            self.found.emit()
 
 
 if __name__ == '__main__':

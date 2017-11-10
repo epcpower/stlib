@@ -118,6 +118,29 @@ class OverlayLabel(QtWidgets.QWidget):
             round(min(pixel_size_width, pixel_size_height))))
 
 
+class OverlayWidget(QtWidgets.QWidget):
+    def __init__(self, parent=None, in_designer=False):
+        super().__init__(parent=parent)
+
+        self.in_designer = in_designer
+
+        parent_widget = self.parentWidget()
+
+        if parent_widget is not None:
+            new_resizeEvent = functools.partial(
+                parent_resizeEvent,
+                child=weakref.ref(self),
+                parent_resizeEvent=weakref.ref(parent_widget.resizeEvent)
+            )
+
+            parent_widget.resizeEvent = new_resizeEvent
+
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
+
+    def resizeEvent(self, event):
+        QtWidgets.QWidget.resizeEvent(self, event)
+
+
 if __name__ == '__main__':
     import sys
 
