@@ -344,8 +344,6 @@ def test_signal_to_pyqtslot():
 
     s.signal.connect(q.slot)
 
-    assert False
-
 
 # def test_signal_repr():
 #     class C:
