@@ -110,7 +110,8 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
     activity_ended = epyqlib.utils.qt.Signal(str)
 
     def __init__(self, neo, bus, stop_cyclic=None, start_cyclic=None,
-                 configuration=None, hierarchy=None, parent=None):
+                 configuration=None, hierarchy=None, metas=(MetaEnum.value,),
+                 parent=None):
         TreeNode.__init__(self)
         epyqlib.canneo.QtCanListener.__init__(self, parent=parent)
 
@@ -215,7 +216,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     d = twisted.internet.defer.Deferred()
                     d.callback(None)
 
-                    for enumerator in MetaEnum:
+                    for enumerator in metas:
                         print(enumerator)
                         d.addCallback(lambda _: self.protocol.write_multiple(
                             nv_signals=signals,
