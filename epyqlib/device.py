@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 import attr
 import can
 import canmatrix.formats
+import collections
 import epyqlib.canneo
 import epyqlib.deviceextension
 try:
@@ -150,6 +151,19 @@ def load(file):
         pass
     elif isinstance(file, io.IOBase):
         pass
+
+
+def ignore_timeout(failure):
+    acceptable_errors = (
+        epyqlib.twisted.nvs.RequestTimeoutError,
+        epyqlib.twisted.nvs.SendFailedError,
+        epyqlib.twisted.nvs.CanceledError,
+    )
+    if failure.type in acceptable_errors:
+        return None
+
+    return epyqlib.utils.twisted.errbackhook(
+        failure)
 
 
 class Device:
@@ -397,6 +411,9 @@ class Device:
 
         can_configuration = can_configurations[can_configuration]
 
+        self.bus_online = False
+        self.bus_tx = False
+
         self.bus = BusProxy(bus=bus)
 
         self.nv_looping_set = None
@@ -642,6 +659,7 @@ class Device:
 
         self.ui.tabs.setCurrentIndex(0)
 
+        self.widget_nv_frames = collections.defaultdict(list)
 
         def flatten(dict_node):
             flat = set()
@@ -711,19 +729,11 @@ class Device:
                     if signal.frame.id == self.nvs.set_frames[0].id:
                         nv_signal = self.widget_nvs.neo.signal_by_path(*signal_path)
 
+                        self.widget_nv_frames[nv_signal.frame].append(
+                            nv_signal,
+                        )
+
                         if nv_signal.multiplex not in self.nv_looping_reads:
-                            def ignore_timeout(failure):
-                                acceptable_errors = (
-                                    epyqlib.twisted.nvs.RequestTimeoutError,
-                                    epyqlib.twisted.nvs.SendFailedError,
-                                    epyqlib.twisted.nvs.CanceledError,
-                                )
-                                if failure.type in acceptable_errors:
-                                    return None
-
-                                return epyqlib.utils.twisted.errbackhook(
-                                        failure)
-
                             def read(nv_signal=nv_signal):
                                 d = self.nvs.protocol.read(
                                     nv_signal=nv_signal,
@@ -792,6 +802,8 @@ class Device:
 
         self.connection_monitor.lost.connect(self.connection_status_changed)
         self.connection_monitor.found.connect(self.connection_status_changed)
+
+        self.connection_monitor.found.connect(self.read_nv_widget_min_max)
 
         self.connection_monitor.start()
 
@@ -866,6 +878,9 @@ class Device:
 
     @pyqtSlot(bool)
     def bus_status_changed(self, online, transmit):
+        self.bus_online = online
+        self.bus_tx = transmit
+
         style = epyqlib.overlaylabel.styles['red']
         text = ''
         if online:
@@ -878,6 +893,39 @@ class Device:
         self.ui.offline_overlay.label.setText(text)
         self.ui.offline_overlay.setVisible(len(text) > 0)
         self.ui.offline_overlay.setStyleSheet(style)
+
+        self.read_nv_widget_min_max()
+
+    def read_nv_widget_min_max(self):
+        print('bus_online', self.bus_online)
+        print('bus_tx', self.bus_tx)
+        print('present', self.connection_monitor.present)
+        active = all((
+            self.bus_online,
+            self.bus_tx,
+            self.connection_monitor.present,
+        ))
+
+        if not active:
+            return
+
+        print('reading min/max for nv widgets')
+
+        metas = (
+            epyqlib.nv.MetaEnum.minimum,
+            epyqlib.nv.MetaEnum.maximum,
+        )
+
+        for frame, signals in self.widget_nv_frames.items():
+            for meta in metas:
+                d = self.nvs.protocol.read_multiple(
+                    nv_signals=signals,
+                    meta=meta,
+                )
+
+                d.addErrback(ignore_timeout)
+
+        return d
 
     def connection_status_changed(self):
         present = self.connection_monitor.present
