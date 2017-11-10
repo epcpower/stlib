@@ -119,6 +119,7 @@ class CanConfiguration:
     data_logger_reset_signal_path = attr.ib()
     data_logger_recording_signal_path = attr.ib()
     data_logger_configuration_is_valid_signal_path = attr.ib()
+    monitor_frame = attr.ib()
 
 
 can_configurations = {
@@ -128,7 +129,8 @@ can_configurations = {
         data_logger_recording_signal_path=(
             'StatusBits', 'DataloggerRecording'),
         data_logger_configuration_is_valid_signal_path=(
-            'StatusBits', 'DataloggerConfigurationIsValid')
+            'StatusBits', 'DataloggerConfigurationIsValid'),
+        monitor_frame='StatusBits',
     ),
     'j1939': CanConfiguration(
         data_logger_reset_signal_path=(
@@ -137,8 +139,9 @@ can_configurations = {
             'ParameterQuery', 'DataloggerStatus', 'DataloggerRecording'),
         data_logger_configuration_is_valid_signal_path=(
             'ParameterQuery', 'DataloggerStatus',
-            'DataloggerConfigurationIsValid')
-    )
+            'DataloggerConfigurationIsValid'),
+        monitor_frame='StatusBits',
+    ),
 }
 
 
@@ -767,11 +770,11 @@ class Device:
             canmatrix.formats.loadp(self.can_path).values()
         )[0]
         monitor_frames = epyqlib.canneo.Neo(matrix=monitor_matrix)
-        monitor_frame = monitor_frames.frame_by_name('StatusBits')
+        monitor_frame = monitor_frames.frame_by_name(
+            can_configuration.monitor_frame,
+        )
 
         self.connection_monitor = FrameTimeout(frame=monitor_frame)
-        self.connection_monitor.lost.connect(lambda: print('converter lost'))
-        self.connection_monitor.found.connect(lambda: print('converter found'))
 
         self.overlay_widget = epyqlib.overlaylabel.OverlayWidget(
             parent=self.ui,
@@ -879,7 +882,7 @@ class Device:
     def connection_status_changed(self):
         present = self.connection_monitor.present
 
-        text = 'lost'
+        text = 'no status'
         if present:
             text = ''
 
