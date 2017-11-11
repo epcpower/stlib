@@ -178,6 +178,16 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
             else:
                 raise ReadOnlyError()
 
+        if not isinstance(nv_signals, dict):
+            nv_signals = {
+                s: (
+                    s.value
+                    if meta == epyqlib.nv.MetaEnum.value
+                    else getattr(s.meta, meta.name).value
+                )
+                for s in nv_signals
+            }
+
         return self._read_write_request(
             nv_signals=nv_signals,
             read=False,
@@ -192,7 +202,14 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
         deferred = twisted.internet.defer.Deferred()
 
         if not isinstance(nv_signals, dict):
-            nv_signals = {s: s.value for s in nv_signals}
+            nv_signals = {
+                s: (
+                    s.value
+                    if meta == epyqlib.nv.MetaEnum.value
+                    else getattr(s.meta, meta.name).value
+                )
+                for s in nv_signals
+            }
 
         frame = tuple(nv_signals.keys())[0].frame
 

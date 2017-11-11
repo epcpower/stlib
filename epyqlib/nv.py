@@ -400,7 +400,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
         def handle_frame(frame, signals):
             frame.update_from_signals()
-            for enumerator in MetaEnum:
+            for enumerator in reversed(MetaEnum):
                 if read:
                     d.addCallback(
                         lambda _, enumerator=enumerator: self.protocol.read_multiple(

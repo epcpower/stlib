@@ -562,7 +562,7 @@ class Device:
                 bus=self.bus,
                 configuration=nv_configuration,
                 hierarchy=hierarchy,
-                metas=epyqlib.nv.MetaEnum,
+                metas=reversed(epyqlib.nv.MetaEnum),
             )
 
             self.widget_frames_nv = epyqlib.canneo.Neo(
