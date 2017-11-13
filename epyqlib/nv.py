@@ -412,9 +412,22 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                         )
                     )
                 elif frame.read_write.min <= 0:
+                    not_none_signals = []
+                    for signal in signals:
+                        if enumerator == MetaEnum.value:
+                            value = signal.value
+                        else:
+                            value = getattr(signal.meta, enumerator.name).value
+
+                        if value is not None:
+                            not_none_signals.append(signal)
+
+                    if len(not_none_signals) == 0:
+                        continue
+
                     d.addCallback(
-                        lambda _, enumerator=enumerator: self.protocol.write_multiple(
-                            nv_signals=signals,
+                        lambda _, enumerator=enumerator, not_none_signals=not_none_signals: self.protocol.write_multiple(
+                            nv_signals=not_none_signals,
                             meta=enumerator,
                             priority=epyqlib.twisted.nvs.Priority.user,
                             passive=True,
@@ -552,9 +565,11 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             if len(parameters) == 1:
                 parameter, = parameters
 
+                for meta in MetaEnum:
+                    only_in_file.discard((name, meta))
+
                 if parameter.value is not None:
                     child.set_human_value(parameter.value)
-                    only_in_file.discard((name, 'value'))
                 else:
                     print(not_found_format.format('value'))
 
@@ -569,7 +584,6 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                             meta=meta,
                             check_range=False,
                         )
-                        only_in_file.discard((name, meta))
                     else:
                         print(not_found_format.format(meta.name))
             elif len(parameters) > 1:
@@ -607,7 +621,11 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         self.activity_started.emit('Requested save to NV...')
         self.save_signal.set_value(self.save_value)
         self.save_frame.update_from_signals()
-        d = self.protocol.write(self.save_signal, passive=True)
+        d = self.protocol.write(
+            nv_signal=self.save_signal,
+            passive=True,
+            meta=MetaEnum.value,
+        )
         d.addBoth(
             epyqlib.utils.twisted.detour_result,
             self.module_to_nv_off,
@@ -622,7 +640,11 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
     def module_to_nv_off(self):
         self.save_signal.set_value(not self.save_value)
-        d = self.protocol.write(self.save_signal, passive=True)
+        d = self.protocol.write(
+            nv_signal=self.save_signal,
+            passive=True,
+            meta=MetaEnum.value,
+        )
         d.addErrback(lambda _: None)
 
     def _module_to_nv_response(self, result):
