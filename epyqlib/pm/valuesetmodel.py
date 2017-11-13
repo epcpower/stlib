@@ -54,7 +54,13 @@ def _post_load(value_set, root=None):
         )
 
 
-def copy_parameter_data(value_set, human_names=True, base_node=None):
+def copy_parameter_data(
+        value_set,
+        human_names=True,
+        base_node=None,
+        calculate_unspecified_min_max=False,
+        symbol_root=None,
+):
     def traverse(node, _):
         if isinstance(node, epyqlib.pm.parametermodel.Parameter):
             if human_names:
@@ -65,13 +71,28 @@ def copy_parameter_data(value_set, human_names=True, base_node=None):
                     node.original_signal_name,
                 ))
 
+            minimum = node.minimum
+            maximum = node.maximum
+
+            if calculate_unspecified_min_max:
+                query_multiplexed_message, = symbol_root.nodes_by_attribute(
+                    attribute_value='Parameter Query',
+                    attribute_name='name',
+                )
+                signal, = query_multiplexed_message.nodes_by_attribute(
+                    attribute_value=node.uuid,
+                    attribute_name='parameter_uuid',
+                )
+
+                minimum, maximum = signal.calculated_min_max()
+
             value_set.model.root.append_child(
                 Parameter(
                     name=name,
                     parameter_uuid=node.uuid,
                     factory_default=node.default,
-                    minimum=node.minimum,
-                    maximum=node.maximum,
+                    minimum=minimum,
+                    maximum=maximum,
                 ),
             )
 
