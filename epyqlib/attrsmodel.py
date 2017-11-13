@@ -43,10 +43,6 @@ class ConsistencyError(Exception):
     pass
 
 
-class NotFoundError(Exception):
-    pass
-
-
 @attr.s
 class Metadata:
     name = attr.ib(default=None)
@@ -298,31 +294,6 @@ def Root(default_name, valid_types):
                 return False
 
             return True
-
-        def nodes_by_attribute(self, attribute_value, attribute_name):
-            def matches(node, matches):
-                if not hasattr(node, attribute_name):
-                    return
-
-                if getattr(node, attribute_name) == attribute_value:
-                    matches.add(node)
-
-            nodes = set()
-            self.traverse(
-                call_this=matches,
-                payload=nodes,
-                internal_nodes=True
-            )
-
-            if len(nodes) == 0:
-                raise NotFoundError(
-                    '''Attribute '{}' with value '{}' not found'''.format(
-                        attribute_name,
-                        attribute_value,
-                    )
-                )
-
-            return nodes
 
     return Root
 
