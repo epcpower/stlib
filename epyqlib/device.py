@@ -417,6 +417,7 @@ class Device:
         self.bus = BusProxy(bus=bus)
 
         self.nv_looping_set = None
+        self.nv_tab_looping_set = None
 
         self.rx_interval = rx_interval
         self.serial_number = serial_number
@@ -556,6 +557,7 @@ class Device:
             )
 
             self.nv_looping_set = epyqlib.twisted.loopingset.Set()
+            self.nv_tab_looping_set = epyqlib.twisted.loopingset.Set()
 
             self.nvs = epyqlib.nv.Nvs(
                 neo=self.frames_nv,
@@ -652,8 +654,10 @@ class Device:
             def tab_changed(index):
                 if index == self.ui.tabs.indexOf(self.ui.nv):
                     self.nv_looping_set.stop()
+                    self.nv_tab_looping_set.start()
                 else:
                     self.nv_looping_set.start()
+                    self.nv_tab_looping_set.stop()
 
             self.ui.tabs.currentChanged.connect(tab_changed)
 
@@ -682,6 +686,8 @@ class Device:
         self.nv_looping_reads = {}
         if Tabs.variables in tabs:
             flat.append(self.ui.variable_selection)
+        if Tabs.nv in tabs:
+            flat.append(self.ui.nv)
         for dash in flat:
             # TODO: CAMPid 99457281212789437474299
             children = dash.findChildren(QObject)
@@ -753,6 +759,14 @@ class Device:
                                 period=1
                             )
                         )
+                        if dash is self.ui.nv:
+                            self.nv_tab_looping_set.add_request(
+                                key=widget,
+                                request=epyqlib.twisted.loopingset.Request(
+                                    f=self.nv_looping_reads[nv_signal.multiplex],
+                                    period=1
+                                )
+                            )
 
                         if hasattr(widget, 'tx') and widget.tx:
                             signal = self.widget_nvs.neo.signal_by_path(
@@ -946,6 +960,8 @@ class Device:
             pass
         if self.nv_looping_set is not None:
             self.nv_looping_set.stop()
+        if self.nv_tab_looping_set is not None:
+            self.nv_tab_looping_set.stop()
         logging.debug('{} terminated'.format(object.__repr__(self)))
 
 

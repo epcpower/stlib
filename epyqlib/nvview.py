@@ -81,6 +81,12 @@ class NvView(QtWidgets.QWidget):
             column=epyqlib.nv.Columns.indexes.name,
         )
 
+        self.ui.current_access_level.signal_path = ';'.join((
+            'ParameterQuery',
+            'FactoryAccess',
+            'AccessLevel',
+        ))
+
     def filter_text_changed(self, text):
         self.ui.tree_view.model().setFilterWildcard(text)
 
