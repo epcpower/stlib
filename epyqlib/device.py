@@ -752,19 +752,20 @@ class Device:
 
                             self.nv_looping_reads[nv_signal.multiplex] = read
 
-                        self.nv_looping_set.add_request(
-                            key=widget,
-                            request=epyqlib.twisted.loopingset.Request(
-                                f=self.nv_looping_reads[nv_signal.multiplex],
-                                period=1
-                            )
-                        )
                         if dash is self.ui.nv:
                             self.nv_tab_looping_set.add_request(
                                 key=widget,
                                 request=epyqlib.twisted.loopingset.Request(
                                     f=self.nv_looping_reads[nv_signal.multiplex],
-                                    period=1
+                                    period=10,
+                                )
+                            )
+                        else:
+                            self.nv_looping_set.add_request(
+                                key=widget,
+                                request=epyqlib.twisted.loopingset.Request(
+                                    f=self.nv_looping_reads[nv_signal.multiplex],
+                                    period=1,
                                 )
                             )
 

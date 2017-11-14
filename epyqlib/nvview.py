@@ -87,6 +87,15 @@ class NvView(QtWidgets.QWidget):
             'AccessLevel',
         ))
 
+        self.password_mapper = QtWidgets.QDataWidgetMapper()
+        self.password_mapper.setSubmitPolicy(
+            QtWidgets.QDataWidgetMapper.AutoSubmit,
+        )
+        self.access_level_mapper = QtWidgets.QDataWidgetMapper()
+        self.access_level_mapper.setSubmitPolicy(
+            QtWidgets.QDataWidgetMapper.AutoSubmit,
+        )
+
     def filter_text_changed(self, text):
         self.ui.tree_view.model().setFilterWildcard(text)
 
@@ -146,6 +155,71 @@ class NvView(QtWidgets.QWidget):
         self.ui.tree_view.setModel(proxy)
 
         model = self.nonproxy_model()
+
+        self.password_mapper.setModel(model)
+        self.password_mapper.setRootIndex(model.index_from_node(
+            model.root.password_node.tree_parent,
+        ))
+        self.password_mapper.setCurrentIndex(
+            model.index_from_node(model.root.password_node).row(),
+        )
+        self.password_mapper.addMapping(
+            self.ui.access_level_password,
+            epyqlib.nv.Columns.indexes.value,
+        )
+
+        access_level_node = model.root.access_level_node
+        self.access_level_mapper.setModel(model)
+        self.access_level_mapper.setRootIndex(model.index_from_node(
+            access_level_node.tree_parent,
+        ))
+        access_level_index = model.index_from_node(access_level_node)
+        self.access_level_mapper.setCurrentIndex(
+            access_level_index.row(),
+        )
+
+        # TODO: CAMPid 9754542524161542698615426
+        # TODO: use the userdata to make it easier to get in and out
+        self.ui.access_level.addItems(
+            model.root.access_level_node.enumeration_strings(
+                include_values=True,
+            ),
+        )
+
+        self.access_level_mapper.addMapping(
+            self.ui.access_level,
+            epyqlib.nv.Columns.indexes.value,
+            'currentIndex'.encode('utf-8'),
+        )
+
+        delegate = self.access_level_mapper.itemDelegate()
+        self.ui.access_level.currentIndexChanged.connect(
+            lambda: delegate.commitData.emit(self.ui.access_level),
+        )
+
+        self.ui.access_level.setCurrentIndex(1)
+        self.ui.access_level.setCurrentIndex(0)
+
+        selected_nodes = (
+            model.root.password_node,
+            model.root.access_level_node,
+        )
+
+        callback = functools.partial(
+            self.update_signals,
+            only_these=selected_nodes
+        )
+
+        def write_access_level():
+            d = model.root.write_all_to_device(
+                only_these=selected_nodes,
+                callback=callback,
+            )
+            d.addErrback(epyqlib.utils.twisted.catch_expected)
+            d.addErrback(epyqlib.utils.twisted.errbackhook)
+
+        self.set_access_level.clicked.connect(write_access_level)
+
         model.activity_started.connect(self.activity_started)
         model.activity_ended.connect(self.activity_ended)
 

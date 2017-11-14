@@ -223,7 +223,7 @@ class Signal:
                                       'no_value_format': '{s}'}
 
         # TODO: make this configurable in the .sym?
-        self.secret = self.name == 'FactoryAccess'
+        self.secret = self.name.casefold() in {'factoryaccess', 'password'}
 
         self.decimal_places = None
 

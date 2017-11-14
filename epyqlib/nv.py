@@ -133,6 +133,16 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         self.neo = neo
         self.message_received_signal.connect(self.message_received)
 
+        self.access_level_node = self.neo.signal_by_path(
+            'ParameterQuery',
+            'FactoryAccess',
+            'AccessLevel',
+        )
+        self.password_node = self.neo.signal_by_path(
+            'ParameterQuery',
+            'FactoryAccess',
+            'Password',
+        )
 
         self.set_frames = [f for f in self.neo.frames
                        if f.name == self.configuration.set_frame]
@@ -350,18 +360,37 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             callback=callback,
         )
 
-    def read_all_from_device(self, only_these=None, callback=None):
+    def read_all_from_device(
+            self,
+            only_these=None,
+            callback=None,
+            meta=None,
+            background=False,
+    ):
         return self._read_write_all(
             read=True,
             only_these=only_these,
             callback=callback,
+            meta=meta,
+            background=background,
         )
 
-    def _read_write_all(self, read, only_these=None, callback=None):
+    def _read_write_all(
+            self,
+            read,
+            only_these=None,
+            callback=None,
+            meta=None,
+            background=False,
+    ):
+        if meta is None:
+            meta = tuple(reversed(MetaEnum))
+
         activity = ('Reading from device' if read
                     else 'Writing to device')
 
-        self.activity_started.emit('{}...'.format(activity))
+        if not background:
+            self.activity_started.emit('{}...'.format(activity))
         d = twisted.internet.defer.Deferred()
         d.callback(None)
 
@@ -400,7 +429,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
         def handle_frame(frame, signals):
             frame.update_from_signals()
-            for enumerator in reversed(MetaEnum):
+            for enumerator in meta:
                 if read:
                     d.addCallback(
                         lambda _, enumerator=enumerator: self.protocol.read_multiple(
@@ -450,12 +479,13 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
                 handle_frame(frame=frame, signals=signals)
 
-        d.addCallback(epyqlib.utils.twisted.detour_result,
-                      self.activity_ended.emit,
-                      'Finished {}...'.format(activity.lower()))
-        d.addErrback(epyqlib.utils.twisted.detour_result,
-                     self.activity_ended.emit,
-                     'Failed while {}...'.format(activity.lower()))
+        if not background:
+            d.addCallback(epyqlib.utils.twisted.detour_result,
+                          self.activity_ended.emit,
+                          'Finished {}...'.format(activity.lower()))
+            d.addErrback(epyqlib.utils.twisted.detour_result,
+                         self.activity_ended.emit,
+                         'Failed while {}...'.format(activity.lower()))
 
         return d
 
@@ -469,6 +499,14 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 return
 
             if multiplex_value is not None and multiplex_message in self.status_frames.values():
+                values = multiplex_message.unpack(msg.data, only_return=True)
+
+                meta = epyqlib.nv.MetaEnum(
+                    values[multiplex_message.meta_signal],
+                )
+                if meta != epyqlib.nv.MetaEnum.value:
+                    return
+
                 multiplex_message.unpack(msg.data)
                 # multiplex_message.frame.update_canneo_from_matrix_signals()
 
@@ -901,6 +939,17 @@ class Frame(epyqlib.canneo.Frame, TreeNode):
                                    parent=parent,
                                    **kwargs)
         TreeNode.__init__(self, parent)
+
+        meta_signals = [
+            signal
+            for signal in self.signals
+            if signal.name == 'Meta'
+        ]
+
+        if len(meta_signals) == 0:
+            self.meta_signal = None
+        else:
+            self.meta_signal, = meta_signals
 
         for signal in self.signals:
             if signal.name in ("ReadParam_command", "ReadParam_status"):

@@ -110,8 +110,37 @@
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
         <widget class="QLabel" name="status_label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="access_level_password">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="echoMode">
+          <enum>QLineEdit::Password</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="access_level"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="set_access_level">
+         <property name="text">
+          <string>Set</string>
          </property>
         </widget>
        </item>
@@ -129,6 +158,13 @@
         </widget>
        </item>
        <item>
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QCheckBox" name="enforce_range_limits_check_box">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -137,7 +173,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Enforce Range Limits</string>
+          <string>Enforce Limits Locally</string>
          </property>
          <property name="checked">
           <bool>true</bool>
