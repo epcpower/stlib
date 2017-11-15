@@ -725,7 +725,11 @@ class Device:
 
                         self.dash_missing_signals.add(
                             '{}:/{} - {}'.format(
-                                dash.file_name,
+                                (
+                                    dash.file_name
+                                    if hasattr(dash, 'file_name')
+                                    else '<builtin>'
+                                ),
                                 '/'.join(widget_path),
                                 ':'.join(signal_path) if len(signal_path) > 0
                                     else '<none specified>'

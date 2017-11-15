@@ -135,12 +135,12 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
         self.access_level_node = self.neo.signal_by_path(
             'ParameterQuery',
-            'FactoryAccess',
             'AccessLevel',
+            'Level',
         )
         self.password_node = self.neo.signal_by_path(
             'ParameterQuery',
-            'FactoryAccess',
+            'AccessLevel',
             'Password',
         )
 

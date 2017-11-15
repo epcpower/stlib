@@ -83,8 +83,8 @@ class NvView(QtWidgets.QWidget):
 
         self.ui.current_access_level.signal_path = ';'.join((
             'ParameterQuery',
-            'FactoryAccess',
             'AccessLevel',
+            'Level',
         ))
 
         self.password_mapper = QtWidgets.QDataWidgetMapper()
