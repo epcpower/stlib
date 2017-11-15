@@ -757,7 +757,7 @@ class Device:
                                 key=widget,
                                 request=epyqlib.twisted.loopingset.Request(
                                     f=self.nv_looping_reads[nv_signal.multiplex],
-                                    period=10,
+                                    period=1,
                                 )
                             )
                         else:
