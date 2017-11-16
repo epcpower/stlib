@@ -672,7 +672,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         d.addErrback(
             epyqlib.utils.twisted.detour_result,
             self._module_to_nv_response,
-            0,
+            (0, None),
         )
         d.addErrback(epyqlib.utils.twisted.errbackhook)
 
@@ -686,7 +686,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         d.addErrback(lambda _: None)
 
     def _module_to_nv_response(self, result):
-        if result == 1:
+        if result[0] == 1:
             feedback = 'Save to NV confirmed'
         else:
             feedback = 'Save to NV failed ({})'.format(
