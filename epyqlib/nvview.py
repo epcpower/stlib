@@ -96,6 +96,8 @@ class NvView(QtWidgets.QWidget):
             QtWidgets.QDataWidgetMapper.AutoSubmit,
         )
 
+        self.ui.access_level_password.setPlaceholderText('Access Code...')
+
     def filter_text_changed(self, text):
         self.ui.tree_view.model().setFilterWildcard(text)
 
