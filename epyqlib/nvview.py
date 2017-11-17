@@ -340,6 +340,22 @@ class NvView(QtWidgets.QWidget):
         f = dispatch.get(node_type)
         if f is not None:
             f(position)
+        else:
+            self.other_context_menu(position)
+
+    def other_context_menu(self, position):
+        menu = QtWidgets.QMenu(parent=self.ui.tree_view)
+        menu.setSeparatorsCollapsible(True)
+
+        expand_all = menu.addAction('Expand All')
+        collapse_all = menu.addAction('Collapse All')
+
+        action = menu.exec(self.ui.tree_view.viewport().mapToGlobal(position))
+
+        if action is expand_all:
+            self.ui.tree_view.expandAll()
+        elif action is collapse_all:
+            self.ui.tree_view.collapseAll()
 
     def nv_context_menu(self, position):
         proxy = self.ui.tree_view.model()
@@ -358,6 +374,7 @@ class NvView(QtWidgets.QWidget):
         )
 
         menu = QtWidgets.QMenu(parent=self.ui.tree_view)
+        menu.setSeparatorsCollapsible(True)
 
         read = menu.addAction('Read {}'.format(
             self.ui.read_from_module_button.text()))
@@ -372,6 +389,10 @@ class NvView(QtWidgets.QWidget):
         clear = menu.addAction('Clear')
         if not any(n.can_be_cleared() for n in selected_nodes):
             clear.setDisabled(True)
+
+        menu.addSeparator()
+        expand_all = menu.addAction('Expand All')
+        collapse_all = menu.addAction('Collapse All')
 
         action = menu.exec(self.ui.tree_view.viewport().mapToGlobal(position))
 
@@ -404,6 +425,10 @@ class NvView(QtWidgets.QWidget):
         elif action is clear:
             for node in selected_nodes:
                 model.clear_node(node)
+        elif action is expand_all:
+            self.ui.tree_view.expandAll()
+        elif action is collapse_all:
+            self.ui.tree_view.collapseAll()
 
     def update_signals(self, arg, only_these):
         d, meta = arg
