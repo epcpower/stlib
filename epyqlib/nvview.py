@@ -117,8 +117,18 @@ class NvView(QtWidgets.QWidget):
 
     def write_to_module(self):
         model = self.nonproxy_model()
+
+        def not_none(nv):
+            if nv.value is not None:
+                return True
+
+            return any(
+                getattr(nv.meta, meta.name).value is not None
+                for meta in epyqlib.nv.MetaEnum.non_value
+            )
+
         only_these = [nv for nv in model.all_nv()
-                      if nv.value is not None]
+                      if not_none(nv) is not None]
         callback = functools.partial(
             self.update_signals,
             only_these=only_these

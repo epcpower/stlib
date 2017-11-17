@@ -92,6 +92,9 @@ class MetaEnum(epyqlib.utils.general.AutoNumberIntEnum):
     maximum = 4
 
 
+MetaEnum.non_value = set(MetaEnum) - {MetaEnum.value}
+
+
 @attr.s
 @epyqlib.utils.general.enumerated_attrs(MetaEnum, default=None)
 class Meta:
@@ -591,7 +594,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     attribute_value=name,
                     attribute_name='name',
                 )
-            except epyqlib.attrsmodel.NotFoundError:
+            except epyqlib.treenode.NotFoundError:
                 parameters = []
 
 
