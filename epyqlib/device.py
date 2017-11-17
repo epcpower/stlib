@@ -17,6 +17,7 @@ except ImportError:
 import epyqlib.nv
 import epyqlib.nvview
 import epyqlib.overlaylabel
+import epyqlib.scripting
 import epyqlib.twisted.loopingset
 import epyqlib.txrx
 import epyqlib.txrxview
@@ -64,6 +65,7 @@ class Elements(Enum):
     rx = 3
     variables = 4
     nv = 5
+    scripting = 6
 
 
 @unique
@@ -72,10 +74,11 @@ class Tabs(Enum):
     txrx = 2
     variables = 3
     nv = 4
+    scripting = 5
 
     @classmethod
     def defaults(cls):
-        return set(cls) - set((cls.variables,))
+        return set(cls) - {cls.variables, cls.scripting}
 
 
 def j1939_node_id_adjust(message_id, device_id, to_device, controller_id):
@@ -267,6 +270,9 @@ class Device:
 
         if Tabs.nv not in tabs:
             self.elements.discard(Elements.nv)
+
+        if Tabs.scripting not in tabs:
+            self.elements.discard(Elements.scripting)
 
         self.referenced_files = [
             f for f in [
@@ -646,6 +652,8 @@ class Device:
                     self.nv_looping_set.start()
 
             self.ui.tabs.currentChanged.connect(tab_changed)
+        if Tabs.scripting not in tabs:
+            self.ui.tabs.removeTab(self.ui.tabs.indexOf(self.ui.scripting))
 
         self.ui.offline_overlay = epyqlib.overlaylabel.OverlayLabel(parent=self.ui)
         self.ui.offline_overlay.label.setText('offline')
@@ -828,6 +836,9 @@ class Device:
                 message=message,
                 icon=QMessageBox.Information,
             )
+
+        scripting_model = epyqlib.scripting.Model(neo=self.neo_frames)
+        self.ui.scripting_view.set_model(scripting_model)
 
         self.extension.post()
 
