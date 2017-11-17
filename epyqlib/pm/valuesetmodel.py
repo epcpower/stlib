@@ -96,6 +96,8 @@ def copy_parameter_data(
                 ),
             )
 
+            value_set.model.root.children.sort()
+
     if base_node is None:
         base_node = value_set.parameter_model.root
 
@@ -139,6 +141,10 @@ def decimal_attrib(**kwargs):
 @attr.s(hash=False)
 class Parameter(epyqlib.treenode.TreeNode):
     name = name_attrib()
+    parameter_uuid = epyqlib.attrsmodel.attr_uuid(
+        default=None,
+        allow_none=True,
+    )
 
     value = decimal_attrib(default=None)
     user_default = decimal_attrib(default=None)
@@ -146,10 +152,6 @@ class Parameter(epyqlib.treenode.TreeNode):
     minimum = decimal_attrib(default=None)
     maximum = decimal_attrib(default=None)
 
-    parameter_uuid = epyqlib.attrsmodel.attr_uuid(
-        default=None,
-        allow_none=True,
-    )
     epyqlib.attrsmodel.attrib(
         attribute=parameter_uuid,
         human_name='Parameter UUID',
@@ -205,7 +207,18 @@ class ValueSet:
 
             self.path = pathlib.Path(path)
 
-        s = graham.dumps(self.model.root, indent=4).data
+        sorted_children = sorted(self.model.root.children)
+
+        # TODO: remove this backwards compat and just use recent
+        #       attrs everywhere
+        evolve = getattr(attr, 'evolve', attr.assoc)
+
+        sorted_root = evolve(
+            self.model.root,
+            children=sorted_children
+        )
+
+        s = graham.dumps(sorted_root, indent=4).data
 
         with open(self.path, 'w') as f:
             f.write(s)
