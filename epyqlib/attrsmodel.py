@@ -3,6 +3,7 @@ import contextlib
 import decimal
 import inspect
 import json
+import locale
 import logging
 import uuid
 import weakref
@@ -40,10 +41,6 @@ class Column:
 
 
 class ConsistencyError(Exception):
-    pass
-
-
-class NotFoundError(Exception):
     pass
 
 
@@ -306,45 +303,6 @@ def Root(default_name, valid_types):
 
             return True
 
-        def nodes_by_filter(self, f):
-            def matches(node, matches):
-                if f(node):
-                    matches.add(node)
-
-            nodes = set()
-            self.traverse(
-                call_this=matches,
-                payload=nodes,
-                internal_nodes=True
-            )
-
-            return nodes
-
-        def nodes_by_attribute(self, attribute_value, attribute_name):
-            def matches(node, matches):
-                if not hasattr(node, attribute_name):
-                    return
-
-                if getattr(node, attribute_name) == attribute_value:
-                    matches.add(node)
-
-            nodes = set()
-            self.traverse(
-                call_this=matches,
-                payload=nodes,
-                internal_nodes=True
-            )
-
-            if len(nodes) == 0:
-                raise NotFoundError(
-                    '''Attribute '{}' with value '{}' not found'''.format(
-                        attribute_name,
-                        attribute_value,
-                    )
-                )
-
-            return nodes
-
     return Root
 
 
@@ -383,6 +341,9 @@ def to_decimal_or_none(s):
     if isinstance(s, str) and len(s) == 0:
         return None
 
+    if isinstance(s, str):
+        s = locale.delocalize(s)
+
     try:
         result = decimal.Decimal(s)
     except decimal.InvalidOperation as e:
@@ -410,6 +371,9 @@ def to_int_or_none(s):
 
     if isinstance(s, str) and len(s) == 0:
         return None
+
+    if isinstance(s, str):
+        s = locale.delocalize(s)
 
     try:
         result = int(s)

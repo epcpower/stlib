@@ -330,6 +330,21 @@ def test_signal_chaining():
         assert tuple(checker.expected) == tuple(checker.collected)
 
 
+def test_signal_to_pyqtslot():
+    class Signal:
+        signal = epyqlib.utils.qt.Signal()
+
+    class Slot(PyQt5.QtCore.QObject):
+        @PyQt5.QtCore.pyqtSlot()
+        def slot(self):
+            pass
+
+    s = Signal()
+    q = Slot()
+
+    s.signal.connect(q.slot)
+
+
 # def test_signal_repr():
 #     class C:
 #         signal = epyqlib.utils.qt.Signal()

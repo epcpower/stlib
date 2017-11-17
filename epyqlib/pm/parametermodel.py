@@ -112,6 +112,24 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
+    original_frame_name = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+    original_multiplexer_name = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+    original_signal_name = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
     uuid = epyqlib.attrsmodel.attr_uuid()
 
     def __attrs_post_init__(self):
@@ -565,6 +583,10 @@ columns = epyqlib.attrsmodel.columns(
     merge('decimal_places', Parameter),
 
     merge('comment', Parameter),
+
+    merge('original_frame_name', Parameter),
+    merge('original_multiplexer_name', Parameter),
+    merge('original_signal_name', Parameter),
 
     merge('enumeration_uuid', Parameter),
     merge('uuid', *types.types.values()),

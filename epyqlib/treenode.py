@@ -5,6 +5,10 @@ __copyright__ = 'Copyright 2016, EPC Power Corp.'
 __license__ = 'GPLv2+'
 
 
+class NotFoundError(Exception):
+    pass
+
+
 class Signals(PyQt5.QtCore.QObject):
     child_added = PyQt5.QtCore.pyqtSignal('PyQt_PyObject', int)
     child_removed = PyQt5.QtCore.pyqtSignal(
@@ -110,6 +114,45 @@ class TreeNode:
 
     def __len__(self):
         return len(self.children)
+
+    def nodes_by_filter(self, f):
+        def matches(node, matches):
+            if f(node):
+                matches.add(node)
+
+        nodes = set()
+        self.traverse(
+            call_this=matches,
+            payload=nodes,
+            internal_nodes=True
+        )
+
+        return nodes
+
+    def nodes_by_attribute(self, attribute_value, attribute_name):
+        def matches(node, matches):
+            if not hasattr(node, attribute_name):
+                return
+
+            if getattr(node, attribute_name) == attribute_value:
+                matches.add(node)
+
+        nodes = set()
+        self.traverse(
+            call_this=matches,
+            payload=nodes,
+            internal_nodes=True
+        )
+
+        if len(nodes) == 0:
+            raise NotFoundError(
+                '''Attribute '{}' with value '{}' not found'''.format(
+                    attribute_name,
+                    attribute_value,
+                )
+            )
+
+        return nodes
 
 
 if __name__ == '__main__':

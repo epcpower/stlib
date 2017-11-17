@@ -53,20 +53,56 @@ def _post_load(value_set, root=None):
             columns=columns,
         )
 
-    if value_set.parameter_model is not None:
-        def traverse(node, _):
-            if isinstance(node, epyqlib.pm.parametermodel.Parameter):
-                value_set.model.root.append_child(
-                    Parameter(
-                        name=node.name,
-                        parameter_uuid=node.uuid,
-                    ),
+
+def copy_parameter_data(
+        value_set,
+        human_names=True,
+        base_node=None,
+        calculate_unspecified_min_max=False,
+        symbol_root=None,
+):
+    def traverse(node, _):
+        if isinstance(node, epyqlib.pm.parametermodel.Parameter):
+            if human_names:
+                name = node.name
+            else:
+                name = ':'.join((
+                    node.original_multiplexer_name,
+                    node.original_signal_name,
+                ))
+
+            minimum = node.minimum
+            maximum = node.maximum
+
+            if calculate_unspecified_min_max:
+                query_multiplexed_message, = symbol_root.nodes_by_attribute(
+                    attribute_value='Parameter Query',
+                    attribute_name='name',
+                )
+                signal, = query_multiplexed_message.nodes_by_attribute(
+                    attribute_value=node.uuid,
+                    attribute_name='parameter_uuid',
                 )
 
-        value_set.parameter_model.root.traverse(
-            call_this=traverse,
-            internal_nodes=False,
-        )
+                minimum, maximum = signal.calculated_min_max()
+
+            value_set.model.root.append_child(
+                Parameter(
+                    name=name,
+                    parameter_uuid=node.uuid,
+                    factory_default=node.default,
+                    minimum=minimum,
+                    maximum=maximum,
+                ),
+            )
+
+    if base_node is None:
+        base_node = value_set.parameter_model.root
+
+    base_node.traverse(
+        call_this=traverse,
+        internal_nodes=False,
+    )
 
 
 def name_attrib():
