@@ -141,16 +141,16 @@ def decimal_attrib(**kwargs):
 @attr.s(hash=False)
 class Parameter(epyqlib.treenode.TreeNode):
     name = name_attrib()
-    parameter_uuid = epyqlib.attrsmodel.attr_uuid(
-        default=None,
-        allow_none=True,
-    )
-
     value = decimal_attrib(default=None)
     user_default = decimal_attrib(default=None)
     factory_default = decimal_attrib(default=None)
     minimum = decimal_attrib(default=None)
     maximum = decimal_attrib(default=None)
+
+    parameter_uuid = epyqlib.attrsmodel.attr_uuid(
+        default=None,
+        allow_none=True,
+    )
 
     epyqlib.attrsmodel.attrib(
         attribute=parameter_uuid,
