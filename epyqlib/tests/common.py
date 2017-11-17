@@ -1,3 +1,4 @@
+import contextlib
 import os
 
 import attr
@@ -58,3 +59,15 @@ class Values:
 
     def check(self):
         return all(x == y for x, y in zip(self.expected, self.collected))
+
+
+@contextlib.contextmanager
+def use_locale(s=''):
+    import locale
+
+    old = locale.getlocale(locale.LC_ALL)
+    locale.setlocale(locale.LC_ALL, s)
+
+    yield
+
+    locale.setlocale(locale.LC_ALL, old)

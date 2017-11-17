@@ -3,6 +3,7 @@ import contextlib
 import decimal
 import inspect
 import json
+import locale
 import logging
 import uuid
 import weakref
@@ -333,6 +334,9 @@ def to_decimal_or_none(s):
     if isinstance(s, str) and len(s) == 0:
         return None
 
+    if isinstance(s, str):
+        s = locale.delocalize(s)
+
     try:
         result = decimal.Decimal(s)
     except decimal.InvalidOperation as e:
@@ -360,6 +364,9 @@ def to_int_or_none(s):
 
     if isinstance(s, str) and len(s) == 0:
         return None
+
+    if isinstance(s, str):
+        s = locale.delocalize(s)
 
     try:
         result = int(s)
