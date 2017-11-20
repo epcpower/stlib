@@ -79,7 +79,7 @@ class ScriptingView(QtWidgets.QWidget):
         with open(filename, 'w') as f:
             text = self.ui.csv_edit.toPlainText()
             f.write(text)
-            if f[-1] != '\n':
+            if text[-1] != '\n':
                 f.write('\n')
 
     def run(self):
