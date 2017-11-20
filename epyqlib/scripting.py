@@ -13,6 +13,10 @@ import epyqlib.utils.general
 import epyqlib.utils.twisted
 
 
+class TimeParseError(Exception):
+    pass
+
+
 @attr.s(frozen=True)
 class Event:
     time = attr.ib()
@@ -23,10 +27,22 @@ class Event:
 class Action:
     signal = attr.ib()
     value = attr.ib()
+    is_nv = attr.ib(default=False)
 
-    def __call__(self):
-        print('setting:', self.signal.name, self.value)
+    def __call__(self, nvs=None):
+        if self.is_nv:
+            return self.nv_handler(nvs)
+        else:
+            return self.standard_handler()
+
+    def standard_handler(self):
+        print('standard setting:', self.signal.name, self.value)
         self.signal.set_human_value(self.value)
+
+    def nv_handler(self, nvs):
+        print('nv setting:', self.signal.name, self.value)
+        self.signal.set_human_value(self.value)
+        nvs.write_all_to_device(only_these=(self.signal,))
 
 
 def csv_load(f):
@@ -34,8 +50,16 @@ def csv_load(f):
 
     reader = csv.reader(f)
 
-    for row in reader:
-        event_time = decimal.Decimal(row[0])
+    for i, row in enumerate(reader):
+        try:
+            event_time = decimal.Decimal(row[0])
+        except decimal.InvalidOperation as e:
+            raise TimeParseError(
+                'Unable to parse as a time (line {number}): {string}'.format(
+                    number=i,
+                    string=row[0],
+                )
+            ) from e
 
         actions = [x.strip() for x in row[1:] if len(x) > 0]
         actions = [
@@ -61,24 +85,37 @@ def csv_loadp(path):
         return csv_load(f)
 
 
-def resolve_signals(events, neo):
+def resolve(event, tx_neo, nvs):
+    signal = tx_neo.signal_by_path(*event.action.signal)
+
+    # TODO: CAMPid 079320743340327834208
+    is_nv = signal.frame.id == nvs.set_frames[0].id
+    if is_nv:
+        print('switching', event.action.signal)
+        signal = nvs.neo.signal_by_path(*event.action.signal)
+
     # TODO: remove this backwards compat and just use recent
     #       attrs everywhere
     evolve = getattr(attr, 'evolve', attr.assoc)
 
-    return [
-        evolve(
-            event,
-            action=evolve(
-                event.action,
-                signal=neo.signal_by_path(*event.action.signal),
-            )
+    return evolve(
+        event,
+        action=evolve(
+            event.action,
+            signal=signal,
+            is_nv=is_nv,
         )
+    )
+
+
+def resolve_signals(events, tx_neo, nvs):
+    return [
+        resolve(event=event, tx_neo=tx_neo, nvs=nvs)
         for event in events
     ]
 
 
-def run(events):
+def run(events, nvs):
     d = twisted.internet.defer.Deferred()
 
     zero_padded = itertools.chain(
@@ -91,6 +128,7 @@ def run(events):
             clock=twisted.internet.reactor,
             delay=float(n.time - p.time),
             callable=n.action,
+            nvs=nvs,
         ))
 
     d.addCallback(lambda _: print('done'))
@@ -100,12 +138,17 @@ def run(events):
 
 @attr.s
 class Model:
-    neo = attr.ib()
+    tx_neo = attr.ib()
+    nvs = attr.ib()
 
     def demo(self):
         events = epyqlib.scripting.csv_loadp(
             pathlib.Path(__file__).parents[0] / 'scripting.csv',
         )
 
-        events = epyqlib.scripting.resolve_signals(events, self.neo)
-        epyqlib.scripting.run(events)
+        events = epyqlib.scripting.resolve_signals(
+            events=events,
+            tx_neo=self.tx_neo,
+            nvs=self.nvs,
+        )
+        epyqlib.scripting.run(events=events, nvs=self.nvs)

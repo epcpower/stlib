@@ -646,7 +646,11 @@ class Device:
             self.ui.tabs.removeTab(self.ui.tabs.indexOf(self.ui.nv))
         else:
             def tab_changed(index):
-                if index == self.ui.tabs.indexOf(self.ui.nv):
+                tabs = {
+                    self.ui.tabs.indexOf(x)
+                    for x in (self.ui.nv, self.ui.scripting)
+                }
+                if index in tabs:
                     self.nv_looping_set.stop()
                 else:
                     self.nv_looping_set.start()
@@ -731,6 +735,7 @@ class Device:
                             )
                         )
                 else:
+                    # TODO: CAMPid 079320743340327834208
                     if signal.frame.id == self.nvs.set_frames[0].id:
                         nv_signal = self.widget_nvs.neo.signal_by_path(*signal_path)
 
@@ -837,7 +842,10 @@ class Device:
                 icon=QMessageBox.Information,
             )
 
-        scripting_model = epyqlib.scripting.Model(neo=self.neo_frames)
+        scripting_model = epyqlib.scripting.Model(
+            tx_neo=self.neo_frames,
+            nvs=self.widget_nvs,
+        )
         self.ui.scripting_view.set_model(scripting_model)
 
         self.extension.post()
