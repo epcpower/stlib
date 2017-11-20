@@ -1,7 +1,10 @@
 import io
 import os
+import pathlib
 
 from PyQt5 import QtCore, Qsci, QtWidgets, uic
+
+import epyqlib.utils.qt
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2017, EPC Power Corp.'
@@ -33,8 +36,15 @@ class ScriptingView(QtWidgets.QWidget):
 
         self.ui.execute_button.clicked.connect(self.execute)
 
+        self.ui.load_button.clicked.connect(self.load)
+        self.ui.save_button.clicked.connect(self.save)
+        self.ui.run_button.clicked.connect(self.run)
+
         self.model = None
         self.model_connections = []
+
+        with open(pathlib.Path(__file__).parents[0] / 'scripting.csv') as f:
+            self.ui.csv_edit.setPlaceholderText(f.read())
 
     def set_model(self, model):
         for connection in self.model_connections:
@@ -42,10 +52,44 @@ class ScriptingView(QtWidgets.QWidget):
 
         self.model = model
 
-        self.model_connections.append(
-            self.ui.demo_button.clicked.connect(model.demo)
-        )
-
     def execute(self):
         exec(self.ui.editor.text())
 
+    def load(self):
+        filters = [
+            ('CSV', ['csv']),
+            ('All Files', ['*'])
+        ]
+        filename = epyqlib.utils.qt.file_dialog(
+            filters,
+            parent=self.ui,
+        )
+
+        if filename is None:
+            return
+
+        with open(filename) as f:
+            self.ui.csv_edit.setText(f.read())
+
+    def save(self):
+        filters = [
+            ('CSV', ['csv']),
+            ('All Files', ['*'])
+        ]
+        filename = epyqlib.utils.qt.file_dialog(
+            filters,
+            save=True,
+            parent=self.ui,
+        )
+
+        if filename is None:
+            return
+
+        with open(filename, 'w') as f:
+            text = self.ui.csv_edit.toPlainText()
+            f.write(text)
+            if f[-1] != '\n':
+                f.write('\n')
+
+    def run(self):
+        self.model.runs(self.ui.csv_edit.toPlainText())

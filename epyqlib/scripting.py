@@ -152,3 +152,14 @@ class Model:
             nvs=self.nvs,
         )
         epyqlib.scripting.run(events=events, nvs=self.nvs)
+
+    def runs(self, event_string):
+        events = csv_loads(event_string)
+
+        events = epyqlib.scripting.resolve_signals(
+            events=events,
+            tx_neo=self.tx_neo,
+            nvs=self.nvs,
+        )
+
+        return run(events=events, nvs=self.nvs)
