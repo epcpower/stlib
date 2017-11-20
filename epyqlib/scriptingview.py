@@ -30,12 +30,6 @@ class ScriptingView(QtWidgets.QWidget):
         sio = io.StringIO(ts.readAll())
         self.ui = uic.loadUi(sio, self)
 
-        self.lexer = Qsci.QsciLexerPython(self.ui.editor)
-        self.ui.editor.setLexer(self.lexer)
-        self.ui.editor.setUtf8(True)
-
-        self.ui.execute_button.clicked.connect(self.execute)
-
         self.ui.load_button.clicked.connect(self.load)
         self.ui.save_button.clicked.connect(self.save)
         self.ui.run_button.clicked.connect(self.run)
@@ -51,9 +45,6 @@ class ScriptingView(QtWidgets.QWidget):
             connection.disconnect()
 
         self.model = model
-
-    def execute(self):
-        exec(self.ui.editor.text())
 
     def load(self):
         filters = [
