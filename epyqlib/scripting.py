@@ -2,6 +2,7 @@ import csv
 import decimal
 import io
 import itertools
+import operator
 import pathlib
 
 import attr
@@ -21,6 +22,12 @@ class TimeParseError(Exception):
 class Event:
     time = attr.ib()
     action = attr.ib()
+
+
+operators = {
+    '+': operator.add,
+    '-': operator.sub,
+}
 
 
 @attr.s(frozen=True)
@@ -50,16 +57,27 @@ def csv_load(f):
 
     reader = csv.reader(f)
 
+    last_event_time = 0
+
     for i, row in enumerate(reader):
+        raw_event_time = row[0]
+
+        selected_operator = operators.get(raw_event_time[0], None)
+        if selected_operator is not None:
+            raw_event_time = raw_event_time[1:]
+
         try:
-            event_time = decimal.Decimal(row[0])
+            event_time = decimal.Decimal(raw_event_time)
         except decimal.InvalidOperation as e:
             raise TimeParseError(
                 'Unable to parse as a time (line {number}): {string}'.format(
                     number=i,
-                    string=row[0],
+                    string=raw_event_time,
                 )
             ) from e
+
+        if selected_operator is not None:
+            event_time = selected_operator(last_event_time, event_time)
 
         actions = [x.strip() for x in row[1:] if len(x) > 0]
         actions = [
@@ -72,7 +90,9 @@ def csv_load(f):
             for action in actions
         ])
 
-    return events
+        last_event_time = event_time
+
+    return sorted(events)
 
 
 def csv_loads(s):
