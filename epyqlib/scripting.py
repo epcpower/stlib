@@ -173,7 +173,7 @@ class Model:
         )
         epyqlib.scripting.run(events=events, nvs=self.nvs)
 
-    def runs(self, event_string):
+    def run_s(self, event_string):
         events = csv_loads(event_string)
 
         events = epyqlib.scripting.resolve_signals(

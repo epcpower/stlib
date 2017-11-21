@@ -83,4 +83,4 @@ class ScriptingView(QtWidgets.QWidget):
                 f.write('\n')
 
     def run(self):
-        self.model.runs(self.ui.csv_edit.toPlainText())
+        self.model.run_s(self.ui.csv_edit.toPlainText())
