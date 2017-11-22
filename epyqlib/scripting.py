@@ -85,9 +85,10 @@ def csv_load(f):
             event_time = selected_operator(last_event_time, event_time)
 
         actions = [x.strip() for x in row[1:] if len(x) > 0]
+        print(list(epyqlib.utils.general.grouper(actions, n=2)))
         actions = [
             Action(signal=path.split(';'), value=decimal.Decimal(value))
-            for path, value in epyqlib.utils.general.pairwise(actions)
+            for path, value in epyqlib.utils.general.grouper(actions, n=2)
         ]
 
         events.extend([
