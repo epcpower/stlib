@@ -48,10 +48,15 @@ def exception_message_box(excType=None, excValue=None, tracebackobj=None):
     def join(iterable):
         return ''.join(iterable).strip()
 
-    brief = join(traceback.format_exception_only(
-        etype=excType,
-        value=excValue
-    ))
+    expected = isinstance(excValue, epyqlib.utils.general.ExpectedException)
+
+    if expected:
+        brief = excValue.expected_message()
+    else:
+        brief = join(traceback.format_exception_only(
+            etype=excType,
+            value=excValue
+        ))
 
     extended = join(traceback.format_exception(
         etype=excType,
@@ -59,7 +64,12 @@ def exception_message_box(excType=None, excValue=None, tracebackobj=None):
         tb=tracebackobj,
     ))
 
-    custom_exception_message_box(
+    if expected:
+        box = raw_exception_message_box
+    else:
+        box = custom_exception_message_box
+
+    box(
         brief=brief,
         extended=extended,
         stderr=False,
