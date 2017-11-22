@@ -5,10 +5,16 @@ import pathlib
 from PyQt5 import QtCore, Qsci, QtWidgets, uic
 
 import epyqlib.utils.qt
+import epyqlib.utils.twisted
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2017, EPC Power Corp.'
 __license__ = 'GPLv2+'
+
+
+class ScriptAlreadyActiveError(epyqlib.utils.general.ExpectedException):
+    def expected_message(self):
+        return 'Script already active.'
 
 
 class ScriptingView(QtWidgets.QWidget):
@@ -32,13 +38,17 @@ class ScriptingView(QtWidgets.QWidget):
 
         self.ui.load_button.clicked.connect(self.load)
         self.ui.save_button.clicked.connect(self.save)
-        self.ui.run_button.clicked.connect(self.run)
+
+        self.ui.run_button.clicked.connect(self.run_clicked)
+        self.ui.loop_button.clicked.connect(self.loop_clicked)
 
         self.model = None
         self.model_connections = []
 
         with open(pathlib.Path(__file__).parents[0] / 'scripting.csv') as f:
             self.ui.csv_edit.setPlaceholderText(f.read())
+
+        self.run_deferred = None
 
     def set_model(self, model):
         for connection in self.model_connections:
@@ -60,7 +70,7 @@ class ScriptingView(QtWidgets.QWidget):
             return
 
         with open(filename) as f:
-            self.ui.csv_edit.setText(f.read())
+            self.ui.csv_edit.setPlainText(f.read())
 
     def save(self):
         filters = [
@@ -82,5 +92,69 @@ class ScriptingView(QtWidgets.QWidget):
             if text[-1] != '\n':
                 f.write('\n')
 
+    def run_clicked(self, checked):
+        try:
+            if checked:
+                self.run()
+            else:
+                self.cancel_run()
+        except:
+            self.ui.run_button.setChecked(not checked)
+            raise
+
+    def run_errback(self):
+        self.ui.run_button.setChecked(False)
+        self.run_deferred = None
+
     def run(self):
-        self.model.run_s(self.ui.csv_edit.toPlainText())
+        if self.run_deferred is not None:
+            raise ScriptAlreadyActiveError()
+
+        self.run_deferred = self.model.run_s(self.ui.csv_edit.toPlainText())
+        self.run_deferred.addBoth(
+            epyqlib.utils.twisted.detour_result,
+            self.run_errback,
+        )
+        self.run_deferred.addErrback(epyqlib.utils.twisted.catch_expected)
+        self.run_deferred.addErrback(epyqlib.utils.twisted.errbackhook)
+
+    def cancel_run(self):
+        if self.run_deferred is None:
+            return
+
+        self.run_deferred.cancel()
+
+    def loop_clicked(self, checked):
+        try:
+            if checked:
+                self.loop()
+            else:
+                self.cancel_loop()
+        except:
+            self.ui.loop_button.setChecked(not checked)
+            raise
+
+    def loop_errback(self):
+        self.ui.loop_button.setChecked(False)
+        self.run_deferred = None
+
+    def loop(self):
+        if self.run_deferred is not None:
+            raise ScriptAlreadyActiveError()
+
+        self.run_deferred = epyqlib.utils.twisted.mobius(
+            f=self.model.run_s,
+            event_string=self.ui.csv_edit.toPlainText(),
+        )
+        self.run_deferred.addErrback(
+            epyqlib.utils.twisted.detour_result,
+            self.loop_errback,
+        )
+        self.run_deferred.addErrback(epyqlib.utils.twisted.catch_expected)
+        self.run_deferred.addErrback(epyqlib.utils.twisted.errbackhook)
+
+    def cancel_loop(self):
+        if self.run_deferred is None:
+            return
+
+        self.run_deferred.cancel()

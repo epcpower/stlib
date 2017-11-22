@@ -18,6 +18,11 @@ class TimeParseError(Exception):
     pass
 
 
+class NoEventsError(epyqlib.utils.general.ExpectedException):
+    def expected_message(self):
+        return 'No script events found.'
+
+
 @attr.s(frozen=True)
 class Event:
     time = attr.ib()
@@ -151,9 +156,9 @@ def run(events, nvs):
             nvs=nvs,
         ))
 
-    d.addCallback(lambda _: print('done'))
-    d.addErrback(epyqlib.utils.twisted.errbackhook)
     d.callback(None)
+
+    return d
 
 
 @attr.s
@@ -175,6 +180,9 @@ class Model:
 
     def run_s(self, event_string):
         events = csv_loads(event_string)
+
+        if len(events) == 0:
+            raise NoEventsError()
 
         events = epyqlib.scripting.resolve_signals(
             events=events,
