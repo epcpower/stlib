@@ -2,7 +2,7 @@ import io
 import os
 import pathlib
 
-from PyQt5 import QtCore, Qsci, QtWidgets, uic
+from PyQt5 import QtCore, QtWidgets, uic
 
 import epyqlib.utils.qt
 import epyqlib.utils.twisted
