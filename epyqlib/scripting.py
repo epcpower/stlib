@@ -60,7 +60,7 @@ class Action:
 def csv_load(f):
     events = []
 
-    reader = csv.reader(f)
+    reader = csv.reader(line for line in f if line.lstrip()[0] != '#')
 
     last_event_time = 0
 
