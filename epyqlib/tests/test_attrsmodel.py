@@ -698,7 +698,7 @@ def test_to_decimal_or_none_re_locale():
         with pytest.raises(ValueError, match=repr(decimal_string)):
             epyqlib.attrsmodel.to_decimal_or_none(decimal_string)
 
-    with epyqlib.tests.common.use_locale(('en_US', 'utf8')):
+    with epyqlib.tests.common.use_locale(('en_US', 'utf8'), 'en_us'):
         epyqlib.attrsmodel.to_decimal_or_none(decimal_string)
 
 
@@ -709,5 +709,5 @@ def test_to_int_or_none_re_locale():
         with pytest.raises(ValueError, match=repr(int_string)):
             epyqlib.attrsmodel.to_int_or_none(int_string)
 
-    with epyqlib.tests.common.use_locale(('en_US', 'utf8')):
+    with epyqlib.tests.common.use_locale(('en_US', 'utf8'), 'en_us'):
         epyqlib.attrsmodel.to_int_or_none(int_string)
