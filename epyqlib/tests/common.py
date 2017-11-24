@@ -1,5 +1,7 @@
 import contextlib
+import locale
 import os
+import sys
 
 import attr
 
@@ -61,9 +63,15 @@ class Values:
         return all(x == y for x, y in zip(self.expected, self.collected))
 
 
+locale_linux_to_windows_dict = {
+    'en_US': 'en_us',
+}
+
+
 @contextlib.contextmanager
 def use_locale(s=''):
-    import locale
+    if sys.platform == 'win32':
+        s = locale_linux_to_windows_dict.get(s, s)
 
     old = locale.getlocale(locale.LC_ALL)
     locale.setlocale(locale.LC_ALL, s)
