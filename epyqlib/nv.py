@@ -833,7 +833,13 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         self.set_data(self.saturation_value(), mark_modified=True)
 
     def saturation_value(self):
-        return min(max(self.min, self.to_human(self.value)), self.max)
+        return min(
+            max(
+                self.to_human(self.meta.minimum.value),
+                self.to_human(self.value),
+            ),
+            self.to_human(self.meta.maximum.value),
+        )
 
     def can_be_reset(self):
         return self.reset_value != self.value
