@@ -84,3 +84,30 @@ def sleep(seconds):
     from twisted.internet import reactor
     reactor.callLater(seconds, d.callback, None)
     return d
+
+
+class DeferredRepeater:
+    def __init__(self, f, *args, **kwargs):
+        self.callable = f
+        self.args = args
+        self.kwargs = kwargs
+
+        self.public_deferred = twisted.internet.defer.Deferred(
+            canceller=self.cancel)
+        self.private_deferred = None
+
+    def repeat(self):
+        self.private_deferred = self.callable(*self.args, **self.kwargs)
+        self.private_deferred.addCallback(lambda _: self.repeat())
+        self.private_deferred.addErrback(self.public_deferred.errback)
+
+    def cancel(self, _):
+        if self.private_deferred is not None:
+            self.private_deferred.cancel()
+
+
+def mobius(f, *args, **kwargs):
+    repeater = DeferredRepeater(f, *args, **kwargs)
+    repeater.repeat()
+
+    return repeater.public_deferred

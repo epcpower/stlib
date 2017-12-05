@@ -1,0 +1,13 @@
+3, ProcessToInverter;CommandModeControl;Enable, 0, ParameterQuery;AfeConfig;PhaseRotation, 0
++1, ParameterQuery;AfeConfig;PhaseRotation, 1
++.1, ParameterQuery;AfeConfig;PhaseRotation, 0
+6, ProcessToInverter;CommandModeControl;Enable, 1, ParameterQuery;AfeConfig;PhaseRotation, 1
++1, ParameterQuery;AfeConfig;PhaseRotation, 0
++.1, ParameterQuery;AfeConfig;PhaseRotation, 1
+9, ProcessToInverter;CommandModeControl;Enable, 0, ParameterQuery;AfeConfig;PhaseRotation, 0
++1, ParameterQuery;AfeConfig;PhaseRotation, 1
++.1, ParameterQuery;AfeConfig;PhaseRotation, 0
+12, ProcessToInverter;CommandModeControl;Enable, 1, ParameterQuery;AfeConfig;PhaseRotation, 1
+#+1, ParameterQuery;AfeConfig;PhaseRotation, 0
+#15, ProcessToInverter;CommandModeControl;Enable, 0, ParameterQuery;AfeConfig;PhaseRotation, 0
+#+1, ParameterQuery;AfeConfig;PhaseRotation, 1

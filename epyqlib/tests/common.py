@@ -1,5 +1,7 @@
 import contextlib
+import locale
 import os
+import sys
 
 import attr
 
@@ -62,11 +64,21 @@ class Values:
 
 
 @contextlib.contextmanager
-def use_locale(s=''):
-    import locale
+def use_locale(*s):
+    if len(s) == 0:
+        s = ('',)
 
     old = locale.getlocale(locale.LC_ALL)
-    locale.setlocale(locale.LC_ALL, s)
+
+    for name in s:
+        try:
+            locale.setlocale(locale.LC_ALL, name)
+        except locale.Error:
+            continue
+
+        break
+    else:
+        assert False, 'Unable to set locale to any of {}'.format(s)
 
     yield
 

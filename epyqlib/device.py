@@ -18,6 +18,7 @@ except ImportError:
 import epyqlib.nv
 import epyqlib.nvview
 import epyqlib.overlaylabel
+import epyqlib.scripting
 import epyqlib.twisted.loopingset
 import epyqlib.txrx
 import epyqlib.txrxview
@@ -67,6 +68,7 @@ class Elements(Enum):
     rx = 3
     variables = 4
     nv = 5
+    scripting = 6
 
 
 @unique
@@ -75,10 +77,11 @@ class Tabs(Enum):
     txrx = 2
     variables = 3
     nv = 4
+    scripting = 5
 
     @classmethod
     def defaults(cls):
-        return set(cls) - set((cls.variables,))
+        return set(cls) - {cls.variables, cls.scripting}
 
 
 def j1939_node_id_adjust(message_id, device_id, to_device, controller_id):
@@ -286,6 +289,9 @@ class Device:
 
         if Tabs.nv not in tabs:
             self.elements.discard(Elements.nv)
+
+        if Tabs.scripting not in tabs:
+            self.elements.discard(Elements.scripting)
 
         self.referenced_files = [
             f for f in [
@@ -652,7 +658,11 @@ class Device:
             self.ui.tabs.removeTab(self.ui.tabs.indexOf(self.ui.nv))
         else:
             def tab_changed(index):
-                if index == self.ui.tabs.indexOf(self.ui.nv):
+                tabs = {
+                    self.ui.tabs.indexOf(x)
+                    for x in (self.ui.nv, self.ui.scripting)
+                }
+                if index in tabs:
                     self.nv_looping_set.stop()
                     self.nv_tab_looping_set.start()
                 else:
@@ -660,6 +670,8 @@ class Device:
                     self.nv_tab_looping_set.stop()
 
             self.ui.tabs.currentChanged.connect(tab_changed)
+        if Tabs.scripting not in tabs:
+            self.ui.tabs.removeTab(self.ui.tabs.indexOf(self.ui.scripting))
 
         self.ui.tabs.setCurrentIndex(0)
 
@@ -736,6 +748,7 @@ class Device:
                             )
                         )
                 else:
+                    # TODO: CAMPid 079320743340327834208
                     if signal.frame.id == self.nvs.set_frames[0].id:
                         nv_signal = self.widget_nvs.neo.signal_by_path(*signal_path)
 
@@ -877,6 +890,12 @@ class Device:
                 message=message,
                 icon=QMessageBox.Information,
             )
+
+        scripting_model = epyqlib.scripting.Model(
+            tx_neo=self.neo_frames,
+            nvs=self.widget_nvs,
+        )
+        self.ui.scripting_view.set_model(scripting_model)
 
         for notifiee in notifiees:
             self.bus.notifier.add(notifiee)
