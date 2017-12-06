@@ -15,7 +15,6 @@
         "Control": "distributed_generation_control.ui",
         "Setup and Status": "distributed_generation_setup_factory.ui"
     },
-    "parameter_defaults": "DG_Defaults-7.epp",
     "module": "distributed_generation.py",
     "parameter_hierarchy": "EPC_DG_ID247_FACTORY.parameters.json"
 }
