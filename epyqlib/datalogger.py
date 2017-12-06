@@ -86,7 +86,7 @@ class DataLogger:
                 nv_signal=recording_signal,
                 meta=epyqlib.nv.MetaEnum.value,
             )
-            recording = int(recording)
+            recording = int(recording[0])
 
             if not recording:
                 break
@@ -101,7 +101,7 @@ class DataLogger:
             nv_signal=readable_octets_signal,
             meta=epyqlib.nv.MetaEnum.value,
         )
-        readable_octets = int(readable_octets)
+        readable_octets = int(readable_octets[0])
 
         self.progress.configure(maximum=readable_octets)
 
