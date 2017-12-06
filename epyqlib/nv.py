@@ -67,7 +67,7 @@ configurations = {
 }
 
 
-@attr.s
+@attr.s(hash=True)
 class Group(TreeNode):
     fields = attr.ib(default=attr.Factory(Columns))
 

@@ -485,7 +485,11 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         node = self.node_from_index(index)
 
         data = getattr(node, field.name)
-        processor = data_processor(type(node), field, Metadata.data_display)
+        processor = data_processor(
+            cls=type(node),
+            data_field=field,
+            attribute_field=attr.fields(Metadata).data_display,
+        )
         if processor is not None:
             return processor(data)
 
