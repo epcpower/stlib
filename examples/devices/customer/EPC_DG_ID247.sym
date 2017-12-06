@@ -374,6 +374,15 @@ Var=ReconnectDelay unsigned 32,32 /u:seconds /f:0.1 /max:600 /d:10	// Delay time
 
 [ParameterQuery]
 DLC=8
+Mux=AccessLevel 0,11 074h
+Var=Password unsigned 16,16
+Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=Level unsigned 32,6 /e:AccessLevel
+Var=CheckLimits unsigned 38,2 /e:OnOff
+
+[ParameterQuery]
+DLC=8
 Mux=FanType 0,11 077h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
@@ -1197,6 +1206,15 @@ Mux=LineMonitor 0,11 073h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=ReconnectDelay unsigned 32,32 /u:seconds /f:0.1 /max:600 /d:10	// Delay time after abnormal grid conditions end until reconnect.  <nv::fRECONNECT_DELAY_SCALE:allLineMonitorParams{}.reconnectTime>
+
+[ParameterResponse]
+DLC=8
+Mux=AccessLevel 0,11 074h
+Var=Password unsigned 16,16
+Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=Level unsigned 32,6 /e:AccessLevel
+Var=CheckLimits unsigned 38,2 /e:OnOff
 
 [ParameterResponse]
 DLC=8
