@@ -1205,7 +1205,8 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
     @pyqtSlot()
     def write_to_value_set_file(self, parent=None):
-        filters = epyqlib.pm.valuesetmodel.ValueSet.filters.default
+        fields = attr.fields(epyqlib.pm.valuesetmodel.ValueSet)
+        filters = fields.filters.default
         path = epyqlib.utils.qt.file_dialog(
             filters,
             save=True,
@@ -1214,7 +1215,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         if path is not None:
             value_set = self.root.to_value_set()
-            value_set.path = path
+            value_set.path = pathdat    was
 
             try:
                 value_set.save()
@@ -1248,7 +1249,9 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
     @pyqtSlot()
     def read_from_value_set_file(self, parent=None):
-        filters = epyqlib.pm.valuesetmodel.ValueSet.filters.default
+        fields = attr.fields(epyqlib.pm.valuesetmodel.ValueSet)
+        filters = fields.filters.default
+        # filters = epyqlib.pm.valuesetmodel.ValueSet.filters.default
         path = epyqlib.utils.qt.file_dialog(filters, parent=parent)
 
         if path is None:
