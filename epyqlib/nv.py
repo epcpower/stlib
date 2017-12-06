@@ -1215,7 +1215,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         if path is not None:
             value_set = self.root.to_value_set()
-            value_set.path = pathdat    was
+            value_set.path = path
 
             try:
                 value_set.save()
