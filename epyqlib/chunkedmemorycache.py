@@ -18,7 +18,7 @@ class ByteLengthError(Exception):
     pass
 
 
-@attr.s
+@attr.s(frozen=True)
 class Subscriber:
     callback = attr.ib()
     reference = attr.ib()
@@ -130,6 +130,7 @@ class Cache:
             ))
 
         return chunks
+
 
 @attr.s(hash=False)
 class Chunk:
