@@ -92,6 +92,11 @@ class MetaEnum(epyqlib.utils.general.AutoNumberIntEnum):
     maximum = 4
 
 
+meta_limits = [MetaEnum.minimum, MetaEnum.maximum]
+meta_limits_first = (
+    meta_limits + sorted(set(MetaEnum) - set(meta_limits))
+)
+
 MetaEnum.non_value = set(MetaEnum) - {MetaEnum.value}
 
 
@@ -356,11 +361,12 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
     def names(self):
         return '\n'.join([n.fields.name for n in self.all_nv()])
 
-    def write_all_to_device(self, only_these=None, callback=None):
+    def write_all_to_device(self, only_these=None, callback=None, meta=None):
         return self._read_write_all(
             read=False,
             only_these=only_these,
             callback=callback,
+            meta=meta,
         )
 
     def read_all_from_device(

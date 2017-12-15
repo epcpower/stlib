@@ -552,6 +552,7 @@ class Device:
                     else:
                         view.setModel(model)
 
+        self.widget_nvs = None
         if Elements.nv in self.elements:
             matrix_nv = list(canmatrix.formats.loadp(self.can_path).values())[0]
             self.frames_nv = epyqlib.canneo.Neo(
@@ -962,8 +963,6 @@ class Device:
                 )
 
                 d.addErrback(ignore_timeout)
-
-        return d
 
     def connection_status_changed(self):
         present = self.connection_monitor.present
