@@ -92,12 +92,12 @@ class MetaEnum(epyqlib.utils.general.AutoNumberIntEnum):
     maximum = 4
 
 
-meta_limits = [MetaEnum.minimum, MetaEnum.maximum]
+meta_limits = (MetaEnum.minimum, MetaEnum.maximum)
 meta_limits_first = (
-    meta_limits + sorted(set(MetaEnum) - set(meta_limits))
+    meta_limits + tuple(sorted(set(MetaEnum) - set(meta_limits)))
 )
 
-MetaEnum.non_value = set(MetaEnum) - {MetaEnum.value}
+MetaEnum.non_value = tuple(sorted(set(MetaEnum) - {MetaEnum.value}))
 
 
 @attr.s
