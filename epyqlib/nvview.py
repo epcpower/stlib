@@ -2,6 +2,7 @@
 
 #TODO: """DocString if there is one"""
 
+import collections
 import epyqlib.nv
 import epyqlib.utils.qt
 import functools
@@ -58,8 +59,19 @@ class NvView(QtWidgets.QWidget):
         view = self.ui.tree_view
         view.setContextMenuPolicy(Qt.CustomContextMenu)
         view.customContextMenuRequested.connect(self.context_menu)
-        view.setSelectionBehavior(view.SelectRows)
+        view.setSelectionBehavior(view.SelectItems)
         view.setSelectionMode(view.ExtendedSelection)
+        view.row_columns = {
+            epyqlib.nv.Columns.indexes.name,
+        }
+        self.meta_columns = {
+            getattr(epyqlib.nv.Columns.indexes, meta.name)
+            for meta in epyqlib.nv.MetaEnum
+        }
+        no_update_columns = set(epyqlib.nv.Columns.indexes)
+        no_update_columns -= {epyqlib.nv.Columns.indexes.name,}
+        no_update_columns -= self.meta_columns
+        view.no_update_columns = no_update_columns
 
         self.resize_columns = epyqlib.nv.Columns(
             name=True,
@@ -374,16 +386,28 @@ class NvView(QtWidgets.QWidget):
         model = self.nonproxy_model()
 
         selection_model = self.ui.tree_view.selectionModel()
-        selected_indexes = selection_model.selectedRows()
+        selected_indexes = selection_model.selectedIndexes()
         selected_indexes = tuple(
             proxy.mapToSource(i) for i in selected_indexes
         )
-        selected_nodes = tuple(
-            model.node_from_index(i) for i in selected_indexes
-        )
-        selected_nodes = tuple(
-            node for node in selected_nodes if isinstance(node, epyqlib.nv.Nv)
-        )
+
+        selected_by_node = collections.defaultdict(list)
+        selected_by_meta = collections.defaultdict(list)
+
+        for index in selected_indexes:
+            node = model.node_from_index(index)
+            if not isinstance(node, epyqlib.nv.Nv):
+                continue
+            if index.column() not in self.meta_columns:
+                continue
+
+            meta = getattr(
+                epyqlib.nv.MetaEnum,
+                epyqlib.nv.Columns().index_from_attribute(index.column()),
+            )
+            selected_by_node[node].append(meta)
+            selected_by_meta[meta].append(node)
+
 
         menu = QtWidgets.QMenu(parent=self.ui.tree_view)
         menu.setSeparatorsCollapsible(True)
@@ -393,13 +417,23 @@ class NvView(QtWidgets.QWidget):
         write = menu.addAction('Write {}'.format(
             self.ui.write_to_module_button.text()))
         saturate = menu.addAction('Saturate')
-        if not any(n.can_be_saturated() for n in selected_nodes):
+
+        def can_be(method_name, selected):
+            return any(
+                any(
+                    getattr(n, method_name)(meta=meta)
+                    for meta in metas
+                )
+                for n, metas in selected.items()
+            )
+
+        if not can_be('can_be_saturated', selected_by_node):
             saturate.setDisabled(True)
         reset = menu.addAction('Reset')
-        if not any(n.can_be_reset() for n in selected_nodes):
+        if not can_be('can_be_reset', selected_by_node):
             reset.setDisabled(True)
         clear = menu.addAction('Clear')
-        if not any(n.can_be_cleared() for n in selected_nodes):
+        if not can_be('can_be_cleared', selected_by_node):
             clear.setDisabled(True)
 
         menu.addSeparator()
@@ -408,39 +442,50 @@ class NvView(QtWidgets.QWidget):
 
         action = menu.exec(self.ui.tree_view.viewport().mapToGlobal(position))
 
-        callback = functools.partial(
-            self.update_signals,
-            only_these=selected_nodes
-        )
-        if action is None:
-            pass
-        elif action is read:
-            d = model.root.read_all_from_device(
-                only_these=selected_nodes,
-                callback=callback,
+        d = twisted.internet.defer.Deferred()
+        d.callback(None)
+
+        for meta, nodes in selected_by_meta.items():
+            callback = functools.partial(
+                self.update_signals,
+                only_these=nodes,
             )
-            d.addErrback(epyqlib.utils.twisted.catch_expected)
-            d.addErrback(epyqlib.utils.twisted.errbackhook)
-        elif action is write:
-            d = model.root.write_all_to_device(
-                only_these=selected_nodes,
-                callback=callback,
-            )
-            d.addErrback(epyqlib.utils.twisted.catch_expected)
-            d.addErrback(epyqlib.utils.twisted.errbackhook)
-        elif action is saturate:
-            for node in selected_nodes:
-                model.saturate_node(node)
-        elif action is reset:
-            for node in selected_nodes:
-                model.reset_node(node)
-        elif action is clear:
-            for node in selected_nodes:
-                model.clear_node(node)
-        elif action is expand_all:
-            self.ui.tree_view.expandAll()
-        elif action is collapse_all:
-            self.ui.tree_view.collapseAll()
+            if action is None:
+                pass
+            elif action is read:
+                d.addCallback(
+                    lambda _, nodes=nodes, callback=callback, meta=meta:
+                    model.root.read_all_from_device(
+                        only_these=nodes,
+                        callback=callback,
+                        meta=(meta,),
+                    )
+                )
+            elif action is write:
+                d.addCallback(
+                    lambda _, nodes=nodes, callback=callback, meta=meta:
+                    model.root.write_all_to_device(
+                        only_these=nodes,
+                        callback=callback,
+                        meta=(meta,),
+                    )
+                )
+            elif action is saturate:
+                for node in nodes:
+                    model.saturate_node(node, meta=meta)
+            elif action is reset:
+                for node in nodes:
+                    model.reset_node(node, meta=meta)
+            elif action is clear:
+                for node in nodes:
+                    model.clear_node(node, meta=meta)
+            elif action is expand_all:
+                self.ui.tree_view.expandAll()
+            elif action is collapse_all:
+                self.ui.tree_view.collapseAll()
+
+        d.addErrback(epyqlib.utils.twisted.catch_expected)
+        d.addErrback(epyqlib.utils.twisted.errbackhook)
 
     def update_signals(self, arg, only_these):
         d, meta = arg

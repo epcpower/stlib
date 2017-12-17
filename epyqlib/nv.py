@@ -99,6 +99,24 @@ meta_limits_first = (
 
 MetaEnum.non_value = tuple(sorted(set(MetaEnum) - {MetaEnum.value}))
 
+meta_column_indexes = tuple(
+    getattr(Columns.indexes, meta.name)
+    for meta in MetaEnum
+)
+
+
+dynamic_column_indexes_by_meta = {
+    MetaEnum.value: [
+        Columns.indexes.value,
+        Columns.indexes.saturate,
+        Columns.indexes.reset,
+        Columns.indexes.clear,
+    ],
+    **{
+        meta: [getattr(Columns.indexes, meta.name)]
+        for meta in MetaEnum.non_value
+    },
+}
 
 @attr.s
 @epyqlib.utils.general.enumerated_attrs(MetaEnum, default=None)
@@ -811,14 +829,23 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
             list(roles),
         )
 
+    def get_meta_signal(self, meta):
+        if meta == MetaEnum.value:
+            return self
+
+        return getattr(self.meta, meta.name)
+
     def get_human_value(self, for_file=False, column=None):
         if column is None:
             column = Columns.indexes.value
         column_name = Columns().index_from_attribute(column)
-        if column_name == MetaEnum.value.name:
+
+        signal = self.get_meta_signal(getattr(MetaEnum, column_name))
+
+        if signal is self:
             return super().get_human_value(for_file=False)
 
-        return getattr(self.meta, column_name).get_human_value(
+        return signal.get_human_value(
             for_file=for_file,
             column=Columns.indexes.value,
         )
@@ -826,17 +853,21 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
     def signal_path(self):
         return self.frame.signal_path() + (self.name,)
 
-    def can_be_saturated(self):
-        if self.value is None:
+    def can_be_saturated(self, meta=MetaEnum.value):
+        signal = self.get_meta_signal(meta)
+
+        if signal.value is None:
             return False
 
-        return self.to_human(self.value) != self.saturation_value()
+        return signal.to_human(signal.value) != signal.saturation_value()
 
-    def saturate(self):
-        if not self.can_be_saturated():
+    def saturate(self, meta=MetaEnum.value):
+        signal = self.get_meta_signal(meta)
+
+        if not signal.can_be_saturated():
             return
 
-        self.set_data(self.saturation_value(), mark_modified=True)
+        self.set_meta(signal.saturation_value(), meta=meta, mark_modified=True)
 
     def saturation_value(self):
         if self.value is None:
@@ -852,14 +883,17 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
 
         return s
 
-    def can_be_reset(self):
-        return self.reset_value != self.value
+    def can_be_reset(self, meta=MetaEnum.value):
+        signal = self.get_meta_signal(meta)
+        return signal.reset_value != signal.value
 
-    def reset(self):
-        if not self.can_be_reset():
+    def reset(self, meta=MetaEnum.value):
+        signal = self.get_meta_signal(meta)
+
+        if not signal.can_be_reset():
             return
 
-        self.set_value(self.reset_value)
+        self.set_meta(signal.reset_value, meta=meta)
 
     def set_value(self, value, force=False, check_range=False):
         self.reset_value = value
@@ -923,16 +957,20 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
 
         return result
 
-    def can_be_cleared(self):
-        return self.value is not None
+    def can_be_cleared(self, meta=MetaEnum.value):
+        signal = self.get_meta_signal(meta)
 
-    def clear(self, mark_modified=True):
-        if not self.can_be_cleared():
+        return signal.value is not None
+
+    def clear(self, mark_modified=True, meta=MetaEnum.value):
+        signal = self.get_meta_signal(meta)
+
+        if not signal.can_be_cleared():
             return
 
-        self.set_data(None, mark_modified=mark_modified)
-        if hasattr(self, 'status_signal'):
-            self.status_signal.set_value(None)
+        self.set_meta(None, meta=meta, mark_modified=mark_modified)
+        if hasattr(signal, 'status_signal'):
+            signal.status_signal.set_value(None)
 
     def is_factory(self):
         return self.factory
@@ -1121,29 +1159,30 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                     comment = ''
                 return '\n'.join(textwrap.wrap(comment, 60))
 
-    def dynamic_columns_changed(self, node, columns=None, roles=(Qt.DisplayRole,)):
+    def dynamic_columns_changed(
+            self,
+            node,
+            columns=None,
+            meta=MetaEnum.value,
+            roles=(Qt.DisplayRole,),
+    ):
         if columns is None:
-            columns = (
-                Columns.indexes.value,
-                Columns.indexes.saturate,
-                Columns.indexes.reset,
-                Columns.indexes.clear,
-            )
+            columns = dynamic_column_indexes_by_meta[meta]
 
         for column in columns:
             self.changed(node, column, node, column, roles)
 
-    def saturate_node(self, node):
-        node.saturate()
-        self.dynamic_columns_changed(node)
+    def saturate_node(self, node, meta=MetaEnum.value):
+        node.saturate(meta=meta)
+        self.dynamic_columns_changed(node, meta=meta)
 
-    def reset_node(self, node):
-        node.reset()
-        self.dynamic_columns_changed(node)
+    def reset_node(self, node, meta=MetaEnum.value):
+        node.reset(meta=meta)
+        self.dynamic_columns_changed(node, meta=meta)
 
-    def clear_node(self, node):
-        node.clear()
-        self.dynamic_columns_changed(node)
+    def clear_node(self, node, meta=MetaEnum.value):
+        node.clear(meta=meta)
+        self.dynamic_columns_changed(node, meta=meta)
 
     def check_range_changed(self, state):
         self.check_range = state == Qt.Checked
