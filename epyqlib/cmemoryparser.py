@@ -163,11 +163,18 @@ class Type:
                     'float type only supports lengths in [{}]'.
                     format(', '.join([str(t) for t in types.keys()]))
                 )
-        else:
-            raise Exception('Unsupported type format: {}'.format(self.type))
 
-        return '{}{}{}'.format('>', type, self.bytes * bits_per_byte)
+            format = '{}{}{}>'.format('>', type, self.bytes * bits_per_byte)
 
+            return bitstruct.unpack(
+                format,
+                bytes(
+                    int(''.join(b), 2)
+                    for b in epyqlib.utils.general.grouper(bits, 8)
+                ),
+            )[-1]
+
+        raise Exception('Unsupported type format: {}'.format(self.type))
 
 
 @attr.s

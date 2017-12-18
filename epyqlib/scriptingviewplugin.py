@@ -1,4 +1,4 @@
-import epyqlib.scripting
+import epyqlib.scriptingview
 import epyqlib.abstractpluginclass
 
 # See file COPYING in this source tree
