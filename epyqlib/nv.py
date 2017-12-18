@@ -253,7 +253,6 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     d.callback(None)
 
                     for enumerator in metas:
-                        print(enumerator)
                         d.addCallback(lambda _: self.protocol.write_multiple(
                             nv_signals=signals,
                             meta=enumerator,
@@ -820,8 +819,6 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
             column_start = Columns.indexes.value
         if column_end is None:
             column_end = column_start
-
-        # self.meta.value = self.value
 
         self.changed.emit(
             self, column_start,
