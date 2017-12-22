@@ -118,6 +118,13 @@ dynamic_column_indexes_by_meta = {
     },
 }
 
+
+column_index_by_meta = {
+    meta: getattr(Columns.indexes, meta.name)
+    for meta in MetaEnum
+}
+
+
 @attr.s
 @epyqlib.utils.general.enumerated_attrs(MetaEnum, default=None)
 class Meta:
@@ -137,6 +144,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
     def __init__(self, neo, bus, stop_cyclic=None, start_cyclic=None,
                  configuration=None, hierarchy=None, metas=(MetaEnum.value,),
+                 access_level_path=None, access_password_path=None,
                  parent=None):
         TreeNode.__init__(self)
         epyqlib.canneo.QtCanListener.__init__(self, parent=parent)
@@ -159,16 +167,13 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         self.neo = neo
         self.message_received_signal.connect(self.message_received)
 
-        self.access_level_node = self.neo.signal_by_path(
-            'ParameterQuery',
-            'AccessLevel',
-            'Level',
-        )
-        self.password_node = self.neo.signal_by_path(
-            'ParameterQuery',
-            'AccessLevel',
-            'Password',
-        )
+        self.access_level_node = None
+        if access_level_path is not None:
+            self.access_level_node = self.neo.signal_by_path(*access_level_path)
+
+        self.password_node = None
+        if access_password_path is not None:
+            self.password_node = self.neo.signal_by_path(*access_password_path)
 
         self.set_frames = [f for f in self.neo.frames
                        if f.name == self.configuration.set_frame]
@@ -527,11 +532,12 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             if multiplex_value is not None and multiplex_message in self.status_frames.values():
                 values = multiplex_message.unpack(msg.data, only_return=True)
 
-                meta = epyqlib.nv.MetaEnum(
-                    values[multiplex_message.meta_signal],
-                )
-                if meta != epyqlib.nv.MetaEnum.value:
-                    return
+                if multiplex_message.meta_signal is not None:
+                    meta = epyqlib.nv.MetaEnum(
+                        values[multiplex_message.meta_signal],
+                    )
+                    if meta != epyqlib.nv.MetaEnum.value:
+                        return
 
                 multiplex_message.unpack(msg.data)
                 # multiplex_message.frame.update_canneo_from_matrix_signals()
@@ -671,7 +677,10 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         for child in self.all_nv():
             value = d.get(child.fields.name, None)
             if value is not None:
-                child.default_value = child.from_human(float(value))
+                child.set_meta(
+                    data=float(value),
+                    meta=epyqlib.nv.MetaEnum.factory_default,
+                )
                 only_in_file.remove(child.fields.name)
             else:
                 print("Nv value named '{}' not found when loading from dict"

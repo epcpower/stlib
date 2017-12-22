@@ -93,11 +93,7 @@ class NvView(QtWidgets.QWidget):
             column=epyqlib.nv.Columns.indexes.name,
         )
 
-        self.ui.current_access_level.signal_path = ';'.join((
-            'ParameterQuery',
-            'AccessLevel',
-            'Level',
-        ))
+        self.set_access_level_signal_path(path=None)
 
         self.password_mapper = QtWidgets.QDataWidgetMapper()
         self.password_mapper.setSubmitPolicy(
@@ -109,6 +105,36 @@ class NvView(QtWidgets.QWidget):
         )
 
         self.ui.access_level_password.setPlaceholderText('Access Code...')
+
+        self.metas = ()
+
+    def set_access_level_signal_path(self, path):
+        if path is None or path == '':
+            self.ui.current_access_level.signal_path = ''
+            self.ui.current_access_level.setHidden(True)
+            self.ui.access_level.setHidden(True)
+            self.ui.current_access_level.ignore = True
+        else:
+            self.ui.current_access_level.signal_path = ';'.join(path)
+            self.ui.current_access_level.setVisible(True)
+            self.ui.access_level.setVisible(True)
+            self.ui.current_access_level.ignore = False
+
+    def set_metas(self, metas):
+        self.metas = metas
+
+        factory_default = epyqlib.nv.MetaEnum.factory_default
+
+        index = epyqlib.nv.column_index_by_meta[factory_default]
+        self.nonproxy_model().editable_columns[index] = (
+            factory_default in self.metas
+        )
+
+        for meta in set(epyqlib.nv.MetaEnum) - {factory_default}:
+            self.ui.tree_view.setColumnHidden(
+                epyqlib.nv.column_index_by_meta[meta],
+                meta not in self.metas,
+            )
 
     def filter_text_changed(self, text):
         self.ui.tree_view.model().setFilterWildcard(text)
@@ -180,53 +206,59 @@ class NvView(QtWidgets.QWidget):
 
         model = self.nonproxy_model()
 
-        self.password_mapper.setModel(model)
-        self.password_mapper.setRootIndex(model.index_from_node(
-            model.root.password_node.tree_parent,
-        ))
-        self.password_mapper.setCurrentIndex(
-            model.index_from_node(model.root.password_node).row(),
-        )
-        self.password_mapper.addMapping(
-            self.ui.access_level_password,
-            epyqlib.nv.Columns.indexes.value,
-        )
+        if model.root.password_node is not None:
+            self.password_mapper.setModel(model)
+            self.password_mapper.setRootIndex(model.index_from_node(
+                model.root.password_node.tree_parent,
+            ))
+            self.password_mapper.setCurrentIndex(
+                model.index_from_node(model.root.password_node).row(),
+            )
+            self.password_mapper.addMapping(
+                self.ui.access_level_password,
+                epyqlib.nv.Columns.indexes.value,
+            )
 
         access_level_node = model.root.access_level_node
-        self.access_level_mapper.setModel(model)
-        self.access_level_mapper.setRootIndex(model.index_from_node(
-            access_level_node.tree_parent,
-        ))
-        access_level_index = model.index_from_node(access_level_node)
-        self.access_level_mapper.setCurrentIndex(
-            access_level_index.row(),
-        )
+        if access_level_node is not None:
+            self.access_level_mapper.setModel(model)
+            self.access_level_mapper.setRootIndex(model.index_from_node(
+                access_level_node.tree_parent,
+            ))
+            access_level_index = model.index_from_node(access_level_node)
+            self.access_level_mapper.setCurrentIndex(
+                access_level_index.row(),
+            )
 
-        # TODO: CAMPid 9754542524161542698615426
-        # TODO: use the userdata to make it easier to get in and out
-        self.ui.access_level.addItems(
-            model.root.access_level_node.enumeration_strings(
-                include_values=True,
-            ),
-        )
+            # TODO: CAMPid 9754542524161542698615426
+            # TODO: use the userdata to make it easier to get in and out
+            self.ui.access_level.addItems(
+                model.root.access_level_node.enumeration_strings(
+                    include_values=True,
+                ),
+            )
 
-        self.access_level_mapper.addMapping(
-            self.ui.access_level,
-            epyqlib.nv.Columns.indexes.value,
-            'currentIndex'.encode('utf-8'),
-        )
+            self.access_level_mapper.addMapping(
+                self.ui.access_level,
+                epyqlib.nv.Columns.indexes.value,
+                'currentIndex'.encode('utf-8'),
+            )
 
-        delegate = self.access_level_mapper.itemDelegate()
-        self.ui.access_level.currentIndexChanged.connect(
-            lambda: delegate.commitData.emit(self.ui.access_level),
-        )
+            delegate = self.access_level_mapper.itemDelegate()
+            self.ui.access_level.currentIndexChanged.connect(
+                lambda: delegate.commitData.emit(self.ui.access_level),
+            )
 
-        self.ui.access_level.setCurrentIndex(1)
-        self.ui.access_level.setCurrentIndex(0)
+            self.ui.access_level.setCurrentIndex(1)
+            self.ui.access_level.setCurrentIndex(0)
 
-        selected_nodes = (
-            model.root.password_node,
-            model.root.access_level_node,
+        selected_nodes = tuple(
+            node
+            for node in (
+                model.root.password_node,
+                model.root.access_level_node,
+            )
+            if node is not None
         )
 
         callback = functools.partial(

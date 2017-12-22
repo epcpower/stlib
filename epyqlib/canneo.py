@@ -880,14 +880,14 @@ class Neo(QtCanListener):
             try:
                 return next(i)
             except StopIteration as e:
-                raise NotFoundError(', '.join(elements)) from e
+                raise NotFoundError(repr(elements)) from e
 
         element = get_next(i)
 
         frame = self.frame_by_name(element)
 
         if frame is None:
-            raise NotFoundError(', '.join(elements))
+            raise NotFoundError(repr(elements))
 
         if hasattr(frame, 'multiplex_frames'):
             element = get_next(i)
@@ -899,13 +899,13 @@ class Neo(QtCanListener):
             try:
                 [frame] = frames
             except ValueError:
-                raise NotFoundError(', '.join(elements))
+                raise NotFoundError(repr(elements))
 
         element = get_next(i)
 
         signal = frame.signal_by_name(element)
         if signal is None:
-            raise NotFoundError(', '.join(elements))
+            raise NotFoundError(repr(elements))
 
         return signal
 

@@ -231,6 +231,12 @@ class Device:
         s = file.read()
         d = json.loads(s, object_pairs_hook=OrderedDict)
         self.raw_dict = d
+        d.setdefault('nv_meta_enum', None)
+        d.setdefault('access_level_path', None)
+        d.setdefault(
+            'access_password_path',
+            'ParameterQuery;FactoryAccess;FactoryAccess',
+        )
 
         self.module_path = d.get('module', None)
         self.plugin = None
@@ -566,13 +572,45 @@ class Device:
             self.nv_looping_set = epyqlib.twisted.loopingset.Set()
             self.nv_tab_looping_set = epyqlib.twisted.loopingset.Set()
 
+            access_level_path = self.raw_dict['access_level_path']
+            if access_level_path is not None:
+                access_level_path = access_level_path.split(';')
+
+            access_password_path = self.raw_dict['access_password_path']
+            if access_password_path is not None:
+                access_password_path = access_password_path.split(';')
+
+            if self.raw_dict['nv_meta_enum'] == 'Meta':
+                self.metas = epyqlib.nv.meta_limits_first
+            else:
+                self.metas = (epyqlib.nv.MetaEnum.value,)
+
             self.nvs = epyqlib.nv.Nvs(
                 neo=self.frames_nv,
                 bus=self.bus,
                 configuration=nv_configuration,
                 hierarchy=hierarchy,
-                metas=reversed(epyqlib.nv.MetaEnum),
+                metas=self.metas,
+                access_level_path=access_level_path,
+                access_password_path=access_password_path,
             )
+
+            if epyqlib.nv.MetaEnum.factory_default not in self.metas:
+                if 'parameter_defaults' in self.raw_dict:
+                    parameter_defaults_path = os.path.join(
+                        os.path.dirname(self.config_path),
+                        self.raw_dict['parameter_defaults']
+                    )
+                    with open(parameter_defaults_path) as f:
+                        self.nvs.defaults_from_dict(json.load(f))
+                        for nv in self.nvs.all_nv():
+                            if isinstance(nv, epyqlib.nv.Nv):
+                                if nv.default_value is not None:
+                                    nv.fields.factory_default = (
+                                        nv.format_strings(
+                                           value=int(nv.default_value)
+                                        )[0]
+                                    )
 
             self.widget_frames_nv = epyqlib.canneo.Neo(
                 matrix=matrix_nv,
@@ -596,12 +634,18 @@ class Device:
 
                 column = epyqlib.nv.Columns.indexes.name
                 for view in nv_views:
+                    if self.nvs.access_level_node is not None:
+                        view.set_access_level_signal_path(
+                            path=self.nvs.access_level_node.signal_path(),
+                        )
+
                     proxy = epyqlib.utils.qt.PySortFilterProxyModel(
                         filter_column=column,
                     )
                     proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
                     proxy.setSourceModel(nv_model)
                     view.setModel(proxy)
+                    view.set_metas(self.metas)
                     view.set_sorting_enabled(True)
                     view.sort_by_column(
                         column=column,
@@ -812,7 +856,10 @@ class Device:
         monitor_matrix = list(
             canmatrix.formats.loadp(self.can_path).values()
         )[0]
-        monitor_frames = epyqlib.canneo.Neo(matrix=monitor_matrix)
+        monitor_frames = epyqlib.canneo.Neo(
+            matrix=monitor_matrix,
+            node_id_adjust=self.node_id_adjust,
+        )
         monitor_frame = monitor_frames.frame_by_name(
             can_configuration.monitor_frame,
         )
