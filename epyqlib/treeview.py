@@ -9,16 +9,19 @@ class TreeView(QtWidgets.QTreeView):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        self.row_columns = {}
-        self.no_update_columns = {}
+        self.row_columns = set()
+        self.no_update_columns = set()
 
     def selectionCommand(self, index, event):
-        if index.column() in self.no_update_columns:
+        column = index.column()
+        is_row_column = column in self.row_columns
+
+        if column in self.no_update_columns and not is_row_column:
             return QtCore.QItemSelectionModel.NoUpdate
 
         result = super().selectionCommand(index, event)
 
-        if index.column() in self.row_columns:
+        if is_row_column:
             result |= QtCore.QItemSelectionModel.Rows
 
         return result

@@ -106,7 +106,10 @@ class NvView(QtWidgets.QWidget):
 
         self.ui.access_level_password.setPlaceholderText('Access Code...')
 
-        self.metas = ()
+        self.metas = None
+        self.set_metas(())
+
+        self.resize_modes = None
 
     def set_access_level_signal_path(self, path):
         if path is None or path == '':
@@ -123,18 +126,32 @@ class NvView(QtWidgets.QWidget):
     def set_metas(self, metas):
         self.metas = metas
 
-        factory_default = epyqlib.nv.MetaEnum.factory_default
+        show_but_no_edit = {
+            epyqlib.nv.MetaEnum.factory_default,
+            epyqlib.nv.MetaEnum.minimum,
+            epyqlib.nv.MetaEnum.maximum,
+        }
 
-        index = epyqlib.nv.column_index_by_meta[factory_default]
-        self.nonproxy_model().editable_columns[index] = (
-            factory_default in self.metas
-        )
+        model = self.nonproxy_model()
+        if model is not None:
+            for meta in show_but_no_edit:
+                index = epyqlib.nv.column_index_by_meta[meta]
+                model.editable_columns[index] = (
+                    meta in self.metas
+                )
 
-        for meta in set(epyqlib.nv.MetaEnum) - {factory_default}:
+        for meta in set(epyqlib.nv.MetaEnum) - show_but_no_edit:
             self.ui.tree_view.setColumnHidden(
                 epyqlib.nv.column_index_by_meta[meta],
                 meta not in self.metas,
             )
+
+        if set(self.metas) == {epyqlib.nv.MetaEnum.value}:
+            self.ui.tree_view.row_columns = set(epyqlib.nv.Columns.indexes)
+        else:
+            self.ui.tree_view.row_columns = {
+                epyqlib.nv.Columns.indexes.name,
+            }
 
     def filter_text_changed(self, text):
         self.ui.tree_view.model().setFilterWildcard(text)
@@ -174,28 +191,58 @@ class NvView(QtWidgets.QWidget):
         d = model.root.write_all_to_device(
             callback=callback,
             only_these=only_these,
+            meta=tuple(
+                meta
+                for meta in epyqlib.nv.meta_limits_first
+                if meta in self.metas
+            ),
         )
         d.addErrback(epyqlib.utils.twisted.catch_expected)
         d.addErrback(epyqlib.utils.twisted.errbackhook)
 
+    def disable_column_resize(self):
+        self.resize_modes = {
+            index: (
+                self.ui.tree_view.header().sectionResizeMode(
+                    index,
+                )
+            )
+            for index in epyqlib.nv.column_index_by_meta.values()
+        }
+
+        for index in self.resize_modes:
+            self.ui.tree_view.header().setSectionResizeMode(
+                index,
+                QtWidgets.QHeaderView.Fixed,
+            )
+
+    def enable_column_resize(self):
+        for index, mode in self.resize_modes.items():
+            self.ui.tree_view.header().setSectionResizeMode(
+                index,
+                mode,
+            )
+
     def read_from_module(self):
-        resize_mode = self.ui.tree_view.header().sectionResizeMode(epyqlib.nv.Columns.indexes.value)
-        self.ui.tree_view.header().setSectionResizeMode(
-            epyqlib.nv.Columns.indexes.value, QtWidgets.QHeaderView.Fixed)
+        self.disable_column_resize()
+
         model = self.nonproxy_model()
         only_these = [nv for nv in model.all_nv()]
         callback = functools.partial(
             self.update_signals,
             only_these=only_these
         )
-        d = model.root.read_all_from_device(callback=callback,
-                                            only_these=only_these)
+        d = model.root.read_all_from_device(
+            callback=callback,
+            only_these=only_these,
+            meta=tuple(
+                meta
+                for meta in epyqlib.nv.meta_limits_first
+                if meta in self.metas
+            ),
+        )
 
-        def f():
-            self.ui.tree_view.header().setSectionResizeMode(
-                epyqlib.nv.Columns.indexes.value, resize_mode
-            )
-        d.addBoth(epyqlib.utils.twisted.detour_result, f)
+        d.addBoth(epyqlib.utils.twisted.detour_result, self.enable_column_resize)
         d.addErrback(epyqlib.utils.twisted.catch_expected)
         d.addErrback(epyqlib.utils.twisted.errbackhook)
 
@@ -437,8 +484,14 @@ class NvView(QtWidgets.QWidget):
                 epyqlib.nv.MetaEnum,
                 epyqlib.nv.Columns().index_from_attribute(index.column()),
             )
-            selected_by_node[node].append(meta)
-            selected_by_meta[meta].append(node)
+            if meta not in self.metas:
+                meta = epyqlib.nv.MetaEnum.value
+
+            if meta not in selected_by_node[node]:
+                selected_by_node[node].append(meta)
+
+            if node not in selected_by_meta[meta]:
+                selected_by_meta[meta].append(node)
 
 
         menu = QtWidgets.QMenu(parent=self.ui.tree_view)
@@ -503,14 +556,20 @@ class NvView(QtWidgets.QWidget):
                     )
                 )
             elif action is saturate:
+                self.disable_column_resize()
                 for node in nodes:
                     model.saturate_node(node, meta=meta)
+                self.enable_column_resize()
             elif action is reset:
+                self.disable_column_resize()
                 for node in nodes:
                     model.reset_node(node, meta=meta)
+                self.enable_column_resize()
             elif action is clear:
+                self.disable_column_resize()
                 for node in nodes:
                     model.clear_node(node, meta=meta)
+                self.enable_column_resize()
             elif action is expand_all:
                 self.ui.tree_view.expandAll()
             elif action is collapse_all:

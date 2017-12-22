@@ -612,6 +612,22 @@ class Device:
                                         )[0]
                                     )
 
+            for nv in self.nvs.all_nv():
+                if isinstance(nv, epyqlib.nv.Nv):
+                    if epyqlib.nv.MetaEnum.minimum not in self.metas:
+                        if nv.min is not None:
+                            nv.set_meta(
+                                data=float(nv.min),
+                                meta=epyqlib.nv.MetaEnum.minimum,
+                            )
+
+                    if epyqlib.nv.MetaEnum.maximum not in self.metas:
+                        if nv.max is not None:
+                            nv.set_meta(
+                                data=float(nv.max),
+                                meta=epyqlib.nv.MetaEnum.maximum,
+                            )
+
             self.widget_frames_nv = epyqlib.canneo.Neo(
                 matrix=matrix_nv,
                 frame_class=epyqlib.nv.Frame,
