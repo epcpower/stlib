@@ -671,16 +671,26 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             print("Unrecognized NV value named '{}' ({}) found when loading "
                   "from value set".format(name, meta.name))
 
-    def defaults_from_dict(self, d):
+    def defaults_from_dict(
+            self,
+            d,
+            default_metas=(MetaEnum.factory_default,),
+    ):
         only_in_file = list(d.keys())
 
         for child in self.all_nv():
             value = d.get(child.fields.name, None)
             if value is not None:
-                child.set_meta(
-                    data=float(value),
-                    meta=epyqlib.nv.MetaEnum.factory_default,
-                )
+                for meta in default_metas:
+                    child.set_meta(
+                        data=float(value),
+                        meta=meta,
+                    )
+                    self.changed.emit(
+                        child, meta_column_indexes[meta],
+                        child, meta_column_indexes[meta],
+                        [Qt.DisplayRole],
+                    )
                 only_in_file.remove(child.fields.name)
             else:
                 print("Nv value named '{}' not found when loading from dict"

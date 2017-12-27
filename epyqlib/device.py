@@ -595,22 +595,25 @@ class Device:
                 access_password_path=access_password_path,
             )
 
-            if epyqlib.nv.MetaEnum.factory_default not in self.metas:
-                if 'parameter_defaults' in self.raw_dict:
-                    parameter_defaults_path = os.path.join(
-                        os.path.dirname(self.config_path),
-                        self.raw_dict['parameter_defaults']
+            default_metas = [
+                meta
+                for meta in (
+                    epyqlib.nv.MetaEnum.user_default,
+                    epyqlib.nv.MetaEnum.factory_default,
+                )
+                if meta not in self.metas
+            ]
+
+            if len(default_metas) > 0 and 'parameter_defaults' in self.raw_dict:
+                parameter_defaults_path = os.path.join(
+                    os.path.dirname(self.config_path),
+                    self.raw_dict['parameter_defaults']
+                )
+                with open(parameter_defaults_path) as f:
+                    self.nvs.defaults_from_dict(
+                        d=json.load(f),
+                        default_metas=default_metas,
                     )
-                    with open(parameter_defaults_path) as f:
-                        self.nvs.defaults_from_dict(json.load(f))
-                        for nv in self.nvs.all_nv():
-                            if isinstance(nv, epyqlib.nv.Nv):
-                                if nv.default_value is not None:
-                                    nv.fields.factory_default = (
-                                        nv.format_strings(
-                                           value=int(nv.default_value)
-                                        )[0]
-                                    )
 
             for nv in self.nvs.all_nv():
                 if isinstance(nv, epyqlib.nv.Nv):
