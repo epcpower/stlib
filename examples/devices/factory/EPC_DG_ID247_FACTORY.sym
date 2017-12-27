@@ -142,7 +142,7 @@ DLC=8
 Mux=HardwareDef1 0,11 00Ah
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=DeviceOvertempLimit unsigned 16,16 /u:C /max:200 /d:150	// <factory>	// <nv::allHwParams{}.deviceOvertempLimit>
+Var=DeviceOvertempLimit unsigned 16,16 /u:C /max:200 /d:150	// <factory> <nv::allHwParams{}.deviceOvertempLimit>
 Var=EnableCalcIDCTrip unsigned 36,2 /max:1 /e:Enable /d:1 /ln:"Calc. IDC trip"	// Enable trip on calculated IDC <factory> <nv::allHwParams{}.enableIDCTotalFault>
 Var=EnablePumpControl unsigned 38,2 /max:1 /e:Enable /d:1 /ln:"Enable Pump Control"	// <nv::allHwParams{}.useDigitalPump>
 
@@ -1436,7 +1436,7 @@ Mux=SoftStart 0,11 136h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=OpenLoopVoutGain unsigned 16,16 /f:0.001 /p:3 /d:1.025	// <factory> open loop output voltage gain  <nv::fVOUT_GAIN_SCALE:allAfeParams{}.openLoopVoutGain>
-Var=SoftStartInc unsigned 32,16 /f:0.0001 /p:4 /d:0.02	// <factory> // ramp increment for OpenLoopVoutGain (ramped at 1ms rate)  <nv::fSOFTSTART_INC_SCALE:allAfeParams{}.softStartInc> 
+Var=SoftStartInc unsigned 32,16 /f:0.0001 /p:4 /d:0.02	// <factory> ramp increment for OpenLoopVoutGain (ramped at 1ms rate)  <nv::fSOFTSTART_INC_SCALE:allAfeParams{}.softStartInc> 
 
 [ParameterQuery]
 DLC=8
@@ -1685,7 +1685,7 @@ DLC=8
 Mux=HardwareDef1 0,11 00Ah
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=DeviceOvertempLimit unsigned 16,16 /u:C /max:200 /d:150	// <factory>	// <nv::allHwParams{}.deviceOvertempLimit>
+Var=DeviceOvertempLimit unsigned 16,16 /u:C /max:200 /d:150	// <factory> <nv::allHwParams{}.deviceOvertempLimit>
 Var=EnableCalcIDCTrip unsigned 36,2 /max:1 /e:Enable /d:1 /ln:"Calc. IDC trip"	// Enable trip on calculated IDC <factory> <nv::allHwParams{}.enableIDCTotalFault>
 Var=EnablePumpControl unsigned 38,2 /max:1 /e:Enable /d:1 /ln:"Enable Pump Control"	// <nv::allHwParams{}.useDigitalPump>
 
@@ -2979,7 +2979,7 @@ Mux=SoftStart 0,11 136h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=OpenLoopVoutGain unsigned 16,16 /f:0.001 /p:3 /d:1.025	// <factory> open loop output voltage gain  <nv::fVOUT_GAIN_SCALE:allAfeParams{}.openLoopVoutGain>
-Var=SoftStartInc unsigned 32,16 /f:0.0001 /p:4 /d:0.02	// <factory> // ramp increment for OpenLoopVoutGain (ramped at 1ms rate)  <nv::fSOFTSTART_INC_SCALE:allAfeParams{}.softStartInc> 
+Var=SoftStartInc unsigned 32,16 /f:0.0001 /p:4 /d:0.02	// <factory> ramp increment for OpenLoopVoutGain (ramped at 1ms rate)  <nv::fSOFTSTART_INC_SCALE:allAfeParams{}.softStartInc> 
 
 [ParameterResponse]
 DLC=8
