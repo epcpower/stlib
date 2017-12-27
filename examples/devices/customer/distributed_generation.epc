@@ -12,5 +12,8 @@
         "Setup and Status": "distributed_generation_setup.ui"
     },
     "module": "distributed_generation.py",
-    "parameter_hierarchy": "EPC_DG_ID247.parameters.json"
+    "parameter_hierarchy": "EPC_DG_ID247.parameters.json",
+    "nv_meta_enum": "Meta",
+    "access_level_path": "ParameterQuery;AccessLevel;Level",
+    "access_password_path": "ParameterQuery;AccessLevel;Password"
 }
