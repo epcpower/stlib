@@ -69,7 +69,7 @@
      </widget>
      <widget class="QWidget" name="variables">
       <attribute name="title">
-       <string>Variables</string>
+       <string>Data Logger</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_6">
        <item>
@@ -84,6 +84,16 @@
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
         <widget class="NvView" name="nv"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="scripting">
+      <attribute name="title">
+       <string>Scripting</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0">
+        <widget class="ScriptingView" name="scripting_view"/>
        </item>
       </layout>
      </widget>
@@ -106,6 +116,11 @@
    <class>VariableSelection</class>
    <extends>QWidget</extends>
    <header>epyqlib.variableselection</header>
+  </customwidget>
+  <customwidget>
+   <class>ScriptingView</class>
+   <extends>QWidget</extends>
+   <header>epyqlib.scriptingview</header>
   </customwidget>
  </customwidgets>
  <resources/>

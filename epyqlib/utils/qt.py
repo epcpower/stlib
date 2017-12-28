@@ -48,10 +48,15 @@ def exception_message_box(excType=None, excValue=None, tracebackobj=None):
     def join(iterable):
         return ''.join(iterable).strip()
 
-    brief = join(traceback.format_exception_only(
-        etype=excType,
-        value=excValue
-    ))
+    expected = isinstance(excValue, epyqlib.utils.general.ExpectedException)
+
+    if expected:
+        brief = excValue.expected_message()
+    else:
+        brief = join(traceback.format_exception_only(
+            etype=excType,
+            value=excValue
+        ))
 
     extended = join(traceback.format_exception(
         etype=excType,
@@ -59,7 +64,12 @@ def exception_message_box(excType=None, excValue=None, tracebackobj=None):
         tb=tracebackobj,
     ))
 
-    custom_exception_message_box(
+    if expected:
+        box = raw_exception_message_box
+    else:
+        box = custom_exception_message_box
+
+    box(
         brief=brief,
         extended=extended,
         stderr=False,
@@ -812,7 +822,16 @@ def pyqtify(name=None, property_decorator=lambda: property):
 
             self.__pyqtify_instance__.changed = SignalContainer()
 
-            old_init(self, *args, **kwargs)
+            try:
+                old_init(self, *args, **kwargs)
+            except TypeError as e:
+                raise TypeError(
+                    '.'.join((
+                        type(self).__module__,
+                        type(self).__qualname__,
+                        e.args[0],
+                    )),
+                ) from e
 
         cls.__init__ = __init__
 

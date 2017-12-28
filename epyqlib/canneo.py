@@ -619,7 +619,7 @@ class Frame(QtCanListener):
     def _sent(self):
         pass
 
-    def send_now(self):
+    def send_now(self, signals=None):
         self._send(update=True)
 
     def cyclic_request(self, caller, period):

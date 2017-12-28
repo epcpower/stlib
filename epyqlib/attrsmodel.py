@@ -3,6 +3,7 @@ import contextlib
 import decimal
 import inspect
 import json
+import locale
 import logging
 import uuid
 import weakref
@@ -40,10 +41,6 @@ class Column:
 
 
 class ConsistencyError(Exception):
-    pass
-
-
-class NotFoundError(Exception):
     pass
 
 
@@ -90,7 +87,11 @@ def ify():
             if metadata is None:
                 metadata = Metadata(name=field.name, **extras)
             else:
-                metadata = attr.evolve(metadata, name=field.name, **extras)
+                # TODO: remove this backwards compat and just use recent
+                #       attrs everywhere
+                evolve = getattr(attr, 'evolve', attr.assoc)
+
+                metadata = evolve(metadata, name=field.name, **extras)
 
             if metadata.convert is None:
                 metadata.convert = field.convert
@@ -299,31 +300,6 @@ def Root(default_name, valid_types):
 
             return True
 
-        def nodes_by_attribute(self, attribute_value, attribute_name):
-            def matches(node, matches):
-                if not hasattr(node, attribute_name):
-                    return
-
-                if getattr(node, attribute_name) == attribute_value:
-                    matches.add(node)
-
-            nodes = set()
-            self.traverse(
-                call_this=matches,
-                payload=nodes,
-                internal_nodes=True
-            )
-
-            if len(nodes) == 0:
-                raise NotFoundError(
-                    '''Attribute '{}' with value '{}' not found'''.format(
-                        attribute_name,
-                        attribute_value,
-                    )
-                )
-
-            return nodes
-
     return Root
 
 
@@ -362,6 +338,9 @@ def to_decimal_or_none(s):
     if isinstance(s, str) and len(s) == 0:
         return None
 
+    if isinstance(s, str):
+        s = locale.delocalize(s)
+
     try:
         result = decimal.Decimal(s)
     except decimal.InvalidOperation as e:
@@ -389,6 +368,9 @@ def to_int_or_none(s):
 
     if isinstance(s, str) and len(s) == 0:
         return None
+
+    if isinstance(s, str):
+        s = locale.delocalize(s)
 
     try:
         result = int(s)
@@ -503,7 +485,11 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         node = self.node_from_index(index)
 
         data = getattr(node, field.name)
-        processor = data_processor(type(node), field, Metadata.data_display)
+        processor = data_processor(
+            cls=type(node),
+            data_field=field,
+            attribute_field=attr.fields(Metadata).data_display,
+        )
         if processor is not None:
             return processor(data)
 

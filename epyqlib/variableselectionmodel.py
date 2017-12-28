@@ -697,21 +697,21 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             size = size.fields.value
             chunk_ranges.append((address, size))
 
-        def overlaps_a_chunk(node):
+        def contained_by_a_chunk(node):
             if len(node.children) > 0:
                 return False
 
             node_lower = int(node.fields.address, 16)
             node_upper = node_lower + node.fields.size - 1
 
-            for lower, upper in chunk_ranges:
-                upper = lower + upper - 1
-                if lower <= node_upper and upper >= node_lower:
+            for lower, size in chunk_ranges:
+                upper = lower + size - 1
+                if lower <= node_lower and node_upper <= upper:
                     return True
 
             return False
 
-        cache = self.create_cache(test=overlaps_a_chunk, subscribe=False)
+        cache = self.create_cache(test=contained_by_a_chunk, subscribe=False)
         return cache
 
     def parse_block_header_into_node(self, raw_header, bits_per_byte, block_header_type):

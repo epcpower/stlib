@@ -689,3 +689,25 @@ def test_original_signals(qtbot):
 
     for name, value in values.items():
         assert tuple(value.expected) == tuple(value.collected)
+
+
+def test_to_decimal_or_none_re_locale():
+    decimal_string = '1,000.00'
+
+    with epyqlib.tests.common.use_locale(('C', None)):
+        with pytest.raises(ValueError, match=repr(decimal_string)):
+            epyqlib.attrsmodel.to_decimal_or_none(decimal_string)
+
+    with epyqlib.tests.common.use_locale(('en_US', 'utf8'), 'us'):
+        epyqlib.attrsmodel.to_decimal_or_none(decimal_string)
+
+
+def test_to_int_or_none_re_locale():
+    int_string = '1,000'
+
+    with epyqlib.tests.common.use_locale(('C', None)):
+        with pytest.raises(ValueError, match=repr(int_string)):
+            epyqlib.attrsmodel.to_int_or_none(int_string)
+
+    with epyqlib.tests.common.use_locale(('en_US', 'utf8'), 'us'):
+        epyqlib.attrsmodel.to_int_or_none(int_string)
