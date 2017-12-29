@@ -553,7 +553,7 @@ types = epyqlib.attrsmodel.Types(
         ArrayParameterElement,
         Enumeration,
         Enumerator,
-Enumerations,
+        Enumerations,
     ),
 )
 
