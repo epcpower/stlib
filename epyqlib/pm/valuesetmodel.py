@@ -59,7 +59,7 @@ def copy_parameter_data(
         human_names=True,
         base_node=None,
         calculate_unspecified_min_max=False,
-        symbol_root=None,
+        can_root=None,
 ):
     def traverse(node, _):
         if isinstance(node, epyqlib.pm.parametermodel.Parameter):
@@ -75,7 +75,7 @@ def copy_parameter_data(
             maximum = node.maximum
 
             if calculate_unspecified_min_max:
-                query_multiplexed_message, = symbol_root.nodes_by_attribute(
+                query_multiplexed_message, = can_root.nodes_by_attribute(
                     attribute_value='Parameter Query',
                     attribute_name='name',
                 )
