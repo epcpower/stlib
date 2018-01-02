@@ -28,6 +28,10 @@ __license__ = 'GPLv2+'
 logger = logging.getLogger()
 
 
+class NotFoundError(Exception):
+    pass
+
+
 @attr.s
 class Column:
     name = attr.ib()

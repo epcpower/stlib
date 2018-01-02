@@ -98,12 +98,14 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.Boolean(),
         ),
     )
-    factory = attr.ib(
-        default=False,
-        convert=epyqlib.attrsmodel.two_state_checkbox,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.Boolean(),
-        ),
+    access_level_uuid = epyqlib.attrsmodel.attr_uuid(
+        default=None,
+        allow_none=True,
+        # convert=lambda x: x if x is None else AccessLevelsAccessLevel(x),
+    )
+    parameter_uuid = epyqlib.attrsmodel.attr_uuid(
+        default=None,
+        allow_none=True,
     )
     comment = attr.ib(
         default=None,
@@ -226,6 +228,7 @@ class Enumerations(epyqlib.treenode.TreeNode):
             field=graham.fields.MixedList(fields=(
                 # TODO: would be nice to self reference without a name
                 marshmallow.fields.Nested('Enumeration'),
+                marshmallow.fields.Nested('AccessLevels'),
             )),
         ),
     )
@@ -538,6 +541,90 @@ class Enumeration(epyqlib.treenode.TreeNode):
         return True
 
 
+@graham.schemify(tag='access_level')
+@epyqlib.attrsmodel.ify()
+@epyqlib.utils.qt.pyqtify()
+@attr.s(hash=False)
+class AccessLevel(epyqlib.treenode.TreeNode):
+    name = attr.ib(
+        default='New Access Level',
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(),
+        ),
+    )
+    value = attr.ib(
+        default=None,
+        convert=epyqlib.attrsmodel.to_decimal_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Integer(allow_none=True),
+        ),
+    )
+    uuid = epyqlib.attrsmodel.attr_uuid()
+
+    def __attrs_post_init__(self):
+        super().__init__()
+
+    def can_drop_on(self):
+        return False
+
+    can_delete = epyqlib.attrsmodel.childless_can_delete
+
+
+@graham.schemify(tag='access_levels')
+@epyqlib.attrsmodel.ify()
+@epyqlib.utils.qt.pyqtify()
+@attr.s(hash=False)
+class AccessLevels(epyqlib.treenode.TreeNode):
+    name = attr.ib(
+        default='New Access Levels',
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(),
+        ),
+    )
+    children = attr.ib(
+        default=attr.Factory(list),
+        metadata=graham.create_metadata(
+            field=graham.fields.MixedList(fields=(
+                marshmallow.fields.Nested(graham.schema(AccessLevel)),
+            )),
+        ),
+    )
+
+    uuid = epyqlib.attrsmodel.attr_uuid()
+
+    def __attrs_post_init__(self):
+        super().__init__()
+
+    def items(self):
+        for child in self.children:
+            yield (child.name, child.value)
+
+    def values(self):
+        for child in self.children:
+            yield child.value
+
+    def can_drop_on(self):
+        return False
+
+    def can_delete(self, node=None):
+        if node is None:
+            return self.tree_parent.can_delete(node=self)
+
+        return True
+
+    def by_name(self, name):
+        level, = (
+            level
+            for level in self.children
+            if level.name.casefold() == name.casefold()
+        )
+
+        return level
+
+    def default(self):
+        return min(self.children, key=lambda x: x.value)
+
+
 Root = epyqlib.attrsmodel.Root(
     default_name='Parameters',
     valid_types=(Parameter, Group, Enumerations)
@@ -553,7 +640,9 @@ types = epyqlib.attrsmodel.Types(
         ArrayParameterElement,
         Enumeration,
         Enumerator,
-Enumerations,
+        Enumerations,
+        AccessLevel,
+        AccessLevels,
     ),
 )
 
@@ -570,14 +659,14 @@ columns = epyqlib.attrsmodel.columns(
     merge('named_enumerators', Array),
     merge('units', Parameter),
 
-    merge('value', Enumerator),
+    merge('value', Enumerator, AccessLevel),
     merge('default', Parameter, ArrayParameterElement),
     merge('minimum', Parameter, ArrayParameterElement),
     merge('maximum', Parameter, ArrayParameterElement),
 
     merge('nv', Parameter, ArrayParameterElement),
     merge('read_only', Parameter),
-    merge('factory', Parameter),
+    merge('access_level_uuid', Parameter),
 
     merge('display_hexadecimal', Parameter),
     merge('decimal_places', Parameter),
