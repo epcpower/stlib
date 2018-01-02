@@ -84,7 +84,21 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.Boolean(),
         ),
     )
-    nv = attr.ib(
+    nv_format = attr.ib(
+        default=None,
+        convert=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True)
+        ),
+    )
+    nv_factor = attr.ib(
+        default=None,
+        convert=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True)
+        ),
+    )
+    nv_cast = attr.ib(
         default=False,
         convert=epyqlib.attrsmodel.two_state_checkbox,
         metadata=graham.create_metadata(
@@ -252,7 +266,7 @@ class Enumerations(epyqlib.treenode.TreeNode):
 @epyqlib.utils.qt.pyqtify()
 @epyqlib.utils.qt.pyqtify_passthrough_properties(
     original='original',
-    field_names=('nv',),
+    field_names=('nv_format',),
 )
 @attr.s(hash=False)
 class ArrayParameterElement(epyqlib.treenode.TreeNode):
@@ -284,10 +298,12 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.Decimal(allow_none=True, as_string=True),
         ),
     )
-    nv = attr.ib(
-        default=False,
-        init=False,
-        convert=epyqlib.attrsmodel.two_state_checkbox,
+    nv_format = attr.ib(
+        default=None,
+        convert=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True)
+        ),
     )
     uuid = epyqlib.attrsmodel.attr_uuid()
     original = attr.ib(
@@ -664,7 +680,9 @@ columns = epyqlib.attrsmodel.columns(
     merge('minimum', Parameter, ArrayParameterElement),
     merge('maximum', Parameter, ArrayParameterElement),
 
-    merge('nv', Parameter, ArrayParameterElement),
+    merge('nv_format', Parameter, ArrayParameterElement),
+    merge('nv_factor', Parameter),
+    merge('nv_cast', Parameter),
     merge('read_only', Parameter),
     merge('access_level_uuid', Parameter),
 
