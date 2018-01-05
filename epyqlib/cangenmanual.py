@@ -3,6 +3,7 @@ import itertools
 import logging
 import os
 import signal
+import time
 
 import attr
 import canmatrix.formats
@@ -11,6 +12,8 @@ import docx
 import docx.enum.section
 import docx.enum.table
 import docx.enum.text
+import docx.oxml
+import docx.oxml.ns
 import docx.shared
 import docx.table
 import lxml.etree
@@ -23,6 +26,26 @@ __license__ = 'GPLv2+'
 
 
 logger = logging.getLogger(__name__)
+
+
+# https://github.com/python-openxml/python-docx/issues/322#issuecomment-265018856
+def set_repeat_table_header(row):
+    tr = row._tr
+    trPr = tr.get_or_add_trPr()
+    tblHeader = docx.oxml.OxmlElement('w:tblHeader')
+    tblHeader.set(docx.oxml.ns.qn('w:val'), "true")
+    trPr.append(tblHeader)
+    return row
+
+
+# https://github.com/python-openxml/python-docx/issues/245#issuecomment-208476933
+def prevent_row_breaks(table):
+    tags = table._element.xpath('//w:tr')
+    rows = len(tags)
+    for row in range(0,rows):
+        tag = tags[row]                     # Specify which <w:r> tag you want
+        child = docx.oxml.OxmlElement('w:cantSplit')  # Create arbitrary tag
+        tag.append(child)                   # Append in the new tag
 
 
 def w(s):
@@ -51,17 +74,27 @@ class Table:
     comment = attr.ib(default='')
     rows = attr.ib(default=attr.Factory(list))
 
-    def fill_docx(self, table):
+    def fill_docx(
+            self,
+            table,
+            title_style=None,
+            heading_style=None,
+            contents_style=None,
+    ):
         table.alignment = docx.enum.table.WD_TABLE_ALIGNMENT.CENTER
         # table.autofit = True
         # table.style = 'CAN Table Base'
 
-        row = table.add_row()
-        row.cells[0].text = self.title
-        title_paragraph = row.cells[0].paragraphs[0]
-        title_paragraph.paragraph_format.keep_with_next = True
-        title_paragraph.style = 'CAN Table Title'
-        shade(row.cells[0], fill="000000")
+        title_present = self.title is not None and len(self.title) > 0
+
+        if title_present:
+            row = table.add_row()
+            row.cells[0].text = self.title
+            title_paragraph = row.cells[0].paragraphs[0]
+            title_paragraph.paragraph_format.keep_with_next = True
+            if title_style is not None:
+                title_paragraph.style = title_style
+            shade(row.cells[0], fill="000000")
 
         if len(self.comment) > 0:
             row = table.add_row()
@@ -72,21 +105,40 @@ class Table:
         row = table.add_row()
         for cell, heading in zip(row.cells, self.headings):
             cell.text = heading
-            cell.paragraphs[0].style = 'CAN Table Heading'
+            if heading_style is not None:
+                cell.paragraphs[0].style = heading_style
             cell.paragraphs[0].paragraph_format.keep_with_next = True
+
+            if not title_present:
+                shade(cell, fill="000000")
 
         shadings = (
             {'fill': 'D9D9D9'},
             None,
         )
 
-        for r, shading in zip(self.rows, itertools.cycle(shadings)):
+        shadings_iterator = itertools.cycle(shadings)
+        if not title_present:
+            next(shadings_iterator)
+
+        zipped = zip(self.rows, shadings_iterator)
+        total = len(self.rows)
+        checkpoint = time.monotonic()
+        n = 10
+        for i, (r, shading) in enumerate(zipped):
+            if i > 0 and i % n == 0:
+                now = time.monotonic()
+                delta = now - checkpoint
+                checkpoint = now
+                print('{} / {} ({:.3})'.format(i, total, delta / n))
+
             row = table.add_row()
             for cell, text in zip(row.cells, r):
                 cell.text = str(text)
                 if shading is not None:
                     shade(cell, **shading)
-                cell.paragraphs[0].style = 'CAN Table Contents'
+                if contents_style is not None:
+                    cell.paragraphs[0].style = contents_style
                 cell.paragraphs[0].paragraph_format.keep_with_next = True
 
         remaining_width = (
@@ -100,11 +152,22 @@ class Table:
         ]
         for column, width in zip(table.columns, widths):
             column.width = width
-        for row in table.rows:
+
+        total = len(self.rows)
+        checkpoint = time.monotonic()
+        n = 10
+        for i, row in enumerate(table.rows):
+            if i > 0 and i % n == 0:
+                now = time.monotonic()
+                delta = now - checkpoint
+                checkpoint = now
+                print('{} / {} ({:.3})'.format(i, total, delta / n))
+
             for cell, width in zip(row.cells, widths):
                 cell.width = width
 
-        table.rows[0].cells[0].merge(table.rows[0].cells[-1])
+        if title_present:
+            table.rows[0].cells[0].merge(table.rows[0].cells[-1])
 
 
 def id_string(id):
@@ -319,7 +382,12 @@ def main(can, template, output, verbose):
             paragraph._p.addprevious(doc_table._tbl)
             paragraph._p.addprevious(doc_paragraph._p)
 
-            table.fill_docx(doc_table)
+            table.fill_docx(
+                doc_table,
+                title_style='CAN Table Title',
+                heading_style='CAN Table Heading',
+                contents_style='CAN Table Contents',
+            )
 
         # TODO: Would rather delete the tag paragraph but that breaks the
         #       template's landscape page format for some reason
