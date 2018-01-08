@@ -112,11 +112,17 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.Boolean(),
         ),
     )
+
     access_level_uuid = epyqlib.attrsmodel.attr_uuid(
         default=None,
         allow_none=True,
         # convert=lambda x: x if x is None else AccessLevelsAccessLevel(x),
     )
+    epyqlib.attrsmodel.attrib(
+        attribute=access_level_uuid,
+        human_name='Access Level UUID',
+    )
+
     parameter_uuid = epyqlib.attrsmodel.attr_uuid(
         default=None,
         allow_none=True,
