@@ -172,6 +172,22 @@ class Columns:
 
         return self.columns[item]
 
+    def index_of(self, item):
+        if isinstance(item, str):
+            index, = (
+                index
+                for index, column in enumerate(self.columns)
+                if column.name == item
+            )
+        elif isinstance(item, tuple):
+            index, = (
+                index
+                for index, column in enumerate(self.columns)
+                if column.fields[item[0]] == item[1]
+            )
+
+        return index
+
 
 def columns(*columns):
     def _name(column):
@@ -478,7 +494,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         if name is None:
             return None
 
-        return getattr(attr.fields(t), name)
+        return getattr(attributes(t).fields, name)
 
     def data_display(self, index, replace_none='-'):
         field = self.get_field(index)

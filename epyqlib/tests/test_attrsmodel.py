@@ -711,3 +711,50 @@ def test_to_int_or_none_re_locale():
 
     with epyqlib.tests.common.use_locale(('en_US', 'utf8'), 'us'):
         epyqlib.attrsmodel.to_int_or_none(int_string)
+
+
+def test_two_state_checkbox():
+    @graham.schemify('parameter')
+    @epyqlib.attrsmodel.ify()
+    @epyqlib.utils.qt.pyqtify()
+    @attr.s(hash=False)
+    class Parameter(epyqlib.treenode.TreeNode):
+        type = attr.ib(default='test_parameter', init=False)
+        name = attr.ib(default='New Parameter')
+        value = attr.ib(
+            default=None,
+            convert=epyqlib.attrsmodel.two_state_checkbox,
+        )
+        uuid = epyqlib.attrsmodel.attr_uuid()
+
+        def __attrs_post_init__(self):
+            super().__init__()
+
+    Root = epyqlib.attrsmodel.Root(
+        default_name='Parameters',
+        valid_types=(Parameter, Group)
+    )
+
+    columns = epyqlib.attrsmodel.columns(
+        (
+            (Parameter, 'name'),
+            (Group, 'name'),
+        ),
+        ((Parameter, 'value'),),
+    )
+
+    root = Root()
+    model = epyqlib.attrsmodel.Model(
+        root=root,
+        columns=columns,
+    )
+
+    parameter = Parameter()
+    root.append_child(parameter)
+
+    index = model.index_from_node(parameter)
+    column_index = columns.index_of('Value')
+    index = model.index(index.row(), column_index, index.parent())
+
+    flags = model.flags(index)
+    assert flags & PyQt5.QtCore.Qt.ItemIsUserCheckable
