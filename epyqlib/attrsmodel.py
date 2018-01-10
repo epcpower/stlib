@@ -13,9 +13,12 @@ import graham
 import graham.fields
 import marshmallow
 from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 import PyQt5.QtCore
 
 import epyqlib.abstractcolumns
+import epyqlib.delegates
 import epyqlib.pyqabstractitemmodel
 import epyqlib.treenode
 import epyqlib.utils.general
@@ -333,7 +336,7 @@ def convert_uuid(x):
     return uuid.UUID(x)
 
 
-def attr_uuid(metadata=None, default=attr.Factory(uuid.uuid4), **field_options):
+def attr_uuid(metadata=None, human_name='UUID', default=attr.Factory(uuid.uuid4), **field_options):
     if metadata is None:
         metadata = {}
 
@@ -348,7 +351,7 @@ def attr_uuid(metadata=None, default=attr.Factory(uuid.uuid4), **field_options):
     )
     attrib(
         attribute=attribute,
-        human_name='UUID',
+        human_name=human_name,
     )
 
     return attribute
@@ -441,6 +444,72 @@ def childless_can_delete(self, node=None):
     return self.tree_parent.can_delete(node=self)
 
 
+def enumeration_delegate(model, text_column_name):
+    def f(index, node, parent):
+        widget = QtWidgets.QComboBox(parent=parent)
+        widget.setModel(model)
+        widget.setModelColumn(model.columns.index_of(text_column_name))
+
+        node_attribute_column = model.columns[index.column()]
+        node_attribute_name = node_attribute_column.fields[type(node)]
+
+        enumeration_node = model.node_from_uuid(
+            getattr(node, node_attribute_name),
+        )
+
+        widget.setRootModelIndex(model.index_from_node(
+            enumeration_node.tree_parent,
+        ))
+
+        event = QtGui.QMouseEvent(
+            QtCore.QEvent.MouseButtonPress,
+            QtCore.QPoint(),
+            QtCore.Qt.LeftButton,
+            QtCore.Qt.LeftButton,
+            QtCore.Qt.NoModifier,
+        )
+        QtCore.QCoreApplication.postEvent(widget, event)
+
+        return widget
+
+    return f
+
+
+def enumeration_delegate_editor(editor, model, index):
+    if hasattr(model, 'sourceModel'):
+        proxy = model
+        model = proxy.sourceModel()
+
+        target_index = proxy.mapToSource(index)
+    else:
+        target_index = index
+
+    editor_model = editor.model()
+    root_index = editor.rootModelIndex()
+    row = editor.currentIndex()
+    selected_index = editor_model.index(row, 0, root_index)
+
+    node = model.node_from_index(selected_index)
+
+    model.setData(target_index, node.uuid, role=QtCore.Qt.EditRole)
+
+
+def delegate(model, node, column):
+    column = model.columns[column]
+
+    # TODO: make a real configuration for this
+    if column.fields[type(node)].casefold().endswith('_uuid'):
+        return epyqlib.delegates.Delegate(
+            creator=enumeration_delegate(
+                model=model,
+                text_column_name='Name',
+            ),
+            model_setter=enumeration_delegate_editor,
+        )
+
+    return epyqlib.delegates.Delegate()
+
+
 class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
     def __init__(self, root, columns, parent=None):
         super().__init__(root=root, parent=parent)
@@ -464,6 +533,13 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             internal_nodes=True,
         )
 
+    def delegate(self, parent=None, proxy=None):
+        return epyqlib.delegates.ByFunction(
+            model=self,
+            parent=parent,
+            proxy=proxy,
+            function=delegate,
+        )
 
     def add_drop_sources(self, *sources):
         self.droppable_from.update(sources)

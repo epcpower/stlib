@@ -1,18 +1,27 @@
+import attr
 from PyQt5.QtCore import pyqtSlot, Qt, QCoreApplication, QEvent, QPoint
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import QMouseEvent
 
 
-def default(node):
+def default(model, node, column):
     if hasattr(node, 'enumeration_strings'):
         if len(node.enumeration_strings()) > 0:
-            return create_combo, None
+            return Delegate(creator=create_combo)
 
     if hasattr(node, 'secret'):
         if node.secret:
-            return None, modify_password
+            return Delegate(modifier=modify_password)
 
-    return None, None
+    return Delegate()
+
+
+@attr.s
+class Delegate:
+    creator = attr.ib(default=None)
+    modifier = attr.ib(default=None)
+    editor_setter = attr.ib(default=None)
+    model_setter = attr.ib(default=None)
 
 
 class ByFunction(QtWidgets.QStyledItemDelegate):
@@ -23,25 +32,55 @@ class ByFunction(QtWidgets.QStyledItemDelegate):
         self.proxy = proxy
         self.function = function
 
-    def createEditor(self, parent, option, index):
+    def get_delegate_node(self, index):
         if self.proxy is not None:
             index = self.proxy.mapToSource(index)
         # TODO: way too particular
         node = self.model.node_from_index(index)
 
-        creator, modifier = self.function(node=node)
+        delegate = self.function(
+            model=self.model,
+            node=node,
+            column=index.column(),
+        )
 
-        if creator is None:
+        return delegate, node
+
+    def createEditor(self, parent, option, index):
+        delegate, node = self.get_delegate_node(index=index)
+
+        if delegate.creator is None:
             widget = QtWidgets.QStyledItemDelegate.createEditor(
                 self, parent, option, index)
         else:
-            widget = creator(index=index, node=node, parent=parent)
+            widget = delegate.creator(index=index, node=node, parent=parent)
+            # TODO: this is combobox specific
             widget.currentIndexChanged.connect(self.current_index_changed)
 
-        if modifier is not None:
-            modifier(widget=widget)
+        if delegate.modifier is not None:
+            delegate.modifier(widget=widget)
 
         return widget
+
+    # def setEditorData(self, editor, index):
+    #     delegate, node = self.get_delegate_node(index=index)
+    #
+    #     if delegate.editor_setter is None:
+    #         return super().setEditorData(editor, index)
+    #
+    #     return delegate.editor_setter(editor=editor, index=index)
+
+    def setModelData(self, editor, model, index):
+        delegate, node = self.get_delegate_node(index=index)
+
+        if delegate.model_setter is None:
+            return super().setModelData(editor, model, index)
+
+        return delegate.model_setter(
+            editor=editor,
+            model=model,
+            index=index,
+        )
 
     @pyqtSlot()
     def current_index_changed(self):

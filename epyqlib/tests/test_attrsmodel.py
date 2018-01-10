@@ -758,3 +758,97 @@ def test_two_state_checkbox():
 
     flags = model.flags(index)
     assert flags & PyQt5.QtCore.Qt.ItemIsUserCheckable
+
+
+def test_enumeration():
+    @graham.schemify('leaf')
+    @epyqlib.attrsmodel.ify()
+    @epyqlib.utils.qt.pyqtify()
+    @attr.s(hash=False)
+    class TestEnumerationLeaf(epyqlib.treenode.TreeNode):
+        name = attr.ib(default='New Leaf')
+        enumeration_uuid = attr.ib(
+            default=None,
+            convert=epyqlib.attrsmodel.convert_uuid,
+        )
+        uuid = epyqlib.attrsmodel.attr_uuid()
+
+        def __attrs_post_init__(self):
+            super().__init__()
+
+    @graham.schemify('group')
+    @epyqlib.attrsmodel.ify()
+    @epyqlib.utils.qt.pyqtify()
+    @attr.s(hash=False)
+    class TestEnumerationGroup(epyqlib.treenode.TreeNode):
+        name = attr.ib(default='New Group')
+        children = attr.ib(
+            default=attr.Factory(list),
+            cmp=False,
+            init=False,
+            metadata={'valid_types': (TestEnumerationLeaf,)}
+        )
+        uuid = epyqlib.attrsmodel.attr_uuid()
+
+        def __attrs_post_init__(self):
+            super().__init__()
+
+        def can_drop_on(self, node):
+            return isinstance(node, tuple(self.addable_types().values()))
+
+    Root = epyqlib.attrsmodel.Root(
+        default_name='Test',
+        valid_types=(TestEnumerationLeaf, TestEnumerationGroup)
+    )
+
+    columns = epyqlib.attrsmodel.columns(
+        (
+            (TestEnumerationLeaf, 'name'),
+            (TestEnumerationGroup, 'name'),
+        ),
+        ((TestEnumerationLeaf, 'enumeration_uuid'),),
+    )
+
+    root = Root()
+    model = epyqlib.attrsmodel.Model(
+        root=root,
+        columns=columns,
+    )
+    model.add_drop_sources(root)
+
+    item = TestEnumerationLeaf()
+    root.append_child(item)
+
+    group = TestEnumerationGroup()
+    root.append_child(group)
+
+    enumerator_a = TestEnumerationLeaf()
+    group.append_child(enumerator_a)
+    enumerator_b = TestEnumerationLeaf()
+    group.append_child(enumerator_b)
+
+    view = PyQt5.QtWidgets.QTreeView()
+    view.setItemDelegate(model.delegate())
+
+    target_index = model.index_from_node(item)
+    target_index = model.index(
+        target_index.row(),
+        columns.index_of('Enumeration Uuid'),
+        target_index.parent(),
+    )
+
+    viewport = view.findChild(PyQt5.QtWidgets.QWidget, 'qt_scrollarea_viewport')
+    delegate = view.itemDelegate()
+
+    item.enumeration_uuid = enumerator_a.uuid
+
+    for index, enumerator in enumerate(group.children):
+        editor = delegate.createEditor(
+            parent=viewport,
+            option=None,
+            index=target_index,
+        )
+
+        editor.setCurrentIndex(index)
+        delegate.setModelData(editor, model, target_index)
+        assert enumerator.uuid == item.enumeration_uuid
