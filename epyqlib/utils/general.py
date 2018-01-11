@@ -124,7 +124,10 @@ def grouper(iterable, n, fillvalue=None):
 
 
 def generate_ranges(ids):
-    start = ids[0]
+    try:
+        start = ids[0]
+    except IndexError:
+        return
 
     for previous, next in pairwise(itertools.chain(ids, (None,))):
         if previous + 1 != next:

@@ -566,7 +566,19 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         frame_count = len(set_frames)
         chunk_count = len(chunks)
-        if chunk_count > frame_count:
+        if chunk_count == 0:
+            result = QMessageBox.question(
+                parent,
+                'Clear all logging parameters?',
+                (
+                    'No variables are selected.  '
+                    'Do you want to clear all logging?'
+                ),
+            )
+
+            if result == QMessageBox.No:
+                return
+        elif chunk_count > frame_count:
             chunks = chunks[:frame_count]
 
             message_box = QMessageBox(parent=parent)
