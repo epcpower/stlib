@@ -1054,3 +1054,23 @@ class Signal:
 
 
 Signal.attribute_name = epyqlib.utils.general.identifier_path(Signal)
+
+
+class Connections:
+    def __init__(self, signal, slot=None, slots=(), connect=True):
+        self.signal = signal
+        self.slots = slots
+
+        if slot is not None:
+            self.slots = (slot,) + self.slots
+
+        if connect:
+            self.connect()
+
+    def connect(self):
+        for slot in self.slots:
+            self.signal.connect(slot)
+
+    def disconnect(self):
+        for slot in self.slots:
+            self.signal.disconnect(slot)

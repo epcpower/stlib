@@ -828,7 +828,8 @@ def test_enumeration():
     group.append_child(enumerator_b)
 
     view = PyQt5.QtWidgets.QTreeView()
-    view.setItemDelegate(model.delegate())
+    view.setItemDelegate(epyqlib.attrsmodel.create_delegate())
+    view.setModel(model)
 
     target_index = model.index_from_node(item)
     target_index = model.index(
@@ -837,18 +838,15 @@ def test_enumeration():
         target_index.parent(),
     )
 
-    viewport = view.findChild(PyQt5.QtWidgets.QWidget, 'qt_scrollarea_viewport')
-    delegate = view.itemDelegate()
-
     item.enumeration_uuid = enumerator_a.uuid
 
-    for index, enumerator in enumerate(group.children):
-        editor = delegate.createEditor(
-            parent=viewport,
-            option=None,
-            index=target_index,
-        )
+    for row, enumerator in enumerate(group.children):
+        view.edit(target_index)
+        editor, = view.findChildren(PyQt5.QtWidgets.QListView)
 
+        index = editor.model().index(row, 0, editor.rootIndex())
         editor.setCurrentIndex(index)
-        delegate.setModelData(editor, model, target_index)
+        editor.clicked.emit(index)
+        editor.setParent(None)
+
         assert enumerator.uuid == item.enumeration_uuid

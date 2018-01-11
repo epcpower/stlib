@@ -22,6 +22,7 @@ import epyqlib.delegates
 import epyqlib.pyqabstractitemmodel
 import epyqlib.treenode
 import epyqlib.utils.general
+import epyqlib.utils.qt
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2017, EPC Power Corp.'
@@ -444,70 +445,132 @@ def childless_can_delete(self, node=None):
     return self.tree_parent.can_delete(node=self)
 
 
-def enumeration_delegate(model, text_column_name):
-    def f(index, node, parent):
-        widget = QtWidgets.QComboBox(parent=parent)
-        widget.setModel(model)
-        widget.setModelColumn(model.columns.index_of(text_column_name))
+def to_source_model(index):
+    model = index.model()
+    while not isinstance(model, Model):
+        index = model.mapToSource(index)
+        model = index.model()
 
-        node_attribute_column = model.columns[index.column()]
+    return index
+
+
+def create_delegate(parent=None):
+    selector = DelegateSelector(parent=parent)
+    delegate = epyqlib.delegates.Dispatch(
+        selector=selector.select,
+        parent=parent,
+    )
+
+    return delegate
+
+
+class DelegateSelector:
+    def __init__(self, parent=None):
+        self.regular = QtWidgets.QStyledItemDelegate(parent)
+        self.enumeration = EnumerationDelegate(
+            text_column_name='Name',
+            parent=parent,
+        )
+
+    def select(self, index):
+        index = to_source_model(index)
+        model = index.model()
+        node = model.node_from_index(index)
+
+        column = model.columns[index.column()]
+        # TODO: make a real configuration for this
+        if column.fields[type(node)].casefold().endswith('_uuid'):
+            delegate = self.enumeration
+        else:
+            delegate = self.regular
+
+        return delegate
+
+
+class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
+    def __init__(self, text_column_name, parent):
+        super().__init__(parent)
+
+        self.text_column_name = text_column_name
+
+        self.connections = {}
+
+    def createEditor(self, parent, option, index):
+        view = parent.parent()
+
+        editor = QtWidgets.QListView(parent=parent)
+        editor.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+
+        self.connections[editor] = epyqlib.utils.qt.Connections(
+            signal=editor.clicked,
+            slots=(
+                lambda: self.commitData.emit(editor),
+                lambda: view.closeEditor(
+                    editor,
+                    QtWidgets.QAbstractItemDelegate.NoHint,
+                ),
+            ),
+        )
+
+        return editor
+
+    def destroyEditor(self, editor, index):
+        self.connections.pop(editor).disconnect()
+
+        super().destroyEditor(editor, index)
+
+    def setEditorData(self, editor, index):
+        super().setEditorData(editor, index)
+
+        model_index = to_source_model(index)
+        model = model_index.model()
+
+        node = model.node_from_index(model_index)
+
+        editor.setModel(model)
+        editor.setModelColumn(model.columns.index_of(self.text_column_name))
+
+        node_attribute_column = model.columns[model_index.column()]
         node_attribute_name = node_attribute_column.fields[type(node)]
 
         enumeration_node = model.node_from_uuid(
             getattr(node, node_attribute_name),
         )
 
-        widget.setRootModelIndex(model.index_from_node(
+        editor.setRootIndex(model.index_from_node(
             enumeration_node.tree_parent,
         ))
 
-        event = QtGui.QMouseEvent(
-            QtCore.QEvent.MouseButtonPress,
-            QtCore.QPoint(),
-            QtCore.Qt.LeftButton,
-            QtCore.Qt.LeftButton,
-            QtCore.Qt.NoModifier,
-        )
-        QtCore.QCoreApplication.postEvent(widget, event)
+        self.updateEditorGeometry(editor, None, index)
 
-        return widget
+    def updateEditorGeometry(self, editor, option, index):
+        view = editor.parent().parent()
 
-    return f
+        rect = view.visualRect(index)
 
+        width = sum((
+            editor.sizeHintForColumn(0),
+            2 * editor.frameWidth(),
+        ))
+        height = sum((
+            editor.sizeHintForRow(0) * len(editor.children()),
+            2 * editor.frameWidth(),
+        ))
 
-def enumeration_delegate_editor(editor, model, index):
-    if hasattr(model, 'sourceModel'):
-        proxy = model
-        model = proxy.sourceModel()
-
-        target_index = proxy.mapToSource(index)
-    else:
-        target_index = index
-
-    editor_model = editor.model()
-    root_index = editor.rootModelIndex()
-    row = editor.currentIndex()
-    selected_index = editor_model.index(row, 0, root_index)
-
-    node = model.node_from_index(selected_index)
-
-    model.setData(target_index, node.uuid, role=QtCore.Qt.EditRole)
-
-
-def delegate(model, node, column):
-    column = model.columns[column]
-
-    # TODO: make a real configuration for this
-    if column.fields[type(node)].casefold().endswith('_uuid'):
-        return epyqlib.delegates.Delegate(
-            creator=enumeration_delegate(
-                model=model,
-                text_column_name='Name',
-            ),
-            model_setter=enumeration_delegate_editor,
+        editor.setGeometry(
+            rect.left() + rect.height(),
+            rect.bottom(),
+            width,
+            height,
         )
 
-    return epyqlib.delegates.Delegate()
+    def setModelData(self, editor, model, index):
+        index = to_source_model(index)
+        model = index.model()
+
+        node = model.node_from_index(editor.currentIndex())
+
+        model.setData(index, node.uuid, role=QtCore.Qt.EditRole)
 
 
 class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
@@ -531,14 +594,6 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         self.root.traverse(
             call_this=connect,
             internal_nodes=True,
-        )
-
-    def delegate(self, parent=None, proxy=None):
-        return epyqlib.delegates.ByFunction(
-            model=self,
-            parent=parent,
-            proxy=proxy,
-            function=delegate,
         )
 
     def add_drop_sources(self, *sources):

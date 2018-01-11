@@ -1,7 +1,49 @@
+import weakref
+
 import attr
 from PyQt5.QtCore import pyqtSlot, Qt, QCoreApplication, QEvent, QPoint
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import QMouseEvent
+
+
+class Dispatch(QtWidgets.QStyledItemDelegate):
+    def __init__(self, selector, parent):
+        super().__init__(parent)
+
+        self.selector = selector
+        self.delegates = set()
+
+        self.delegates_by_editor = weakref.WeakKeyDictionary()
+
+    def createEditor(self, parent, option, index):
+        delegate = self.selector(index)
+
+        if delegate not in self.delegates:
+            self.delegates.add(delegate)
+            delegate.closeEditor.connect(self.closeEditor)
+            delegate.commitData.connect(self.commitData)
+
+        editor = delegate.createEditor(parent, option, index)
+
+        self.delegates_by_editor[editor] = delegate
+
+        return editor
+
+    def destroyEditor(self, editor, *args, **kwargs):
+        delegate = self.delegates_by_editor[editor]
+        return delegate.destroyEditor(editor, *args, **kwargs)
+
+    def setEditorData(self, editor, *args, **kwargs):
+        delegate = self.delegates_by_editor[editor]
+        return delegate.setEditorData(editor, *args, **kwargs)
+
+    def setModelData(self, editor, *args, **kwargs):
+        delegate = self.delegates_by_editor[editor]
+        return delegate.setModelData(editor, *args, **kwargs)
+
+    def updateEditorGeometry(self, editor, *args, **kwargs):
+        delegate = self.delegates_by_editor[editor]
+        return delegate.updateEditorGeometry(editor, *args, **kwargs)
 
 
 def default(model, node, column):
