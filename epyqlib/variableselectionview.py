@@ -33,6 +33,11 @@ class VariableSelectionView(QtWidgets.QWidget):
         sio = io.StringIO(ts.readAll())
         self.ui = uic.loadUi(sio, self)
 
+        self.ui.searchbox.connect_to_view(
+            view=self.ui.tree_view,
+            column=epyqlib.variableselectionmodel.Columns.indexes.name,
+        )
+
     def set_model(self, model):
         self.ui.tree_view.setModel(model)
         model.setSortRole(epyqlib.pyqabstractitemmodel.UserRoles.sort)

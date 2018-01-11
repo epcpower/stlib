@@ -28,7 +28,10 @@
    </property>
    <item>
     <layout class="QGridLayout" name="gridLayout">
-     <item row="0" column="0" colspan="2">
+     <item row="0" column="0">
+      <widget class="SearchBox" name="searchbox"/>
+     </item>
+     <item row="1" column="0">
       <widget class="QTreeView" name="tree_view">
        <property name="alternatingRowColors">
         <bool>true</bool>
@@ -39,6 +42,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>SearchBox</class>
+   <extends>QWidget</extends>
+   <header>epyqlib.searchbox</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
