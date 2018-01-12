@@ -496,18 +496,17 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
         self.connections = {}
 
     def createEditor(self, parent, option, index):
-        view = parent.parent()
-
         editor = QtWidgets.QListView(parent=parent)
         editor.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 
         self.connections[editor] = epyqlib.utils.qt.Connections(
             signal=editor.clicked,
-            slots=(
-                lambda: self.commitData.emit(editor),
-                lambda: view.closeEditor(
-                    editor,
-                    QtWidgets.QAbstractItemDelegate.NoHint,
+            slot=lambda: QtCore.QCoreApplication.postEvent(
+                editor,
+                QtGui.QKeyEvent(
+                    QtCore.QEvent.KeyPress,
+                    QtCore.Qt.Key_Enter,
+                    QtCore.Qt.NoModifier,
                 ),
             ),
         )

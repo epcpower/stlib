@@ -7,6 +7,7 @@ import graham
 import PyQt5.QtCore
 import PyQt5.QtWidgets
 import pytest
+from pytestqt.qt_compat import qt_api
 
 import epyqlib.attrsmodel
 import epyqlib.tests.common
@@ -760,7 +761,7 @@ def test_two_state_checkbox():
     assert flags & PyQt5.QtCore.Qt.ItemIsUserCheckable
 
 
-def test_enumeration():
+def test_enumeration(qtbot):
     @graham.schemify('leaf')
     @epyqlib.attrsmodel.ify()
     @epyqlib.utils.qt.pyqtify()
@@ -826,6 +827,8 @@ def test_enumeration():
     group.append_child(enumerator_a)
     enumerator_b = TestEnumerationLeaf()
     group.append_child(enumerator_b)
+    enumerator_c = TestEnumerationLeaf()
+    group.append_child(enumerator_c)
 
     view = PyQt5.QtWidgets.QTreeView()
     view.setItemDelegate(epyqlib.attrsmodel.create_delegate())
@@ -840,13 +843,22 @@ def test_enumeration():
 
     item.enumeration_uuid = enumerator_a.uuid
 
+    application = qt_api.QApplication.instance()
+
     for row, enumerator in enumerate(group.children):
-        view.edit(target_index)
+        assert view.edit(
+            target_index,
+            PyQt5.QtWidgets.QAbstractItemView.AllEditTriggers,
+            None,
+        )
         editor, = view.findChildren(PyQt5.QtWidgets.QListView)
 
         index = editor.model().index(row, 0, editor.rootIndex())
         editor.setCurrentIndex(index)
         editor.clicked.emit(index)
-        editor.setParent(None)
+
+        # this is fun.  if you get weird issues try doing this more times
+        for _ in range(3):
+            application.processEvents()
 
         assert enumerator.uuid == item.enumeration_uuid
