@@ -67,7 +67,8 @@ class Parameter(epyqlib.treenode.TreeNode):
     )
     epyqlib.attrsmodel.attrib(
         attribute=enumeration_uuid,
-        human_name='Enumeration UUID',
+        human_name='Enumeration',
+        data_display=epyqlib.attrsmodel.name_from_uuid,
     )
 
     decimal_places = attr.ib(
@@ -112,11 +113,13 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.Boolean(),
         ),
     )
+
     access_level_uuid = epyqlib.attrsmodel.attr_uuid(
         default=None,
         allow_none=True,
         # convert=lambda x: x if x is None else AccessLevelsAccessLevel(x),
-        human_name='Access Level UUID',
+        human_name='Access Level',
+        data_display=epyqlib.attrsmodel.name_from_uuid,
     )
     parameter_uuid = epyqlib.attrsmodel.attr_uuid(
         default=None,

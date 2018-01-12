@@ -36,6 +36,15 @@ class NotFoundError(Exception):
     pass
 
 
+def name_from_uuid(node, value, model):
+    if value is None:
+        return None
+
+    target_node = model.node_from_uuid(value)
+
+    return target_node.name
+
+
 @attr.s
 class Column:
     name = attr.ib()
@@ -337,7 +346,7 @@ def convert_uuid(x):
     return uuid.UUID(x)
 
 
-def attr_uuid(metadata=None, human_name='UUID', default=attr.Factory(uuid.uuid4), **field_options):
+def attr_uuid(metadata=None, human_name='UUID', data_display=None, default=attr.Factory(uuid.uuid4), **field_options):
     if metadata is None:
         metadata = {}
 
@@ -353,6 +362,7 @@ def attr_uuid(metadata=None, human_name='UUID', default=attr.Factory(uuid.uuid4)
     attrib(
         attribute=attribute,
         human_name=human_name,
+        data_display=data_display,
     )
 
     return attribute
@@ -644,7 +654,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             attribute_field=attr.fields(Metadata).data_display,
         )
         if processor is not None:
-            return processor(data)
+            return processor(node, model=self, value=data)
 
         if data is None:
             return replace_none
