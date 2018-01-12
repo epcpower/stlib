@@ -69,6 +69,7 @@ class Parameter(epyqlib.treenode.TreeNode):
         attribute=enumeration_uuid,
         human_name='Enumeration',
         data_display=epyqlib.attrsmodel.name_from_uuid,
+        list_selection_root='enumerations',
     )
 
     decimal_places = attr.ib(
@@ -120,6 +121,7 @@ class Parameter(epyqlib.treenode.TreeNode):
         # convert=lambda x: x if x is None else AccessLevelsAccessLevel(x),
         human_name='Access Level',
         data_display=epyqlib.attrsmodel.name_from_uuid,
+        list_selection_root='access level',
     )
     parameter_uuid = epyqlib.attrsmodel.attr_uuid(
         default=None,

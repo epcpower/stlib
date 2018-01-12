@@ -772,6 +772,10 @@ def test_enumeration(qtbot):
             default=None,
             convert=epyqlib.attrsmodel.convert_uuid,
         )
+        epyqlib.attrsmodel.attrib(
+            attribute=enumeration_uuid,
+            list_selection_root='test list_selection_root',
+        )
         uuid = epyqlib.attrsmodel.attr_uuid()
 
         def __attrs_post_init__(self):
@@ -822,6 +826,7 @@ def test_enumeration(qtbot):
 
     group = TestEnumerationGroup()
     root.append_child(group)
+    model.list_selection_roots['test list_selection_root'] = group
 
     enumerator_a = TestEnumerationLeaf()
     group.append_child(enumerator_a)

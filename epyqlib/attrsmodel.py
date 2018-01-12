@@ -69,6 +69,7 @@ class Metadata:
     human_name = attr.ib(default=None)
     convert = attr.ib(default=None)
     no_column = attr.ib(default=False)
+    list_selection_root = attr.ib(default=None)
 
 
 metadata_key = object()
@@ -346,7 +347,14 @@ def convert_uuid(x):
     return uuid.UUID(x)
 
 
-def attr_uuid(metadata=None, human_name='UUID', data_display=None, default=attr.Factory(uuid.uuid4), **field_options):
+def attr_uuid(
+        metadata=None,
+        human_name='UUID',
+        data_display=None,
+        list_selection_root=None,
+        default=attr.Factory(uuid.uuid4),
+        **field_options,
+):
     if metadata is None:
         metadata = {}
 
@@ -363,6 +371,7 @@ def attr_uuid(metadata=None, human_name='UUID', data_display=None, default=attr.
         attribute=attribute,
         human_name=human_name,
         data_display=data_display,
+        list_selection_root=list_selection_root,
     )
 
     return attribute
@@ -476,10 +485,18 @@ def create_delegate(parent=None):
 
 class DelegateSelector:
     def __init__(self, parent=None):
+        self.parent = parent
         self.regular = QtWidgets.QStyledItemDelegate(parent)
-        self.enumeration = EnumerationDelegate(
-            text_column_name='Name',
-            parent=parent,
+        self.enumerations = {}
+
+    def enumeration_delegate(self, root):
+        return self.enumerations.setdefault(
+            root,
+            EnumerationDelegate(
+                text_column_name='Name',
+                root=root,
+                parent=self.parent,
+            ),
         )
 
     def select(self, index):
@@ -488,9 +505,14 @@ class DelegateSelector:
         node = model.node_from_index(index)
 
         column = model.columns[index.column()]
-        # TODO: make a real configuration for this
-        if column.fields[type(node)].casefold().endswith('_uuid'):
-            delegate = self.enumeration
+        field_name = column.fields[type(node)]
+
+        list_selection_root = getattr(fields(type(node)), field_name)
+        list_selection_root = list_selection_root.list_selection_root
+        list_selection_root = model.list_selection_roots[list_selection_root]
+
+        if list_selection_root is not None:
+            delegate = self.enumeration_delegate(list_selection_root)
         else:
             delegate = self.regular
 
@@ -498,10 +520,11 @@ class DelegateSelector:
 
 
 class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
-    def __init__(self, text_column_name, parent):
+    def __init__(self, text_column_name, root, parent):
         super().__init__(parent)
 
         self.text_column_name = text_column_name
+        self.root = root
 
         self.connections = {}
 
@@ -534,21 +557,10 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
         model_index = to_source_model(index)
         model = model_index.model()
 
-        node = model.node_from_index(model_index)
-
         editor.setModel(model)
         editor.setModelColumn(model.columns.index_of(self.text_column_name))
 
-        node_attribute_column = model.columns[model_index.column()]
-        node_attribute_name = node_attribute_column.fields[type(node)]
-
-        enumeration_node = model.node_from_uuid(
-            getattr(node, node_attribute_name),
-        )
-
-        editor.setRootIndex(model.index_from_node(
-            enumeration_node.tree_parent,
-        ))
+        editor.setRootIndex(model.index_from_node(self.root))
 
         self.updateEditorGeometry(editor, None, index)
 
@@ -594,6 +606,8 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         self.droppable_from = set()
 
         self.connected_signals = {}
+
+        self.list_selection_roots = {}
 
         check_uuids(self.root)
 
