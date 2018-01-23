@@ -856,11 +856,18 @@ def test_enumeration(qtbot):
             PyQt5.QtWidgets.QAbstractItemView.AllEditTriggers,
             None,
         )
-        editor, = view.findChildren(PyQt5.QtWidgets.QListView)
+        editor, = view.findChildren(PyQt5.QtWidgets.QComboBox)
 
-        index = editor.model().index(row, 0, editor.rootIndex())
-        editor.setCurrentIndex(index)
-        editor.clicked.emit(index)
+        editor.setCurrentIndex(row)
+
+        PyQt5.QtCore.QCoreApplication.postEvent(
+            editor,
+            PyQt5.QtGui.QKeyEvent(
+                PyQt5.QtCore.QEvent.KeyPress,
+                PyQt5.QtCore.Qt.Key_Enter,
+                PyQt5.QtCore.Qt.NoModifier,
+            ),
+        )
 
         # this is fun.  if you get weird issues try doing this more times
         for _ in range(3):

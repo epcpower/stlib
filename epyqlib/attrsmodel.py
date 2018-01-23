@@ -519,6 +519,20 @@ class DelegateSelector:
         return delegate
 
 
+class CustomCombo(PyQt5.QtWidgets.QComboBox):
+    def hidePopup(self):
+        super().hidePopup()
+
+        QtCore.QCoreApplication.postEvent(
+            self,
+            QtGui.QKeyEvent(
+                QtCore.QEvent.KeyPress,
+                QtCore.Qt.Key_Enter,
+                QtCore.Qt.NoModifier,
+            ),
+        )
+
+
 class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
     def __init__(self, text_column_name, root, parent):
         super().__init__(parent)
@@ -526,30 +540,8 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
         self.text_column_name = text_column_name
         self.root = root
 
-        self.connections = {}
-
     def createEditor(self, parent, option, index):
-        editor = QtWidgets.QListView(parent=parent)
-        editor.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-
-        self.connections[editor] = epyqlib.utils.qt.Connections(
-            signal=editor.clicked,
-            slot=lambda: QtCore.QCoreApplication.postEvent(
-                editor,
-                QtGui.QKeyEvent(
-                    QtCore.QEvent.KeyPress,
-                    QtCore.Qt.Key_Enter,
-                    QtCore.Qt.NoModifier,
-                ),
-            ),
-        )
-
-        return editor
-
-    def destroyEditor(self, editor, index):
-        self.connections.pop(editor).disconnect()
-
-        super().destroyEditor(editor, index)
+        return CustomCombo(parent=parent)
 
     def setEditorData(self, editor, index):
         super().setEditorData(editor, index)
@@ -559,37 +551,29 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
 
         editor.setModel(model)
         editor.setModelColumn(model.columns.index_of(self.text_column_name))
+        editor.setRootModelIndex(model.index_from_node(self.root))
 
-        editor.setRootIndex(model.index_from_node(self.root))
-
-        self.updateEditorGeometry(editor, None, index)
-
-    def updateEditorGeometry(self, editor, option, index):
-        view = editor.parent().parent()
-
-        rect = view.visualRect(index)
-
-        width = sum((
-            editor.sizeHintForColumn(0),
-            2 * editor.frameWidth(),
-        ))
-        height = sum((
-            editor.sizeHintForRow(0) * len(editor.children()),
-            2 * editor.frameWidth(),
-        ))
-
-        editor.setGeometry(
-            rect.left() + rect.height(),
-            rect.bottom(),
-            width,
-            height,
+        target_uuid = model.data(
+            model_index,
+            epyqlib.pyqabstractitemmodel.UserRoles.raw,
         )
+        target_node = model.node_from_uuid(target_uuid)
+        target_index = model.index_from_node(target_node)
+        editor.setCurrentIndex(target_index.row())
+
+        editor.showPopup()
 
     def setModelData(self, editor, model, index):
         index = to_source_model(index)
         model = index.model()
 
-        node = model.node_from_index(editor.currentIndex())
+        selected_index = model.index(
+            editor.currentIndex(),
+            0,
+            model.index_from_node(self.root),
+        )
+
+        node = model.node_from_index(selected_index)
 
         model.setData(index, node.uuid, role=QtCore.Qt.EditRole)
 
@@ -597,6 +581,10 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
 class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
     def __init__(self, root, columns, parent=None):
         super().__init__(root=root, parent=parent)
+
+        self.role_functions[epyqlib.pyqabstractitemmodel.UserRoles.raw] = (
+            self.data_raw
+        )
 
         self.mime_type = 'application/com.epcpower.pm.attrsmodel'
 
@@ -649,6 +637,11 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             return None
 
         return getattr(attributes(t).fields, name)
+
+    def data_raw(self, index):
+        field = self.get_field(index)
+        node = self.node_from_index(index)
+        return getattr(node, field.name)
 
     def data_display(self, index, replace_none='-'):
         field = self.get_field(index)
