@@ -18,6 +18,21 @@ class ScriptAlreadyActiveError(epyqlib.utils.general.ExpectedException):
         return 'Script already active.'
 
 
+class ScriptNotActiveError(epyqlib.utils.general.ExpectedException):
+    def expected_message(self):
+        return 'Script is not active.'
+
+
+class ScriptAlreadyPausedError(epyqlib.utils.general.ExpectedException):
+    def expected_message(self):
+        return 'Script already paused.'
+
+
+class ScriptNotPausedError(epyqlib.utils.general.ExpectedException):
+    def expected_message(self):
+        return 'Script is not paused.'
+
+
 def cancelled_handler(error):
     if isinstance(error.value, twisted.internet.defer.CancelledError):
         epyqlib.utils.qt.raw_exception_message_box(
@@ -56,6 +71,9 @@ class ScriptingView(QtWidgets.QWidget):
         self.ui.loop_button.clicked.connect(self.loop)
         self.ui.stop_button.clicked.connect(self.stop)
 
+        self.ui.pause_button.clicked.connect(self.pause)
+        self.ui.continue_button.clicked.connect(self.unpause)
+
         self.model = None
         self.model_connections = []
 
@@ -63,14 +81,18 @@ class ScriptingView(QtWidgets.QWidget):
             self.ui.csv_edit.setPlaceholderText(f.read())
 
         self.run_deferred = None
+        self.run_deferred_paused = False
         self.update_buttons()
 
     def update_buttons(self):
         active = self.run_deferred is not None
 
-        self.ui.run_button.setDisabled(active)
-        self.ui.loop_button.setDisabled(active)
+        self.ui.run_button.setEnabled(not active)
+        self.ui.loop_button.setEnabled(not active)
         self.ui.stop_button.setEnabled(active)
+
+        self.ui.pause_button.setEnabled(active and not self.run_deferred_paused)
+        self.ui.continue_button.setEnabled(active and self.run_deferred_paused)
 
     def set_model(self, model):
         for connection in self.model_connections:
@@ -119,6 +141,9 @@ class ScriptingView(QtWidgets.QWidget):
             return
 
         self.run_deferred.cancel()
+        self.run_deferred_paused = False
+        self.run_deferred = None
+        self.update_buttons()
 
     def errback(self):
         self.run_deferred = None
@@ -129,6 +154,7 @@ class ScriptingView(QtWidgets.QWidget):
             raise ScriptAlreadyActiveError()
 
         self.run_deferred = self.model.run_s(self.ui.csv_edit.toPlainText())
+        self.run_deferred_paused = False
         self.update_buttons()
 
         self.run_deferred.addBoth(
@@ -147,6 +173,7 @@ class ScriptingView(QtWidgets.QWidget):
             f=self.model.run_s,
             event_string=self.ui.csv_edit.toPlainText(),
         )
+        self.run_deferred_paused = False
         self.update_buttons()
 
         self.run_deferred.addErrback(
@@ -156,3 +183,25 @@ class ScriptingView(QtWidgets.QWidget):
         self.run_deferred.addErrback(epyqlib.utils.twisted.catch_expected)
         self.run_deferred.addErrback(cancelled_handler)
         self.run_deferred.addErrback(epyqlib.utils.twisted.errbackhook)
+
+    def pause(self):
+        if self.run_deferred is None:
+            raise ScriptNotActiveError()
+
+        if self.run_deferred_paused:
+            raise ScriptAlreadyPausedError()
+
+        self.run_deferred.pause()
+        self.run_deferred_paused = True
+        self.update_buttons()
+
+    def unpause(self):
+        if self.run_deferred is None:
+            raise ScriptNotActiveError()
+
+        if not self.run_deferred_paused:
+            raise ScriptNotPausedError()
+
+        self.run_deferred.unpause()
+        self.run_deferred_paused = False
+        self.update_buttons()
