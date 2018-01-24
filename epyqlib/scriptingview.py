@@ -52,8 +52,9 @@ class ScriptingView(QtWidgets.QWidget):
         self.ui.load_button.clicked.connect(self.load)
         self.ui.save_button.clicked.connect(self.save)
 
-        self.ui.run_button.clicked.connect(self.run_clicked)
-        self.ui.loop_button.clicked.connect(self.loop_clicked)
+        self.ui.run_button.clicked.connect(self.run)
+        self.ui.loop_button.clicked.connect(self.loop)
+        self.ui.stop_button.clicked.connect(self.stop)
 
         self.model = None
         self.model_connections = []
@@ -62,6 +63,14 @@ class ScriptingView(QtWidgets.QWidget):
             self.ui.csv_edit.setPlaceholderText(f.read())
 
         self.run_deferred = None
+        self.update_buttons()
+
+    def update_buttons(self):
+        active = self.run_deferred is not None
+
+        self.ui.run_button.setDisabled(active)
+        self.ui.loop_button.setDisabled(active)
+        self.ui.stop_button.setEnabled(active)
 
     def set_model(self, model):
         for connection in self.model_connections:
@@ -105,52 +114,30 @@ class ScriptingView(QtWidgets.QWidget):
             if text[-1] != '\n':
                 f.write('\n')
 
-    def run_clicked(self, checked):
-        try:
-            if checked:
-                self.run()
-            else:
-                self.cancel_run()
-        except:
-            self.ui.run_button.setChecked(not checked)
-            raise
+    def stop(self):
+        if self.run_deferred is None:
+            return
 
-    def run_errback(self):
-        self.ui.run_button.setChecked(False)
+        self.run_deferred.cancel()
+
+    def errback(self):
         self.run_deferred = None
+        self.update_buttons()
 
     def run(self):
         if self.run_deferred is not None:
             raise ScriptAlreadyActiveError()
 
         self.run_deferred = self.model.run_s(self.ui.csv_edit.toPlainText())
+        self.update_buttons()
+
         self.run_deferred.addBoth(
             epyqlib.utils.twisted.detour_result,
-            self.run_errback,
+            self.errback,
         )
         self.run_deferred.addErrback(epyqlib.utils.twisted.catch_expected)
         self.run_deferred.addErrback(cancelled_handler)
         self.run_deferred.addErrback(epyqlib.utils.twisted.errbackhook)
-
-    def cancel_run(self):
-        if self.run_deferred is None:
-            return
-
-        self.run_deferred.cancel()
-
-    def loop_clicked(self, checked):
-        try:
-            if checked:
-                self.loop()
-            else:
-                self.cancel_loop()
-        except:
-            self.ui.loop_button.setChecked(not checked)
-            raise
-
-    def loop_errback(self):
-        self.ui.loop_button.setChecked(False)
-        self.run_deferred = None
 
     def loop(self):
         if self.run_deferred is not None:
@@ -160,16 +147,12 @@ class ScriptingView(QtWidgets.QWidget):
             f=self.model.run_s,
             event_string=self.ui.csv_edit.toPlainText(),
         )
+        self.update_buttons()
+
         self.run_deferred.addErrback(
             epyqlib.utils.twisted.detour_result,
-            self.loop_errback,
+            self.errback,
         )
         self.run_deferred.addErrback(epyqlib.utils.twisted.catch_expected)
         self.run_deferred.addErrback(cancelled_handler)
         self.run_deferred.addErrback(epyqlib.utils.twisted.errbackhook)
-
-    def cancel_loop(self):
-        if self.run_deferred is None:
-            return
-
-        self.run_deferred.cancel()

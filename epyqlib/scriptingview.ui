@@ -19,15 +19,19 @@
      <property name="text">
       <string>Run</string>
      </property>
-     <property name="checkable">
-      <bool>true</bool>
-     </property>
     </widget>
    </item>
    <item row="0" column="0">
     <widget class="QPushButton" name="load_button">
      <property name="text">
       <string>Load...</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="3">
+    <widget class="QPushButton" name="loop_button">
+     <property name="text">
+      <string>Loop</string>
      </property>
     </widget>
    </item>
@@ -38,17 +42,14 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="3">
-    <widget class="QPushButton" name="loop_button">
+   <item row="0" column="4">
+    <widget class="QPushButton" name="stop_button">
      <property name="text">
-      <string>Loop</string>
-     </property>
-     <property name="checkable">
-      <bool>true</bool>
+      <string>Stop</string>
      </property>
     </widget>
    </item>
-   <item row="1" column="0" colspan="4">
+   <item row="1" column="0" colspan="5">
     <widget class="QPlainTextEdit" name="csv_edit"/>
    </item>
   </layout>
