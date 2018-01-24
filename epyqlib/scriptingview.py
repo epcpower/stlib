@@ -3,6 +3,7 @@ import os
 import pathlib
 
 from PyQt5 import QtCore, QtWidgets, uic
+import twisted.internet.defer
 
 import epyqlib.utils.qt
 import epyqlib.utils.twisted
@@ -15,6 +16,18 @@ __license__ = 'GPLv2+'
 class ScriptAlreadyActiveError(epyqlib.utils.general.ExpectedException):
     def expected_message(self):
         return 'Script already active.'
+
+
+def cancelled_handler(error):
+    if isinstance(error.value, twisted.internet.defer.CancelledError):
+        epyqlib.utils.qt.raw_exception_message_box(
+            brief='Script cancelled by user request.',
+            extended=error.getTraceback(),
+        )
+
+        return None
+
+    return error
 
 
 class ScriptingView(QtWidgets.QWidget):
@@ -116,6 +129,7 @@ class ScriptingView(QtWidgets.QWidget):
             self.run_errback,
         )
         self.run_deferred.addErrback(epyqlib.utils.twisted.catch_expected)
+        self.run_deferred.addErrback(cancelled_handler)
         self.run_deferred.addErrback(epyqlib.utils.twisted.errbackhook)
 
     def cancel_run(self):
@@ -151,6 +165,7 @@ class ScriptingView(QtWidgets.QWidget):
             self.loop_errback,
         )
         self.run_deferred.addErrback(epyqlib.utils.twisted.catch_expected)
+        self.run_deferred.addErrback(cancelled_handler)
         self.run_deferred.addErrback(epyqlib.utils.twisted.errbackhook)
 
     def cancel_loop(self):
