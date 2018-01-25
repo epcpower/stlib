@@ -169,10 +169,13 @@ class ScriptingView(QtWidgets.QWidget):
         if self.run_deferred is not None:
             raise ScriptAlreadyActiveError()
 
-        self.run_deferred = epyqlib.utils.twisted.mobius(
+        m = epyqlib.utils.twisted.Mobius.build(
             f=self.model.run_s,
             event_string=self.ui.csv_edit.toPlainText(),
         )
+        m.run()
+        self.run_deferred = m
+
         self.run_deferred_paused = False
         self.update_buttons()
 

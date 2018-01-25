@@ -142,7 +142,7 @@ def resolve_signals(events, tx_neo, nvs):
 
 
 def run(events, nvs):
-    d = twisted.internet.defer.Deferred()
+    chain = epyqlib.utils.twisted.DeferLaterChain()
 
     zero_padded = itertools.chain(
         (Event(time=0, action=None),),
@@ -150,16 +150,15 @@ def run(events, nvs):
     )
 
     for p, n in epyqlib.utils.general.pairwise(zero_padded):
-        d.addCallback(lambda _, p=p, n=n: twisted.internet.task.deferLater(
-            clock=twisted.internet.reactor,
+        chain.add_delayed_callback(
             delay=float(n.time - p.time),
-            callable=n.action,
+            c=n.action,
             nvs=nvs,
-        ))
+        )
 
-    d.callback(None)
+    chain.run()
 
-    return d
+    return chain
 
 
 @attr.s
