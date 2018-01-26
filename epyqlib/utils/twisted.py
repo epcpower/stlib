@@ -1,10 +1,11 @@
-import epyqlib.utils.general
-import epyqlib.utils.qt
 import logging
-import sys
-import twisted.internet.defer
+import time
 
 import attr
+import twisted.internet.defer
+
+import epyqlib.utils.general
+import epyqlib.utils.qt
 
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
 __license__ = 'GPLv2+'
@@ -232,3 +233,108 @@ class Mobius:
     def unpause(self):
         self.public_deferred.unpause()
         self.repeater.unpause()
+
+
+@attr.s
+class Action:
+    f = attr.ib()
+    args = attr.ib(default=())
+    kwargs = attr.ib(default=attr.Factory(dict))
+
+    def __call__(self):
+        return self.f(*self.args, **self.kwargs)
+
+
+@attr.s
+class Event:
+    action = attr.ib()
+    time = attr.ib()
+
+
+@attr.s
+class Sequence:
+    events = attr.ib(default=attr.Factory(list))
+    tolerance = attr.ib(default=0.05)
+    clock = attr.ib(default=time.monotonic)
+
+    virtual_time = attr.ib(default=0, init=False)
+    clock_time = attr.ib(default=0, init=False)
+    deferred = attr.ib(default=None, init=False)
+    paused = attr.ib(default=False, init=False)
+
+    def add_delayed(self, delay, f, *args, **kwargs):
+        last_time = 0
+        if len(self.events) > 0:
+            last_time = self.events[-1].time
+
+        self.events.append(Event(
+            action=Action(f=f, args=args, kwargs=kwargs),
+            time=last_time + delay,
+        ))
+
+    @twisted.internet.defer.inlineCallbacks
+    def run(self, loop=False):
+        self.update_time(virtual_time=0)
+
+        run = True
+        while run:
+            run = loop
+
+            base_time = self.virtual_time
+
+            for event in self.events:
+                while True:
+                    delay = (base_time + event.time) - self.virtual_time
+                    logger.debug(
+                        'self.virtual_time: {}'.format(self.virtual_time),
+                    )
+                    logger.debug('delay: {}'.format(delay))
+                    if delay > self.tolerance:
+                        self.deferred = epyqlib.utils.twisted.sleep(
+                            delay - (self.tolerance / 2),
+                        )
+                        try:
+                            yield self.deferred
+                        except twisted.internet.defer.CancelledError:
+                            if not self.paused:
+                                raise
+                        self.deferred = None
+
+                    self.update_time()
+
+                    if not self.paused:
+                        break
+
+                    was_paused = self.paused
+                    while self.paused:
+                        yield epyqlib.utils.twisted.sleep(self.tolerance)
+
+                    if was_paused:
+                        self.update_time(virtual_time=self.virtual_time)
+
+                event.action()
+                self.update_time()
+
+    def update_time(self, virtual_time=None):
+        now = self.clock()
+
+        if virtual_time is None:
+            self.virtual_time += now - self.clock_time
+
+        self.clock_time = now
+
+    def cancel(self):
+        if self.deferred is None:
+            raise Exception()
+
+        self.deferred.cancel()
+
+    def pause(self):
+        if self.deferred is None:
+            raise Exception()
+
+        self.paused = True
+        self.deferred.cancel()
+
+    def unpause(self):
+        self.paused = False
