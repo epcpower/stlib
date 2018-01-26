@@ -156,8 +156,8 @@ def resolve_signals(events, tx_neo, nvs):
     ]
 
 
-def run(events, nvs, pause):
-    chain = epyqlib.utils.twisted.DeferLaterChain()
+def run(events, nvs, pause, loop):
+    sequence = epyqlib.utils.twisted.Sequence()
 
     zero_padded = itertools.chain(
         (Event(time=0, action=None),),
@@ -174,15 +174,15 @@ def run(events, nvs, pause):
             action = n.action
             kwargs = dict(nvs=nvs)
 
-        chain.add_delayed_callback(
+        sequence.add_delayed(
             delay=float(n.time - p.time),
-            c=action,
+            f=action,
             **kwargs,
         )
 
-    chain.run()
+    sequence.run(loop=loop)
 
-    return chain
+    return sequence
 
 
 @attr.s
@@ -202,7 +202,7 @@ class Model:
         )
         epyqlib.scripting.run(events=events, nvs=self.nvs)
 
-    def run_s(self, event_string, pause):
+    def run_s(self, event_string, pause, loop=False):
         events = csv_loads(event_string)
 
         if len(events) == 0:
@@ -214,4 +214,4 @@ class Model:
             nvs=self.nvs,
         )
 
-        return run(events=events, nvs=self.nvs, pause=pause)
+        return run(events=events, nvs=self.nvs, pause=pause, loop=loop)

@@ -80,19 +80,18 @@ class ScriptingView(QtWidgets.QWidget):
         with open(pathlib.Path(__file__).parents[0] / 'scripting.csv') as f:
             self.ui.csv_edit.setPlaceholderText(f.read())
 
-        self.run_deferred = None
-        self.run_deferred_paused = False
+        self.sequence = None
         self.update_buttons()
 
     def update_buttons(self):
-        active = self.run_deferred is not None
+        active = self.sequence is not None
 
         self.ui.run_button.setEnabled(not active)
         self.ui.loop_button.setEnabled(not active)
         self.ui.stop_button.setEnabled(active)
 
-        self.ui.pause_button.setEnabled(active and not self.run_deferred_paused)
-        self.ui.continue_button.setEnabled(active and self.run_deferred_paused)
+        self.ui.pause_button.setEnabled(active and not self.sequence.paused)
+        self.ui.continue_button.setEnabled(active and self.sequence.paused)
 
     def set_model(self, model):
         for connection in self.model_connections:
@@ -137,78 +136,60 @@ class ScriptingView(QtWidgets.QWidget):
                 f.write('\n')
 
     def stop(self):
-        if self.run_deferred is None:
+        if self.sequence is None:
             return
 
-        self.run_deferred.cancel()
-        self.run_deferred_paused = False
-        self.run_deferred = None
+        self.sequence.cancel()
+        self.sequence = None
         self.update_buttons()
 
     def errback(self):
-        self.run_deferred = None
+        self.sequence = None
         self.update_buttons()
 
     def run(self):
-        if self.run_deferred is not None:
-            raise ScriptAlreadyActiveError()
-
-        self.run_deferred = self.model.run_s(
-            event_string=self.ui.csv_edit.toPlainText(),
-            pause=self.pause,
-        )
-        self.run_deferred_paused = False
-        self.update_buttons()
-
-        self.run_deferred.addBoth(
-            epyqlib.utils.twisted.detour_result,
-            self.errback,
-        )
-        self.run_deferred.addErrback(epyqlib.utils.twisted.catch_expected)
-        self.run_deferred.addErrback(cancelled_handler)
-        self.run_deferred.addErrback(epyqlib.utils.twisted.errbackhook)
+        return self._run(loop=False)
 
     def loop(self):
-        if self.run_deferred is not None:
+        return self._run(loop=True)
+
+    def _run(self, loop=False):
+        if self.sequence is not None:
             raise ScriptAlreadyActiveError()
 
-        m = epyqlib.utils.twisted.Mobius.build(
-            f=self.model.run_s,
+        self.sequence = self.model.run_s(
             event_string=self.ui.csv_edit.toPlainText(),
             pause=self.pause,
+            loop=loop,
         )
-        m.run()
-        self.run_deferred = m
-
-        self.run_deferred_paused = False
         self.update_buttons()
 
-        self.run_deferred.addErrback(
+        self.sequence.run_deferred.addBoth(
             epyqlib.utils.twisted.detour_result,
             self.errback,
         )
-        self.run_deferred.addErrback(epyqlib.utils.twisted.catch_expected)
-        self.run_deferred.addErrback(cancelled_handler)
-        self.run_deferred.addErrback(epyqlib.utils.twisted.errbackhook)
+        self.sequence.run_deferred.addErrback(
+            epyqlib.utils.twisted.catch_expected,
+        )
+        self.sequence.run_deferred.addErrback(cancelled_handler)
+        self.sequence.run_deferred.addErrback(epyqlib.utils.twisted.errbackhook)
 
     def pause(self):
-        if self.run_deferred is None:
+        if self.sequence is None:
             raise ScriptNotActiveError()
 
-        if self.run_deferred_paused:
+        if self.sequence.paused:
             raise ScriptAlreadyPausedError()
 
-        self.run_deferred.pause()
-        self.run_deferred_paused = True
+        self.sequence.pause()
         self.update_buttons()
 
     def unpause(self):
-        if self.run_deferred is None:
+        if self.sequence is None:
             raise ScriptNotActiveError()
 
-        if not self.run_deferred_paused:
+        if not self.sequence.paused:
             raise ScriptNotPausedError()
 
-        self.run_deferred.unpause()
-        self.run_deferred_paused = False
+        self.sequence.unpause()
         self.update_buttons()
