@@ -121,10 +121,14 @@ class DeferLaterChain:
     def add_callback(self, *args, **kwargs):
         return self.deferred.addCallback(*args, **kwargs)
 
+    def add_both(self, *args, **kwargs):
+        return self.deferred.addBoth(*args, **kwargs)
+
     def add_errback(self, *args, **kwargs):
         return self.deferred.addErrback(*args, **kwargs)
 
     addCallback = add_callback
+    addBoth = add_both
     addErrback = add_errback
 
     def run(self, arg=None):
