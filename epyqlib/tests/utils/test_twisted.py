@@ -166,3 +166,75 @@ def test_sequence_pause(action_logger, assert_no_unhandled_errbacks):
     twisted.internet.reactor.callLater(unpause_time, sequence.unpause)
 
     yield deferred
+
+
+@pytest.inlineCallbacks
+def test_sequence_pause_event(action_logger, assert_no_unhandled_errbacks):
+    sequence = epyqlib.utils.twisted.Sequence()
+    t = 0
+    delay = 0.3
+    for n in range(3):
+        sequence.add_delayed(delay, action_logger.action, n, )
+        t += delay
+        action_logger.expected.append(Result(time=t, data=n))
+
+    pause_before = 2
+
+    pause_data = object()
+
+    def pause():
+        sequence.pause()
+        action_logger.action(pause_data)
+
+    pause_time = sequence.events[pause_before].time
+    pause_event = epyqlib.utils.twisted.Event(
+        time=pause_time,
+        action=epyqlib.utils.twisted.Action(f=pause),
+    )
+
+    sequence.events.insert(pause_before, pause_event)
+    action_logger.expected.insert(
+        pause_before,
+        Result(time=pause_time, data=pause_data),
+    )
+
+    pause_duration = 1
+    unpause_time = pause_time + pause_duration
+
+    for expected in action_logger.expected[pause_before + 1:]:
+        expected.time += pause_duration
+
+    deferred = sequence.run()
+
+    yield epyqlib.utils.twisted.sleep(unpause_time)
+    sequence.unpause()
+
+    yield deferred
+
+
+@pytest.inlineCallbacks
+def test_sequence_stop_while_paused(action_logger, assert_no_unhandled_errbacks):
+    sequence = epyqlib.utils.twisted.Sequence()
+    t = 0
+    delay = 0.3
+    for n in range(3):
+        sequence.add_delayed(delay, action_logger.action, n)
+        t += delay
+        action_logger.expected.append(Result(time=t, data=n))
+
+    pause_before = 2
+
+    pause_time = action_logger.expected[pause_before].time - (delay / 2)
+
+    action_logger.expected = action_logger.expected[:pause_before]
+
+    deferred = sequence.run()
+
+    yield epyqlib.utils.twisted.sleep(pause_time)
+    sequence.pause()
+
+    yield epyqlib.utils.twisted.sleep(1)
+    sequence.cancel()
+
+    with pytest.raises(twisted.internet.defer.CancelledError):
+        yield deferred

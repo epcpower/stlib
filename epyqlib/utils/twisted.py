@@ -261,6 +261,7 @@ class Sequence:
     clock_time = attr.ib(default=0, init=False)
     deferred = attr.ib(default=None, init=False)
     paused = attr.ib(default=False, init=False)
+    run_deferred = attr.ib(default=None, init=False)
 
     def add_delayed(self, delay, f, *args, **kwargs):
         last_time = 0
@@ -272,8 +273,13 @@ class Sequence:
             time=last_time + delay,
         ))
 
-    @twisted.internet.defer.inlineCallbacks
     def run(self, loop=False):
+        self.run_deferred = self._run(loop=loop)
+
+        return self.run_deferred
+
+    @twisted.internet.defer.inlineCallbacks
+    def _run(self, loop=False):
         self.update_time(virtual_time=0)
 
         run = True
@@ -307,7 +313,12 @@ class Sequence:
 
                     was_paused = self.paused
                     while self.paused:
-                        yield epyqlib.utils.twisted.sleep(self.tolerance)
+                        self.deferred = epyqlib.utils.twisted.sleep(
+                            self.tolerance,
+                        )
+                        yield self.deferred
+
+                    self.deferred = None
 
                     if was_paused:
                         self.update_time(virtual_time=self.virtual_time)
@@ -324,17 +335,12 @@ class Sequence:
         self.clock_time = now
 
     def cancel(self):
-        if self.deferred is None:
-            raise Exception()
-
-        self.deferred.cancel()
+        self.run_deferred.cancel()
 
     def pause(self):
-        if self.deferred is None:
-            raise Exception()
-
         self.paused = True
-        self.deferred.cancel()
+        if self.deferred is not None:
+            self.deferred.cancel()
 
     def unpause(self):
         self.paused = False
