@@ -313,16 +313,16 @@ class Sequence:
                     if not self.paused:
                         break
 
-                    was_paused = self.paused
-                    while self.paused:
-                        self.deferred = epyqlib.utils.twisted.sleep(
-                            self.tolerance,
-                        )
-                        yield self.deferred
+                    if self.paused:
+                        self.deferred = sleep()
+                        try:
+                            yield self.deferred
+                        except twisted.internet.defer.CancelledError:
+                            if self.paused:
+                                raise
+                        finally:
+                            self.deferred = None
 
-                    self.deferred = None
-
-                    if was_paused:
                         self.update_time(virtual_time=self.virtual_time)
 
                 event.action()
@@ -346,3 +346,5 @@ class Sequence:
 
     def unpause(self):
         self.paused = False
+        if self.deferred is not None:
+            self.deferred.cancel()
