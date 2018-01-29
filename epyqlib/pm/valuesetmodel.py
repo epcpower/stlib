@@ -209,11 +209,7 @@ class ValueSet:
 
         sorted_children = sorted(self.model.root.children)
 
-        # TODO: remove this backwards compat and just use recent
-        #       attrs everywhere
-        evolve = getattr(attr, 'evolve', attr.assoc)
-
-        sorted_root = evolve(
+        sorted_root = attr.evolve(
             self.model.root,
             children=sorted_children
         )

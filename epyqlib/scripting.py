@@ -135,13 +135,9 @@ def resolve(event, tx_neo, nvs):
         print('switching', event.action.signal)
         signal = nvs.neo.signal_by_path(*event.action.signal)
 
-    # TODO: remove this backwards compat and just use recent
-    #       attrs everywhere
-    evolve = getattr(attr, 'evolve', attr.assoc)
-
-    return evolve(
+    return attr.evolve(
         event,
-        action=evolve(
+        action=attr.evolve(
             event.action,
             signal=signal,
             is_nv=is_nv,
