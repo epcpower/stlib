@@ -82,10 +82,12 @@ def timeout_retry(function, times=3, acceptable=None):
     return retry(function=function, times=times, acceptable=acceptable)
 
 
-def sleep(seconds):
+def sleep(seconds=None):
     d = twisted.internet.defer.Deferred()
-    from twisted.internet import reactor
-    reactor.callLater(seconds, d.callback, None)
+
+    if seconds is not None:
+        twisted.internet.reactor.callLater(seconds, d.callback, None)
+
     return d
 
 
