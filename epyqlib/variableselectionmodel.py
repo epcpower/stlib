@@ -52,15 +52,12 @@ class Sender(QObject):
 def build_node_tree(variables, array_truncated_slot):
     root = epyqlib.variableselectionmodel.Variables()
 
-    sender = Sender(slot=array_truncated_slot)
-
     for variable in variables:
         node = VariableNode(variable=variable)
         root.append_child(node)
         node.add_members(
             base_type=epyqlib.cmemoryparser.base_type(variable),
             address=variable.address,
-            sender=sender
         )
 
     return root
