@@ -256,7 +256,7 @@ class Event:
 @attr.s
 class Sequence:
     events = attr.ib(default=attr.Factory(list))
-    tolerance = attr.ib(default=0.05)
+    tolerance = attr.ib(default=0.005)
     clock = attr.ib(default=time.monotonic)
 
     virtual_time = attr.ib(default=0, init=False)
