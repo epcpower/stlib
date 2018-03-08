@@ -105,11 +105,7 @@ def ify():
             if metadata is None:
                 metadata = Metadata(name=field.name, **extras)
             else:
-                # TODO: remove this backwards compat and just use recent
-                #       attrs everywhere
-                evolve = getattr(attr, 'evolve', attr.assoc)
-                metadata = evolve(
-                    metadata,
+                metadata = attr.evolve(metadata, name=field.name, **extras)
                     name=field.name,
                     **extras,
                 )

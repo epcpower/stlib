@@ -397,8 +397,7 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
                 print(' -- skipping due to unmatched meta')
                 return
 
-        response_read_write_value, = (v for k, v in signals.items() if k.name
-                                      == 'ReadParam_status')
+        response_read_write_value = signals[status_signal.frame.command_signal]
         # TODO: handle the enumeration
         if response_read_write_value != request.read:
             return

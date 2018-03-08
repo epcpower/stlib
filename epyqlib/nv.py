@@ -53,6 +53,7 @@ class Configuration:
     to_nv_command = attr.ib()
     to_nv_status = attr.ib()
     read_write_signal = attr.ib()
+    read_write_status_signal = attr.ib()
     meta_signal = attr.ib()
 
 
@@ -63,6 +64,7 @@ configurations = {
         to_nv_command='SaveToEE_command',
         to_nv_status='SaveToEE_status',
         read_write_signal='ReadParam_command',
+        read_write_status_signal='ReadParam_status',
         meta_signal=None,
     ),
     'j1939': Configuration(
@@ -71,6 +73,7 @@ configurations = {
         to_nv_command='SaveToEE_command',
         to_nv_status='SaveToEE_status',
         read_write_signal='ReadParam_command',
+        read_write_status_signal = 'ReadParam_status',
         meta_signal='Meta',
     )
 }
@@ -274,7 +277,15 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     frame.parameter_signals.append(nv)
                     nv.changed.connect(self.changed)
 
-                nv.frame.status_frame = self.status_frames[value]
+                try:
+                    nv.frame.status_frame = self.status_frames[value]
+                except KeyError:
+                    raise Exception('Unable to find: {}:{} with mux id {}'.format(
+                        self.configuration.status_frame,
+                        frame.mux_name,
+                        frame.mux_value,
+                    ))
+
                 self.status_frames[value].set_frame = nv.frame
 
                 search = (s for s in self.status_frames[value].signals
@@ -366,6 +377,41 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         if len(duplicate_names) > 0:
             raise Exception('Duplicate NV parameter names found: {}'.format(
                 ', '.join(duplicate_names)))
+
+        missing_read_write_signals = []
+
+        for i, set_frame in self.set_frames.items():
+            status_frame = self.status_frames[i]
+            try:
+                set_frame.command_signal, = (
+                    s
+                    for s in set_frame.signals
+                    if s.name == self.configuration.read_write_signal
+                )
+            except ValueError:
+                missing_read_write_signals.append('{}:{}:{}'.format(
+                    set_frame.name,
+                    set_frame.mux_name,
+                    self.configuration.read_write_signal,
+                ))
+
+            try:
+                status_frame.command_signal, = (
+                    s
+                    for s in status_frame.signals
+                    if s.name == self.configuration.read_write_status_signal
+                )
+            except ValueError:
+                missing_read_write_signals.append('{}:{}:{}'.format(
+                    status_frame.name,
+                    status_frame.mux_name,
+                    self.configuration.read_write_status_signal,
+                ))
+
+        if len(missing_read_write_signals) > 0:
+            raise Exception('Unable to find needed signals: {}'.format(
+                ', '.join(missing_read_write_signals),
+            ))
 
     def all_nv(self):
         def visit(node, all):

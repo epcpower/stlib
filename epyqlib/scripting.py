@@ -42,6 +42,10 @@ class Action:
     is_nv = attr.ib(default=False)
 
     def __call__(self, nvs=None):
+        if self is pause_sentinel:
+            print('pausing')
+            return
+
         if self.is_nv:
             return self.nv_handler(nvs)
         else:
@@ -55,6 +59,9 @@ class Action:
         print('nv setting:', self.signal.name, self.value)
         self.signal.set_human_value(self.value)
         nvs.write_all_to_device(only_these=(self.signal,))
+
+
+pause_sentinel = Action(signal=[], value=0)
 
 
 def csv_load(f):
@@ -84,12 +91,17 @@ def csv_load(f):
         if selected_operator is not None:
             event_time = selected_operator(last_event_time, event_time)
 
-        actions = [x.strip() for x in row[1:] if len(x) > 0]
-        print(list(epyqlib.utils.general.grouper(actions, n=2)))
-        actions = [
-            Action(signal=path.split(';'), value=decimal.Decimal(value))
-            for path, value in epyqlib.utils.general.grouper(actions, n=2)
-        ]
+        raw_actions = [x.strip() for x in row[1:] if len(x) > 0]
+        print(list(epyqlib.utils.general.grouper(raw_actions, n=2)))
+        actions = []
+        for path, value in epyqlib.utils.general.grouper(raw_actions, n=2):
+            if path == 'pause':
+                actions.append(pause_sentinel)
+            else:
+                actions.append(Action(
+                    signal=path.split(';'),
+                    value=decimal.Decimal(value),
+                ))
 
         events.extend([
             Event(time=event_time, action=action)
@@ -98,7 +110,7 @@ def csv_load(f):
 
         last_event_time = event_time
 
-    return sorted(events)
+    return sorted(events, key=lambda event: event.time)
 
 
 def csv_loads(s):
@@ -112,6 +124,9 @@ def csv_loadp(path):
 
 
 def resolve(event, tx_neo, nvs):
+    if event.action is pause_sentinel:
+        return event
+
     signal = tx_neo.signal_by_path(*event.action.signal)
 
     # TODO: CAMPid 079320743340327834208
@@ -120,13 +135,9 @@ def resolve(event, tx_neo, nvs):
         print('switching', event.action.signal)
         signal = nvs.neo.signal_by_path(*event.action.signal)
 
-    # TODO: remove this backwards compat and just use recent
-    #       attrs everywhere
-    evolve = getattr(attr, 'evolve', attr.assoc)
-
-    return evolve(
+    return attr.evolve(
         event,
-        action=evolve(
+        action=attr.evolve(
             event.action,
             signal=signal,
             is_nv=is_nv,
@@ -141,8 +152,8 @@ def resolve_signals(events, tx_neo, nvs):
     ]
 
 
-def run(events, nvs):
-    d = twisted.internet.defer.Deferred()
+def run(events, nvs, pause, loop):
+    sequence = epyqlib.utils.twisted.Sequence()
 
     zero_padded = itertools.chain(
         (Event(time=0, action=None),),
@@ -150,16 +161,24 @@ def run(events, nvs):
     )
 
     for p, n in epyqlib.utils.general.pairwise(zero_padded):
-        d.addCallback(lambda _, p=p, n=n: twisted.internet.task.deferLater(
-            clock=twisted.internet.reactor,
+        if n.action is pause_sentinel:
+            def action(n=n):
+                n.action()
+                pause()
+            kwargs = {}
+        else:
+            action = n.action
+            kwargs = dict(nvs=nvs)
+
+        sequence.add_delayed(
             delay=float(n.time - p.time),
-            callable=n.action,
-            nvs=nvs,
-        ))
+            f=action,
+            **kwargs,
+        )
 
-    d.callback(None)
+    sequence.run(loop=loop)
 
-    return d
+    return sequence
 
 
 @attr.s
@@ -179,7 +198,7 @@ class Model:
         )
         epyqlib.scripting.run(events=events, nvs=self.nvs)
 
-    def run_s(self, event_string):
+    def run_s(self, event_string, pause, loop=False):
         events = csv_loads(event_string)
 
         if len(events) == 0:
@@ -191,4 +210,4 @@ class Model:
             nvs=self.nvs,
         )
 
-        return run(events=events, nvs=self.nvs)
+        return run(events=events, nvs=self.nvs, pause=pause, loop=loop)
