@@ -204,24 +204,6 @@ def test_array_update_children_length():
         assert len(array.children) == n
 
 
-def test_array_passthrough_nv():
-    array = epyqlib.pm.parametermodel.Array()
-    parameter = epyqlib.pm.parametermodel.Parameter()
-    array.append_child(parameter)
-
-    array.length = 5
-
-    assignments = (
-        (3, True),
-        (1, False),
-        (0, True),
-    )
-
-    for index, value in assignments:
-        array.children[index].nv = value
-        assert all(child.nv == value for child in array.children)
-
-
 def test_all_addable_also_in_types():
     # Since addable types is dynamic and could be anything... this
     # admittedly only checks the addable types on default instances.

@@ -106,9 +106,6 @@ def ify():
                 metadata = Metadata(name=field.name, **extras)
             else:
                 metadata = attr.evolve(metadata, name=field.name, **extras)
-                    name=field.name,
-                    **extras,
-                )
 
             if metadata.convert is None:
                 metadata.convert = field.convert

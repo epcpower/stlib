@@ -702,6 +702,7 @@ columns = epyqlib.attrsmodel.columns(
     merge('original_signal_name', Parameter),
 
     merge('enumeration_uuid', Parameter),
+    merge('parameter_uuid', Parameter),
     merge('uuid', *types.types.values()),
 
 )
