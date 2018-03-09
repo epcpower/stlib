@@ -647,7 +647,10 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
     def from_value_set(self, value_set):
         only_in_file = value_set.model.root.nodes_by_filter(
-            f=lambda node: isinstance(node, epyqlib.pm.valuesetmodel.Parameter),
+            filter=lambda node: isinstance(
+                node,
+                epyqlib.pm.valuesetmodel.Parameter,
+            ),
         )
         only_in_file = {
             parameter.name

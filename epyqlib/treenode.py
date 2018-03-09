@@ -122,20 +122,6 @@ class TreeNode:
     def __len__(self):
         return len(self.children)
 
-    def nodes_by_filter(self, f):
-        def matches(node, matches):
-            if f(node):
-                matches.add(node)
-
-        nodes = set()
-        self.traverse(
-            call_this=matches,
-            payload=nodes,
-            internal_nodes=True
-        )
-
-        return nodes
-
     def nodes_by_attribute(self, attribute_value, attribute_name):
         def matches(node):
             if not hasattr(node, attribute_name):
