@@ -958,11 +958,12 @@ class Device:
                 icon=QMessageBox.Information,
             )
 
-        scripting_model = epyqlib.scripting.Model(
-            tx_neo=self.neo_frames,
-            nvs=self.widget_nvs,
-        )
-        self.ui.scripting_view.set_model(scripting_model)
+        if Elements.scripting in self.elements:
+            scripting_model = epyqlib.scripting.Model(
+                tx_neo=self.neo_frames,
+                nvs=self.widget_nvs,
+            )
+            self.ui.scripting_view.set_model(scripting_model)
 
         for notifiee in notifiees:
             self.bus.notifier.add(notifiee)
