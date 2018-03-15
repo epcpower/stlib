@@ -216,7 +216,7 @@ class NvView(QtWidgets.QWidget):
 
             file_names = (
                 *auto_parameters_device.referenced_files,
-                auto_parameters_device_file_path.name,
+                str(auto_parameters_device_file_path),
             )
 
             for file_name in file_names:
@@ -241,17 +241,37 @@ class NvView(QtWidgets.QWidget):
                 if len(archive_code) > 0:
                     password_option = ['-p{}'.format(archive_code)]
 
-                subprocess.run(
-                    [
-                        '7z',
-                        'a',
-                        '-tzip',
-                        filename.name,
-                        directory_path.name,
-                        *password_option,
-                    ],
-                    check=True,
+                paths = (
+                    pathlib.Path('7z'),
+                    pathlib.Path('C:')/os.sep/'Program Files'/'7-Zip'/'7z.exe',
+                    (
+                        pathlib.Path('C:')/os.sep
+                        /'Program Files (x86)'/'7-Zip'/'7z.exe',
+                    ),
                 )
+                for path in paths:
+                    try:
+                        subprocess.run(
+                            [
+                                str(path),
+                                'a',
+                                '-tzip',
+                                str(filename),
+                                str(directory_path),
+                                *password_option,
+                            ],
+                            check=True,
+                        )
+                    except FileNotFoundError:
+                        continue
+                    else:
+                        break
+                else:
+                    raise Exception(
+                        'Unable to find 7z binary as any of: {}'.format(
+                            paths,
+                        )
+                    )
             except Exception as e:
                 if backup_path is not None:
                     shutil.move(backup_path, filename)
