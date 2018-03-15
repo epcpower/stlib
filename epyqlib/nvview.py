@@ -224,7 +224,7 @@ class NvView(QtWidgets.QWidget):
                     continue
 
                 shutil.copy(
-                    auto_parameters_device_file_path.with_name(file_name),
+                    auto_parameters_device_file_path.with_name(file_name.name),
                     directory_path,
                 )
 
