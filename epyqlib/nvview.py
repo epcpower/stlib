@@ -223,8 +223,10 @@ class NvView(QtWidgets.QWidget):
                 if file_name in (can_path, parameter_path):
                     continue
 
+                file_path = pathlib.Path(file_name)
+
                 shutil.copy(
-                    auto_parameters_device_file_path.with_name(file_name.name),
+                    auto_parameters_device_file_path.with_name(file_path.name),
                     directory_path,
                 )
 
