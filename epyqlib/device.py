@@ -325,6 +325,8 @@ class Device:
 
         if not only_for_files:
             self.can_path = os.path.join(path, d['can_path'])
+            with open(self.can_path, 'rb') as f:
+                self.can_contents = f.read()
 
             self.node_id_type = d.get('node_id_type',
                                       next(iter(node_id_types))).lower()
@@ -653,6 +655,7 @@ class Device:
 
                 column = epyqlib.nv.Columns.indexes.name
                 for view in nv_views:
+                    view.set_can_contents(self.can_contents)
                     if self.nvs.access_level_node is not None:
                         view.set_access_level_signal_path(
                             path=self.nvs.access_level_node.signal_path(),

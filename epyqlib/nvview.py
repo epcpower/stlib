@@ -4,10 +4,19 @@
 
 import collections
 import epyqlib.nv
+try:
+    import epyqlib.resources.code
+except ImportError:
+    pass # we will catch the failure to open the file
 import epyqlib.utils.qt
 import functools
 import io
+import json
 import os
+import pathlib
+import shutil
+import subprocess
+import tempfile
 import twisted.internet.defer
 from PyQt5 import QtWidgets, uic, QtCore
 from PyQt5.QtCore import (pyqtSignal, pyqtSlot, QFile, QFileInfo, QTextStream,
@@ -55,6 +64,9 @@ class NvView(QtWidgets.QWidget):
         self.ui.read_from_value_set_file_button.clicked.connect(
             self.read_from_value_set_file,
         )
+        self.ui.write_to_auto_parameters_button.clicked.connect(
+            self.write_to_auto_parameters,
+        )
 
         view = self.ui.tree_view
         view.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -93,6 +105,7 @@ class NvView(QtWidgets.QWidget):
             column=epyqlib.nv.Columns.indexes.name,
         )
 
+        self.can_contents = None
         self.set_access_level_signal_path(path=None)
 
         self.password_mapper = QtWidgets.QDataWidgetMapper()
@@ -245,6 +258,151 @@ class NvView(QtWidgets.QWidget):
         d.addBoth(epyqlib.utils.twisted.detour_result, self.enable_column_resize)
         d.addErrback(epyqlib.utils.twisted.catch_expected)
         d.addErrback(epyqlib.utils.twisted.errbackhook)
+
+    def write_to_auto_parameters(self):
+        filters = [
+            ('EPC Device', ['epc']),
+            ('All Files', ['*'])
+        ]
+        auto_parameters_device_file_path = pathlib.Path(
+            epyqlib.utils.qt.file_dialog(
+                filters=filters,
+                caption='Open Auto Parameters Template',
+                parent=self,
+            )
+        )
+        auto_parameters_device = epyqlib.device.Device(
+            file=auto_parameters_device_file_path,
+            only_for_files=True,
+        )
+
+        filters = [
+            ('EPC Device', ['epz']),
+            ('All Files', ['*'])
+        ]
+        filename = epyqlib.utils.qt.file_dialog(
+            filters,
+            save=True,
+            parent=self,
+        )
+
+        if filename is None:
+            return
+
+        filename = pathlib.Path(filename)
+
+        archive_code = epyqlib.utils.qt.get_code()
+        if archive_code is not None:
+            archive_code = archive_code.decode('ascii')
+        else:
+            archive_code, ok = QtWidgets.QInputDialog.getText(
+                None,
+                '.epz Password',
+                '.epz Password (empty for no password)',
+                QtWidgets.QLineEdit.Password,
+            )
+
+            if not ok:
+                return
+
+        factory_access_code, ok = QtWidgets.QInputDialog.getText(
+            None,
+            'Factory Access Code',
+            'Factory Access Code',
+            QtWidgets.QLineEdit.Password,
+        )
+
+        if not ok:
+            return
+
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            temporary_directory = pathlib.Path(temporary_directory)
+            directory_path = temporary_directory / filename.stem
+            directory_path.mkdir()
+
+            parameter_path = (
+                auto_parameters_device.raw_dict['auto_parameters']
+            )
+
+            with open(directory_path / parameter_path, 'w') as file:
+                model = self.nonproxy_model()
+                d = model.root.to_dict(include_secrets=True)
+                factory_access_key, = (k for k in d if 'FactoryAccess' in k)
+                d[factory_access_key] = factory_access_code
+                s = json.dumps(d, sort_keys=True, indent=4)
+                file.write(s)
+                file.write('\n')
+
+            can_path = auto_parameters_device.raw_dict['can_path']
+
+            file_names = (
+                *auto_parameters_device.referenced_files,
+                str(auto_parameters_device_file_path),
+            )
+
+            for file_name in file_names:
+                if file_name in (can_path, parameter_path):
+                    continue
+
+                file_path = pathlib.Path(file_name)
+
+                shutil.copy(
+                    auto_parameters_device_file_path.with_name(file_path.name),
+                    directory_path,
+                )
+
+            with open(directory_path / can_path, 'wb') as f:
+                f.write(self.can_contents)
+
+            backup_path = None
+            if filename.exists():
+                backup_path = temporary_directory / filename.name
+                shutil.move(filename, backup_path)
+
+            try:
+                password_option = []
+                if len(archive_code) > 0:
+                    password_option = ['-p{}'.format(archive_code)]
+
+                paths = (
+                    pathlib.Path('7z'),
+                    pathlib.Path('C:')/os.sep/'Program Files'/'7-Zip'/'7z.exe',
+                    (
+                        pathlib.Path('C:')/os.sep
+                        /'Program Files (x86)'/'7-Zip'/'7z.exe',
+                    ),
+                )
+                for path in paths:
+                    try:
+                        subprocess.run(
+                            [
+                                str(path),
+                                'a',
+                                '-tzip',
+                                str(filename),
+                                str(directory_path),
+                                *password_option,
+                            ],
+                            check=True,
+                        )
+                    except FileNotFoundError:
+                        continue
+                    else:
+                        break
+                else:
+                    raise Exception(
+                        'Unable to find 7z binary as any of: {}'.format(
+                            paths,
+                        )
+                    )
+            except Exception as e:
+                if backup_path is not None:
+                    shutil.move(backup_path, filename)
+
+                raise e
+
+    def set_can_contents(self, can_contents):
+        self.can_contents = can_contents
 
     def setModel(self, model):
         proxy = model

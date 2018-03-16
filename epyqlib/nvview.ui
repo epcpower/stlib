@@ -65,6 +65,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="write_to_auto_parameters_button">
+         <property name="text">
+          <string>To Auto Parameters</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <spacer name="horizontalSpacer_2">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
