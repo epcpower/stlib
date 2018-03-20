@@ -10,6 +10,7 @@ import can
 import canmatrix.formats
 import epyqlib.canneo
 import epyqlib.deviceextension
+import epyqlib.faultlogmodel
 try:
     import epyqlib.resources.code
 except ImportError:
@@ -66,6 +67,7 @@ class Elements(Enum):
     variables = 4
     nv = 5
     scripting = 6
+    fault_log = 7
 
 
 @unique
@@ -75,10 +77,11 @@ class Tabs(Enum):
     variables = 3
     nv = 4
     scripting = 5
+    fault_log = 6
 
     @classmethod
     def defaults(cls):
-        return set(cls) - {cls.variables, cls.scripting}
+        return set(cls) - {cls.variables, cls.scripting, cls.fault_log}
 
 
 def j1939_node_id_adjust(message_id, device_id, to_device, controller_id):
@@ -261,6 +264,8 @@ class Device:
                 else:
                     tabs.discard(tab)
 
+        depended_on = set()
+
         if Tabs.txrx not in tabs:
             self.elements.discard(Elements.tx)
             self.elements.discard(Elements.rx)
@@ -273,6 +278,13 @@ class Device:
 
         if Tabs.scripting not in tabs:
             self.elements.discard(Elements.scripting)
+            
+        if Tabs.fault_log not in tabs:
+            self.elements.discard(Elements.fault_log)
+        else:
+            depended_on.add(Elements.nv)
+
+        self.elements |= depended_on
 
         self.referenced_files = [
             f for f in [
@@ -636,6 +648,22 @@ class Device:
                     can_configuration.data_logger_configuration_is_valid_signal_path,
             )
 
+        if Elements.fault_log in self.elements:
+            fault_log = epyqlib.faultlogmodel.create_blank()
+
+            nv_message_names = self.raw_dict["fault_log"]["nv_message_names"]
+            process_message_names = (
+                self.raw_dict["fault_log"]["process_message_names"]
+            )
+
+            fault_log.connect(
+                process_frames=self.neo_frames,
+                process_message_names=process_message_names,
+                nv_frames=self.widget_nvs,
+                nv_message_names=nv_message_names,
+            )
+            self.ui.fault_log_view.set_model(fault_log.model)
+
         if Tabs.dashes in tabs:
             for i, (name, dash) in enumerate(self.dash_uis.items()):
                 self.ui.tabs.insertTab(i,
@@ -661,6 +689,8 @@ class Device:
             self.ui.tabs.currentChanged.connect(tab_changed)
         if Tabs.scripting not in tabs:
             self.ui.tabs.removeTab(self.ui.tabs.indexOf(self.ui.scripting))
+        if Tabs.fault_log not in tabs:
+            self.ui.tabs.removeTab(self.ui.tabs.indexOf(self.ui.faultlog))
 
         self.ui.offline_overlay = epyqlib.overlaylabel.OverlayLabel(parent=self.ui)
         self.ui.offline_overlay.label.setText('offline')
