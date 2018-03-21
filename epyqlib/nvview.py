@@ -310,15 +310,36 @@ class NvView(QtWidgets.QWidget):
             if not ok:
                 return
 
-        factory_access_code, ok = QtWidgets.QInputDialog.getText(
-            None,
-            'Factory Access Code',
-            'Factory Access Code',
-            QtWidgets.QLineEdit.Password,
-        )
+        root = self.nonproxy_model().root
 
-        if not ok:
-            return
+        access_inputs = {
+            root.access_level_node: 'Elevated Access Level',
+            root.password_node: 'Elevated Access Code',
+        }
+        access_parameters = {}
+
+        for node, description in access_inputs.items():
+            if node is None:
+                continue
+
+            user_input, ok = QtWidgets.QInputDialog.getText(
+                None,
+                description,
+                description,
+                QtWidgets.QLineEdit.Password,
+            )
+
+            if not ok:
+                return
+
+            access_parameters[node] = user_input
+
+        def node_path(node):
+            return [
+                node.frame.name,
+                node.frame.mux_name,
+                node.name,
+            ]
 
         with tempfile.TemporaryDirectory() as temporary_directory:
             temporary_directory = pathlib.Path(temporary_directory)
@@ -332,8 +353,13 @@ class NvView(QtWidgets.QWidget):
             with open(directory_path / parameter_path, 'w') as file:
                 model = self.nonproxy_model()
                 d = model.root.to_dict(include_secrets=True)
-                factory_access_key, = (k for k in d if 'FactoryAccess' in k)
-                d[factory_access_key] = factory_access_code
+                for node, user_input in access_parameters.items():
+                    key, = (
+                        k
+                        for k in d
+                        if k == ':'.join(node_path(node)[1:])
+                    )
+                    d[key] = user_input
                 s = json.dumps(d, sort_keys=True, indent=4)
                 file.write(s)
                 file.write('\n')
