@@ -36,7 +36,14 @@ class FaultLogView(PyQt5.Qt.QWidget):
 
         self.model = None
 
+        self.ui.clear_button.clicked.connect(self.clear)
+
     def set_model(self, model):
         self.model = model
 
         self.ui.tree_view.setModel(model)
+
+    def clear(self):
+        children = list(self.model.root.children)
+        for child in children:
+            self.model.root.remove_child(child=child)
