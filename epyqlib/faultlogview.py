@@ -44,6 +44,15 @@ class FaultLogView(PyQt5.Qt.QWidget):
         self.ui.tree_view.setModel(model)
 
     def clear(self):
+        answer = PyQt5.Qt.QMessageBox.question(
+            self,
+            'Clear Log',
+            'Are you sure you want to clear the log?',
+        )
+
+        if answer != PyQt5.Qt.QMessageBox.Yes:
+            return
+
         children = list(self.model.root.children)
         for child in children:
             self.model.root.remove_child(child=child)
