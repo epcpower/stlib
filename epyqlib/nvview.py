@@ -264,13 +264,18 @@ class NvView(QtWidgets.QWidget):
             ('EPC Device', ['epc']),
             ('All Files', ['*'])
         ]
-        auto_parameters_device_file_path = pathlib.Path(
-            epyqlib.utils.qt.file_dialog(
-                filters=filters,
-                caption='Open Auto Parameters Template',
-                parent=self,
-            )
+        auto_parameters_device_file_path = epyqlib.utils.qt.file_dialog(
+            filters=filters,
+            caption='Open Auto Parameters Template',
+            parent=self,
         )
+        if auto_parameters_device_file_path is None:
+            return
+
+        auto_parameters_device_file_path = pathlib.Path(
+            auto_parameters_device_file_path
+        )
+
         auto_parameters_device = epyqlib.device.Device(
             file=auto_parameters_device_file_path,
             only_for_files=True,
