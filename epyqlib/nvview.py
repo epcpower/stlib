@@ -2,6 +2,7 @@
 
 #TODO: """DocString if there is one"""
 
+import attr
 import collections
 import epyqlib.nv
 try:
@@ -123,6 +124,11 @@ class NvView(QtWidgets.QWidget):
         self.set_metas(())
 
         self.resize_modes = None
+
+        self.device = None
+
+    def set_device(self, device):
+        self.device = device
 
     def set_access_level_signal_path(self, path):
         if path is None or path == '':
@@ -312,27 +318,45 @@ class NvView(QtWidgets.QWidget):
 
         root = self.nonproxy_model().root
 
-        access_inputs = {
-            root.access_level_node: 'Elevated Access Level',
-            root.password_node: 'Elevated Access Code',
-        }
+        @attr.s
+        class AccessInput:
+            node = attr.ib()
+            description = attr.ib()
+            secret = attr.ib()
+
+        access_inputs = (
+            AccessInput(
+                node=root.password_node,
+                description='Elevated Access Code',
+                secret=True,
+            ),
+            AccessInput(
+                node=root.access_level_node,
+                description='Elevated Access Level',
+                secret=False,
+            ),
+        )
         access_parameters = {}
 
-        for node, description in access_inputs.items():
-            if node is None:
+        for access_input in access_inputs:
+            if access_input.node is None:
                 continue
 
-            user_input, ok = QtWidgets.QInputDialog.getText(
+            parameters = [
                 None,
-                description,
-                description,
-                QtWidgets.QLineEdit.Password,
-            )
+                access_input.description,
+                access_input.description,
+            ]
+
+            if access_input.secret:
+                parameters.append(QtWidgets.QLineEdit.Password)
+
+            user_input, ok = QtWidgets.QInputDialog.getText(*parameters)
 
             if not ok:
                 return
 
-            access_parameters[node] = user_input
+            access_parameters[access_input.node] = int(user_input)
 
         def node_path(node):
             return [
@@ -347,31 +371,26 @@ class NvView(QtWidgets.QWidget):
             directory_path.mkdir()
 
             parameter_path = (
-                auto_parameters_device.raw_dict['auto_parameters']
+                auto_parameters_device.raw_dict['auto_value_set']
             )
 
-            with open(directory_path / parameter_path, 'w') as file:
-                model = self.nonproxy_model()
-                d = model.root.to_dict(include_secrets=True)
-                for node, user_input in access_parameters.items():
-                    key, = (
-                        k
-                        for k in d
-                        if k == ':'.join(node_path(node)[1:])
-                    )
-                    d[key] = user_input
-                s = json.dumps(d, sort_keys=True, indent=4)
-                file.write(s)
-                file.write('\n')
+            model = self.nonproxy_model()
+            value_set = model.root.to_value_set(include_secrets=True)
+            for node, user_input in access_parameters.items():
+                name = ':'.join(node_path(node)[1:])
+
+                def name_matches(node):
+                    return node.name == name
+
+                node, = value_set.model.root.nodes_by_filter(name_matches)
+                node.value = user_input
+
+            value_set.path = directory_path / parameter_path
+            value_set.save()
 
             can_path = auto_parameters_device.raw_dict['can_path']
 
-            file_names = (
-                *auto_parameters_device.referenced_files,
-                str(auto_parameters_device_file_path),
-            )
-
-            for file_name in file_names:
+            for file_name in auto_parameters_device.referenced_files:
                 if file_name in (can_path, parameter_path):
                     continue
 
@@ -381,6 +400,26 @@ class NvView(QtWidgets.QWidget):
                     auto_parameters_device_file_path.with_name(file_path.name),
                     directory_path,
                 )
+
+            with open(auto_parameters_device_file_path) as f:
+                raw_dict = json.load(
+                    f,
+                    object_pairs_hook=collections.OrderedDict,
+                )
+
+            keys_to_copy = (
+                'access_level_path',
+                'access_password_path',
+                'nv_meta_enum',
+            )
+            for key in keys_to_copy:
+                raw_dict[key] = self.device.raw_dict[key]
+
+            target_epc_name = (
+                directory_path / auto_parameters_device_file_path.name
+            )
+            with open(target_epc_name, 'w') as f:
+                json.dump(raw_dict, f, indent=4)
 
             with open(directory_path / can_path, 'wb') as f:
                 f.write(self.can_contents)

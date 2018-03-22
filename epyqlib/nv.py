@@ -612,7 +612,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         value_set = epyqlib.pm.valuesetmodel.create_blank()
 
         for child in self.all_nv():
-            if include_secrets or not child.secret:
+            if not child.secret:
                 parameter = epyqlib.pm.valuesetmodel.Parameter(
                     name=child.fields.name,
                     value=child.get_human_value(for_file=True),
@@ -625,7 +625,27 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     minimum=child.meta.minimum.get_human_value(for_file=True),
                     maximum=child.meta.maximum.get_human_value(for_file=True),
                 )
-                value_set.model.root.append_child(parameter)
+            elif include_secrets:
+                def format_float(value):
+                    was_secret = child.secret
+                    child.secret = False
+                    result = child.format_float(value=value, for_file=True)
+                    child.secret = was_secret
+
+                    return result
+
+                parameter = epyqlib.pm.valuesetmodel.Parameter(
+                    name=child.fields.name,
+                    value=format_float(value=0),
+                    user_default=format_float(value=0),
+                    factory_default=format_float(value=0),
+                    minimum=format_float(value=child.min),
+                    maximum=format_float(value=child.max),
+                )
+            else:
+                continue
+
+            value_set.model.root.append_child(parameter)
 
         return value_set
 

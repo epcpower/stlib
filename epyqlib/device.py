@@ -582,6 +582,7 @@ class Device:
             if access_password_path is not None:
                 access_password_path = access_password_path.split(';')
 
+            # TODO: CAMPid 0794311304143707516085683164039671793972
             if self.raw_dict['nv_meta_enum'] == 'Meta':
                 self.metas = epyqlib.nv.meta_limits_first
             else:
@@ -655,6 +656,7 @@ class Device:
 
                 column = epyqlib.nv.Columns.indexes.name
                 for view in nv_views:
+                    view.set_device(self)
                     view.set_can_contents(self.can_contents)
                     if self.nvs.access_level_node is not None:
                         view.set_access_level_signal_path(
