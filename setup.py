@@ -23,6 +23,7 @@ setup(
         ]
     },
     install_requires=[
+        'arrow',
         'gitpython',
         'graham',
         'PyQt5',

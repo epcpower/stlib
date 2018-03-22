@@ -97,6 +97,16 @@
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="faultlog">
+      <attribute name="title">
+       <string>Fault Log</string>
+      </attribute>
+      <layout class="QGridLayout" name="gridLayout">
+       <item row="0" column="0">
+        <widget class="FaultLogView" name="fault_log_view"/>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
   </layout>
@@ -121,6 +131,11 @@
    <class>ScriptingView</class>
    <extends>QWidget</extends>
    <header>epyqlib.scriptingview</header>
+  </customwidget>
+  <customwidget>
+   <class>FaultLogView</class>
+   <extends>QWidget</extends>
+   <header>epyqlib.faultlogview</header>
   </customwidget>
  </customwidgets>
  <resources/>
