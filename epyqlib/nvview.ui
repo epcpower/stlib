@@ -58,6 +58,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="write_to_value_set_file_button">
+         <property name="text">
+          <string>To Value Set File</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="write_to_auto_parameters_button">
          <property name="text">
           <string>To Auto Parameters</string>
@@ -76,6 +83,13 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="read_from_value_set_file_button">
+         <property name="text">
+          <string>From Value Set File</string>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QPushButton" name="read_from_file_button">
@@ -103,8 +117,57 @@
       <layout class="QHBoxLayout" name="horizontalLayout_2">
        <item>
         <widget class="QLabel" name="status_label">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="access_level_password">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="echoMode">
+          <enum>QLineEdit::Password</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="access_level"/>
+       </item>
+       <item>
+        <widget class="QPushButton" name="set_access_level">
+         <property name="text">
+          <string>Set</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Enum" name="current_access_level">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="label_visible" stdset="0">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
          </property>
         </widget>
        </item>
@@ -117,7 +180,7 @@
           </sizepolicy>
          </property>
          <property name="text">
-          <string>Enforce Range Limits</string>
+          <string>Enforce Limits Locally</string>
          </property>
          <property name="checked">
           <bool>true</bool>
@@ -130,7 +193,7 @@
       <widget class="SearchBox" name="searchbox"/>
      </item>
      <item>
-      <widget class="QTreeView" name="tree_view">
+      <widget class="TreeView" name="tree_view">
        <property name="alternatingRowColors">
         <bool>true</bool>
        </property>
@@ -145,6 +208,16 @@
    <class>SearchBox</class>
    <extends>QWidget</extends>
    <header>epyqlib.searchbox</header>
+  </customwidget>
+  <customwidget>
+   <class>Enum</class>
+   <extends>QWidget</extends>
+   <header>epyqlib.widgets.enum</header>
+  </customwidget>
+  <customwidget>
+   <class>TreeView</class>
+   <extends>QTreeView</extends>
+   <header>epyqlib.treeview</header>
   </customwidget>
  </customwidgets>
  <resources/>

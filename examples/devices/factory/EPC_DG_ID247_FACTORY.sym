@@ -2,6 +2,17 @@ FormatVersion=5.0 // Do not edit this line!
 Title="EPC_DG_ID247_FACTORY"
 
 {ENUMS}
+enum State(0="Power On Reset", 1="Ready", 2="Following", 3="Fault", 
+  4="Forming", 5="Reconnect Delay", 6="N/A", 7="Area EPS Lost", 8="Charging", 
+  9="N/A", 10="N/A", 11="N/A", 12="N/A", 13="N/A", 14="N/A", 15="N/A")
+enum RelayStatus(0="Open", 1="Closed", 2="Error", 3="N/A")
+enum PowerAvail(0="None", 1="Available", 2="Error", 3="N/A")
+enum IGBTsEnabled(0="Disabled", 1="Enabled", 2="Error", 3="N/A")
+enum WakeUpSignal(0="Not Active", 1="Active", 2="Error", 3="N/A")
+enum Enable(0="Disable", 1="Enable", 2="Error", 3="N/A")
+enum MessageValid(0="Invalid", 1="Valid", 2="Error", 3="N/A")
+enum FaultClear(0="Normal", 1="Clear Faults", 2="Error", 3="N/A")
+enum WarningClear(0="Normal", 1="Clear Warnings", 2="Error", 3="N/A")
 enum Baudrate(0="125K", 1="250K", 2="500K", 3="1M")
 enum BridgeFlt(0="Normal", 1="FLT_A", 2="N/A", 3="FLT_C", 4="OverVoltage", 
   5="FLT_B", 6="Overcurrent", 7="5V")
@@ -10,39 +21,35 @@ enum ControlSource(0="CAN", 1="Modbus")
 enum DIOInverted(0="Normal", 1="Inverted", 2="Error", 3="N/A")
 // Control digital outputs from CAN interface
 enum DOController(0="Application", 1="CAN")
-enum DcLegType(0="Voltage Control", 1="Current Control", 2="MPPT", 4="Disabled")
-enum Enable(0="Disable", 1="Enable", 2="Error", 3="N/A")
 enum EnableSplitPhase(0="Normal - Three Phase Mode", 
   1="Enable Split Phase Mode", 2="Error", 3="N/A")
 enum EnableUPSMode(0="Disable", 1="Enable", 2="Error", 3="N/A")
 enum FANTYPE(0="variable speed", 1="on/off")
 enum Fault(0="Normal", 1="Fault Active", 2="Error", 3="N/A")
-enum FaultClear(0="Normal", 1="Clear Faults", 2="Error", 3="N/A")
 enum FaultConfig(0="Warning", 1="Fault", 2="Disabled", 3="N/A")
-enum IGBTsEnabled(0="Disabled", 1="Enabled", 2="Error", 3="N/A")
 enum InvertHwEnable(0="No invert", 1="Invert", 2="Error", 3="N/A")
 enum LVMTYPE(0="Line-Line", 1="Line-Neutral", 2="Error", 3="N/A")
 enum LineVoltagePresent(0="No_Voltage", 1="Voltage_Detected", 2="Error", 
   3="N/A")
-enum MessageValid(0="Invalid", 1="Valid", 2="Error", 3="N/A")
 enum OnOff(0="off", 1="on", 2="Error", 3="N/A")
 enum PhaseRotation(0="Negative", 1="Positive", 2="Error", 3="N/A")
-enum PowerAvail(0="None", 1="Available", 2="Error", 3="N/A")
 enum ReadNV(0="Write", 1="Read", 2="Error", 3="N/A")
-enum Relay(0="Open", 1="Closed", 2="Error", 3="N/A")
 enum RelayCommand(0="Normal", 1="Force On", 2="Error", 3="N/A")
 enum RemoteVoltageSense(0="Use Local Sense", 1="Use Remote Sense", 2="Error", 
   3="N/A")
 enum SerialBaud(0="115200", 1="57600", 2="38400", 3="19200", 4="9600", 
   5="4800", 6="2400")
 enum SerialProtocol(0="N81", 1="N82", 2="E81", 3="O81")
-enum State(0="Power On Reset", 1="Ready", 2="Following", 3="Fault", 
-  4="Forming", 5="Reconnect Delay", 6="N/A", 7="Area EPS Lost", 8="Charging", 
-  9="N/A", 10="N/A", 11="N/A", 12="N/A", 13="N/A", 14="N/A", 15="N/A")
 enum Status(0="Not Active", 1="Active", 2="Error", 3="N/A")
 enum WARNING(0="Normal", 1="Warning Active", 2="Error", 3="N/A")
-enum WakeUpSignal(0="Not Active", 1="Active", 2="Error", 3="N/A")
-enum WarningClear(0="Normal", 1="Clear Warnings", 2="Error", 3="N/A")
+enum DcLegType(0="Voltage Control", 1="Current Control", 2="MPPT", 
+  4="Disabled")
+enum PrechargeType(0="AC", 1="DC", 2="AC_DC", 3="Disable")
+enum PrechargeRelay(0="N/A", 1="RelayMX2", 2="RelayK1", 3="N/A")
+enum DeviceTempMethod(0="Instantaneous", 1="Average", 2="Error", 3="N/A")
+enum Meta(0="Value", 1="UserDefault", 2="FactoryDefault", 3="Minimum", 
+  4="Maximum")
+enum AccessLevel(0="User", 1="Engineering", 2="Factory")
 
 {SEND}
 
@@ -50,90 +57,102 @@ enum WarningClear(0="Normal", 1="Clear Warnings", 2="Error", 3="N/A")
 ID=1DEFF741h	// Provides access to configure non-volatile parameters.
 Type=Extended
 DLC=8
-Mux=Param0 0,14 0 
+Mux=Param0 0,11 0 
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 
 [ParameterQuery]
 DLC=8
-Mux=LVM_ClearingTimes1 0,14 1 	// Line Voltage Monitor fault times.
+Mux=LVM_ClearingTimes1 0,11 1 	// Line Voltage Monitor fault times.
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=VUnder45pct unsigned 16,16 /u:ms /min:1 /max:160 /d:160	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains under 45 percent of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
-Var=V45to60pct unsigned 32,16 /u:ms /min:1 /max:11000 /d:1000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between 50 and 88 percent of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
-Var=V60toUVThresh unsigned 48,16 /u:ms /min:1 /max:21000 /d:2000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between 60 and the undervoltage threshold percent of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
+Var=Meta unsigned 11,3 /e:Meta
+Var=VUnder45pct unsigned 16,16 /u:ms /min:1 /max:160 /d:160	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains under 45 percent of the nominal value specified by the VoltageRef parameter while the inverter is running in GRID FOLLOWING mode.  <nv::allLineMonitorParams{}.lvmClearingTimes[CLEARING_TIME_V_UNDER_45]>
+Var=V45to60pct unsigned 32,16 /u:ms /min:1 /max:11000 /d:1000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between 45 and 60 percent of the nominal value specified by the VoltageRef parameter while the inverter is running in GRID FOLLOWING mode.  <nv::allLineMonitorParams{}.lvmClearingTimes[CLEARING_TIME_V_45_TO_60]>
+Var=V60toUVThresh unsigned 48,16 /u:ms /min:1 /max:21000 /d:2000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between 60 percent and the undervoltage threshold of the nominal value specified by the VoltageRef parameter while the inverter is running in GRID FOLLOWING mode.  <nv::allLineMonitorParams{}.lvmClearingTimes[CLEARING_TIME_V_60_TO_LOLIM]>
 
 [ParameterQuery]
 DLC=8
-Mux=LVM_ClearingTimes2 0,14 2 	// Line Voltage Monitor fault times.
+Mux=LVM_ClearingTimes2 0,11 2 	// Line Voltage Monitor fault times.
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=OVThreshTo120pct unsigned 16,16 /u:ms /min:1 /max:13000 /d:1000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between the overvoltage threshold and 120 percent of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
-Var=VOver120 unsigned 32,16 /u:ms /min:1 /max:160 /d:160	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains Over 120 percent of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
-Var=VoltageMeasurement unsigned 48,2 /max:1 /e:LVMTYPE	// Select line voltage measurement type for line voltage monitor
+Var=Meta unsigned 11,3 /e:Meta
+Var=OVThreshTo120pct unsigned 16,16 /u:ms /min:1 /max:13000 /d:1000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between the overvoltage threshold and 120 percent of the nominal value specified by the VoltageRef parameter while the inverter is running in GRID FOLLOWING mode.  <nv::allLineMonitorParams{}.lvmClearingTimes[CLEARING_TIME_V_HILIM_TO_120]>
+Var=VOver120 unsigned 32,16 /u:ms /min:1 /max:160 /d:160	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains Over 120 percent of the nominal value specified by the VoltageRef parameter while the inverter is running in GRID FOLLOWING mode.  <nv::allLineMonitorParams{}.lvmClearingTimes[CLEARING_TIME_V_OVER_120]>
+Var=VoltageMeasurement unsigned 48,2 /max:1 /e:LVMTYPE	// Select line voltage measurement type for line voltage monitor  <nv::allLineMonitorParams{}.measureLine_N>
 
 [ParameterQuery]
 DLC=8
-Mux=LFM_UnderFreqLimits 0,14 3 	// Line under-frequency Monitor limits.
+Mux=LFM_UnderFreqLimits 0,11 3 	// Line under-frequency Monitor limits.
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=UF1 unsigned 16,16 /u:Hz /f:0.1 /min:40 /max:70 /d:57	// Determines the upper bound, above which the frequency monitor will trip if the line frequency remains for the time specified in FreqHi of the LFM_ClearingTimes Mux.
 Var=UF2 unsigned 32,16 /u:Hz /f:0.1 /min:40 /max:70 /d:59.5	// Determines the upper bound, in which the frequency monitor will trip if the line frequency remains below this bound but above the value of FreqVeryLo for the time specified in FreqLo of the LFM_ClearingTimes Mux.
 
 [ParameterQuery]
 DLC=8
-Mux=LFM_ClearingTimesUF1 0,14 4 	// Line Frequency Monitor Trip times
+Mux=LFM_ClearingTimesUF1 0,11 4 	// Line Frequency Monitor Trip times
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=UF1 unsigned 32,32 /u:ms /min:1 /max:10000 /d:160	// Determines the time it will take for a fault trip to occur when line frequency remains below the value specified in FreqVeryLo of the LFM_Limits Mux when the inverter is in GRID FOLLOWING mode.
 
 [ParameterQuery]
 DLC=8
-Mux=J1939_Interface 0,14 5 	// J1939 interface parameters
-Var=NodeID unsigned 16,8 /max:247 /d:247	// J1939 Source Address node for the module.
-Var=MasterAddr unsigned 24,8 /d:65	// Not presently used.
-Var=Baudrate unsigned 32,4 /max:3 /e:Baudrate /d:2	// CAN baudrate
+Mux=J1939_Interface 0,11 5 	// J1939 interface parameters 
+Var=NodeID unsigned 16,8 /max:247 /d:247	// J1939 Source Address node for the module. <nv::allJ1939Params{}.nodeID>
+Var=MasterAddr unsigned 24,8 /d:65	// Not presently used. <nv::allJ1939Params{}.masterAddr>
+Var=Baudrate unsigned 32,4 /max:3 /e:Baudrate /d:2	// CAN baudrate <nv:c:allJ1939Params{}.baud>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 
 [ParameterQuery]
 DLC=8
-Mux=Fault_Config 0,14 6 	// Allows configuration of various fault conditions to either trip the inverter, or provide a warning status via CAN
+Mux=Fault_Config 0,11 6 	// Allows configuration of various fault conditions to either trip the inverter, or provide a warning status via CAN
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=FilterOvertemp unsigned 22,2 /max:2 /e:FaultConfig /d:1	// Configures action to take when filter overtemperature is detected.
-Var=FanCircuit unsigned 20,2 /max:1 /e:FaultConfig /d:1	// Configured action to take when monitored fan circuit input is lost.  <factory>
+Var=Meta unsigned 11,3 /e:Meta
+Var=FilterOvertemp unsigned 22,2 /max:2 /e:FaultConfig /d:1	// Configures action to take when filter overtemperature is detected.  <nv:c:allAppFaultConfigurationParams{}[FLT_CFG_THERMAL_OVERLOAD]>
+Var=FanCircuit unsigned 20,2 /max:2 /e:FaultConfig /d:1	// Configured action to take when monitored fan circuit input is lost.  <factory>  <nv:c:allAppFaultConfigurationParams{}[FLT_CFG_FAN_CIRCUIT]>
 
 [ParameterQuery]
 DLC=8
-Mux=ContactorDelays1 0,14 7 	// Sets the time the controller assumes it will take for contactors to open/close.
+Mux=ContactorDelays1 0,11 7 	// Sets the time the controller assumes it will take for contactors to open/close.
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=MX1Open unsigned 16,16 /u:ms /max:5000 /d:70	// Maximum time required for the MX1 contactor to open.
-Var=MX1Close unsigned 32,16 /u:ms /max:5000 /d:20	// Maximum time required for the MX1 contactor to close.
-Var=MX2Open unsigned 48,16 /u:ms /max:5000 /d:70	// Maximum time required for the MX2 contactor to open.
+Var=Meta unsigned 11,3 /e:Meta
+Var=MX1Open unsigned 16,16 /u:ms /max:5000 /d:70	// Maximum time required for the MX1 contactor to open.  <nv::allIoParams{}.relayDelays[relayMX1].open>
+Var=MX1Close unsigned 32,16 /u:ms /max:5000 /d:20	// Maximum time required for the MX1 contactor to close.  <nv::allIoParams{}.relayDelays[relayMX1].close>
+Var=MX2Open unsigned 48,16 /u:ms /max:5000 /d:70	// Maximum time required for the MX2 contactor to open.  <nv::allIoParams{}.relayDelays[relayMX2].open>
 
 [ParameterQuery]
 DLC=8
-Mux=ContactorDelays2 0,14 8 	// Sets the time the controller assumes it will take for contactors to open/close.
+Mux=ContactorDelays2 0,11 8 	// Sets the time the controller assumes it will take for contactors to open/close.
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=MX2Close unsigned 16,16 /u:ms /max:5000 /d:20	// Maximum time required for the MX2 contactor to open.
-Var=K1Open unsigned 32,16 /u:ms /max:2000	// Maximum time required for the K1 contactor to open.
-Var=K1Close unsigned 48,16 /u:ms /max:2000 /d:20	// Maximum time required for the K1 contactor to close.
+Var=Meta unsigned 11,3 /e:Meta
+Var=MX2Close unsigned 16,16 /u:ms /max:5000 /d:20	// Maximum time required for the MX2 contactor to open.  <nv::allIoParams{}.relayDelays[relayMX2].close>
+Var=K1Open unsigned 32,16 /u:ms /max:2000	// Maximum time required for the K1 contactor to open.  <nv::allIoParams{}.relayDelays[relayK1].open>
+Var=K1Close unsigned 48,16 /u:ms /max:2000 /d:20	// Maximum time required for the K1 contactor to close.  <nv::allIoParams{}.relayDelays[relayK1].close>
 
 [ParameterQuery]
 DLC=8
-Mux=ContactorDelays3 0,14 9 	// Sets the time the controller assumes it will take for contactors to open/close.
+Mux=ContactorDelays3 0,11 9 	// Sets the time the controller assumes it will take for contactors to open/close.
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=K2Open unsigned 16,16 /u:ms /max:2000	// Maximum time required for the K2 contactor to open.
-Var=K2Close unsigned 32,16 /u:ms /max:2000 /d:20	// Maximum time required for the K2 contactor to close.
+Var=Meta unsigned 11,3 /e:Meta
+Var=K2Open unsigned 16,16 /u:ms /max:2000	// Maximum time required for the K2 contactor to open.  <nv::allIoParams{}.relayDelays[relayK2].open>
+Var=K2Close unsigned 32,16 /u:ms /max:2000 /d:20	// Maximum time required for the K2 contactor to close.  <nv::allIoParams{}.relayDelays[relayK2].close>
 
 [ParameterQuery]
 DLC=8
-Mux=HardwareDef1 0,14 000Ah
+Mux=HardwareDef1 0,11 00Ah
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=DeviceOvertempLimit unsigned 16,16 /u:C /max:200 /d:150	// <factory>
-Var=EnableCalcIDCTrip unsigned 36,2 /max:1 /e:Enable /d:1 /ln:"Calc. IDC trip"	// Enable trip on calculated IDC <factory>
-Var=EnablePumpControl unsigned 38,2 /max:1 /e:Enable /d:1 /ln:"Enable Pump Control"
+Var=Meta unsigned 11,3 /e:Meta
+Var=DeviceOvertempLimit unsigned 16,16 /u:C /max:200 /d:150	// <factory> <nv::allHwParams{}.deviceOvertempLimit>
+Var=EnableCalcIDCTrip unsigned 36,2 /max:1 /e:Enable /d:1 /ln:"Calc. IDC trip"	// Enable trip on calculated IDC <factory> <nv::allHwParams{}.enableIDCTotalFault>
+Var=EnablePumpControl unsigned 38,2 /max:1 /e:Enable /d:1 /ln:"Enable Pump Control"	// <nv::allHwParams{}.useDigitalPump>
 
 [ParameterQuery]
 DLC=8
-Mux=AFF 0,14 000Bh	// Configures active harmonic cancellation.
+Mux=AFF 0,11 00Bh	// Configures active harmonic cancellation.
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=EnablePSAff unsigned 16,2 /max:1 /p:0 /e:Enable /d:1	// Enables/disables positive sequence AFF controller
-Var=EnableNSAff unsigned 18,2 /max:1 /e:Enable /d:1	// Enables/disables negative sequence AFF controller.
+Var=Meta unsigned 11,3 /e:Meta
+Var=EnablePSAff unsigned 16,2 /max:1 /p:0 /e:Enable /d:1	// Enables/disables positive sequence AFF controller  <nv::allAfeParams{}.affConfig[AFF_CFG_PS].enable>
+Var=EnableNSAff unsigned 18,2 /max:1 /e:Enable /d:1	// Enables/disables negative sequence AFF controller.  <nv::allAfeParams{}.affConfig[AFF_CFG_NS].enable>
 Var=PSGain unsigned 32,8 /f:0.01 /p:2 /d:0.02	// <factory>
 Var=PSLimit unsigned 40,8 /f:0.01 /p:2 /d:0.05	// <factory>
 Var=NSGain unsigned 48,8 /f:0.01 /p:2 /d:0.02	// <factory>
@@ -141,14 +160,16 @@ Var=NSLimit unsigned 56,8 /f:0.01 /p:2 /d:0.05	// <factory>
 
 [ParameterQuery]
 DLC=8
-Mux=ManageNV 0,14 000Ch
+Mux=ManageNV 0,11 00Ch
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=SaveToEE_command unsigned 16,2 /max:1 /e:Enable	// Save active parameters to nonvolatile memory.
 
 [ParameterQuery]
 DLC=8
-Mux=Serial 0,14 000Dh
+Mux=Serial 0,11 00Dh
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=Protocol unsigned 22,2 /e:SerialProtocol
 Var=Baudrate unsigned 16,3 /max:6 /e:SerialBaud /d:4	// Serial bit rate
 Var=DropNum unsigned 24,8 /min:1 /max:247 /d:1 /ln:"Modbus Drop"	// Modbus slave address
@@ -157,545 +178,625 @@ Var=MonitorTimeout unsigned 32,32 /u:ms /max:30000 /d:1000 /ln:"Monitor Timeout"
 
 [ParameterQuery]
 DLC=8
-Mux=SN 0,14 0010h	// Serial number
+Mux=SN 0,11 010h	// Serial number
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=SerialNumber unsigned 32,32	// Inverter Serial Number
 
 [ParameterQuery]
 DLC=8
-Mux=SoftwareRevisions 0,14 0011h
+Mux=SoftwareRevisions 0,11 011h
 Var=ReadParam_command unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=InterfaceRev unsigned 16,16 /f:0.01 /p:2	// Software revision of the CAN communication interface.
 Var=ControlSwRev unsigned 32,16 /f:0.01 /p:2	// Software revision of the control firmware.
 
 [ParameterQuery]
 DLC=8
-Mux=BuildTime 0,14 0012h
+Mux=BuildTime 0,11 012h
 Var=ReadParam_command unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=BuildTime unsigned 32,32	// Build timestamp.
 
 [ParameterQuery]
 DLC=8
-Mux=SoftwareHash 0,14 0013h
+Mux=SoftwareHash 0,11 013h
 Var=ReadParam_command unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=SoftwareHash unsigned 32,28 -h	// Unique revision identification hashcode.
 
 [ParameterQuery]
 DLC=8
-Mux=ManageDIO 0,14 0014h
+Mux=ManageDIO 0,11 014h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=InvertDI1 unsigned 16,2 /max:1 /e:DIOInverted	// Invert DI1 polarity
-Var=InvertDI2 unsigned 18,2 /max:1 /e:DIOInverted	// Invert DI2 polarity
-Var=InvertDI3 unsigned 20,2 /max:1 /e:DIOInverted	// Invert DI3 polarity
-Var=InvertDI4 unsigned 22,2 /max:1 /e:DIOInverted	// Invert DI4 polarity
-Var=InvertDO1 unsigned 24,2 /max:1 /e:DIOInverted	// Invert DO1 polarity
-Var=InvertDO2 unsigned 26,2 /max:1 /e:DIOInverted	// Invert DO2 polarity
-Var=InvertDO3 unsigned 28,2 /max:1 /e:DIOInverted	// Invert DO3 polarity
-Var=InvertDO4 unsigned 30,2 /max:1 /e:DIOInverted	// Invert DO4 polarity
-Var=ForceRelayMX1 unsigned 38,2 /max:1 /e:RelayCommand /ln:"Close MX1"	// If set to 'Force On,' will force the relay closed, overriding firmware state machine commands.  Meant for diagnostic purposes only.
-Var=ForceRelayMX2 unsigned 36,2 /max:1 /e:RelayCommand /ln:"Close MX2"	// If set to 'Force On,' will force the relay closed, overriding firmware state machine commands.  Meant for diagnostic purposes only.
-Var=ForceRelayK1_Precharge unsigned 34,2 /max:1 /p:0 /e:RelayCommand /ln:"Close K1 precharge"	// If set to 'Force On,' will force the relay closed, overriding firmware state machine commands.  Meant for diagnostic purposes only.
-Var=ForceRelayRelayK2_DCRun unsigned 32,2 /max:1 /e:RelayCommand /ln:"Close K2"	// If set to 'Force On,' will force the relay closed, overriding firmware state machine commands.  Meant for diagnostic purposes only.
-Var=DO1Controller unsigned 46,2 /max:1 /e:DOController	// control source for DO1
-Var=DO2Controller unsigned 44,2 /max:1 /e:DOController	// control source for DO2
-Var=DO3Controller unsigned 42,2 /max:1 /e:DOController	// control source for DO3
-Var=DO4Controller unsigned 40,2 /max:1 /e:DOController	// control source for DO4
-Var=DO1Command unsigned 54,2 /max:1 /e:OnOff	// Output command for DO1 if CAN is selected as controller
-Var=DO2Command unsigned 52,2 /max:1 /e:OnOff	// Output command for DO2 if CAN is selected as controller
-Var=DO3Command unsigned 50,2 /max:1 /e:OnOff	// Output command for DO3 if CAN is selected as controller
-Var=DO4Command unsigned 48,2 /max:1 /e:OnOff	// Output command for DO4 if CAN is selected as controller
-Var=ForceFanOn unsigned 60,2 /max:1 /e:RelayCommand /ln:"Force fan on"	// Forces cooling fan on (air cooled units only)
-Var=InvertHwEnable unsigned 62,2 /max:1 /e:InvertHwEnable /ln:"Invert hardware enable"	// Inverts the logic of the Hardware Enable input.
+Var=Meta unsigned 11,3 /e:Meta
+Var=InvertDI1 unsigned 16,2 /max:1 /e:DIOInverted	// Invert DI1 polarity  <nv::allIoParams{}.diInvert[0]>
+Var=InvertDI2 unsigned 18,2 /max:1 /e:DIOInverted	// Invert DI2 polarity  <nv::allIoParams{}.diInvert[1]>
+Var=InvertDI3 unsigned 20,2 /max:1 /e:DIOInverted	// Invert DI3 polarity  <nv::allIoParams{}.diInvert[2]>
+Var=InvertDI4 unsigned 22,2 /max:1 /e:DIOInverted	// Invert DI4 polarity  <nv::allIoParams{}.diInvert[3]>
+Var=InvertDO1 unsigned 24,2 /max:1 /e:DIOInverted	// Invert DO1 polarity  <nv::allIoParams{}.doInvert[0]>
+Var=InvertDO2 unsigned 26,2 /max:1 /e:DIOInverted	// Invert DO2 polarity  <nv::allIoParams{}.doInvert[1]>
+Var=InvertDO3 unsigned 28,2 /max:1 /e:DIOInverted	// Invert DO3 polarity  <nv::allIoParams{}.doInvert[2]>
+Var=InvertDO4 unsigned 30,2 /max:1 /e:DIOInverted	// Invert DO4 polarity  <nv::allIoParams{}.doInvert[3]>
+Var=ForceRelayMX1 unsigned 38,2 /max:1 /e:RelayCommand /ln:"Close MX1"	// If set to 'Force On,' will force the relay closed, overriding firmware state machine commands.  Meant for diagnostic purposes only.  <nv::allIoParams{}.forceRelayCmds[relayMX1]>
+Var=ForceRelayMX2 unsigned 36,2 /max:1 /e:RelayCommand /ln:"Close MX2"	// If set to 'Force On,' will force the relay closed, overriding firmware state machine commands.  Meant for diagnostic purposes only.  <nv::allIoParams{}.forceRelayCmds[relayMX2]>
+Var=ForceRelayK1_Precharge unsigned 34,2 /max:1 /p:0 /e:RelayCommand /ln:"Close K1 precharge"	// If set to 'Force On,' will force the relay closed, overriding firmware state machine commands.  Meant for diagnostic purposes only.  <nv::allIoParams{}.forceRelayCmds[relayK1]>
+Var=ForceRelayRelayK2_DCRun unsigned 32,2 /max:1 /e:RelayCommand /ln:"Close K2"	// If set to 'Force On,' will force the relay closed, overriding firmware state machine commands.  Meant for diagnostic purposes only.  <nv::allIoParams{}.forceRelayCmds[relayK2]>
+Var=DO1Controller unsigned 46,2 /max:1 /e:DOController	// control source for DO1  <nv:c:allIoParams{}.doCtlSrc[DO_FAN_COOLANT]>
+Var=DO2Controller unsigned 44,2 /max:1 /e:DOController	// control source for DO2  <nv:c:allIoParams{}.doCtlSrc[DO_FAN_CABINET]>
+Var=DO3Controller unsigned 42,2 /max:1 /e:DOController	// control source for DO3  <nv:c:allIoParams{}.doCtlSrc[DO_PUMP_RUN]>
+Var=DO4Controller unsigned 40,2 /max:1 /e:DOController	// control source for DO4  <nv:c:allIoParams{}.doCtlSrc[DO_PUMP_RESET]>
+Var=DO1Command unsigned 54,2 /max:1 /e:OnOff	// Output command for DO1 if CAN is selected as controller  <nv::allIoParams{}.doOverride[DO_FAN_COOLANT]>
+Var=DO2Command unsigned 52,2 /max:1 /e:OnOff	// Output command for DO2 if CAN is selected as controller  <nv::allIoParams{}.doOverride[DO_FAN_CABINET]>
+Var=DO3Command unsigned 50,2 /max:1 /e:OnOff	// Output command for DO3 if CAN is selected as controller  <nv::allIoParams{}.doOverride[DO_PUMP_RUN]>
+Var=DO4Command unsigned 48,2 /max:1 /e:OnOff	// Output command for DO4 if CAN is selected as controller  <nv::allIoParams{}.doOverride[DO_PUMP_RESET]>
+Var=ForceFanOn unsigned 60,2 /max:1 /e:RelayCommand /ln:"Force fan on"	// Forces cooling fan on (air cooled units only)  <nv::allIoParams{}.forceFanOn>
+Var=InvertHwEnable unsigned 62,2 /max:1 /e:InvertHwEnable /ln:"Invert hardware enable"	// Inverts the logic of the Hardware Enable input.  <nv::allIoParams{}.invertHwEnable>
 
 [ParameterQuery]
 DLC=8
-Mux=LocalPLLGain 0,14 0015h
+Mux=LocalPLLGain 0,11 015h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=LocalPLLGain unsigned 16,16 /f:0.001 /min:0.01 /p:3 /d:1 /ln:"Loc. PLL Gain"	// Gain to be applied to the line voltage feedback signals, typically used when sensing voltage on the other side of a transformer.
 
 [ParameterQuery]
 DLC=8
-Mux=LocalPLLOffset 0,14 0016h
+Mux=LocalPLLOffset 0,11 016h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=LocalPLLOffset signed 16,16 /u:deg /min:-180 /max:180 /ln:"Loc. PLL Offset"	// Phase shift angle to be applied to the PLL, typically used when sensing voltage on the other side of a transformer.
 
 [ParameterQuery]
 DLC=8
-Mux=RemotePLLGain 0,14 0017h
+Mux=RemotePLLGain 0,11 017h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=RemotePLLGain unsigned 16,16 /f:0.001 /min:0.01 /p:3 /d:1 /ln:"Rem. PLL Gain"	// Gain to be applied to the line voltage feedback signals, typically used when sensing voltage on the other side of a transformer.
 
 [ParameterQuery]
 DLC=8
-Mux=RemotePLLOffset 0,14 0018h
+Mux=RemotePLLOffset 0,11 018h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=RemotePLLOffset signed 16,16 /u:deg /min:-180 /max:180 /ln:"Rem. PLL Offset"	// Phase shift angle to be applied to the PLL, typically used when sensing voltage on the other side of a transformer.
 
 [ParameterQuery]
 DLC=8
-Mux=VoltsPerAmpComp 0,14 0019h
+Mux=VoltsPerAmpComp 0,11 019h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=VoltsPerAmpComp signed 16,16 /f:0.0001 /min:-1 /max:1 /p:4 /d:0 /ln:"V/A comp"	// Open loop AC voltage compensation term on a per amp basis; used in forming mode.
 
 [ParameterQuery]
 DLC=8
-Mux=RealCurrentOffset 0,14 001Ah
+Mux=RealCurrentOffset 0,11 01Ah
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=RealCurrentOffset signed 32,32 /u:A/V /f:1E-005 /p:5 /d:0.06126
 
 [ParameterQuery]
 DLC=8
-Mux=ReactiveCurrentOffset 0,14 001Bh
+Mux=ReactiveCurrentOffset 0,11 01Bh
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=ReactiveCurrentOffset signed 32,32 /u:A/V /f:1E-005 /p:5 /d:0.18919
 
 [ParameterQuery]
 DLC=8
-Mux=Inductance 0,14 001Ch	// <HYDRA>
+Mux=Inductance 0,11 01Ch	// <HYDRA>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
-Var=legInductance1 unsigned 16,16 /u:uH /f:0.1 /min:0.1 /max:2000 /d:150 /ln:"Leg 1 Inductance"
-Var=legInductance2 unsigned 32,16 /u:uH /f:0.1 /min:0.1 /max:2000 /d:150 /ln:"Leg 2 Inductance"
-Var=legInductance3 unsigned 48,16 /u:uH /f:0.1 /min:0.1 /max:2000 /d:150 /ln:"Leg 3 Inductance"
+Var=Meta unsigned 11,3 /e:Meta
+Var=legInductance1 unsigned 16,16 /u:uH /f:0.1 /min:0.1 /max:2000 /d:150 /ln:"Leg 1 Inductance"	// <nv::f10e6:allDcdcParams{}.legInductance[0]>
+Var=legInductance2 unsigned 32,16 /u:uH /f:0.1 /min:0.1 /max:2000 /d:150 /ln:"Leg 2 Inductance"	// <nv::f10e6:allDcdcParams{}.legInductance[1]>
+Var=legInductance3 unsigned 48,16 /u:uH /f:0.1 /min:0.1 /max:2000 /d:150 /ln:"Leg 3 Inductance"	// <nv::f10e6:allDcdcParams{}.legInductance[2]>
 
 [ParameterQuery]
 DLC=8
-Mux=VoltageControlGains 0,14 001Dh	// <factory>
+Mux=VoltageControlGains 0,11 01Dh	// <factory>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=Kp signed 16,16 /f:0.001	// Proportional Gain
 Var=Ki signed 32,16 /f:1E-005 /p:5	// Integral Gain
 
 [ParameterQuery]
 DLC=8
-Mux=VoltageControlLimits 0,14 001Eh	// <factory>
+Mux=VoltageControlLimits 0,11 01Eh	// <factory>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=min signed 16,16 /f:0.001 /p:3	// lower limit
 Var=max signed 32,16 /f:0.001 /p:3	// upper limit
 
 [ParameterQuery]
 DLC=8
-Mux=CurrentControlBoostGains 0,14 001Fh	// <factory>
+Mux=CurrentControlBoostGains 0,11 01Fh	// <factory>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=Kp signed 16,16 /f:0.001 /p:3	// Proportional Gain
 Var=Ki signed 32,16 /f:1E-005 /p:5	// Integral Gain
 
 [ParameterQuery]
 DLC=8
-Mux=CurrentControlBoostLimits 0,14 0020h	// <factory>
+Mux=CurrentControlBoostLimits 0,11 020h	// <factory>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=min signed 16,16 /f:0.001 /p:3	// lower limit
 Var=max signed 32,16 /f:0.001 /p:3	// upper limit 
 
 [ParameterQuery]
 DLC=8
-Mux=AffSteps 0,14 0021h	// <factory>
+Mux=AffSteps 0,11 021h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=affSteps unsigned 16,16 /f:0.1 /max:100
 
 [ParameterQuery]
 DLC=8
-Mux=DQCCTerm 0,14 0022h	// <factory>
+Mux=DQCCTerm 0,11 022h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=dqCCTerm signed 32,32 /f:1E-006 /p:6 /d:0.092363
 
 [ParameterQuery]
 DLC=8
-Mux=ActiveDamping 0,14 0023h	// <factory>
+Mux=ActiveDamping 0,11 023h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=alpha signed 16,16 /f:0.001 /min:-0.5 /max:0.5 /p:3 /d:0
 Var=beta signed 32,16 /f:0.001 /min:-0.5 /max:0.5 /p:3 /d:0
-Var=VDcDelaySteps unsigned 48,16 /u:steps /max:100
+Var=VDcDelaySteps unsigned 48,16 /u:steps /max:100	// <nv::allAfeParams{}.vDC_delaySteps>
 
 [ParameterQuery]
 DLC=8
-Mux=AFF_DrainFactor 0,14 0024h	// <factory>
+Mux=AFF_DrainFactor 0,11 024h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=PS unsigned 16,16 /f:0.01 /max:1
 Var=NS unsigned 32,16 /f:0.01 /max:1
 
 [ParameterQuery]
 DLC=8
-Mux=MinPulse 0,14 0025h	// <factory>
+Mux=MinPulse 0,11 025h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=minPulseTime unsigned 16,16 /u:ns /max:8000 /d:4000
+Var=Meta unsigned 11,3 /e:Meta
+Var=minPulseTime unsigned 16,16 /u:ns /max:8000 /d:4000	// <nv::allHwParams{}.deviceOvertempLimit>
 
 [ParameterQuery]
 DLC=8
-Mux=Deadtime 0,14 0026h	// <factory>
+Mux=Deadtime 0,11 026h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=time unsigned 16,16 /u:ns /min:800 /max:2500 /d:1400
+Var=Meta unsigned 11,3 /e:Meta
+Var=time unsigned 16,16 /u:ns /min:800 /max:2500 /d:1400	// <nv::allHwParams{}.deadband_ns>
 
 [ParameterQuery]
 DLC=8
-Mux=Fan_Coolant 0,14 0027h
+Mux=Fan_Coolant 0,11 027h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=tempSetpoint unsigned 16,16 /u:C /max:40 /d:35
+Var=Meta unsigned 11,3 /e:Meta
+Var=tempSetpoint unsigned 16,16 /u:C /max:100 /d:35	// <nv::allHwParams{}.fanCoolantTempSet>
 
 [ParameterQuery]
 DLC=8
-Mux=Fan_Cabinet 0,14 0028h
+Mux=Fan_Cabinet 0,11 028h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=tempSetpoint unsigned 16,16 /u:C /max:50 /d:35	// Temperature at which fan is enabled.
+Var=Meta unsigned 11,3 /e:Meta
+Var=tempSetpoint unsigned 16,16 /u:C /max:50 /d:35	// Temperature at which fan is enabled. <nv::allHwParams{}.fanCabinetTempSet>
 
 [ParameterQuery]
 DLC=8
-Mux=HiTempInvReady 0,14 0029h	// <factory>
+Mux=HiTempInvReady 0,11 029h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=temp unsigned 16,16 /u:C /max:180 /d:70
+Var=Meta unsigned 11,3 /e:Meta
+Var=temp unsigned 16,16 /u:C /max:180 /d:70	// <nv::allHwParams{}.hiTempInvReady>
 
 [ParameterQuery]
 DLC=8
-Mux=HiTempInvRun 0,14 002Ah	// <factory>
+Mux=HiTempInvRun 0,11 02Ah	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=temp unsigned 16,16 /u:C /max:180 /d:75
+Var=Meta unsigned 11,3 /e:Meta
+Var=temp unsigned 16,16 /u:C /max:180 /d:75	// <nv::allHwParams{}.hiTempInvRun>
 
 [ParameterQuery]
 DLC=8
-Mux=HiTempIGBTReady 0,14 002Bh	// <factory>
+Mux=HiTempIGBTReady 0,11 02Bh	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=temp unsigned 16,16 /u:C /max:180 /d:70
+Var=Meta unsigned 11,3 /e:Meta
+Var=temp unsigned 16,16 /u:C /max:180 /d:70	// <nv::allHwParams{}.hiTempIGBTReady>
 
 [ParameterQuery]
 DLC=8
-Mux=HiTempIGBTRun 0,14 002Ch	// <factory>
+Mux=HiTempIGBTRun 0,11 02Ch	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=temp unsigned 16,16 /u:C /max:180 /d:90
+Var=Meta unsigned 11,3 /e:Meta
+Var=temp unsigned 16,16 /u:C /max:180 /d:90	// <nv::allHwParams{}.hiTempIGBTRun>
 
 [ParameterQuery]
 DLC=8
-Mux=AfeConfig 0,14 002Dh
+Mux=AfeConfig 0,11 02Dh
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=EnableZSC unsigned 20,2 /max:1 /e:Enable	// Enables DC current injection limiter.
-Var=EnableForming unsigned 18,2 /max:1 /e:Enable	// Islanding mode allowed
-Var=EnableFollowing unsigned 16,2 /max:1 /e:Enable /d:1	// Grid-connect mode allowed
-Var=PhaseRotation unsigned 24,2 /max:1 /e:PhaseRotation /ln:"Positive phase rotation"	// Specifies phase rotation direction.  Only active while transitioning from READY to GRID_FORMING.
-Var=EnableSplitPhase unsigned 32,2 /max:1 /e:EnableSplitPhase /ln:"Split phase"	// Commands the inverter into split-phase mode.
-Var=EnableUPSMode unsigned 28,2 /max:1 /e:EnableUPSMode /ln:"UPS Mode"	// Enables uninterruptible operation when transitioning from GRID FOLLOWING to GRID FORMING operation.  If operating in GRID FOLLOWING mode, and AC grid voltage is interrupted, the module will attempt to transition to GRID FORMING mode, with no interruption
-Var=UseVoltageSenseAsRemote unsigned 30,2 /max:1 /e:RemoteVoltageSense /ln:"Use VSense as remote"	// Use local voltage sense input as either local or remote reference.
-Var=EnableAC unsigned 34,2 /max:1 /e:Enable	// Enable AC power stage
-Var=EnableDC unsigned 36,2 /max:1 /e:Enable /d:1	// Enable DC power stage
-Var=EnableDcControl unsigned 38,2 /e:Enable /d:1 // <factory>
+Var=Meta unsigned 11,3 /e:Meta
+Var=EnableZSC unsigned 20,2 /max:1 /e:Enable	// Enables DC current injection limiter.  <nv::allAfeParams{}.cfgFlags.EnableZSC>
+Var=EnableForming unsigned 18,2 /max:1 /e:Enable	// Islanding mode allowed  <nv::allAfeParams{}.cfgFlags.allowForming>
+Var=EnableFollowing unsigned 16,2 /max:1 /e:Enable /d:1	// Grid-connect mode allowed  <nv::allAfeParams{}.cfgFlags.allowFollowing>
+Var=PhaseRotation unsigned 24,2 /max:1 /e:PhaseRotation /ln:"Positive phase rotation"	// Specifies phase rotation direction.  Only active while transitioning from READY to GRID_FORMING.  <nv::allAfeParams{}.cfgFlags.phaseRotationCmd>
+Var=EnableSplitPhase unsigned 32,2 /max:1 /e:EnableSplitPhase /ln:"Split phase"	// Commands the inverter into split-phase mode.  <nv::allAfeParams{}.cfgFlags.enableSplitPhase>
+Var=EnableUPSMode unsigned 28,2 /max:1 /e:EnableUPSMode /ln:"UPS Mode"	// Enables uninterruptible operation when transitioning from GRID FOLLOWING to GRID FORMING operation.  If operating in GRID FOLLOWING mode, and AC grid voltage is interrupted, the module will attempt to transition to GRID FORMING mode, with no interruption  <nv::allAfeParams{}.cfgFlags.enableUPSMode>
+Var=UseVoltageSenseAsRemote unsigned 30,2 /max:1 /e:RemoteVoltageSense /ln:"Use VSense as remote"	// Use local voltage sense input as either local or remote reference.  <nv::allAfeParams{}.cfgFlags.useVoltageRemote>
+Var=EnableAC unsigned 34,2 /max:1 /e:Enable	// Enable AC power stage  <nv::allAfeParams{}.cfgFlags.allowACStage>
+Var=EnableDC unsigned 36,2 /max:1 /e:Enable /d:1	// Enable DC power stage  <nv::allAfeParams{}.cfgFlags.allowDCStage>
+Var=EnableDcControl unsigned 38,2 /e:Enable /d:1	// <factory>  <nv::allAfeParams{}.cfgFlags.allowDCControl>
 
 [ParameterQuery]
 DLC=8
-Mux=TOL_ACFast 0,14 002Eh	// <factory>
+Mux=TOL_ACFast 0,11 02Eh	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:ARMS /max:800 /d:560
-Var=time unsigned 32,16 /u:seconds /min:1 /max:3600 /d:10
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:ARMS /max:800 /d:560	// <nv::f1:allHwParams{}.tol[TOL_AC_FAST].level>
+Var=time unsigned 32,16 /u:seconds /min:1 /max:3600 /d:10	// <nv::f1:allHwParams{}.tol[TOL_AC_FAST].time>
 
 [ParameterQuery]
 DLC=8
-Mux=TOL_ACSlow 0,14 002Fh	// <factory>
+Mux=TOL_ACSlow 0,11 02Fh	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:ARMS /max:800 /d:440
-Var=time unsigned 32,16 /u:seconds /min:1 /max:3600 /d:600
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:ARMS /max:800 /d:440	// <nv::f1:allHwParams{}.tol[TOL_AC_SLOW].level>
+Var=time unsigned 32,16 /u:seconds /min:1 /max:3600 /d:600	// <nv::f1:allHwParams{}.tol[TOL_AC_SLOW].time>
 
 [ParameterQuery]
 DLC=8
-Mux=TOL_DCFast 0,14 0030h	// <factory>
+Mux=TOL_DCFast 0,11 030h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:ADC /max:800 /d:235
-Var=time unsigned 32,16 /u:seconds /min:1 /max:3600 /d:10
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:ADC /max:800 /d:235	// <nv::f1:allHwParams{}.tol[TOL_DC].level>
+Var=time unsigned 32,16 /u:seconds /min:1 /max:3600 /d:10	// <nv::f1:allHwParams{}.tol[TOL_DC].time>
 
 [ParameterQuery]
 DLC=8
-Mux=IGBT_r0 0,14 0032h	// <factory>
+Mux=IGBT_r0 0,11 032h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.01
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.01	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rIGBT[0]>
 
 [ParameterQuery]
 DLC=8
-Mux=IGBT_r1 0,14 0033h	// <factory>
+Mux=IGBT_r1 0,11 033h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.071
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.071	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rIGBT[1]>
 
 [ParameterQuery]
 DLC=8
-Mux=IGBT_r2 0,14 0034h	// <factory>
+Mux=IGBT_r2 0,11 034h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.011
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.011	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rIGBT[2]>
 
 [ParameterQuery]
 DLC=8
-Mux=IGBT_r3 0,14 0035h	// <factory>
+Mux=IGBT_r3 0,11 035h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.05
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.05	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rIGBT[3]>
 
 [ParameterQuery]
 DLC=8
-Mux=Diode_r0 0,14 0036h	// <factory>
+Mux=Diode_r0 0,11 036h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.017
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.017	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rDiode[0]>
 
 [ParameterQuery]
 DLC=8
-Mux=Diode_r1 0,14 0037h	// <factory>
+Mux=Diode_r1 0,11 037h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.119
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.119	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rDiode[1]>
 
 [ParameterQuery]
 DLC=8
-Mux=Diode_r2 0,14 0038h	// <factory>
+Mux=Diode_r2 0,11 038h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.019
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.019	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rDiode[2]>
 
 [ParameterQuery]
 DLC=8
-Mux=Diode_r3 0,14 0039h	// <factory>
+Mux=Diode_r3 0,11 039h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.16
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.16	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rDiode[3]>
 
 [ParameterQuery]
 DLC=8
-Mux=rii 0,14 003Ah	// <factory>
+Mux=rii 0,11 03Ah	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.26
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.26	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rii>
 
 [ParameterQuery]
 DLC=8
-Mux=rdi 0,14 003Bh	// <factory>
+Mux=rdi 0,11 03Bh	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.1
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.1	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rdi>
 
 [ParameterQuery]
-DLC=8
-Mux=CurrentControlBuckGains 0,14 003Ch	// <factory> 
+Mux=CurrentControlBuckGains 0,11 03Ch	// <factory> 
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=Kp signed 16,16 /f:0.001 /p:3	// Proportional Gain
 Var=Ki signed 32,16 /f:1E-005 /p:5	// Integral Gain
 
 [ParameterQuery]
 DLC=8
-Mux=CurrentControlBuckLimits 0,14 003Dh	// <factory>
+Mux=CurrentControlBuckLimits 0,11 03Dh	// <factory>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=min signed 16,16 /f:0.001 /p:3	// lower limit
 Var=max signed 32,16 /f:0.001 /p:3	// upper limit 
 
 [ParameterQuery]
 DLC=8
-Mux=InputVoltageLimits 0,14 003Eh	// <HYDRA>
+Mux=InputVoltageLimits 0,11 03Eh	// <HYDRA>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=min unsigned 16,16 /u:V /max:1000
 Var=max unsigned 32,16 /u:V /max:1000 /d:1000
 
 [ParameterQuery]
 DLC=8
-Mux=InputCurrentLimits 0,14 003Fh	// <HYDRA>
+Mux=InputCurrentLimits 0,11 03Fh	// <HYDRA>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=min signed 16,16 /u:A /min:-1400 /max:0 /d:-500
 Var=max signed 32,16 /u:A /min:0 /max:1400 /d:500
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerChunk01 0,14 0040h	// <factory>
+Mux=LoggerChunk01 0,11 040h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[0].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[0].bytes>
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerChunk02 0,14 0041h	// <factory>
+Mux=LoggerChunk02 0,11 041h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[1].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[1].bytes>
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerChunk03 0,14 0042h	// <factory>
+Mux=LoggerChunk03 0,11 042h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[2].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[2].bytes>
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerChunk04 0,14 0043h	// <factory>
+Mux=LoggerChunk04 0,11 043h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[3].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[3].bytes>
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerChunk05 0,14 0044h	// <factory>
+Mux=LoggerChunk05 0,11 044h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[4].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[4].bytes>
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerChunk06 0,14 0045h	// <factory>
+Mux=LoggerChunk06 0,11 045h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[5].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[5].bytes>
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerChunk07 0,14 0046h	// <factory>
+Mux=LoggerChunk07 0,11 046h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[6].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[6].bytes>
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerChunk08 0,14 0047h	// <factory>
+Mux=LoggerChunk08 0,11 047h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[7].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[7].bytes>
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerChunk09 0,14 0048h	// <factory>
+Mux=LoggerChunk09 0,11 048h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[8].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[8].bytes>
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerChunk10 0,14 0049h	// <factory>
+Mux=LoggerChunk10 0,11 049h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[9].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[9].bytes>
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerChunk11 0,14 004Ah	// <factory>
+Mux=LoggerChunk11 0,11 04Ah	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[10].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[10].bytes>
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerChunk12 0,14 004Bh	// <factory>
+Mux=LoggerChunk12 0,11 04Bh	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[11].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[11].bytes>
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerChunk13 0,14 004Ch	// <factory>
+Mux=LoggerChunk13 0,11 04Ch	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[12].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[12].bytes>
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerChunk14 0,14 004Dh	// <factory>
+Mux=LoggerChunk14 0,11 04Dh	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[13].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[13].bytes>
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerChunk15 0,14 004Eh	// <factory>
+Mux=LoggerChunk15 0,11 04Eh	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[14].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[14].bytes>
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerChunk16 0,14 004Fh	// <factory>
+Mux=LoggerChunk16 0,11 04Fh	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[15].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[15].bytes>
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerConf01 0,14 0060h
+Mux=LoggerConf01 0,11 060h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=PostTriggerDuration_s unsigned 16,14 /u:seconds /f:0.001 /d:0.2	// Duration datalogger continues logging after a fault event occurs.
+Var=Meta unsigned 11,3 /e:Meta
+Var=PostTriggerDuration_s unsigned 16,14 /u:seconds /f:0.001 /d:0.2	// Duration datalogger continues logging after a fault event occurs. <nv::allDataLoggerParams{}.postTriggerDuration_ms>
 
 [ParameterQuery]
 DLC=8
-Mux=LoggerStatus01 0,14 0061h
+Mux=LoggerStatus01 0,11 061h
 Var=ReadParam_command unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=ReadableOctets unsigned 32,32 /u:octets
 
 [ParameterQuery]
 DLC=8
-Mux=RealPwrCmdRampRate 0,14 0070h
+Mux=RealPwrCmdRampRate 0,11 070h
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
-Var=rate unsigned 32,32 /u:kW/s /f:0.001 /max:10000 /p:3 /d:2000	// slew limit for change in real power command
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 32,32 /u:kW/s /f:0.001 /max:10000 /p:3 /d:2000	// slew limit for change in real power command  <nv::fPU_POWER:allAfeParams{}.pRampRate>
 
 [ParameterQuery]
 DLC=8
-Mux=ReactivePwrCmdRampRate 0,14 0071h
+Mux=ReactivePwrCmdRampRate 0,11 071h
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
-Var=rate unsigned 32,32 /u:kVA/s /f:0.001 /max:10000 /p:3 /d:2000	// slew limit for change in reactive power command
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 32,32 /u:kVA/s /f:0.001 /max:10000 /p:3 /d:2000	// slew limit for change in reactive power command  <nv::fPU_POWER:allAfeParams{}.qRampRate>
 
 [ParameterQuery]
 DLC=8
-Mux=UserSettings 0,14 0072h
+Mux=UserSettings 0,11 072h
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=OverVoltageDC unsigned 16,16 /u:V /max:1350 /p:0 /d:1100	// User Settable Over Voltage Limit
 Var=UnderVoltageDC unsigned 32,16 /u:V /max:1350 /d:705	// User Settable Under Voltage Limit
 
 [ParameterQuery]
 DLC=8
-Mux=LineMonitor 0,14 0073h
+Mux=LineMonitor 0,11 073h
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
-Var=ReconnectDelay unsigned 32,32 /u:seconds /f:0.1 /max:600 /d:10	// Delay time after abnormal grid conditions end until reconnect.
+Var=Meta unsigned 11,3 /e:Meta
+Var=ReconnectDelay unsigned 32,32 /u:seconds /f:0.1 /max:600 /d:10	// Delay time after abnormal grid conditions end until reconnect.  <nv::fRECONNECT_DELAY_SCALE:allLineMonitorParams{}.reconnectTime>
 
 [ParameterQuery]
 DLC=8
-Mux=FactoryAccess 0,14 0074h
-Var=FactoryAccess unsigned 16,16
+Mux=AccessLevel 0,11 074h
+Var=Password unsigned 16,16
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=Level unsigned 32,6 /e:AccessLevel
+Var=CheckLimits unsigned 38,2 /e:OnOff
 
 [ParameterQuery]
 DLC=8
-Mux=Fan_PowerModule_MinSpeed 0,14 0075h	// <factory>
+Mux=Fan_PowerModule_MinSpeed 0,11 075h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=current unsigned 16,16 /u:A
+Var=Meta unsigned 11,3 /e:Meta
+Var=current unsigned 16,16 /u:A	// <nv::allHwParams{}.fanIntCurrentMin>
 
 [ParameterQuery]
 DLC=8
-Mux=Fan_PowerModule_MaxSpeed 0,14 0076h	// <factory>
+Mux=Fan_PowerModule_MaxSpeed 0,11 076h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=current unsigned 16,16 /u:A
+Var=Meta unsigned 11,3 /e:Meta
+Var=current unsigned 16,16 /u:A	// <nv::allHwParams{}.fanIntCurrentMax>
 
 [ParameterQuery]
 DLC=8
-Mux=FanType 0,14 0077h
+Mux=FanType 0,11 077h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=CoolantFan unsigned 16,2 /max:1 /e:FANTYPE /d:1
-Var=CabinetFan unsigned 18,2 /max:1 /e:FANTYPE
-Var=InternalFan unsigned 20,2 /max:1 /e:FANTYPE	// <factory>
+Var=Meta unsigned 11,3 /e:Meta
+Var=CoolantFan unsigned 16,2 /max:1 /e:FANTYPE /d:1	// <nv:c:allHwParams{}.fanTypes[HARDWARE_FAN_COOLANT]>
+Var=CabinetFan unsigned 18,2 /max:1 /e:FANTYPE	// <nv:c:allHwParams{}.fanTypes[HARDWARE_FAN_CABINET]>
+Var=InternalFan unsigned 20,2 /max:1 /e:FANTYPE	// <factory> <nv:c:allHwParams{}.fanTypes[HARDWARE_FAN_INTERNAL]>
 
 [ParameterQuery]
 DLC=8
-Mux=VoltageRef 0,14 0078h
+Mux=VoltageRef 0,11 078h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=Voltage unsigned 16,16 /u:VRMS /f:0.1 /min:10 /max:480 /d:480 /ln:"Voltage"	// Desired output voltage while in grid forming mode.
 
 [ParameterQuery]
 DLC=8
-Mux=FrequencyRef 0,14 0079h
+Mux=FrequencyRef 0,11 079h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=Frequency unsigned 16,16 /u:Hz /f:0.1 /min:45 /max:65 /d:60 /ln:"Frequency"	// Desired output frequency while in grid forming mode.
 
 [ParameterQuery]
 DLC=8
-Mux=StatusDeviceTemps2 0,14 007Fh
+Mux=StatusDeviceTemps2 0,11 07Fh
 Var=ReadParam_command unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=TempTmodel_calculated signed 16,16 /u:C /f:0.1 /min:-40 /max:120 /ln:"Model"	// Thermal Model predicted temp
 Var=IGBTTemperature signed 32,16 /u:C /f:0.1 /min:-40 /max:175 /ln:"IGBT"	// Hottest IGBT
 Var=DiodeTemperature signed 48,16 /u:C /f:0.1 /min:-40 /max:175 /ln:"Diode"	// Hottest Diode
 
 [ParameterQuery]
 DLC=8
-Mux=StatusDeviceTemps 0,14 0080h
+Mux=StatusDeviceTemps 0,11 080h
 Var=ReadParam_command unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=TempDeviceBrdgA_measured signed 48,16 /u:C /f:0.1 /min:-40 /max:120 /ln:"Bridge A Temp."	// BridgeA Device temp
 Var=TempDeviceBrdgB_measured signed 32,16 /u:C /f:0.1 /min:-40 /max:120 /ln:"Bridge B Temp."	// BridgeB Device temp
 
 [ParameterQuery]
 DLC=8
-Mux=ConverterLosses 0,14 0081h
+Mux=ConverterLosses 0,11 081h
 Var=ReadParam_command unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=ConverterLosses unsigned 16,16 /u:W /ln:"Converter Losses"	// Power converter thermal loss, excluding grid filter.
 
 [ParameterQuery]
 DLC=8
-Mux=StatusFaults 0,14 0082h
+Mux=StatusFaults 0,11 082h
 Var=ReadParam_command unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=LossValidControlMessage unsigned 16,4 /e:Fault /ln:"Control Message"	// Set whenever a control message required for operation contains out of range data or has not been received within the required timeout period.
 Var=dIdt unsigned 20,2 /max:1 /e:Fault	// Rapid change in current
 Var=CtlBrdVoltage unsigned 22,2 /max:1 /e:Fault /ln:"Control Bd. Undervolt."	// The control board power supply voltage is out of range
@@ -724,387 +825,449 @@ Var=BridgeAFault unsigned 61,3 /e:BridgeFlt /ln:"Bridge A"	// Each bridge has ha
 
 [ParameterQuery]
 DLC=8
-Mux=StatusFaults2 0,14 0083h
+Mux=StatusFaults2 0,11 083h
 Var=ReadParam_command unsigned 14,2 /min:1 /e:ReadNV
-Var=OvervoltageDC unsigned 30,2 /e:Fault /ln:"Overvoltage DC"	// Set immediately upon the software detection of DC voltage exceeding the threshold value.
-Var=UndervoltageDC unsigned 28,2 /e:Fault /ln:"Undervoltage DC"	// Indicates loss of DC source voltage.
-Var=OvercurrentDC unsigned 26,2 /e:Fault /ln:"Overcurrent DC"	// Set immediately upon the software detection of DC current exceeding the threshold value.
-Var=FanCircuit unsigned 24,2 /max:1 /e:Fault /ln:"Fan Circuit"	// There is an issue with the module internal cooling fan
+Var=Meta unsigned 11,3 /e:Meta
 Var=OvertempPowerDevice unsigned 16,2 /e:Fault /ln:"IGBT Overtemp"	// Set immediately upon the software detection of an IGBT temperature exceeding the threshold value.
 Var=OvertempInternal unsigned 18,2 /e:Fault /ln:"Internal Overtemp"	// Set immediately upon the software detection of an internal inverter temperature exceeding the threshold value.
 Var=OvercurrentAC unsigned 20,2 /e:Fault /ln:"Overcurrent AC"	// Set immediately upon the software detection of AC current exceeding the threshold value.
 Var=GeneralFault unsigned 22,2 /e:Fault /ln:"General"	// Will be set any time a fault shutdown has occurred.  It is always accompanied by an additional fault descriptor.
+Var=FanCircuit unsigned 24,2 /max:1 /e:Fault /ln:"Fan Circuit"	// There is an issue with the module internal cooling fan
+Var=OvercurrentDC unsigned 26,2 /e:Fault /ln:"Overcurrent DC"	// Set immediately upon the software detection of DC current exceeding the threshold value.
+Var=UndervoltageDC unsigned 28,2 /e:Fault /ln:"Undervoltage DC"	// Indicates loss of DC source voltage.
+Var=OvervoltageDC unsigned 30,2 /e:Fault /ln:"Overvoltage DC"	// Set immediately upon the software detection of DC voltage exceeding the threshold value.
 Var=LowCoolingFlow unsigned 32,2 /e:Fault /ln:"Low Cooling Flow"	// An issue has been detected with the cooling system
+Var=PORTimeout unsigned 42,2 /e:Fault /ln:"POR Timeout"	// The system was unable to transition out of the POR state within the timeout period
 
 [ParameterQuery]
 DLC=8
-Mux=StatusControlVoltage 0,14 0084h	// <factory>
+Mux=StatusControlVoltage 0,11 084h	// <factory>
 Var=ReadParam_command unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=v24_Supply unsigned 16,16 /u:V /f:0.01 /min:23 /max:25 /ln:"24V Supply"	// Present voltage of the control board 24V power supply.
 Var=v15_Supply unsigned 48,16 /u:V /f:0.01 /min:14 /max:16 /ln:"15V Supply"	// Present voltage of the control board 15V power supply.
 Var=n15V_Supply signed 32,16 /u:V /f:0.01 /min:-16 /max:-14 /ln:"-15V Supply"	// Present voltage of the control board -15V power supply.
 
 [ParameterQuery]
 DLC=8
-Mux=StatusControlVoltage2 0,14 0085h	// <factory>
+Mux=StatusControlVoltage2 0,11 085h	// <factory>
 Var=ReadParam_command unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=v5p0_Supply unsigned 16,16 /u:V /f:0.01 /min:4.5 /max:5.5 /ln:"5V Supply"	// Present voltage of the control board 5V power suppy.
 Var=v3p3_Supply unsigned 32,16 /u:V /f:0.01 /min:3 /max:3.6 /ln:"3.3V Supply"
 
 [ParameterQuery]
 DLC=8
-Mux=RealPowerLimits 0,14 0086h
+Mux=RealPowerLimits 0,11 086h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=min signed 16,16 /u:kW /f:0.1 /min:-375 /max:0	// Minimum allowed real power command
-Var=max signed 32,16 /u:kW /f:0.1 /min:0 /max:375	// Maximum allowed real power command
+Var=Meta unsigned 11,3 /e:Meta
+Var=min signed 16,16 /u:kW /f:0.1 /min:-375 /max:0	// Minimum allowed real power command <nv::allHwParams{}.customerLimits.realPowerMin>
+Var=max signed 32,16 /u:kW /f:0.1 /min:0 /max:375	// Maximum allowed real power command <nv::allHwParams{}.customerLimits.realPowerMax>
 
 [ParameterQuery]
 DLC=8
-Mux=ReactivePowerLimits 0,14 0087h
+Mux=ReactivePowerLimits 0,11 087h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=min signed 16,16 /u:kVA /f:0.1 /min:-375 /max:0	// Minimum allowed reactive power command
-Var=max signed 32,16 /u:kVA /f:0.1 /min:0 /max:375	// Maximum allowed reactive power command
+Var=Meta unsigned 11,3 /e:Meta
+Var=min signed 16,16 /u:kVA /f:0.1 /min:-375 /max:0	// Minimum allowed reactive power command <nv::allHwParams{}.customerLimits.reactivePowerMin>
+Var=max signed 32,16 /u:kVA /f:0.1 /min:0 /max:375	// Maximum allowed reactive power command <nv::allHwParams{}.customerLimits.reactivePowerMax>
 
 [ParameterQuery]
 DLC=8
-Mux=RealCurrentLimits 0,14 0088h
+Mux=RealCurrentLimits 0,11 088h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=min signed 16,16 /u:A /min:-450 /max:0	// Minimum allowed real current command
-Var=max signed 32,16 /u:A /min:0 /max:450	// Maximum allowed real current command
+Var=Meta unsigned 11,3 /e:Meta
+Var=min signed 16,16 /u:A /min:-450 /max:0	// Minimum allowed real current command <nv::allHwParams{}.customerLimits.realCurrentMin>
+Var=max signed 32,16 /u:A /min:0 /max:450	// Maximum allowed real current command <nv::allHwParams{}.customerLimits.realCurrentMax>
 
 [ParameterQuery]
 DLC=8
-Mux=ReactiveCurrentLimits 0,14 0089h
+Mux=ReactiveCurrentLimits 0,11 089h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=min signed 16,16 /u:A /min:-450 /max:0	// Minimum allowed reactive current command
-Var=max signed 32,16 /u:A /min:0 /max:450	// Maximum allowed reactive current command
+Var=Meta unsigned 11,3 /e:Meta
+Var=min signed 16,16 /u:A /min:-450 /max:0	// Minimum allowed reactive current command <nv::allHwParams{}.customerLimits.reactiveCurrentMin>
+Var=max signed 32,16 /u:A /min:0 /max:450	// Maximum allowed reactive current command <nv::allHwParams{}.customerLimits.reactiveCurrentMax>
 
 [ParameterQuery]
 DLC=8
-Mux=DataloggerConfig 0,14 008Ah
+Mux=DataloggerConfig 0,11 08Ah
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=ResetDatalogger unsigned 16,2 /e:OnOff
 
 [ParameterQuery]
 DLC=8
-Mux=DataloggerStatus 0,14 008Bh
+Mux=DataloggerStatus 0,11 08Bh
 Var=ReadParam_command unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=DataloggerRecording unsigned 58,2 /e:OnOff /ln:"Logging"
 Var=DataloggerConfigurationIsValid unsigned 56,2 /e:OnOff
 
 [ParameterQuery]
 DLC=8
-Mux=StatusLineCurrents_txRate 0,14 008Ch
+Mux=StatusLineCurrents_txRate 0,11 08Ch
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusLineCurrents message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusLineCurrents message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusLineCurrents]>
 
 [ParameterQuery]
 DLC=8
-Mux=StatusLineToNVoltages_txRate 0,14 008Dh
+Mux=StatusLineToNVoltages_txRate 0,11 08Dh
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusLineToNVoltages message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusLineToNVoltages message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusLineToNVoltages]>
 
 [ParameterQuery]
 DLC=8
-Mux=StatusRemoteLineToNV_txRate 0,14 008Eh
+Mux=StatusRemoteLineToNV_txRate 0,11 08Eh
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusRemoteLineToNV message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusRemoteLineToNV message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusRemoteLineToNV]>
 
 [ParameterQuery]
 DLC=8
-Mux=StatusACRemote_txRate 0,14 008Fh
+Mux=StatusACRemote_txRate 0,11 08Fh
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusACRemoteParameters message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusACRemoteParameters message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusACRemote]>
 
 [ParameterQuery]
 DLC=8
-Mux=StatusMeasuredPower_txRate 0,14 0090h
+Mux=StatusMeasuredPower_txRate 0,11 090h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusMeasuredPower message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusMeasuredPower message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusMeasuredPower]>
 
 [ParameterQuery]
 DLC=8
-Mux=StatusCommandedPower_txRate 0,14 0091h
+Mux=StatusCommandedPower_txRate 0,11 091h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusCommandedPower message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusCommandedPower message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusCommandedPower]>
 
 [ParameterQuery]
 DLC=8
-Mux=StatusBits_txRate 0,14 0092h
+Mux=StatusBits_txRate 0,11 092h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.01	// rate at which the StatusBits message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.01	// rate at which the StatusBits message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusBits]>
 
 [ParameterQuery]
 DLC=8
-Mux=StatusTemps_txRate 0,14 0093h
+Mux=StatusTemps_txRate 0,11 093h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusTemps message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusTemps message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusTemps]>
 
 [ParameterQuery]
 DLC=8
-Mux=StatusAC_txRate 0,14 0094h
+Mux=StatusAC_txRate 0,11 094h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusACParameters message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusACParameters message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusAC]>
 
 [ParameterQuery]
 DLC=8
-Mux=StatusDCParameters_txRate 0,14 0095h
+Mux=StatusDCParameters_txRate 0,11 095h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusDCParameters message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusDCParameters message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusDCParameters]>
 
 [ParameterQuery]
 DLC=8
-Mux=StatusCommandedCurrent_txRate 0,14 0096h
+Mux=StatusCommandedCurrent_txRate 0,11 096h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10	// rate at which the StatusCommandedCurrent message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10	// rate at which the StatusCommandedCurrent message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusCommandedCurrent]>
 
 [ParameterQuery]
 DLC=8
-Mux=IdqControlPsKpGain 0,14 0097h	// <factory>
+Mux=IdqControlPsKpGain 0,11 097h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-008 /p:8
 
 [ParameterQuery]
 DLC=8
-Mux=IdqControlPsKiGain 0,14 0098h	// <factory>
+Mux=IdqControlPsKiGain 0,11 098h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-008 /p:8
 
 [ParameterQuery]
 DLC=8
-Mux=IdqControlNsKpGain 0,14 0099h	// <factory>
+Mux=IdqControlNsKpGain 0,11 099h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-008 /p:8
 
 [ParameterQuery]
 DLC=8
-Mux=IdqControlNsKiGain 0,14 009Ah	// <factory>
+Mux=IdqControlNsKiGain 0,11 09Ah	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-008 /p:8
 
 [ParameterQuery]
 DLC=8
-Mux=VdcControlKpGain 0,14 009Bh	// <factory>
+Mux=VdcControlKpGain 0,11 09Bh	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-008 /p:8
 
 [ParameterQuery]
 DLC=8
-Mux=VdcControlKiGain 0,14 009Ch	// <factory>
+Mux=VdcControlKiGain 0,11 09Ch	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-008 /p:8
 
 [ParameterQuery]
 DLC=8
-Mux=ControlZscB0Gain 0,14 009Dh	// <factory>
+Mux=ControlZscB0Gain 0,11 09Dh	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-008 /p:8
 
 [ParameterQuery]
 DLC=8
-Mux=ControlZscB1Gain 0,14 009Eh	// <factory>
+Mux=ControlZscB1Gain 0,11 09Eh	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-008 /p:8
 
 [ParameterQuery]
 DLC=8
-Mux=FrequencyRampRate 0,14 009Fh
+Mux=FrequencyRampRate 0,11 09Fh
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
-Var=rate unsigned 32,32 /u:Hz/s /max:1000 /d:10	// Slew limit for change in frequency command.
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 32,32 /u:Hz/s /max:1000 /d:10	// Slew limit for change in frequency command.  <nv::f1:allAfeParams{}.fRampRate>
 
 [ParameterQuery]
 DLC=8
-Mux=VoltageRampRate 0,14 0100h
+Mux=VoltageRampRate 0,11 100h
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=rate unsigned 32,32 /u:V/s /d:612	// Slew limit for change in volatage command.  A zero value allows in immediate transition.
 
 [ParameterQuery]
 DLC=8
-Mux=PhaseImbalanceRampRate 0,14 0101h	// <factory>
+Mux=PhaseImbalanceRampRate 0,11 101h	// <factory>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
-Var=rate unsigned 32,32 /u:%/s /max:10000	// slew limit for change in phase Imbalance commands
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 32,32 /u:%/s /max:10000	// slew limit for change in phase Imbalance commands  <nv::f100:allAfeParams{}.phaseImbalanceRampRate>
 
 [ParameterQuery]
 DLC=8
-Mux=PhaseImbalance 0,14 0102h	// <factory>
+Mux=PhaseImbalance 0,11 102h	// <factory>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
-Var=phaseA unsigned 16,16 /u:% /max:200 /d:100	// % by which the phase A output will be scaled
-Var=phaseB unsigned 32,16 /u:% /max:200 /d:100	// % by which the phase B output will be scaled
-Var=phaseC unsigned 48,16 /u:% /max:200 /d:100	// % by which the phase C output will be scaled
+Var=Meta unsigned 11,3 /e:Meta
+Var=phaseA unsigned 16,16 /u:% /max:200 /d:100	// % by which the phase A output will be scaled  <nv::f1:allAfeParams{}.phaseImbalance[LINE1]>
+Var=phaseB unsigned 32,16 /u:% /max:200 /d:100	// % by which the phase B output will be scaled  <nv::f1:allAfeParams{}.phaseImbalance[LINE2]>
+Var=phaseC unsigned 48,16 /u:% /max:200 /d:100	// % by which the phase C output will be scaled  <nv::f1:allAfeParams{}.phaseImbalance[LINE3]>
 
 [ParameterQuery]
 DLC=8
-Mux=AntiIslandingFreqGain 0,14 0103h	// <factory>
+Mux=AntiIslandingFreqGain 0,11 103h	// <factory>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-005 /p:5
 
 [ParameterQuery]
 DLC=8
-Mux=AntiIslandingVoltageGain 0,14 0104h	// <factory>
+Mux=AntiIslandingVoltageGain 0,11 104h	// <factory>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-005 /p:5
 
 [ParameterQuery]
 DLC=8
-Mux=IGBT_tc0 0,14 0105h	// <factory>
+Mux=IGBT_tc0 0,11 105h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=tc signed 32,32 /f:1E-006 /p:6 /d:1
+Var=Meta unsigned 11,3 /e:Meta
+Var=tc signed 32,32 /f:1E-006 /p:6 /d:1	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.tcIGBT[0]>
 
 [ParameterQuery]
 DLC=8
-Mux=IGBT_tc1 0,14 0106h	// <factory>
+Mux=IGBT_tc1 0,11 106h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=tc signed 32,32 /f:1E-006 /p:6 /d:0.13
+Var=Meta unsigned 11,3 /e:Meta
+Var=tc signed 32,32 /f:1E-006 /p:6 /d:0.13	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.tcIGBT[1]>
 
 [ParameterQuery]
 DLC=8
-Mux=IGBT_tc2 0,14 0107h	// <factory>
+Mux=IGBT_tc2 0,11 107h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=tc signed 32,32 /f:1E-006 /p:6 /d:0.002
+Var=Meta unsigned 11,3 /e:Meta
+Var=tc signed 32,32 /f:1E-006 /p:6 /d:0.002	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.tcIGBT[2]>
 
 [ParameterQuery]
 DLC=8
-Mux=IGBT_tc3 0,14 0108h	// <factory>
+Mux=IGBT_tc3 0,11 108h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=tc signed 32,32 /f:1E-006 /p:6 /d:4
+Var=Meta unsigned 11,3 /e:Meta
+Var=tc signed 32,32 /f:1E-006 /p:6 /d:4	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.tcIGBT[3]>
 
 [ParameterQuery]
 DLC=8
-Mux=Diode_tc0 0,14 0109h	// <factory>
+Mux=Diode_tc0 0,11 109h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=tc signed 32,32 /f:1E-006 /p:6 /d:1
+Var=Meta unsigned 11,3 /e:Meta
+Var=tc signed 32,32 /f:1E-006 /p:6 /d:1	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.tcDiode[0]>
 
 [ParameterQuery]
 DLC=8
-Mux=Diode_tc1 0,14 010Ah	// <factory>
+Mux=Diode_tc1 0,11 10Ah	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=tc signed 32,32 /f:1E-006 /p:6 /d:0.13
+Var=Meta unsigned 11,3 /e:Meta
+Var=tc signed 32,32 /f:1E-006 /p:6 /d:0.13	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.tcDiode[1]>
 
 [ParameterQuery]
 DLC=8
-Mux=Diode_tc2 0,14 010Bh	// <factory>
+Mux=Diode_tc2 0,11 10Bh	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=tc signed 32,32 /f:1E-006 /p:6 /d:0.002
+Var=Meta unsigned 11,3 /e:Meta
+Var=tc signed 32,32 /f:1E-006 /p:6 /d:0.002	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.tcDiode[2]>
 
 [ParameterQuery]
 DLC=8
-Mux=Diode_tc3 0,14 010Ch	// <factory>
+Mux=Diode_tc3 0,11 10Ch	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=tc signed 32,32 /f:1E-006 /p:6 /d:4
+Var=Meta unsigned 11,3 /e:Meta
+Var=tc signed 32,32 /f:1E-006 /p:6 /d:4	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.tcDiode[3]>
 
 [ParameterQuery]
 DLC=8
-Mux=LowFlowTempDelta 0,14 010Dh	// <factory>
+Mux=LowFlowTempDelta 0,11 10Dh	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=temperature unsigned 16,16 /u:C /f:0.1 /max:150 /d:20
+Var=Meta unsigned 11,3 /e:Meta
+Var=temperature unsigned 16,16 /u:C /f:0.1 /max:150 /d:20	// <nv::fTEMP_DELTA_SCALE:allHwParams{}.tempDeltaLimit>
 
 [ParameterQuery]
 DLC=8
-Mux=LowFlowTimeLimit 0,14 010Eh	// <factory>
+Mux=LowFlowTimeLimit 0,11 10Eh	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=time unsigned 16,16 /u:s /f:0.1 /max:200 /d:30
+Var=Meta unsigned 11,3 /e:Meta
+Var=time unsigned 16,16 /u:s /f:0.1 /max:200 /d:30	// <nv::fTEMP_DELTA_TIME_SCALE:allHwParams{}.tempDeltaTripTime_ms>
 
 [ParameterQuery]
 DLC=8
-Mux=MaxInvRatedCurrent 0,14 010Fh	// Maximum Inverter rated current <factory>
+Mux=MaxInvRatedCurrent 0,11 10Fh	// Maximum Inverter rated current <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=current unsigned 16,16 /u:A /max:1500 /d:460
+Var=Meta unsigned 11,3 /e:Meta
+Var=current unsigned 16,16 /u:A /max:1500 /d:460	// <nv::allHwParams{}.maxInvRatedCurrent>
 
 [ParameterQuery]
 DLC=8
-Mux=TempDerateStart 0,14 0110h	// Temperature at which current derate starts <factory>
+Mux=TempDerateStart 0,11 110h	// Temperature at which current derate starts <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=temperature unsigned 16,16 /u:C /d:40
+Var=Meta unsigned 11,3 /e:Meta
+Var=temperature unsigned 16,16 /u:C /d:40	// <nv::allHwParams{}.tempDerateStart>
 
 [ParameterQuery]
 DLC=8
-Mux=TempDerateRate 0,14 0111h	// Rate at which current is derated when the temperature reaches TempDerateStart <factory>
+Mux=TempDerateRate 0,11 111h	// Rate at which current is derated when the temperature reaches TempDerateStart <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:%/C /f:0.01 /d:1
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:%/C /f:0.01 /d:1	// <nv::fTEMP_DERATE_RATE_SCALE:allHwParams{}.tempDerateRate>
 
 [ParameterQuery]
 DLC=8
-Mux=TripILegImbalance 0,14 0112h	// <factory>
+Mux=TripILegImbalance 0,11 112h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:A /d:300
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:A /d:300	// <nv::allHwParams{}.trips[HAL_TRIP_ILEG_IMBALANCE]>
 
 [ParameterQuery]
 DLC=8
-Mux=TripDiDtEnable 0,14 0113h	// <factory>
+Mux=TripDiDtEnable 0,11 113h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:A /d:200
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:A /d:200	// <nv::allHwParams{}.trips[HAL_TRIP_DI_DT_EN]>
 
 [ParameterQuery]
 DLC=8
-Mux=TripDiDt 0,14 0114h	// <factory>
+Mux=TripDiDt 0,11 114h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:A /d:250
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:A /d:250	// <nv::allHwParams{}.trips[HAL_TRIP_DI_DT]>
 
 [ParameterQuery]
 DLC=8
-Mux=TripIAcMax 0,14 0115h	// <factory>
+Mux=TripIAcMax 0,11 115h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:A /d:575
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:A /d:575	// <nv::allHwParams{}.trips[HAL_TRIP_IAC_MAX]>
 
 [ParameterQuery]
 DLC=8
-Mux=TripIDcMax 0,14 0116h	// <factory>
+Mux=TripIDcMax 0,11 116h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:A /d:900
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:A /d:900	// <nv::allHwParams{}.trips[HAL_TRIP_IDC_MAX]>
 
 [ParameterQuery]
 DLC=8
-Mux=TripVDcMax 0,14 0117h	// <factory>
+Mux=TripVDcMax 0,11 117h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:V /d:1100
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:V /d:1100	// <nv::allHwParams{}.trips[HAL_TRIP_VDC_MAX]>
 
 [ParameterQuery]
 DLC=8
-Mux=TripVDcMin 0,14 0118h	// <factory>
+Mux=TripVDcMin 0,11 118h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:V /d:200
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:V /d:200	// <nv::allHwParams{}.trips[HAL_TRIP_VDC_MIN]>
 
 [ParameterQuery]
 DLC=8
-Mux=TripVAcMax 0,14 0119h	// <factory>
+Mux=TripVAcMax 0,11 119h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:V /d:600
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:V /d:600	// <nv::allHwParams{}.trips[HAL_TRIP_VAC_MAX]>
 
 [ParameterQuery]
 DLC=8
-Mux=LFM_OverFreqLimits 0,14 011Ah	// Line under-frequency Monitor limits.
+Mux=LFM_OverFreqLimits 0,11 11Ah	// Line under-frequency Monitor limits.
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=OF1 unsigned 16,16 /u:Hz /f:0.1 /min:40 /max:70 /d:60.5	// Determines the upper bound, above which the frequency monitor will trip if the line frequency remains for the time specified in FreqHi of the LFM_ClearingTimes Mux.
 Var=OF2 unsigned 32,16 /u:Hz /f:0.1 /min:40 /max:70 /d:62	// Determines the upper bound, above which the frequency monitor will trip if the line frequency remains below this bound but above the value of FreqVeryLo for the time specified in FreqLo of the LFM_ClearingTimes Mux.
 
 [ParameterQuery]
 DLC=8
-Mux=LFM_ClearingTimesUF2 0,14 011Bh	// Line Frequency Monitor Trip times
+Mux=LFM_ClearingTimesUF2 0,11 11Bh	// Line Frequency Monitor Trip times
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=UF2 unsigned 32,32 /u:ms /min:1 /max:300000 /d:2000	// Determines the time it will take for a fault trip to occur when line frequency remains below the value specified in FreqVeryLo of the LFM_Limits Mux when the inverter is in GRID FOLLOWING mode.
 
 [ParameterQuery]
 DLC=8
-Mux=LFM_ClearingTimesOF1 0,14 011Ch	// Line Frequency Monitor Trip times
+Mux=LFM_ClearingTimesOF1 0,11 11Ch	// Line Frequency Monitor Trip times
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=OF1 unsigned 32,32 /u:ms /min:1 /max:300000 /d:2000	// Determines the time it will take for a fault trip to occur when line frequency remains below the value specified in FreqVeryLo of the LFM_Limits Mux when the inverter is in GRID FOLLOWING mode.
 
 [ParameterQuery]
 DLC=8
-Mux=LFM_ClearingTimesOF2 0,14 011Dh	// Line Frequency Monitor Trip times
+Mux=LFM_ClearingTimesOF2 0,11 11Dh	// Line Frequency Monitor Trip times
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=OF2 unsigned 32,32 /u:ms /min:1 /max:10000 /d:160	// Determines the time it will take for a fault trip to occur when line frequency remains below the value specified in FreqVeryLo of the LFM_Limits Mux when the inverter is in GRID FOLLOWING mode.
 
 [ParameterQuery]
 DLC=8
-Mux=TripVRmsMax 0,14 011Eh	// <factory>
+Mux=TripVRmsMax 0,11 11Eh	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:V /d:650
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:V /d:650	// <nv::allHwParams{}.trips[HAL_TRIP_VRMS_MAX]>
 
 [ParameterQuery]
 DLC=8
-Mux=StatusWarnings 0,14 011Fh
+Mux=StatusWarnings 0,11 11Fh
 Var=ReadParam_command unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=CANWarning unsigned 16,2 /e:WARNING /ln:"CAN Warning"	// CAN Bus in the warning state
 Var=CANErrorPassive unsigned 18,2 /e:WARNING /ln:"CAN Error Passive"	// CAN Bus in the Error Passive state
 Var=FilterOvertemp unsigned 20,2 /e:WARNING /ln:"Filter Overtemperature"	// Filter overtemperature digital input is active.
@@ -1112,173 +1275,252 @@ Var=FanCircuit unsigned 22,2 /e:WARNING /ln:"Fan Circuit"	// There is a problem 
 
 [ParameterQuery]
 DLC=8
-Mux=StatusMeasuredCurrent_txRate 0,14 0120h
+Mux=StatusMeasuredCurrent_txRate 0,11 120h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusMeasuredCurrent message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusMeasuredCurrent message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusMeasuredCurrent]>
 
 [ParameterQuery]
 DLC=8
-Mux=RealCurrentCmdRampRate 0,14 0121h
+Mux=RealCurrentCmdRampRate 0,11 121h
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
-Var=rate unsigned 32,32 /u:A/s /max:50000 /d:1000	// slew limit for change in real current command
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 32,32 /u:A/s /max:50000 /d:1000	// slew limit for change in real current command  <nv::fPU_IlineRMS:allAfeParams{}.idRampRate>
 
 [ParameterQuery]
 DLC=8
-Mux=ReactiveCurrentCmdRampRate 0,14 0122h
+Mux=ReactiveCurrentCmdRampRate 0,11 122h
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
-Var=rate unsigned 32,32 /u:A/s /max:50000 /d:1000	// slew limit for change in reactive current command
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 32,32 /u:A/s /max:50000 /d:1000	// slew limit for change in reactive current command  < nv::fPU_IlineRMS:allAfeParams{}.iqRampRate>
 
 [ParameterQuery]
 DLC=8
-Mux=AcDampingFreq 0,14 0123h	// <factory>
+Mux=AcDampingFreq 0,11 123h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=freq unsigned 16,16 /u:Hz
+Var=Meta unsigned 11,3 /e:Meta
+Var=freq unsigned 16,16 /u:Hz	// <nv::allAfeParams{}.acDampingFreq>
 
 [ParameterQuery]
 DLC=8
-Mux=DcDampingFreq 0,14 0124h	// <factory>
+Mux=DcDampingFreq 0,11 124h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=freq unsigned 16,16 /u:Hz
+Var=Meta unsigned 11,3 /e:Meta
+Var=freq unsigned 16,16 /u:Hz	// <nv::allAfeParams{}.dcDampingFreq>
 
 [ParameterQuery]
 DLC=8
-Mux=StatusLineToLineVoltages_txRate 0,14 0125h
+Mux=StatusLineToLineVoltages_txRate 0,11 125h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusLineToLineVoltages message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusLineToLineVoltages message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusLineToLineVoltages]>
 
 [ParameterQuery]
 DLC=8
-Mux=StatusRemoteLineToLineV_txRate 0,14 0126h
+Mux=StatusRemoteLineToLineV_txRate 0,11 126h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusRemoteLineToLineV message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusRemoteLineToLineV message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusRemoteLineToLineV]>
 
 [ParameterQuery]
 DLC=8
-Mux=RemoteGrid 0,14 0127h
+Mux=RemoteGrid 0,11 127h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=SyncToRemote unsigned 16,2 /max:1 /e:Enable /ln:"Sync to remote"	// Enables sync and connect to remote source.
 
 [ParameterQuery]
 DLC=8
-Mux=VDCScale 0,14 0128h	// <factory>
+Mux=VDCScale 0,11 128h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=volts unsigned 32,32 /u:V /f:1E-005 /p:5 /d:1004
+Var=Meta unsigned 11,3 /e:Meta
+Var=volts unsigned 32,32 /u:V /f:1E-005 /p:5 /d:1004 	// <nv::fFBK_SCALING_SCALE:allHwParams{}.scales.vdc>
 
 [ParameterQuery]
 DLC=8
-Mux=VlineScale 0,14 0129h	// <factory>
+Mux=VlineScale 0,11 129h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=volts unsigned 32,32 /u:V /f:1E-005 /p:5 /d:499.5
+Var=Meta unsigned 11,3 /e:Meta
+Var=volts unsigned 32,32 /u:V /f:1E-005 /p:5 /d:499.5 	// <nv::fFBK_SCALING_SCALE:allHwParams{}.scales.vLine>
 
 [ParameterQuery]
 DLC=8
-Mux=IlineScale 0,14 012Ah	// <factory>
+Mux=IlineScale 0,11 12Ah	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=amps unsigned 32,32 /u:V /f:1E-005 /p:5 /d:888.989
+Var=Meta unsigned 11,3 /e:Meta
+Var=amps unsigned 32,32 /u:V /f:1E-005 /p:5 /d:888.989 	// <nv::fFBK_SCALING_SCALE:allHwParams{}.scales.iLine>
 
 [ParameterQuery]
 DLC=8
-Mux=OvermodulationLimit 0,14 012Bh	// <factory>
+Mux=OvermodulationLimit 0,11 12Bh	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=limit unsigned 16,16 /f:0.001 /p:3 /d:0.59
 
 [ParameterQuery]
 DLC=8
-Mux=LVM_limits 0,14 012Ch	// voltage thresholds for abnormal grid conditions
+Mux=LVM_limits 0,11 12Ch	// voltage thresholds for abnormal grid conditions
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=UnderVoltageThreshold unsigned 16,16 /u:% /f:0.1 /min:60 /max:100 /d:88
 Var=OverVoltageThreshold unsigned 32,16 /u:% /f:0.1 /min:100 /max:110 /d:110
 
 [ParameterQuery]
 DLC=8
-Mux=StatusDCLowside_txRate 0,14 012Dh	// <HYDRA>
+Mux=StatusDCLowside_txRate 0,11 12Dh	// <HYDRA>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusDCParameters message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusDCParameters message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusDCLowside]>
 
 [ParameterQuery]
 DLC=8
-Mux=VRefRampRate 0,14 012Eh	// <HYDRA>
+Mux=VRefRampRate 0,11 12Eh	// <HYDRA>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
-Var=VperS signed 16,16 /u:V/s /max:10000	// Voltage reference ramp rate
+Var=Meta unsigned 11,3 /e:Meta
+Var=VperS signed 16,16 /u:V/s /max:10000	// Voltage reference ramp rate  <nv::fPU_Vdc:allDcdcParams{}.vRampRate>
 
 [ParameterQuery]
 DLC=8
-Mux=IRefRampRate 0,14 012Fh	// <HYDRA>
+Mux=IRefRampRate 0,11 12Fh	// <HYDRA>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
-Var=AperS signed 16,16 /u:A/s /max:10000	// Current reference ramp rate
+Var=Meta unsigned 11,3 /e:Meta
+Var=AperS signed 16,16 /u:A/s /max:10000	// Current reference ramp rate  <nv::fPU_Idc:allDcdcParams{}.iRampRate>
 
 [ParameterQuery]
 DLC=8
-Mux=DcDcLegControlSourceConfig 0,14 0130h	// Configures control source for DC legs
+Mux=DcDcLegControlSourceConfig 0,11 130h	// Configures control source for DC legs
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
-Var=leg1 unsigned 16,4 /max:3 /e:DcLegType
-Var=leg2 unsigned 20,4 /max:3 /e:DcLegType
-Var=leg3 unsigned 24,4 /max:3 /e:DcLegType
+Var=Meta unsigned 11,3 /e:Meta
+Var=leg1 unsigned 16,4 /max:3 /e:DcLegType	// <nv:c:allDcdcParams{}.legControlSource[0]>
+Var=leg2 unsigned 20,4 /max:3 /e:DcLegType	// <nv:c:allDcdcParams{}.legControlSource[1]>
+Var=leg3 unsigned 24,4 /max:3 /e:DcLegType	// <nv:c:allDcdcParams{}.legControlSource[2]>
 
 [ParameterQuery]
 DLC=8
-Mux=DcDcVoltageDroop 0,14 0131h
+Mux=DcDcVoltageDroop 0,11 131h
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
-Var=Resistance unsigned 16,16 /u:Ohm /f:20E-006 /p:3
+Var=Meta unsigned 11,3 /e:Meta
+Var=Resistance unsigned 16,16 /u:Ohm /f:2E-005 /p:3
 
 [ParameterQuery]
 DLC=8
-Mux=StatusCommandedDcControl_txRate 0,14 0132h
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1
+Mux=StatusCommandedDcControl_txRate 0,11 132h
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusCommandedDcControl]>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 
 [ParameterQuery]
 DLC=8
-Mux=VdcCmdRampRate 0,14 0133h
-Var=rate unsigned 32,32 /u:V/s /d:1000	// Slew rate of voltage command.
+Mux=VdcCmdRampRate 0,11 133h
+Var=rate unsigned 32,32 /u:V/s /d:1000	// Slew rate of voltage command.  <nv::fPU_Vdc:allAfeParams{}.vdcRampRate>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 
 [ParameterQuery]
 DLC=8
-Mux=IdcCmdRampRate 0,14 0134h
-Var=rate unsigned 32,32 /u:A/s /d:1000	// Slew rate of current command.
+Mux=IdcCmdRampRate 0,11 134h
+Var=rate unsigned 32,32 /u:A/s /d:1000	// Slew rate of current command.  <nv::fPU_Idc:allAfeParams{}.idcRampRate>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 
 [ParameterQuery]
 DLC=8
-Mux=DcControlDroop 0,14 0135h
+Mux=DcControlDroop 0,11 135h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=resistance unsigned 16,16 /u:V/A /f:2E-005 /p:3
 
 [ParameterQuery]
 DLC=8
-Mux=SoftStart 0,14 0136h
+Mux=SoftStart 0,11 136h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=OpenLoopVoutGain unsigned 16,16 /f:0.001 /p:3 /d:1.025 // <factory> open loop output voltage gain
-Var=SoftStartInc unsigned 32,16 /f:0.0001 /p:4 /d:0.02 // <factory> // ramp increment for OpenLoopVoutGain (ramped at 1ms rate) 
+Var=Meta unsigned 11,3 /e:Meta
+Var=OpenLoopVoutGain unsigned 16,16 /f:0.001 /p:3 /d:1.025	// <factory> open loop output voltage gain  <nv::fVOUT_GAIN_SCALE:allAfeParams{}.openLoopVoutGain>
+Var=SoftStartInc unsigned 32,16 /f:0.0001 /p:4 /d:0.02	// <factory> ramp increment for OpenLoopVoutGain (ramped at 1ms rate)  <nv::fSOFTSTART_INC_SCALE:allAfeParams{}.softStartInc> 
 
 [ParameterQuery]
 DLC=8
-Mux=BusStabilizationDelay 0,14 0137h
+Mux=BusStabilizationDelay 0,11 137h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Delay unsigned 16,16 /u:ms // <factory> Post-precharge delay to allow the bus to stabilize
+Var=Meta unsigned 11,3 /e:Meta
+Var=Delay unsigned 16,16 /u:ms	// <factory> Post-precharge delay to allow the bus to stabilize  <nv::allAfeParams{}.holdoffDelay>
 
 [ParameterQuery]
 DLC=8
-Mux=PrechargeConfig 0,14 0138h
+Mux=PrechargeConfig 0,11 138h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=PrechargeTime unsigned 16,16 /u:ms /d:2500 // <factory> precharge time
-Var=Enable unsigned 32,2 /e:Enable /d:1 // <factory> If disabled, precharge is bypassed
+Var=Meta unsigned 11,3 /e:Meta
+Var=PrechargeTime unsigned 16,16 /u:ms /d:2500	// <factory> precharge time <nv::allHwParams{}.prechargeParams.softStartTime>
+Var=PrechargeType unsigned 32,2 /e:PrechargeType /d:1	// selects method of precharge including disabling precharge <nv:c:allHwParams{}.prechargeParams.prechargeType>
+Var=PrechargeRelay unsigned 34,2 /e:PrechargeRelay /d:2	// relay used for precharge <nv::allHwParams{}.prechargeParams.prechargeRelay>
 
 [ParameterQuery]
 DLC=8
-Mux=PrechargeVoltage 0,14 0139h
+Mux=PrechargeVoltage 0,11 139h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=VoltageMin unsigned 16,16 /u:VDC /d:200 // <factory> Minimum voltage the bus must reach for precharge to be successful
-Var=VoltageDeltaMin unsigned 32,16 /u:VDC /d:5 // <factory> minimum voltage rise required for precharge to be successful
+Var=Meta unsigned 11,3 /e:Meta
+Var=VoltageMin unsigned 16,16 /u:VDC /d:200	// <factory> Minimum voltage the bus must reach for precharge to be successful <nv::allHwParams{}.prechargeParams.vdcThresholds[PRECHARGE_VDC_MIN]>
+Var=VoltageDeltaMin unsigned 32,16 /u:VDC /d:5	// <factory> minimum voltage rise required for precharge to be successful <nv::allHwParams{}.prechargeParams.vdcThresholds[PRECHARGE_VDC_DELTA_MIN]>
 
 [ParameterQuery]
 DLC=8
-Mux=PrechargeAbort 0,14 013Ah
+Mux=PrechargeAbort 0,11 13Ah
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=AbortTime unsigned 16,16 /u:ms /d:500 // <factory> Time at which to check that precharge is causing a DC link voltage rise
-Var=AbortVoltage unsigned 32,16 /u:VDC /d:50 // <factory> Minimum voltage under which precharge will be aborted
-Var=AbortVoltageRise unsigned 48,16 /u:VDC /d:20 // <factory> minimum voltage rise under which precharge will be aborted
+Var=Meta unsigned 11,3 /e:Meta
+Var=AbortTime unsigned 16,16 /u:ms /d:500	// <factory> Time at which to check that precharge is causing a DC link voltage rise <nv::allHwParams{}.prechargeParams.abortTime>
+Var=AbortVoltage unsigned 32,16 /u:VDC /d:50	// <factory> Minimum voltage under which precharge will be aborted <nv::allHwParams{}.prechargeParams.vdcThresholds[PRECHARGE_VDC_ABORT]>
+Var=AbortVoltageRise unsigned 48,16 /u:VDC /d:20	// <factory> minimum voltage rise under which precharge will be aborted <nv::allHwParams{}.prechargeParams.vdcThresholds[PRECHARGE_VDC_RISE]>
+
+[ParameterQuery]
+DLC=8
+Mux=SimFeedback 0,11 13Bh	// simulated feedback for control board demo <DEMO>
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=Voltage unsigned 16,16 /u:V /f:0.1 /p:1 /d:208	// sets simulated grid voltage
+Var=Frequency unsigned 32,16 /u:Hz /f:0.1 /p:1 /d:60	// sets simulated grid frequency
+Var=Vdc unsigned 48,16 /u:V /max:1000 /d:400	// sets simulated DC link voltage
+
+[ParameterQuery]
+DLC=8
+Mux=VdcMaxControlKiGain 0,11 13Ch	// <factory>
+Var=gain signed 32,32 /f:1E-008 /p:8
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+
+[ParameterQuery]
+DLC=8
+Mux=VdcMaxControlKpGain 0,11 13Dh	// <factory>
+Var=gain signed 32,32 /f:1E-008 /p:8
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+
+[ParameterQuery]
+DLC=8
+Mux=VdcMinControlKiGain 0,11 13Eh	// <factory>
+Var=gain signed 32,32 /f:1E-008 /p:8
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+
+[ParameterQuery]
+DLC=8
+Mux=VdcMinControlKpGain 0,11 13Fh	// <factory>
+Var=gain signed 32,32 /f:1E-008 /p:8
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+
+[ParameterQuery]
+DLC=8
+Mux=IdcCurrentLimits 0,11 140h
+Var=max signed 16,16 /u:A /min:0 /max:1500	// <nv::allHwParams{}.customerLimits.IdcCurrentMax>
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+
+[ParameterQuery]
+DLC=8
+Mux=DeviceTempMeasure 0,11 0141h
+Var=Method unsigned 16,2 /max:1 /e:DeviceTempMethod
+Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 
 [CCP]
 ID=19EFF741h
@@ -1329,14 +1571,14 @@ DLC=8
 CycleTime=100
 Mux=CommandPower 0,8 2 	// Sets the desired real (P) and reactive (Q) power levels for the module to follow while in the GRID FOLLOWING mode.
 Var=RealPower signed 16,16 /u:kW /f:0.1 /min:-375 /max:375 /ln:"Real Power"	// Commanded real power (kW) while in grid following mode - positive real power is defined as power being put into the ac network.
-Var=ReactivePower signed 32,16 /u:kVA /f:0.1 /min:-375 /max:375 /ln:"Reactive Power"	// Commanded reactive power (kVA) while in grid following mode - positive reactive power is defined as the converter having a leading power factor.
+Var=ReactivePower signed 32,16 /u:kVA /f:0.1 /min:-375 /max:375 /ln:"Reactive Power"	// Commanded reactive power (kVA) while in grid following mode - positive reactive power is defined as the converter having a lagging power factor.
 
 [ProcessToInverter]
 DLC=8
 CycleTime=100
 Mux=CommandCurrent 0,8 3 	// Sets the desired real and reactive current levels for the module to follow while in the GRID FOLLOWING mode.
 Var=RealCurrent signed 16,16 /u:A /min:-450 /max:450 /ln:"Real Current"	// Commanded real current while in grid following mode - positive real current is defined as power being put into the ac network.
-Var=ReactiveCurrent signed 32,16 /u:A /min:-450 /max:450 /ln:"Reactive Current"	// Commanded reactive current while in grid following mode - positive reactive current is defined as the converter having a leading power factor.
+Var=ReactiveCurrent signed 32,16 /u:A /min:-450 /max:450 /ln:"Reactive Current"	// Commanded reactive current while in grid following mode - positive reactive current is defined as the converter having a lagging power factor.
 
 [ProcessToInverter]
 DLC=8
@@ -1350,7 +1592,7 @@ CycleTime=100
 Mux=CommandDcControl 0,8 5 	// Set dc link voltage, current and line current limits for DC control mode
 Var=dcCurrentLimit unsigned 16,16 /u:A /max:1450
 Var=dcVoltageLimit unsigned 32,16 /u:V /max:1000
-Var=lineCurrentLimit unsigned 48,16 /u:A /max:450
+Var=lineCurrentLimit unsigned 48,16 /u:A /max:1000
 
 {SENDRECEIVE}
 
@@ -1358,90 +1600,102 @@ Var=lineCurrentLimit unsigned 48,16 /u:A /max:450
 ID=1DEF41F7h	// Echos back parameter values.
 Type=Extended
 DLC=8
-Mux=Param0 0,14 0 
+Mux=Param0 0,11 0 
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 
 [ParameterResponse]
 DLC=8
-Mux=LVM_ClearingTimes1 0,14 1 	// Line Voltage Monitor fault times.
+Mux=LVM_ClearingTimes1 0,11 1 	// Line Voltage Monitor fault times.
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=VUnder45pct unsigned 16,16 /u:ms /min:1 /max:160 /d:160	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains under 45 percent of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
-Var=V45to60pct unsigned 32,16 /u:ms /min:1 /max:11000 /d:1000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between 50 and 88 percent of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
-Var=V60toUVThresh unsigned 48,16 /u:ms /min:1 /max:21000 /d:2000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between 60 and the undervoltage threshold percent of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
+Var=Meta unsigned 11,3 /e:Meta
+Var=VUnder45pct unsigned 16,16 /u:ms /min:1 /max:160 /d:160	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains under 45 percent of the nominal value specified by the VoltageRef parameter while the inverter is running in GRID FOLLOWING mode.  <nv::allLineMonitorParams{}.lvmClearingTimes[CLEARING_TIME_V_UNDER_45]>
+Var=V45to60pct unsigned 32,16 /u:ms /min:1 /max:11000 /d:1000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between 45 and 60 percent of the nominal value specified by the VoltageRef parameter while the inverter is running in GRID FOLLOWING mode.  <nv::allLineMonitorParams{}.lvmClearingTimes[CLEARING_TIME_V_45_TO_60]>
+Var=V60toUVThresh unsigned 48,16 /u:ms /min:1 /max:21000 /d:2000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between 60 percent and the undervoltage threshold of the nominal value specified by the VoltageRef parameter while the inverter is running in GRID FOLLOWING mode.  <nv::allLineMonitorParams{}.lvmClearingTimes[CLEARING_TIME_V_60_TO_LOLIM]>
 
 [ParameterResponse]
 DLC=8
-Mux=LVM_ClearingTimes2 0,14 2 	// Line Voltage Monitor fault times.
+Mux=LVM_ClearingTimes2 0,11 2 	// Line Voltage Monitor fault times.
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=OVThreshTo120pct unsigned 16,16 /u:ms /min:1 /max:13000 /d:1000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between the overvoltage threshold and 120 percent of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
-Var=VOver120 unsigned 32,16 /u:ms /min:1 /max:160 /d:160	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains Over 120 percent of the nominal value specified in the CommandVF message while the inverter is running in GRID FOLLOWING mode.
-Var=VoltageMeasurement unsigned 48,2 /max:1 /e:LVMTYPE	// Select line voltage measurement type for line voltage monitor
+Var=Meta unsigned 11,3 /e:Meta
+Var=OVThreshTo120pct unsigned 16,16 /u:ms /min:1 /max:13000 /d:1000	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains between the overvoltage threshold and 120 percent of the nominal value specified by the VoltageRef parameter while the inverter is running in GRID FOLLOWING mode.  <nv::allLineMonitorParams{}.lvmClearingTimes[CLEARING_TIME_V_HILIM_TO_120]>
+Var=VOver120 unsigned 32,16 /u:ms /min:1 /max:160 /d:160	// Determines the fault trip time when Line-to-line RMS voltage for a phase remains Over 120 percent of the nominal value specified by the VoltageRef parameter while the inverter is running in GRID FOLLOWING mode.  <nv::allLineMonitorParams{}.lvmClearingTimes[CLEARING_TIME_V_OVER_120]>
+Var=VoltageMeasurement unsigned 48,2 /max:1 /e:LVMTYPE	// Select line voltage measurement type for line voltage monitor  <nv::allLineMonitorParams{}.measureLine_N>
 
 [ParameterResponse]
 DLC=8
-Mux=LFM_UnderFreqLimits 0,14 3 	// Line under-frequency Monitor limits.
+Mux=LFM_UnderFreqLimits 0,11 3 	// Line under-frequency Monitor limits.
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=UF1 unsigned 16,16 /u:Hz /f:0.1 /min:40 /max:70 /d:57	// Determines the upper bound, above which the frequency monitor will trip if the line frequency remains for the time specified in FreqHi of the LFM_ClearingTimes Mux.
 Var=UF2 unsigned 32,16 /u:Hz /f:0.1 /min:40 /max:70 /d:59.5	// Determines the upper bound, in which the frequency monitor will trip if the line frequency remains below this bound but above the value of FreqVeryLo for the time specified in FreqLo of the LFM_ClearingTimes Mux.
 
 [ParameterResponse]
 DLC=8
-Mux=LFM_ClearingTimesUF1 0,14 4 	// Line Frequency Monitor Trip times
+Mux=LFM_ClearingTimesUF1 0,11 4 	// Line Frequency Monitor Trip times
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=UF1 unsigned 32,32 /u:ms /min:1 /max:10000 /d:160	// Determines the time it will take for a fault trip to occur when line frequency remains below the value specified in FreqVeryLo of the LFM_Limits Mux when the inverter is in GRID FOLLOWING mode.
 
 [ParameterResponse]
 DLC=8
-Mux=J1939_Interface 0,14 5 	// J1939 interface parameters
-Var=NodeID unsigned 16,8 /max:247 /d:247	// J1939 Source Address node for the module.
-Var=MasterAddr unsigned 24,8 /d:65	// Not presently used.
-Var=Baudrate unsigned 32,4 /max:3 /e:Baudrate /d:2	// CAN baudrate
+Mux=J1939_Interface 0,11 5 	// J1939 interface parameters 
+Var=NodeID unsigned 16,8 /max:247 /d:247	// J1939 Source Address node for the module. <nv::allJ1939Params{}.nodeID>
+Var=MasterAddr unsigned 24,8 /d:65	// Not presently used. <nv::allJ1939Params{}.masterAddr>
+Var=Baudrate unsigned 32,4 /max:3 /e:Baudrate /d:2	// CAN baudrate <nv:c:allJ1939Params{}.baud>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 
 [ParameterResponse]
 DLC=8
-Mux=Fault_Config 0,14 6 	// Allows configuration of various fault conditions to either trip the inverter, or provide a warning status via CAN
+Mux=Fault_Config 0,11 6 	// Allows configuration of various fault conditions to either trip the inverter, or provide a warning status via CAN
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=FilterOvertemp unsigned 22,2 /max:2 /e:FaultConfig /d:1	// Configures action to take when filter overtemperature is detected.
-Var=FanCircuit unsigned 20,2 /max:1 /e:FaultConfig /d:1	// Configured action to take when monitored fan circuit input is lost.  <factory>
+Var=Meta unsigned 11,3 /e:Meta
+Var=FilterOvertemp unsigned 22,2 /max:2 /e:FaultConfig /d:1	// Configures action to take when filter overtemperature is detected.  <nv:c:allAppFaultConfigurationParams{}[FLT_CFG_THERMAL_OVERLOAD]>
+Var=FanCircuit unsigned 20,2 /max:2 /e:FaultConfig /d:1	// Configured action to take when monitored fan circuit input is lost.  <factory>  <nv:c:allAppFaultConfigurationParams{}[FLT_CFG_FAN_CIRCUIT]>
 
 [ParameterResponse]
 DLC=8
-Mux=ContactorDelays1 0,14 7 	// Sets the time the controller assumes it will take for contactors to open/close.
+Mux=ContactorDelays1 0,11 7 	// Sets the time the controller assumes it will take for contactors to open/close.
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=MX1Open unsigned 16,16 /u:ms /max:5000 /d:70	// Maximum time required for the MX1 contactor to open.
-Var=MX1Close unsigned 32,16 /u:ms /max:5000 /d:20	// Maximum time required for the MX1 contactor to close.
-Var=MX2Open unsigned 48,16 /u:ms /max:5000 /d:70	// Maximum time required for the MX2 contactor to open.
+Var=Meta unsigned 11,3 /e:Meta
+Var=MX1Open unsigned 16,16 /u:ms /max:5000 /d:70	// Maximum time required for the MX1 contactor to open.  <nv::allIoParams{}.relayDelays[relayMX1].open>
+Var=MX1Close unsigned 32,16 /u:ms /max:5000 /d:20	// Maximum time required for the MX1 contactor to close.  <nv::allIoParams{}.relayDelays[relayMX1].close>
+Var=MX2Open unsigned 48,16 /u:ms /max:5000 /d:70	// Maximum time required for the MX2 contactor to open.  <nv::allIoParams{}.relayDelays[relayMX2].open>
 
 [ParameterResponse]
 DLC=8
-Mux=ContactorDelays2 0,14 8 	// Sets the time the controller assumes it will take for contactors to open/close.
+Mux=ContactorDelays2 0,11 8 	// Sets the time the controller assumes it will take for contactors to open/close.
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=MX2Close unsigned 16,16 /u:ms /max:5000 /d:20	// Maximum time required for the MX2 contactor to open.
-Var=K1Open unsigned 32,16 /u:ms /max:2000	// Maximum time required for the K1 contactor to open.
-Var=K1Close unsigned 48,16 /u:ms /max:2000 /d:20	// Maximum time required for the K1 contactor to close.
+Var=Meta unsigned 11,3 /e:Meta
+Var=MX2Close unsigned 16,16 /u:ms /max:5000 /d:20	// Maximum time required for the MX2 contactor to open.  <nv::allIoParams{}.relayDelays[relayMX2].close>
+Var=K1Open unsigned 32,16 /u:ms /max:2000	// Maximum time required for the K1 contactor to open.  <nv::allIoParams{}.relayDelays[relayK1].open>
+Var=K1Close unsigned 48,16 /u:ms /max:2000 /d:20	// Maximum time required for the K1 contactor to close.  <nv::allIoParams{}.relayDelays[relayK1].close>
 
 [ParameterResponse]
 DLC=8
-Mux=ContactorDelays3 0,14 9 	// Sets the time the controller assumes it will take for contactors to open/close.
+Mux=ContactorDelays3 0,11 9 	// Sets the time the controller assumes it will take for contactors to open/close.
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=K2Open unsigned 16,16 /u:ms /max:2000	// Maximum time required for the K2 contactor to open.
-Var=K2Close unsigned 32,16 /u:ms /max:2000 /d:20	// Maximum time required for the K2 contactor to close.
+Var=Meta unsigned 11,3 /e:Meta
+Var=K2Open unsigned 16,16 /u:ms /max:2000	// Maximum time required for the K2 contactor to open.  <nv::allIoParams{}.relayDelays[relayK2].open>
+Var=K2Close unsigned 32,16 /u:ms /max:2000 /d:20	// Maximum time required for the K2 contactor to close.  <nv::allIoParams{}.relayDelays[relayK2].close>
 
 [ParameterResponse]
 DLC=8
-Mux=HardwareDef1 0,14 000Ah
+Mux=HardwareDef1 0,11 00Ah
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=DeviceOvertempLimit unsigned 16,16 /u:C /max:200 /d:150	// <factory>
-Var=EnableCalcIDCTrip unsigned 36,2 /max:1 /e:Enable /d:1 /ln:"Calc. IDC trip"	// Enable trip on calculated IDC <factory>
-Var=EnablePumpControl unsigned 38,2 /max:1 /e:Enable /d:1 /ln:"Enable Pump Control"
+Var=Meta unsigned 11,3 /e:Meta
+Var=DeviceOvertempLimit unsigned 16,16 /u:C /max:200 /d:150	// <factory> <nv::allHwParams{}.deviceOvertempLimit>
+Var=EnableCalcIDCTrip unsigned 36,2 /max:1 /e:Enable /d:1 /ln:"Calc. IDC trip"	// Enable trip on calculated IDC <factory> <nv::allHwParams{}.enableIDCTotalFault>
+Var=EnablePumpControl unsigned 38,2 /max:1 /e:Enable /d:1 /ln:"Enable Pump Control"	// <nv::allHwParams{}.useDigitalPump>
 
 [ParameterResponse]
 DLC=8
-Mux=AFF 0,14 000Bh	// Configures active harmonic cancellation.
+Mux=AFF 0,11 00Bh	// Configures active harmonic cancellation.
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=EnablePSAff unsigned 16,2 /max:1 /p:0 /e:Enable /d:1	// Enables/disables positive sequence AFF controller
-Var=EnableNSAff unsigned 18,2 /max:1 /e:Enable /d:1	// Enables/disables negative sequence AFF controller.
+Var=Meta unsigned 11,3 /e:Meta
+Var=EnablePSAff unsigned 16,2 /max:1 /p:0 /e:Enable /d:1	// Enables/disables positive sequence AFF controller  <nv::allAfeParams{}.affConfig[AFF_CFG_PS].enable>
+Var=EnableNSAff unsigned 18,2 /max:1 /e:Enable /d:1	// Enables/disables negative sequence AFF controller.  <nv::allAfeParams{}.affConfig[AFF_CFG_NS].enable>
 Var=PSGain unsigned 32,8 /f:0.01 /p:2 /d:0.02	// <factory>
 Var=PSLimit unsigned 40,8 /f:0.01 /p:2 /d:0.05	// <factory>
 Var=NSGain unsigned 48,8 /f:0.01 /p:2 /d:0.02	// <factory>
@@ -1449,14 +1703,16 @@ Var=NSLimit unsigned 56,8 /f:0.01 /p:2 /d:0.05	// <factory>
 
 [ParameterResponse]
 DLC=8
-Mux=ManageNV 0,14 000Ch
+Mux=ManageNV 0,11 00Ch
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=SaveToEE_status unsigned 16,2 /max:1 /e:Enable	// Save active parameters to nonvolatile memory.
 
 [ParameterResponse]
 DLC=8
-Mux=Serial 0,14 000Dh
+Mux=Serial 0,11 00Dh
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=Protocol unsigned 22,2 /e:SerialProtocol
 Var=Baudrate unsigned 16,3 /max:6 /e:SerialBaud /d:4	// Serial bit rate
 Var=DropNum unsigned 24,8 /min:1 /max:247 /d:1 /ln:"Modbus Drop"	// Modbus slave address
@@ -1465,545 +1721,625 @@ Var=MonitorTimeout unsigned 32,32 /u:ms /max:30000 /d:1000 /ln:"Monitor Timeout"
 
 [ParameterResponse]
 DLC=8
-Mux=SN 0,14 0010h	// Serial number
+Mux=SN 0,11 010h	// Serial number
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=SerialNumber unsigned 32,32	// Inverter Serial Number
 
 [ParameterResponse]
 DLC=8
-Mux=SoftwareRevisions 0,14 0011h
+Mux=SoftwareRevisions 0,11 011h
 Var=ReadParam_status unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=InterfaceRev unsigned 16,16 /f:0.01 /p:2	// Software revision of the CAN communication interface.
 Var=ControlSwRev unsigned 32,16 /f:0.01 /p:2	// Software revision of the control firmware.
 
 [ParameterResponse]
 DLC=8
-Mux=BuildTime 0,14 0012h
+Mux=BuildTime 0,11 012h
 Var=ReadParam_status unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=BuildTime unsigned 32,32	// Build timestamp.
 
 [ParameterResponse]
 DLC=8
-Mux=SoftwareHash 0,14 0013h
+Mux=SoftwareHash 0,11 013h
 Var=ReadParam_status unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=SoftwareHash unsigned 32,28 -h	// Unique revision identification hashcode.
 
 [ParameterResponse]
 DLC=8
-Mux=ManageDIO 0,14 0014h
+Mux=ManageDIO 0,11 014h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=InvertDI1 unsigned 16,2 /max:1 /e:DIOInverted	// Invert DI1 polarity
-Var=InvertDI2 unsigned 18,2 /max:1 /e:DIOInverted	// Invert DI2 polarity
-Var=InvertDI3 unsigned 20,2 /max:1 /e:DIOInverted	// Invert DI3 polarity
-Var=InvertDI4 unsigned 22,2 /max:1 /e:DIOInverted	// Invert DI4 polarity
-Var=InvertDO1 unsigned 24,2 /max:1 /e:DIOInverted	// Invert DO1 polarity
-Var=InvertDO2 unsigned 26,2 /max:1 /e:DIOInverted	// Invert DO2 polarity
-Var=InvertDO3 unsigned 28,2 /max:1 /e:DIOInverted	// Invert DO3 polarity
-Var=InvertDO4 unsigned 30,2 /max:1 /e:DIOInverted	// Invert DO4 polarity
-Var=ForceRelayMX1 unsigned 38,2 /max:1 /e:RelayCommand /ln:"Close MX1"	// If set to 'Force On,' will force the relay closed, overriding firmware state machine commands.  Meant for diagnostic purposes only.
-Var=ForceRelayMX2 unsigned 36,2 /max:1 /e:RelayCommand /ln:"Close MX2"	// If set to 'Force On,' will force the relay closed, overriding firmware state machine commands.  Meant for diagnostic purposes only.
-Var=ForceRelayK1_Precharge unsigned 34,2 /max:1 /p:0 /e:RelayCommand /ln:"Close K1 precharge"	// If set to 'Force On,' will force the relay closed, overriding firmware state machine commands.  Meant for diagnostic purposes only.
-Var=ForceRelayRelayK2_DCRun unsigned 32,2 /max:1 /e:RelayCommand /ln:"Close K2"	// If set to 'Force On,' will force the relay closed, overriding firmware state machine commands.  Meant for diagnostic purposes only.
-Var=DO1Controller unsigned 46,2 /max:1 /e:DOController	// control source for DO1
-Var=DO2Controller unsigned 44,2 /max:1 /e:DOController	// control source for DO2
-Var=DO3Controller unsigned 42,2 /max:1 /e:DOController	// control source for DO3
-Var=DO4Controller unsigned 40,2 /max:1 /e:DOController	// control source for DO4
-Var=DO1Command unsigned 54,2 /max:1 /e:OnOff	// Output command for DO1 if CAN is selected as controller
-Var=DO2Command unsigned 52,2 /max:1 /e:OnOff	// Output command for DO2 if CAN is selected as controller
-Var=DO3Command unsigned 50,2 /max:1 /e:OnOff	// Output command for DO3 if CAN is selected as controller
-Var=DO4Command unsigned 48,2 /max:1 /e:OnOff	// Output command for DO4 if CAN is selected as controller
-Var=ForceFanOn unsigned 60,2 /max:1 /e:RelayCommand /ln:"Force fan on"	// Forces cooling fan on (air cooled units only)
-Var=InvertHwEnable unsigned 62,2 /max:1 /e:InvertHwEnable /ln:"Invert hardware enable"	// Inverts the logic of the Hardware Enable input.
+Var=Meta unsigned 11,3 /e:Meta
+Var=InvertDI1 unsigned 16,2 /max:1 /e:DIOInverted	// Invert DI1 polarity  <nv::allIoParams{}.diInvert[0]>
+Var=InvertDI2 unsigned 18,2 /max:1 /e:DIOInverted	// Invert DI2 polarity  <nv::allIoParams{}.diInvert[1]>
+Var=InvertDI3 unsigned 20,2 /max:1 /e:DIOInverted	// Invert DI3 polarity  <nv::allIoParams{}.diInvert[2]>
+Var=InvertDI4 unsigned 22,2 /max:1 /e:DIOInverted	// Invert DI4 polarity  <nv::allIoParams{}.diInvert[3]>
+Var=InvertDO1 unsigned 24,2 /max:1 /e:DIOInverted	// Invert DO1 polarity  <nv::allIoParams{}.doInvert[0]>
+Var=InvertDO2 unsigned 26,2 /max:1 /e:DIOInverted	// Invert DO2 polarity  <nv::allIoParams{}.doInvert[1]>
+Var=InvertDO3 unsigned 28,2 /max:1 /e:DIOInverted	// Invert DO3 polarity  <nv::allIoParams{}.doInvert[2]>
+Var=InvertDO4 unsigned 30,2 /max:1 /e:DIOInverted	// Invert DO4 polarity  <nv::allIoParams{}.doInvert[3]>
+Var=ForceRelayMX1 unsigned 38,2 /max:1 /e:RelayCommand /ln:"Close MX1"	// If set to 'Force On,' will force the relay closed, overriding firmware state machine commands.  Meant for diagnostic purposes only.  <nv::allIoParams{}.forceRelayCmds[relayMX1]>
+Var=ForceRelayMX2 unsigned 36,2 /max:1 /e:RelayCommand /ln:"Close MX2"	// If set to 'Force On,' will force the relay closed, overriding firmware state machine commands.  Meant for diagnostic purposes only.  <nv::allIoParams{}.forceRelayCmds[relayMX2]>
+Var=ForceRelayK1_Precharge unsigned 34,2 /max:1 /p:0 /e:RelayCommand /ln:"Close K1 precharge"	// If set to 'Force On,' will force the relay closed, overriding firmware state machine commands.  Meant for diagnostic purposes only.  <nv::allIoParams{}.forceRelayCmds[relayK1]>
+Var=ForceRelayRelayK2_DCRun unsigned 32,2 /max:1 /e:RelayCommand /ln:"Close K2"	// If set to 'Force On,' will force the relay closed, overriding firmware state machine commands.  Meant for diagnostic purposes only.  <nv::allIoParams{}.forceRelayCmds[relayK2]>
+Var=DO1Controller unsigned 46,2 /max:1 /e:DOController	// control source for DO1  <nv:c:allIoParams{}.doCtlSrc[DO_FAN_COOLANT]>
+Var=DO2Controller unsigned 44,2 /max:1 /e:DOController	// control source for DO2  <nv:c:allIoParams{}.doCtlSrc[DO_FAN_CABINET]>
+Var=DO3Controller unsigned 42,2 /max:1 /e:DOController	// control source for DO3  <nv:c:allIoParams{}.doCtlSrc[DO_PUMP_RUN]>
+Var=DO4Controller unsigned 40,2 /max:1 /e:DOController	// control source for DO4  <nv:c:allIoParams{}.doCtlSrc[DO_PUMP_RESET]>
+Var=DO1Command unsigned 54,2 /max:1 /e:OnOff	// Output command for DO1 if CAN is selected as controller  <nv::allIoParams{}.doOverride[DO_FAN_COOLANT]>
+Var=DO2Command unsigned 52,2 /max:1 /e:OnOff	// Output command for DO2 if CAN is selected as controller  <nv::allIoParams{}.doOverride[DO_FAN_CABINET]>
+Var=DO3Command unsigned 50,2 /max:1 /e:OnOff	// Output command for DO3 if CAN is selected as controller  <nv::allIoParams{}.doOverride[DO_PUMP_RUN]>
+Var=DO4Command unsigned 48,2 /max:1 /e:OnOff	// Output command for DO4 if CAN is selected as controller  <nv::allIoParams{}.doOverride[DO_PUMP_RESET]>
+Var=ForceFanOn unsigned 60,2 /max:1 /e:RelayCommand /ln:"Force fan on"	// Forces cooling fan on (air cooled units only)  <nv::allIoParams{}.forceFanOn>
+Var=InvertHwEnable unsigned 62,2 /max:1 /e:InvertHwEnable /ln:"Invert hardware enable"	// Inverts the logic of the Hardware Enable input.  <nv::allIoParams{}.invertHwEnable>
 
 [ParameterResponse]
 DLC=8
-Mux=LocalPLLGain 0,14 0015h
+Mux=LocalPLLGain 0,11 015h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=LocalPLLGain unsigned 16,16 /f:0.001 /min:0.01 /p:3 /d:1 /ln:"Loc. PLL Gain"	// Gain to be applied to the line voltage feedback signals, typically used when sensing voltage on the other side of a transformer.
 
 [ParameterResponse]
 DLC=8
-Mux=LocalPLLOffset 0,14 0016h
+Mux=LocalPLLOffset 0,11 016h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=LocalPLLOffset signed 16,16 /u:deg /min:-180 /max:180 /ln:"Loc. PLL Offset"	// Phase shift angle to be applied to the PLL, typically used when sensing voltage on the other side of a transformer.
 
 [ParameterResponse]
 DLC=8
-Mux=RemotePLLGain 0,14 0017h
+Mux=RemotePLLGain 0,11 017h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=RemotePLLGain unsigned 16,16 /f:0.001 /min:0.01 /p:3 /d:1 /ln:"Rem. PLL Gain"	// Gain to be applied to the line voltage feedback signals, typically used when sensing voltage on the other side of a transformer.
 
 [ParameterResponse]
 DLC=8
-Mux=RemotePLLOffset 0,14 0018h
+Mux=RemotePLLOffset 0,11 018h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=RemotePLLOffset signed 16,16 /u:deg /min:-180 /max:180 /ln:"Rem. PLL Offset"	// Phase shift angle to be applied to the PLL, typically used when sensing voltage on the other side of a transformer.
 
 [ParameterResponse]
 DLC=8
-Mux=VoltsPerAmpComp 0,14 0019h
+Mux=VoltsPerAmpComp 0,11 019h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=VoltsPerAmpComp signed 16,16 /f:0.0001 /min:-1 /max:1 /p:4 /d:0 /ln:"V/A comp"	// Open loop AC voltage compensation term on a per amp basis; used in forming mode.
 
 [ParameterResponse]
 DLC=8
-Mux=RealCurrentOffset 0,14 001Ah
+Mux=RealCurrentOffset 0,11 01Ah
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=RealCurrentOffset signed 32,32 /u:A/V /f:1E-005 /p:5 /d:0.06126
 
 [ParameterResponse]
 DLC=8
-Mux=ReactiveCurrentOffset 0,14 001Bh
+Mux=ReactiveCurrentOffset 0,11 01Bh
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=ReactiveCurrentOffset signed 32,32 /u:A/V /f:1E-005 /p:5 /d:0.18919
 
 [ParameterResponse]
 DLC=8
-Mux=Inductance 0,14 001Ch	// <HYDRA>
+Mux=Inductance 0,11 01Ch	// <HYDRA>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
-Var=legInductance1 unsigned 16,16 /u:uH /f:0.1 /min:0.1 /max:2000 /d:150 /ln:"Leg 1 Inductance"
-Var=legInductance2 unsigned 32,16 /u:uH /f:0.1 /min:0.1 /max:2000 /d:150 /ln:"Leg 2 Inductance"
-Var=legInductance3 unsigned 48,16 /u:uH /f:0.1 /min:0.1 /max:2000 /d:150 /ln:"Leg 3 Inductance"
+Var=Meta unsigned 11,3 /e:Meta
+Var=legInductance1 unsigned 16,16 /u:uH /f:0.1 /min:0.1 /max:2000 /d:150 /ln:"Leg 1 Inductance"	// <nv::f10e6:allDcdcParams{}.legInductance[0]>
+Var=legInductance2 unsigned 32,16 /u:uH /f:0.1 /min:0.1 /max:2000 /d:150 /ln:"Leg 2 Inductance"	// <nv::f10e6:allDcdcParams{}.legInductance[1]>
+Var=legInductance3 unsigned 48,16 /u:uH /f:0.1 /min:0.1 /max:2000 /d:150 /ln:"Leg 3 Inductance"	// <nv::f10e6:allDcdcParams{}.legInductance[2]>
 
 [ParameterResponse]
 DLC=8
-Mux=VoltageControlGains 0,14 001Dh	// <factory>
+Mux=VoltageControlGains 0,11 01Dh	// <factory>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=Kp signed 16,16 /f:0.001	// Proportional Gain
 Var=Ki signed 32,16 /f:1E-005 /p:5	// Integral Gain
 
 [ParameterResponse]
 DLC=8
-Mux=VoltageControlLimits 0,14 001Eh	// <factory>
+Mux=VoltageControlLimits 0,11 01Eh	// <factory>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=min signed 16,16 /f:0.001 /p:3	// lower limit
 Var=max signed 32,16 /f:0.001 /p:3	// upper limit
 
 [ParameterResponse]
 DLC=8
-Mux=CurrentControlBoostGains 0,14 001Fh	// <factory>
+Mux=CurrentControlBoostGains 0,11 01Fh	// <factory>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=Kp signed 16,16 /f:0.001 /p:3	// Proportional Gain
 Var=Ki signed 32,16 /f:1E-005 /p:5	// Integral Gain
 
 [ParameterResponse]
 DLC=8
-Mux=CurrentControlBoostLimits 0,14 0020h	// <factory>
+Mux=CurrentControlBoostLimits 0,11 020h	// <factory>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=min signed 16,16 /f:0.001 /p:3	// lower limit
 Var=max signed 32,16 /f:0.001 /p:3	// upper limit 
 
 [ParameterResponse]
 DLC=8
-Mux=AffSteps 0,14 0021h	// <factory>
+Mux=AffSteps 0,11 021h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=affSteps unsigned 16,16 /f:0.1 /max:100
 
 [ParameterResponse]
 DLC=8
-Mux=DQCCTerm 0,14 0022h	// <factory>
+Mux=DQCCTerm 0,11 022h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=dqCCTerm signed 32,32 /f:1E-006 /p:6 /d:0.092363
 
 [ParameterResponse]
 DLC=8
-Mux=ActiveDamping 0,14 0023h	// <factory>
+Mux=ActiveDamping 0,11 023h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=alpha signed 16,16 /f:0.001 /min:-0.5 /max:0.5 /p:3 /d:0
 Var=beta signed 32,16 /f:0.001 /min:-0.5 /max:0.5 /p:3 /d:0
-Var=VDcDelaySteps unsigned 48,16 /u:steps /max:100
+Var=VDcDelaySteps unsigned 48,16 /u:steps /max:100	// <nv::allAfeParams{}.vDC_delaySteps>
 
 [ParameterResponse]
 DLC=8
-Mux=AFF_DrainFactor 0,14 0024h	// <factory>
+Mux=AFF_DrainFactor 0,11 024h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=PS unsigned 16,16 /f:0.01 /max:1
 Var=NS unsigned 32,16 /f:0.01 /max:1
 
 [ParameterResponse]
 DLC=8
-Mux=MinPulse 0,14 0025h	// <factory>
+Mux=MinPulse 0,11 025h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=minPulseTime unsigned 16,16 /u:ns /max:8000 /d:4000
+Var=Meta unsigned 11,3 /e:Meta
+Var=minPulseTime unsigned 16,16 /u:ns /max:8000 /d:4000	// <nv::allHwParams{}.deviceOvertempLimit>
 
 [ParameterResponse]
 DLC=8
-Mux=Deadtime 0,14 0026h	// <factory>
+Mux=Deadtime 0,11 026h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=time unsigned 16,16 /u:ns /min:800 /max:2500 /d:1400
+Var=Meta unsigned 11,3 /e:Meta
+Var=time unsigned 16,16 /u:ns /min:800 /max:2500 /d:1400	// <nv::allHwParams{}.deadband_ns>
 
 [ParameterResponse]
 DLC=8
-Mux=Fan_Coolant 0,14 0027h
+Mux=Fan_Coolant 0,11 027h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=tempSetpoint unsigned 16,16 /u:C /max:40 /d:35
+Var=Meta unsigned 11,3 /e:Meta
+Var=tempSetpoint unsigned 16,16 /u:C /max:100 /d:35	// <nv::allHwParams{}.fanCoolantTempSet>
 
 [ParameterResponse]
 DLC=8
-Mux=Fan_Cabinet 0,14 0028h
+Mux=Fan_Cabinet 0,11 028h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=tempSetpoint unsigned 16,16 /u:C /max:50 /d:35	// Temperature at which fan is enabled.
+Var=Meta unsigned 11,3 /e:Meta
+Var=tempSetpoint unsigned 16,16 /u:C /max:50 /d:35	// Temperature at which fan is enabled. <nv::allHwParams{}.fanCabinetTempSet>
 
 [ParameterResponse]
 DLC=8
-Mux=HiTempInvReady 0,14 0029h	// <factory>
+Mux=HiTempInvReady 0,11 029h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=temp unsigned 16,16 /u:C /max:180 /d:70
+Var=Meta unsigned 11,3 /e:Meta
+Var=temp unsigned 16,16 /u:C /max:180 /d:70	// <nv::allHwParams{}.hiTempInvReady>
 
 [ParameterResponse]
 DLC=8
-Mux=HiTempInvRun 0,14 002Ah	// <factory>
+Mux=HiTempInvRun 0,11 02Ah	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=temp unsigned 16,16 /u:C /max:180 /d:75
+Var=Meta unsigned 11,3 /e:Meta
+Var=temp unsigned 16,16 /u:C /max:180 /d:75	// <nv::allHwParams{}.hiTempInvRun>
 
 [ParameterResponse]
 DLC=8
-Mux=HiTempIGBTReady 0,14 002Bh	// <factory>
+Mux=HiTempIGBTReady 0,11 02Bh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=temp unsigned 16,16 /u:C /max:180 /d:70
+Var=Meta unsigned 11,3 /e:Meta
+Var=temp unsigned 16,16 /u:C /max:180 /d:70	// <nv::allHwParams{}.hiTempIGBTReady>
 
 [ParameterResponse]
 DLC=8
-Mux=HiTempIGBTRun 0,14 002Ch	// <factory>
+Mux=HiTempIGBTRun 0,11 02Ch	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=temp unsigned 16,16 /u:C /max:180 /d:90
+Var=Meta unsigned 11,3 /e:Meta
+Var=temp unsigned 16,16 /u:C /max:180 /d:90	// <nv::allHwParams{}.hiTempIGBTRun>
 
 [ParameterResponse]
 DLC=8
-Mux=AfeConfig 0,14 002Dh
+Mux=AfeConfig 0,11 02Dh
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=EnableZSC unsigned 20,2 /max:1 /e:Enable	// Enables DC current injection limiter.
-Var=EnableForming unsigned 18,2 /max:1 /e:Enable	// Islanding mode allowed
-Var=EnableFollowing unsigned 16,2 /max:1 /e:Enable /d:1	// Grid-connect mode allowed
-Var=PhaseRotation unsigned 24,2 /max:1 /e:PhaseRotation /ln:"Positive phase rotation"	// Specifies phase rotation direction.  Only active while transitioning from READY to GRID_FORMING.
-Var=EnableSplitPhase unsigned 32,2 /max:1 /e:EnableSplitPhase /ln:"Split phase"	// Commands the inverter into split-phase mode.
-Var=EnableUPSMode unsigned 28,2 /max:1 /e:EnableUPSMode /ln:"UPS Mode"	// Enables uninterruptible operation when transitioning from GRID FOLLOWING to GRID FORMING operation.  If operating in GRID FOLLOWING mode, and AC grid voltage is interrupted, the module will attempt to transition to GRID FORMING mode, with no interruption 
-Var=UseVoltageSenseAsRemote unsigned 30,2 /max:1 /e:RemoteVoltageSense /ln:"Use VSense as remote"	// Use local voltage sense input as either local or remote reference.
-Var=EnableAC unsigned 34,2 /max:1 /e:Enable	// Enable AC power stage
-Var=EnableDC unsigned 36,2 /max:1 /e:Enable /d:1	// Enable DC power stage 
-Var=EnableDcControl unsigned 38,2 /e:Enable /d:1 // <factory>
+Var=Meta unsigned 11,3 /e:Meta
+Var=EnableZSC unsigned 20,2 /max:1 /e:Enable	// Enables DC current injection limiter.  <nv::allAfeParams{}.cfgFlags.EnableZSC>
+Var=EnableForming unsigned 18,2 /max:1 /e:Enable	// Islanding mode allowed  <nv::allAfeParams{}.cfgFlags.allowForming>
+Var=EnableFollowing unsigned 16,2 /max:1 /e:Enable /d:1	// Grid-connect mode allowed  <nv::allAfeParams{}.cfgFlags.allowFollowing>
+Var=PhaseRotation unsigned 24,2 /max:1 /e:PhaseRotation /ln:"Positive phase rotation"	// Specifies phase rotation direction.  Only active while transitioning from READY to GRID_FORMING.  <nv::allAfeParams{}.cfgFlags.phaseRotationCmd>
+Var=EnableSplitPhase unsigned 32,2 /max:1 /e:EnableSplitPhase /ln:"Split phase"	// Commands the inverter into split-phase mode.  <nv::allAfeParams{}.cfgFlags.enableSplitPhase>
+Var=EnableUPSMode unsigned 28,2 /max:1 /e:EnableUPSMode /ln:"UPS Mode"	// Enables uninterruptible operation when transitioning from GRID FOLLOWING to GRID FORMING operation.  If operating in GRID FOLLOWING mode, and AC grid voltage is interrupted, the module will attempt to transition to GRID FORMING mode, with no interruption  <nv::allAfeParams{}.cfgFlags.enableUPSMode>
+Var=UseVoltageSenseAsRemote unsigned 30,2 /max:1 /e:RemoteVoltageSense /ln:"Use VSense as remote"	// Use local voltage sense input as either local or remote reference.  <nv::allAfeParams{}.cfgFlags.useVoltageRemote>
+Var=EnableAC unsigned 34,2 /max:1 /e:Enable	// Enable AC power stage  <nv::allAfeParams{}.cfgFlags.allowACStage>
+Var=EnableDC unsigned 36,2 /max:1 /e:Enable /d:1	// Enable DC power stage  <nv::allAfeParams{}.cfgFlags.allowDCStage>
+Var=EnableDcControl unsigned 38,2 /e:Enable /d:1	// <factory>  <nv::allAfeParams{}.cfgFlags.allowDCControl>
 
 [ParameterResponse]
 DLC=8
-Mux=TOL_ACFast 0,14 002Eh	// <factory>
+Mux=TOL_ACFast 0,11 02Eh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=level unsigned 16,16 /u:ARMS /max:800 /d:560
 Var=time unsigned 32,16 /u:seconds /min:1 /max:3600 /d:10
 
 [ParameterResponse]
 DLC=8
-Mux=TOL_ACSlow 0,14 002Fh	// <factory>
+Mux=TOL_ACSlow 0,11 02Fh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=level unsigned 16,16 /u:ARMS /max:800 /d:440
 Var=time unsigned 32,16 /u:seconds /min:1 /max:3600 /d:600
 
 [ParameterResponse]
 DLC=8
-Mux=TOL_DCFast 0,14 0030h	// <factory>
+Mux=TOL_DCFast 0,11 030h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=level unsigned 16,16 /u:ADC /max:800 /d:235
 Var=time unsigned 32,16 /u:seconds /min:1 /max:3600 /d:10
 
 [ParameterResponse]
 DLC=8
-Mux=IGBT_r0 0,14 0032h	// <factory>
+Mux=IGBT_r0 0,11 032h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.01
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.01	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rIGBT[0]>
 
 [ParameterResponse]
 DLC=8
-Mux=IGBT_r1 0,14 0033h	// <factory>
+Mux=IGBT_r1 0,11 033h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.071
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.071	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rIGBT[1]>
 
 [ParameterResponse]
 DLC=8
-Mux=IGBT_r2 0,14 0034h	// <factory>
+Mux=IGBT_r2 0,11 034h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.011
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.011	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rIGBT[2]>
 
 [ParameterResponse]
 DLC=8
-Mux=IGBT_r3 0,14 0035h	// <factory>
+Mux=IGBT_r3 0,11 035h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.05
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.05	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rIGBT[3]>
 
 [ParameterResponse]
 DLC=8
-Mux=Diode_r0 0,14 0036h	// <factory>
+Mux=Diode_r0 0,11 036h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.017
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.017	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rDiode[0]>
 
 [ParameterResponse]
 DLC=8
-Mux=Diode_r1 0,14 0037h	// <factory>
+Mux=Diode_r1 0,11 037h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.119
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.119	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rDiode[1]>
 
 [ParameterResponse]
 DLC=8
-Mux=Diode_r2 0,14 0038h	// <factory>
+Mux=Diode_r2 0,11 038h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.019
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.019	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rDiode[2]>
 
 [ParameterResponse]
 DLC=8
-Mux=Diode_r3 0,14 0039h	// <factory>
+Mux=Diode_r3 0,11 039h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.16
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.16	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rDiode[3]>
 
 [ParameterResponse]
 DLC=8
-Mux=rii 0,14 003Ah	// <factory>
+Mux=rii 0,11 03Ah	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.26
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.26	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rii>
 
 [ParameterResponse]
 DLC=8
-Mux=rdi 0,14 003Bh	// <factory>
+Mux=rdi 0,11 03Bh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=r signed 32,32 /f:1E-006 /p:6 /d:0.1
+Var=Meta unsigned 11,3 /e:Meta
+Var=r signed 32,32 /f:1E-006 /p:6 /d:0.1	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rdi>
 
 [ParameterResponse]
-DLC=8
-Mux=CurrentControlBuckGains 0,14 003Ch	// <factory>
+Mux=CurrentControlBuckGains 0,11 03Ch	// <factory> 
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=Kp signed 16,16 /f:0.001 /p:3	// Proportional Gain
 Var=Ki signed 32,16 /f:1E-005 /p:5	// Integral Gain
 
 [ParameterResponse]
 DLC=8
-Mux=CurrentControlBuckLimits 0,14 003Dh	// <factory>
+Mux=CurrentControlBuckLimits 0,11 03Dh	// <factory>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=min signed 16,16 /f:0.001 /p:3	// lower limit
 Var=max signed 32,16 /f:0.001 /p:3	// upper limit 
 
 [ParameterResponse]
 DLC=8
-Mux=InputVoltageLimits 0,14 003Eh	// <HYDRA>
+Mux=InputVoltageLimits 0,11 03Eh	// <HYDRA>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=min unsigned 16,16 /u:V /max:1000
 Var=max unsigned 32,16 /u:V /max:1000 /d:1000
 
 [ParameterResponse]
 DLC=8
-Mux=InputCurrentLimits 0,14 003Fh	// <HYDRA>
+Mux=InputCurrentLimits 0,11 03Fh	// <HYDRA>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=min signed 16,16 /u:A /min:-1400 /max:0 /d:-500
 Var=max signed 32,16 /u:A /min:0 /max:1400 /d:500
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerChunk01 0,14 0040h	// <factory>
+Mux=LoggerChunk01 0,11 040h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[0].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[0].bytes>
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerChunk02 0,14 0041h	// <factory>
+Mux=LoggerChunk02 0,11 041h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[1].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[1].bytes>
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerChunk03 0,14 0042h	// <factory>
+Mux=LoggerChunk03 0,11 042h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[2].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[2].bytes>
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerChunk04 0,14 0043h	// <factory>
+Mux=LoggerChunk04 0,11 043h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[3].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[3].bytes>
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerChunk05 0,14 0044h	// <factory>
+Mux=LoggerChunk05 0,11 044h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[4].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[4].bytes>
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerChunk06 0,14 0045h	// <factory>
+Mux=LoggerChunk06 0,11 045h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[5].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[5].bytes>
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerChunk07 0,14 0046h	// <factory>
+Mux=LoggerChunk07 0,11 046h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[6].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[6].bytes>
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerChunk08 0,14 0047h	// <factory>
+Mux=LoggerChunk08 0,11 047h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[7].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[7].bytes>
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerChunk09 0,14 0048h	// <factory>
+Mux=LoggerChunk09 0,11 048h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[8].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[8].bytes>
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerChunk10 0,14 0049h	// <factory>
+Mux=LoggerChunk10 0,11 049h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[9].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[9].bytes>
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerChunk11 0,14 004Ah	// <factory>
+Mux=LoggerChunk11 0,11 04Ah	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[10].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[10].bytes>
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerChunk12 0,14 004Bh	// <factory>
+Mux=LoggerChunk12 0,11 04Bh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[11].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[11].bytes>
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerChunk13 0,14 004Ch	// <factory>
+Mux=LoggerChunk13 0,11 04Ch	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[12].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[12].bytes>
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerChunk14 0,14 004Dh	// <factory>
+Mux=LoggerChunk14 0,11 04Dh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[13].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[13].bytes>
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerChunk15 0,14 004Eh	// <factory>
+Mux=LoggerChunk15 0,11 04Eh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[14].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[14].bytes>
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerChunk16 0,14 004Fh	// <factory>
+Mux=LoggerChunk16 0,11 04Fh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Address unsigned 32,32 -h
-Var=Bytes unsigned 16,16
+Var=Meta unsigned 11,3 /e:Meta
+Var=Address unsigned 32,32 -h	// <nv:c:allDataLoggerParams{}.chunks[15].address>
+Var=Bytes unsigned 16,16	// <nv::allDataLoggerParams{}.chunks[15].bytes>
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerConf01 0,14 0060h
+Mux=LoggerConf01 0,11 060h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=PostTriggerDuration_s unsigned 16,14 /u:seconds /f:0.001 /d:0.2	// Duration datalogger continues logging after a fault event occurs.
+Var=Meta unsigned 11,3 /e:Meta
+Var=PostTriggerDuration_s unsigned 16,14 /u:seconds /f:0.001 /d:0.2	// Duration datalogger continues logging after a fault event occurs. <nv::allDataLoggerParams{}.postTriggerDuration_ms>
 
 [ParameterResponse]
 DLC=8
-Mux=LoggerStatus01 0,14 0061h
+Mux=LoggerStatus01 0,11 061h
 Var=ReadParam_status unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=ReadableOctets unsigned 32,32 /u:octets
 
 [ParameterResponse]
 DLC=8
-Mux=RealPwrCmdRampRate 0,14 0070h
+Mux=RealPwrCmdRampRate 0,11 070h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=rate unsigned 32,32 /u:kW/s /f:0.001 /max:10000 /p:3 /d:2000	// slew limit for change in real power command
 
 [ParameterResponse]
 DLC=8
-Mux=ReactivePwrCmdRampRate 0,14 0071h
+Mux=ReactivePwrCmdRampRate 0,11 071h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=rate unsigned 32,32 /u:kVA/s /f:0.001 /max:10000 /p:3 /d:2000	// slew limit for change in reactive power command
 
 [ParameterResponse]
 DLC=8
-Mux=UserSettings 0,14 0072h
+Mux=UserSettings 0,11 072h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=OverVoltageDC unsigned 16,16 /u:V /max:1350 /p:0 /d:1100	// User Settable Over Voltage Limit
 Var=UnderVoltageDC unsigned 32,16 /u:V /max:1350 /d:705	// User Settable Under Voltage Limit
 
 [ParameterResponse]
 DLC=8
-Mux=LineMonitor 0,14 0073h
+Mux=LineMonitor 0,11 073h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
-Var=ReconnectDelay unsigned 32,32 /u:seconds /f:0.1 /max:600 /d:10	// Delay time after abnormal grid conditions end until reconnect.
+Var=Meta unsigned 11,3 /e:Meta
+Var=ReconnectDelay unsigned 32,32 /u:seconds /f:0.1 /max:600 /d:10	// Delay time after abnormal grid conditions end until reconnect.  <nv::fRECONNECT_DELAY_SCALE:allLineMonitorParams{}.reconnectTime>
 
 [ParameterResponse]
 DLC=8
-Mux=FactoryAccess 0,14 0074h
-Var=FactoryAccess unsigned 16,16
+Mux=AccessLevel 0,11 074h
+Var=Password unsigned 16,16
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=Level unsigned 32,6 /e:AccessLevel
+Var=CheckLimits unsigned 38,2 /e:OnOff
 
 [ParameterResponse]
 DLC=8
-Mux=Fan_PowerModule_MinSpeed 0,14 0075h	// <factory>
+Mux=Fan_PowerModule_MinSpeed 0,11 075h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=current unsigned 16,16 /u:A
+Var=Meta unsigned 11,3 /e:Meta
+Var=current unsigned 16,16 /u:A	// <nv::allHwParams{}.fanIntCurrentMin>
 
 [ParameterResponse]
 DLC=8
-Mux=Fan_PowerModule_MaxSpeed 0,14 0076h	// <factory>
+Mux=Fan_PowerModule_MaxSpeed 0,11 076h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=current unsigned 16,16 /u:A
+Var=Meta unsigned 11,3 /e:Meta
+Var=current unsigned 16,16 /u:A	// <nv::allHwParams{}.fanIntCurrentMax>
 
 [ParameterResponse]
 DLC=8
-Mux=FanType 0,14 0077h
+Mux=FanType 0,11 077h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=CoolantFan unsigned 16,2 /max:1 /e:FANTYPE /d:1
-Var=CabinetFan unsigned 18,2 /max:1 /e:FANTYPE
-Var=InternalFan unsigned 20,2 /max:1 /e:FANTYPE	// <factory>
+Var=Meta unsigned 11,3 /e:Meta
+Var=CoolantFan unsigned 16,2 /max:1 /e:FANTYPE /d:1	// <nv:c:allHwParams{}.fanTypes[HARDWARE_FAN_COOLANT]>
+Var=CabinetFan unsigned 18,2 /max:1 /e:FANTYPE	// <nv:c:allHwParams{}.fanTypes[HARDWARE_FAN_CABINET]>
+Var=InternalFan unsigned 20,2 /max:1 /e:FANTYPE	// <factory> <nv:c:allHwParams{}.fanTypes[HARDWARE_FAN_INTERNAL]>
 
 [ParameterResponse]
 DLC=8
-Mux=VoltageRef 0,14 0078h
+Mux=VoltageRef 0,11 078h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=Voltage unsigned 16,16 /u:VRMS /f:0.1 /min:10 /max:480 /d:480 /ln:"Voltage"	// Desired output voltage while in grid forming mode.
 
 [ParameterResponse]
 DLC=8
-Mux=FrequencyRef 0,14 0079h
+Mux=FrequencyRef 0,11 079h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=Frequency unsigned 16,16 /u:Hz /f:0.1 /min:45 /max:65 /d:60 /ln:"Frequency"	// Desired output frequency while in grid forming mode.
 
 [ParameterResponse]
 DLC=8
-Mux=StatusDeviceTemps2 0,14 007Fh
+Mux=StatusDeviceTemps2 0,11 07Fh
 Var=ReadParam_status unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=TempTmodel_calculated signed 16,16 /u:C /f:0.1 /min:-40 /max:120 /ln:"Model"	// Thermal Model predicted temp
 Var=IGBTTemperature signed 32,16 /u:C /f:0.1 /min:-40 /max:175 /ln:"IGBT"	// Hottest IGBT
 Var=DiodeTemperature signed 48,16 /u:C /f:0.1 /min:-40 /max:175 /ln:"Diode"	// Hottest Diode
 
 [ParameterResponse]
 DLC=8
-Mux=StatusDeviceTemps 0,14 0080h
+Mux=StatusDeviceTemps 0,11 080h
 Var=ReadParam_status unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=TempDeviceBrdgA_measured signed 48,16 /u:C /f:0.1 /min:-40 /max:120 /ln:"Bridge A Temp."	// BridgeA Device temp
 Var=TempDeviceBrdgB_measured signed 32,16 /u:C /f:0.1 /min:-40 /max:120 /ln:"Bridge B Temp."	// BridgeB Device temp
 
 [ParameterResponse]
 DLC=8
-Mux=ConverterLosses 0,14 0081h
+Mux=ConverterLosses 0,11 081h
 Var=ReadParam_status unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=ConverterLosses unsigned 16,16 /u:W /ln:"Converter Losses"	// Power converter thermal loss, excluding grid filter.
 
 [ParameterResponse]
 DLC=8
-Mux=StatusFaults 0,14 0082h
+Mux=StatusFaults 0,11 082h
 Var=ReadParam_status unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=LossValidControlMessage unsigned 16,4 /e:Fault /ln:"Control Message"	// Set whenever a control message required for operation contains out of range data or has not been received within the required timeout period.
 Var=dIdt unsigned 20,2 /max:1 /e:Fault	// Rapid change in current
 Var=CtlBrdVoltage unsigned 22,2 /max:1 /e:Fault /ln:"Control Bd. Undervolt."	// The control board power supply voltage is out of range
@@ -2032,387 +2368,449 @@ Var=BridgeAFault unsigned 61,3 /e:BridgeFlt /ln:"Bridge A"	// Each bridge has ha
 
 [ParameterResponse]
 DLC=8
-Mux=StatusFaults2 0,14 0083h
+Mux=StatusFaults2 0,11 083h
 Var=ReadParam_status unsigned 14,2 /min:1 /e:ReadNV
-Var=OvervoltageDC unsigned 30,2 /e:Fault /ln:"Overvoltage DC"	// Set immediately upon the software detection of DC voltage exceeding the threshold value.
-Var=UndervoltageDC unsigned 28,2 /e:Fault /ln:"Undervoltage DC"	// Indicates loss of DC source voltage.
-Var=OvercurrentDC unsigned 26,2 /e:Fault /ln:"Overcurrent DC"	// Set immediately upon the software detection of DC current exceeding the threshold value.
-Var=FanCircuit unsigned 24,2 /max:1 /e:Fault /ln:"Fan Circuit"	// There is an issue with the module internal cooling fan
+Var=Meta unsigned 11,3 /e:Meta
 Var=OvertempPowerDevice unsigned 16,2 /e:Fault /ln:"IGBT Overtemp"	// Set immediately upon the software detection of an IGBT temperature exceeding the threshold value.
 Var=OvertempInternal unsigned 18,2 /e:Fault /ln:"Internal Overtemp"	// Set immediately upon the software detection of an internal inverter temperature exceeding the threshold value.
 Var=OvercurrentAC unsigned 20,2 /e:Fault /ln:"Overcurrent AC"	// Set immediately upon the software detection of AC current exceeding the threshold value.
 Var=GeneralFault unsigned 22,2 /e:Fault /ln:"General"	// Will be set any time a fault shutdown has occurred.  It is always accompanied by an additional fault descriptor.
+Var=FanCircuit unsigned 24,2 /max:1 /e:Fault /ln:"Fan Circuit"	// There is an issue with the module internal cooling fan
+Var=OvercurrentDC unsigned 26,2 /e:Fault /ln:"Overcurrent DC"	// Set immediately upon the software detection of DC current exceeding the threshold value.
+Var=UndervoltageDC unsigned 28,2 /e:Fault /ln:"Undervoltage DC"	// Indicates loss of DC source voltage.
+Var=OvervoltageDC unsigned 30,2 /e:Fault /ln:"Overvoltage DC"	// Set immediately upon the software detection of DC voltage exceeding the threshold value.
 Var=LowCoolingFlow unsigned 32,2 /e:Fault /ln:"Low Cooling Flow"	// An issue has been detected with the cooling system
+Var=PORTimeout unsigned 42,2 /e:Fault /ln:"POR Timeout"	// The system was unable to transition out of the POR state within the timeout period
 
 [ParameterResponse]
 DLC=8
-Mux=StatusControlVoltage 0,14 0084h	// <factory>
+Mux=StatusControlVoltage 0,11 084h	// <factory>
 Var=ReadParam_status unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=v24_Supply unsigned 16,16 /u:V /f:0.01 /min:23 /max:25 /ln:"24V Supply"	// Present voltage of the control board 24V power supply.
 Var=v15_Supply unsigned 48,16 /u:V /f:0.01 /min:14 /max:16 /ln:"15V Supply"	// Present voltage of the control board 15V power supply.
 Var=n15V_Supply signed 32,16 /u:V /f:0.01 /min:-16 /max:-14 /ln:"-15V Supply"	// Present voltage of the control board -15V power supply.
 
 [ParameterResponse]
 DLC=8
-Mux=StatusControlVoltage2 0,14 0085h	// <factory>
+Mux=StatusControlVoltage2 0,11 085h	// <factory>
 Var=ReadParam_status unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=v5p0_Supply unsigned 16,16 /u:V /f:0.01 /min:4.5 /max:5.5 /ln:"5V Supply"	// Present voltage of the control board 5V power suppy.
 Var=v3p3_Supply unsigned 32,16 /u:V /f:0.01 /min:3 /max:3.6 /ln:"3.3V Supply"
 
 [ParameterResponse]
 DLC=8
-Mux=RealPowerLimits 0,14 0086h
+Mux=RealPowerLimits 0,11 086h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=min signed 16,16 /u:kW /f:0.1 /min:-375 /max:0	// Minimum allowed real power command
-Var=max signed 32,16 /u:kW /f:0.1 /min:0 /max:375	// Maximum allowed real power command
+Var=Meta unsigned 11,3 /e:Meta
+Var=min signed 16,16 /u:kW /f:0.1 /min:-375 /max:0	// Minimum allowed real power command <nv::allHwParams{}.customerLimits.realPowerMin>
+Var=max signed 32,16 /u:kW /f:0.1 /min:0 /max:375	// Maximum allowed real power command <nv::allHwParams{}.customerLimits.realPowerMax>
 
 [ParameterResponse]
 DLC=8
-Mux=ReactivePowerLimits 0,14 0087h
+Mux=ReactivePowerLimits 0,11 087h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=min signed 16,16 /u:kVA /f:0.1 /min:-375 /max:0	// Minimum allowed reactive power command
-Var=max signed 32,16 /u:kVA /f:0.1 /min:0 /max:375	// Maximum allowed reactive power command
+Var=Meta unsigned 11,3 /e:Meta
+Var=min signed 16,16 /u:kVA /f:0.1 /min:-375 /max:0	// Minimum allowed reactive power command <nv::allHwParams{}.customerLimits.reactivePowerMin>
+Var=max signed 32,16 /u:kVA /f:0.1 /min:0 /max:375	// Maximum allowed reactive power command <nv::allHwParams{}.customerLimits.reactivePowerMax>
 
 [ParameterResponse]
 DLC=8
-Mux=RealCurrentLimits 0,14 0088h
+Mux=RealCurrentLimits 0,11 088h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=min signed 16,16 /u:A /min:-450 /max:0	// Minimum allowed real current command
-Var=max signed 32,16 /u:A /min:0 /max:450	// Maximum allowed real current command
+Var=Meta unsigned 11,3 /e:Meta
+Var=min signed 16,16 /u:A /min:-450 /max:0	// Minimum allowed real current command <nv::allHwParams{}.customerLimits.realCurrentMin>
+Var=max signed 32,16 /u:A /min:0 /max:450	// Maximum allowed real current command <nv::allHwParams{}.customerLimits.realCurrentMax>
 
 [ParameterResponse]
 DLC=8
-Mux=ReactiveCurrentLimits 0,14 0089h
+Mux=ReactiveCurrentLimits 0,11 089h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=min signed 16,16 /u:A /min:-450 /max:0	// Minimum allowed reactive current command
-Var=max signed 32,16 /u:A /min:0 /max:450	// Maximum allowed reactive current command
+Var=Meta unsigned 11,3 /e:Meta
+Var=min signed 16,16 /u:A /min:-450 /max:0	// Minimum allowed reactive current command <nv::allHwParams{}.customerLimits.reactiveCurrentMin>
+Var=max signed 32,16 /u:A /min:0 /max:450	// Maximum allowed reactive current command <nv::allHwParams{}.customerLimits.reactiveCurrentMax>
 
 [ParameterResponse]
 DLC=8
-Mux=DataloggerConfig 0,14 008Ah
+Mux=DataloggerConfig 0,11 08Ah
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=ResetDatalogger unsigned 16,2 /e:OnOff
 
 [ParameterResponse]
 DLC=8
-Mux=DataloggerStatus 0,14 008Bh
+Mux=DataloggerStatus 0,11 08Bh
 Var=ReadParam_status unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=DataloggerRecording unsigned 58,2 /e:OnOff /ln:"Logging"
 Var=DataloggerConfigurationIsValid unsigned 56,2 /e:OnOff
 
 [ParameterResponse]
 DLC=8
-Mux=StatusLineCurrents_txRate 0,14 008Ch
+Mux=StatusLineCurrents_txRate 0,11 08Ch
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusLineCurrents message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusLineCurrents message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusLineCurrents]>
 
 [ParameterResponse]
 DLC=8
-Mux=StatusLineToNVoltages_txRate 0,14 008Dh
+Mux=StatusLineToNVoltages_txRate 0,11 08Dh
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusLineToNVoltages message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusLineToNVoltages message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusLineToNVoltages]>
 
 [ParameterResponse]
 DLC=8
-Mux=StatusRemoteLineToNV_txRate 0,14 008Eh
+Mux=StatusRemoteLineToNV_txRate 0,11 08Eh
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusRemoteLineToNV message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusRemoteLineToNV message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusRemoteLineToNV]>
 
 [ParameterResponse]
 DLC=8
-Mux=StatusACRemote_txRate 0,14 008Fh
+Mux=StatusACRemote_txRate 0,11 08Fh
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusACRemoteParameters message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusACRemoteParameters message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusACRemote]>
 
 [ParameterResponse]
 DLC=8
-Mux=StatusMeasuredPower_txRate 0,14 0090h
+Mux=StatusMeasuredPower_txRate 0,11 090h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusMeasuredPower message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusMeasuredPower message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusMeasuredPower]>
 
 [ParameterResponse]
 DLC=8
-Mux=StatusCommandedPower_txRate 0,14 0091h
+Mux=StatusCommandedPower_txRate 0,11 091h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusCommandedPower message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusCommandedPower message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusCommandedPower]>
 
 [ParameterResponse]
 DLC=8
-Mux=StatusBits_txRate 0,14 0092h
+Mux=StatusBits_txRate 0,11 092h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.01	// rate at which the StatusBits message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.01	// rate at which the StatusBits message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusBits]>
 
 [ParameterResponse]
 DLC=8
-Mux=StatusTemps_txRate 0,14 0093h
+Mux=StatusTemps_txRate 0,11 093h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusTemps message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusTemps message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusTemps]>
 
 [ParameterResponse]
 DLC=8
-Mux=StatusAC_txRate 0,14 0094h
+Mux=StatusAC_txRate 0,11 094h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusACParameters message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusACParameters message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusAC]>
 
 [ParameterResponse]
 DLC=8
-Mux=StatusDCParameters_txRate 0,14 0095h
+Mux=StatusDCParameters_txRate 0,11 095h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusDCParameters message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusDCParameters message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusDCParameters]>
 
 [ParameterResponse]
 DLC=8
-Mux=StatusCommandedCurrent_txRate 0,14 0096h
+Mux=StatusCommandedCurrent_txRate 0,11 096h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10	// rate at which the StatusCommandedCurrent message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10	// rate at which the StatusCommandedCurrent message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusCommandedCurrent]>
 
 [ParameterResponse]
 DLC=8
-Mux=IdqControlPsKpGain 0,14 0097h	// <factory>
+Mux=IdqControlPsKpGain 0,11 097h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-008 /p:8
 
 [ParameterResponse]
 DLC=8
-Mux=IdqControlPsKiGain 0,14 0098h	// <factory>
+Mux=IdqControlPsKiGain 0,11 098h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-008 /p:8
 
 [ParameterResponse]
 DLC=8
-Mux=IdqControlNsKpGain 0,14 0099h	// <factory>
+Mux=IdqControlNsKpGain 0,11 099h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-008 /p:8
 
 [ParameterResponse]
 DLC=8
-Mux=IdqControlNsKiGain 0,14 009Ah	// <factory>
+Mux=IdqControlNsKiGain 0,11 09Ah	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-008 /p:8
 
 [ParameterResponse]
 DLC=8
-Mux=VdcControlKpGain 0,14 009Bh	// <factory>
+Mux=VdcControlKpGain 0,11 09Bh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-008 /p:8
 
 [ParameterResponse]
 DLC=8
-Mux=VdcControlKiGain 0,14 009Ch	// <factory>
+Mux=VdcControlKiGain 0,11 09Ch	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-008 /p:8
 
 [ParameterResponse]
 DLC=8
-Mux=ControlZscB0Gain 0,14 009Dh	// <factory>
+Mux=ControlZscB0Gain 0,11 09Dh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-008 /p:8
 
 [ParameterResponse]
 DLC=8
-Mux=ControlZscB1Gain 0,14 009Eh	// <factory>
+Mux=ControlZscB1Gain 0,11 09Eh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-008 /p:8
 
 [ParameterResponse]
 DLC=8
-Mux=FrequencyRampRate 0,14 009Fh
+Mux=FrequencyRampRate 0,11 09Fh
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=rate unsigned 32,32 /u:Hz/s /max:1000 /d:10	// Slew limit for change in frequency command.
 
 [ParameterResponse]
 DLC=8
-Mux=VoltageRampRate 0,14 0100h
+Mux=VoltageRampRate 0,11 100h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=rate unsigned 32,32 /u:V/s /d:612	// Slew limit for change in volatage command.  A zero value allows in immediate transition.
 
 [ParameterResponse]
 DLC=8
-Mux=PhaseImbalanceRampRate 0,14 0101h	// <factory>
+Mux=PhaseImbalanceRampRate 0,11 101h	// <factory>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=rate unsigned 32,32 /u:%/s /max:10000	// slew limit for change in phase Imbalance commands
 
 [ParameterResponse]
 DLC=8
-Mux=PhaseImbalance 0,14 0102h	// <factory>
+Mux=PhaseImbalance 0,11 102h	// <factory>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
-Var=phaseA unsigned 16,16 /u:% /max:200 /d:100	// % by which the phase A output will be scaled
-Var=phaseB unsigned 32,16 /u:% /max:200 /d:100	// % by which the phase B output will be scaled
-Var=phaseC unsigned 48,16 /u:% /max:200 /d:100	// % by which the phase C output will be scaled
+Var=Meta unsigned 11,3 /e:Meta
+Var=phaseA unsigned 16,16 /u:% /max:200 /d:100	// % by which the phase A output will be scaled  <nv::f1:allAfeParams{}.phaseImbalance[LINE1]>
+Var=phaseB unsigned 32,16 /u:% /max:200 /d:100	// % by which the phase B output will be scaled  <nv::f1:allAfeParams{}.phaseImbalance[LINE2]>
+Var=phaseC unsigned 48,16 /u:% /max:200 /d:100	// % by which the phase C output will be scaled  <nv::f1:allAfeParams{}.phaseImbalance[LINE3]>
 
 [ParameterResponse]
 DLC=8
-Mux=AntiIslandingFreqGain 0,14 0103h	// <factory>
+Mux=AntiIslandingFreqGain 0,11 103h	// <factory>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-005 /p:5
 
 [ParameterResponse]
 DLC=8
-Mux=AntiIslandingVoltageGain 0,14 0104h	// <factory>
+Mux=AntiIslandingVoltageGain 0,11 104h	// <factory>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=gain signed 32,32 /f:1E-005 /p:5
 
 [ParameterResponse]
 DLC=8
-Mux=IGBT_tc0 0,14 0105h	// <factory>
+Mux=IGBT_tc0 0,11 105h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=tc signed 32,32 /f:1E-006 /p:6 /d:1
+Var=Meta unsigned 11,3 /e:Meta
+Var=tc signed 32,32 /f:1E-006 /p:6 /d:1	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.tcIGBT[0]>
 
 [ParameterResponse]
 DLC=8
-Mux=IGBT_tc1 0,14 0106h	// <factory>
+Mux=IGBT_tc1 0,11 106h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=tc signed 32,32 /f:1E-006 /p:6 /d:0.13
+Var=Meta unsigned 11,3 /e:Meta
+Var=tc signed 32,32 /f:1E-006 /p:6 /d:0.13	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.tcIGBT[1]>
 
 [ParameterResponse]
 DLC=8
-Mux=IGBT_tc2 0,14 0107h	// <factory>
+Mux=IGBT_tc2 0,11 107h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=tc signed 32,32 /f:1E-006 /p:6 /d:0.002
+Var=Meta unsigned 11,3 /e:Meta
+Var=tc signed 32,32 /f:1E-006 /p:6 /d:0.002	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.tcIGBT[2]>
 
 [ParameterResponse]
 DLC=8
-Mux=IGBT_tc3 0,14 0108h	// <factory>
+Mux=IGBT_tc3 0,11 108h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=tc signed 32,32 /f:1E-006 /p:6 /d:4
+Var=Meta unsigned 11,3 /e:Meta
+Var=tc signed 32,32 /f:1E-006 /p:6 /d:4	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.tcIGBT[3]>
 
 [ParameterResponse]
 DLC=8
-Mux=Diode_tc0 0,14 0109h	// <factory>
+Mux=Diode_tc0 0,11 109h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=tc signed 32,32 /f:1E-006 /p:6 /d:1
+Var=Meta unsigned 11,3 /e:Meta
+Var=tc signed 32,32 /f:1E-006 /p:6 /d:1	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.tcDiode[0]>
 
 [ParameterResponse]
 DLC=8
-Mux=Diode_tc1 0,14 010Ah	// <factory>
+Mux=Diode_tc1 0,11 10Ah	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=tc signed 32,32 /f:1E-006 /p:6 /d:0.13
+Var=Meta unsigned 11,3 /e:Meta
+Var=tc signed 32,32 /f:1E-006 /p:6 /d:0.13	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.tcDiode[1]>
 
 [ParameterResponse]
 DLC=8
-Mux=Diode_tc2 0,14 010Bh	// <factory>
+Mux=Diode_tc2 0,11 10Bh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=tc signed 32,32 /f:1E-006 /p:6 /d:0.002
+Var=Meta unsigned 11,3 /e:Meta
+Var=tc signed 32,32 /f:1E-006 /p:6 /d:0.002	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.tcDiode[2]>
 
 [ParameterResponse]
 DLC=8
-Mux=Diode_tc3 0,14 010Ch	// <factory>
+Mux=Diode_tc3 0,11 10Ch	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=tc signed 32,32 /f:1E-006 /p:6 /d:4
+Var=Meta unsigned 11,3 /e:Meta
+Var=tc signed 32,32 /f:1E-006 /p:6 /d:4	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.tcDiode[3]>
 
 [ParameterResponse]
 DLC=8
-Mux=LowFlowTempDelta 0,14 010Dh	// <factory>
+Mux=LowFlowTempDelta 0,11 10Dh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=temperature unsigned 16,16 /u:C /f:0.1 /max:150 /d:20
+Var=Meta unsigned 11,3 /e:Meta
+Var=temperature unsigned 16,16 /u:C /f:0.1 /max:150 /d:20	// <nv::fTEMP_DELTA_SCALE:allHwParams{}.tempDeltaLimit>
 
 [ParameterResponse]
 DLC=8
-Mux=LowFlowTimeLimit 0,14 010Eh	// <factory>
+Mux=LowFlowTimeLimit 0,11 10Eh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=time unsigned 16,16 /u:s /f:0.1 /max:200 /d:30
+Var=Meta unsigned 11,3 /e:Meta
+Var=time unsigned 16,16 /u:s /f:0.1 /max:200 /d:30	// <nv::fTEMP_DELTA_TIME_SCALE:allHwParams{}.tempDeltaTripTime_ms>
 
 [ParameterResponse]
 DLC=8
-Mux=MaxInvRatedCurrent 0,14 010Fh	// Maximum Inverter rated current <factory>
+Mux=MaxInvRatedCurrent 0,11 10Fh	// Maximum Inverter rated current <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=current unsigned 16,16 /u:A /max:1500 /d:460
+Var=Meta unsigned 11,3 /e:Meta
+Var=current unsigned 16,16 /u:A /max:1500 /d:460	// <nv::allHwParams{}.maxInvRatedCurrent>
 
 [ParameterResponse]
 DLC=8
-Mux=TempDerateStart 0,14 0110h	// Temperature at which current derate starts <factory>
+Mux=TempDerateStart 0,11 110h	// Temperature at which current derate starts <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=temperature unsigned 16,16 /u:C /d:40
+Var=Meta unsigned 11,3 /e:Meta
+Var=temperature unsigned 16,16 /u:C /d:40	// <nv::allHwParams{}.tempDerateStart>
 
 [ParameterResponse]
 DLC=8
-Mux=TempDerateRate 0,14 0111h	// Rate at which current is derated when the temperature reaches TempDerateStart <factory>
+Mux=TempDerateRate 0,11 111h	// Rate at which current is derated when the temperature reaches TempDerateStart <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:%/C /f:0.01 /d:1
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:%/C /f:0.01 /d:1	// <nv::fTEMP_DERATE_RATE_SCALE:allHwParams{}.tempDerateRate>
 
 [ParameterResponse]
 DLC=8
-Mux=TripILegImbalance 0,14 0112h	// <factory>
+Mux=TripILegImbalance 0,11 112h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:A /d:300
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:A /d:300	// <nv::allHwParams{}.trips[HAL_TRIP_ILEG_IMBALANCE]>
 
 [ParameterResponse]
 DLC=8
-Mux=TripDiDtEnable 0,14 0113h	// <factory>
+Mux=TripDiDtEnable 0,11 113h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:A /d:200
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:A /d:200	// <nv::allHwParams{}.trips[HAL_TRIP_DI_DT_EN]>
 
 [ParameterResponse]
 DLC=8
-Mux=TripDiDt 0,14 0114h	// <factory>
+Mux=TripDiDt 0,11 114h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:A /d:250
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:A /d:250	// <nv::allHwParams{}.trips[HAL_TRIP_DI_DT]>
 
 [ParameterResponse]
 DLC=8
-Mux=TripIAcMax 0,14 0115h	// <factory>
+Mux=TripIAcMax 0,11 115h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:A /d:575
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:A /d:575	// <nv::allHwParams{}.trips[HAL_TRIP_IAC_MAX]>
 
 [ParameterResponse]
 DLC=8
-Mux=TripIDcMax 0,14 0116h	// <factory>
+Mux=TripIDcMax 0,11 116h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:A /d:900
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:A /d:900	// <nv::allHwParams{}.trips[HAL_TRIP_IDC_MAX]>
 
 [ParameterResponse]
 DLC=8
-Mux=TripVDcMax 0,14 0117h	// <factory>
+Mux=TripVDcMax 0,11 117h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:V /d:1100
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:V /d:1100	// <nv::allHwParams{}.trips[HAL_TRIP_VDC_MAX]>
 
 [ParameterResponse]
 DLC=8
-Mux=TripVDcMin 0,14 0118h	// <factory>
+Mux=TripVDcMin 0,11 118h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:V /d:200
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:V /d:200	// <nv::allHwParams{}.trips[HAL_TRIP_VDC_MIN]>
 
 [ParameterResponse]
 DLC=8
-Mux=TripVAcMax 0,14 0119h	// <factory>
+Mux=TripVAcMax 0,11 119h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:V /d:600
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:V /d:600	// <nv::allHwParams{}.trips[HAL_TRIP_VAC_MAX]>
 
 [ParameterResponse]
 DLC=8
-Mux=LFM_OverFreqLimits 0,14 011Ah	// Line under-frequency Monitor limits.
+Mux=LFM_OverFreqLimits 0,11 11Ah	// Line under-frequency Monitor limits.
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=OF1 unsigned 16,16 /u:Hz /f:0.1 /min:40 /max:70 /d:60.5	// Determines the upper bound, above which the frequency monitor will trip if the line frequency remains for the time specified in FreqHi of the LFM_ClearingTimes Mux.
 Var=OF2 unsigned 32,16 /u:Hz /f:0.1 /min:40 /max:70 /d:62	// Determines the upper bound, above which the frequency monitor will trip if the line frequency remains below this bound but above the value of FreqVeryLo for the time specified in FreqLo of the LFM_ClearingTimes Mux.
 
 [ParameterResponse]
 DLC=8
-Mux=LFM_ClearingTimesUF2 0,14 011Bh	// Line Frequency Monitor Trip times
+Mux=LFM_ClearingTimesUF2 0,11 11Bh	// Line Frequency Monitor Trip times
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=UF2 unsigned 32,32 /u:ms /min:1 /max:300000 /d:2000	// Determines the time it will take for a fault trip to occur when line frequency remains below the value specified in FreqVeryLo of the LFM_Limits Mux when the inverter is in GRID FOLLOWING mode.
 
 [ParameterResponse]
 DLC=8
-Mux=LFM_ClearingTimesOF1 0,14 011Ch	// Line Frequency Monitor Trip times
+Mux=LFM_ClearingTimesOF1 0,11 11Ch	// Line Frequency Monitor Trip times
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=OF1 unsigned 32,32 /u:ms /min:1 /max:300000 /d:2000	// Determines the time it will take for a fault trip to occur when line frequency remains below the value specified in FreqVeryLo of the LFM_Limits Mux when the inverter is in GRID FOLLOWING mode.
 
 [ParameterResponse]
 DLC=8
-Mux=LFM_ClearingTimesOF2 0,14 011Dh	// Line Frequency Monitor Trip times
+Mux=LFM_ClearingTimesOF2 0,11 11Dh	// Line Frequency Monitor Trip times
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=OF2 unsigned 32,32 /u:ms /min:1 /max:10000 /d:160	// Determines the time it will take for a fault trip to occur when line frequency remains below the value specified in FreqVeryLo of the LFM_Limits Mux when the inverter is in GRID FOLLOWING mode.
 
 [ParameterResponse]
 DLC=8
-Mux=TripVRmsMax 0,14 011Eh	// <factory>
+Mux=TripVRmsMax 0,11 11Eh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=level unsigned 16,16 /u:V /d:650
+Var=Meta unsigned 11,3 /e:Meta
+Var=level unsigned 16,16 /u:V /d:650	// <nv::allHwParams{}.trips[HAL_TRIP_VRMS_MAX]>
 
 [ParameterResponse]
 DLC=8
-Mux=StatusWarnings 0,14 011Fh
+Mux=StatusWarnings 0,11 11Fh
 Var=ReadParam_status unsigned 14,2 /min:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=CANWarning unsigned 16,2 /e:WARNING /ln:"CAN Warning"	// CAN Bus in the warning state
 Var=CANErrorPassive unsigned 18,2 /e:WARNING /ln:"CAN Error Passive"	// CAN Bus in the Error Passive state
 Var=FilterOvertemp unsigned 20,2 /e:WARNING /ln:"Filter Overtemperature"	// Filter overtemperature digital input is active.
@@ -2420,173 +2818,252 @@ Var=FanCircuit unsigned 22,2 /e:WARNING /ln:"Fan Circuit"	// There is a problem 
 
 [ParameterResponse]
 DLC=8
-Mux=StatusMeasuredCurrent_txRate 0,14 0120h
+Mux=StatusMeasuredCurrent_txRate 0,11 120h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusMeasuredCurrent message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusMeasuredCurrent message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusMeasuredCurrent]>
 
 [ParameterResponse]
 DLC=8
-Mux=RealCurrentCmdRampRate 0,14 0121h
+Mux=RealCurrentCmdRampRate 0,11 121h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=rate unsigned 32,32 /u:A/s /max:50000 /d:1000	// slew limit for change in real current command
 
 [ParameterResponse]
 DLC=8
-Mux=ReactiveCurrentCmdRampRate 0,14 0122h
+Mux=ReactiveCurrentCmdRampRate 0,11 122h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=rate unsigned 32,32 /u:A/s /max:50000 /d:1000	// slew limit for change in reactive current command
 
 [ParameterResponse]
 DLC=8
-Mux=AcDampingFreq 0,14 0123h	// <factory>
+Mux=AcDampingFreq 0,11 123h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=freq unsigned 16,16 /u:Hz
+Var=Meta unsigned 11,3 /e:Meta
+Var=freq unsigned 16,16 /u:Hz	// <nv::allAfeParams{}.acDampingFreq>
 
 [ParameterResponse]
 DLC=8
-Mux=DcDampingFreq 0,14 0124h	// <factory>
+Mux=DcDampingFreq 0,11 124h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=freq unsigned 16,16 /u:Hz
+Var=Meta unsigned 11,3 /e:Meta
+Var=freq unsigned 16,16 /u:Hz	// <nv::allAfeParams{}.dcDampingFreq>
 
 [ParameterResponse]
 DLC=8
-Mux=StatusLineToLineVoltages_txRate 0,14 0125h
+Mux=StatusLineToLineVoltages_txRate 0,11 125h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusLineToLineVoltages message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusLineToLineVoltages message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusLineToLineVoltages]>
 
 [ParameterResponse]
 DLC=8
-Mux=StatusRemoteLineToLineV_txRate 0,14 0126h
+Mux=StatusRemoteLineToLineV_txRate 0,11 126h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusRemoteLineToLineV message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusRemoteLineToLineV message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusRemoteLineToLineV]>
 
 [ParameterResponse]
 DLC=8
-Mux=RemoteGrid 0,14 0127h
+Mux=RemoteGrid 0,11 127h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=SyncToRemote unsigned 16,2 /max:1 /e:Enable /ln:"Sync to remote"	// Enables sync and connect to remote source.
 
 [ParameterResponse]
 DLC=8
-Mux=VDCScale 0,14 0128h	// <factory>
+Mux=VDCScale 0,11 128h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=volts unsigned 32,32 /u:V /f:1E-005 /p:5 /d:1004
 
 [ParameterResponse]
 DLC=8
-Mux=VlineScale 0,14 0129h	// <factory>
+Mux=VlineScale 0,11 129h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=volts unsigned 32,32 /u:V /f:1E-005 /p:5 /d:499.5
 
 [ParameterResponse]
 DLC=8
-Mux=IlineScale 0,14 012Ah	// <factory>
+Mux=IlineScale 0,11 12Ah	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=amps unsigned 32,32 /u:V /f:1E-005 /p:5 /d:888.989
 
 [ParameterResponse]
 DLC=8
-Mux=OvermodulationLimit 0,14 012Bh	// <factory>
+Mux=OvermodulationLimit 0,11 12Bh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=limit unsigned 16,16 /f:0.001 /p:3 /d:0.59
 
 [ParameterResponse]
 DLC=8
-Mux=LVM_limits 0,14 012Ch	// voltage thresholds for abnormal grid conditions
+Mux=LVM_limits 0,11 12Ch	// voltage thresholds for abnormal grid conditions
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=UnderVoltageThreshold unsigned 16,16 /u:% /f:0.1 /min:60 /max:100 /d:88
 Var=OverVoltageThreshold unsigned 32,16 /u:% /f:0.1 /min:100 /max:110 /d:110
 
 [ParameterResponse]
 DLC=8
-Mux=StatusDCLowside_txRate 0,14 012Dh	// <HYDRA>
+Mux=StatusDCLowside_txRate 0,11 12Dh	// <HYDRA>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusDCParameters message will be sent
+Var=Meta unsigned 11,3 /e:Meta
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusDCParameters message will be sent  <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusDCLowside]>
 
 [ParameterResponse]
 DLC=8
-Mux=VRefRampRate 0,14 012Eh	// <HYDRA>
+Mux=VRefRampRate 0,11 12Eh	// <HYDRA>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
-Var=VperS signed 16,16 /u:V/s /max:10000	// Voltage reference ramp rate
+Var=Meta unsigned 11,3 /e:Meta
+Var=VperS signed 16,16 /u:V/s /max:10000	// Voltage reference ramp rate  <nv::fPU_Vdc:allDcdcParams{}.vRampRate>
 
 [ParameterResponse]
 DLC=8
-Mux=IRefRampRate 0,14 012Fh	// <HYDRA>
+Mux=IRefRampRate 0,11 12Fh	// <HYDRA>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
-Var=AperS signed 16,16 /u:A/s /max:10000	// Current reference ramp rate
+Var=Meta unsigned 11,3 /e:Meta
+Var=AperS signed 16,16 /u:A/s /max:10000	// Current reference ramp rate  <nv::fPU_Idc:allDcdcParams{}.iRampRate>
 
 [ParameterResponse]
 DLC=8
-Mux=DcDcLegControlSourceConfig 0,14 0130h	// Configures control source for DC legs
+Mux=DcDcLegControlSourceConfig 0,11 130h	// Configures control source for DC legs
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=leg1 unsigned 16,4 /max:3 /e:DcLegType
 Var=leg2 unsigned 20,4 /max:3 /e:DcLegType
 Var=leg3 unsigned 24,4 /max:3 /e:DcLegType
 
 [ParameterResponse]
 DLC=8
-Mux=DcDcVoltageDroop 0,14 0131h
+Mux=DcDcVoltageDroop 0,11 131h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
-Var=Resistance unsigned 16,16 /u:Ohm /f:20E-006 /p:3
+Var=Meta unsigned 11,3 /e:Meta
+Var=Resistance unsigned 16,16 /u:Ohm /f:2E-005 /p:3
 
 [ParameterResponse]
 DLC=8
-Mux=StatusCommandedDcControl_txRate 0,14 0132h
-Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1
+Mux=StatusCommandedDcControl_txRate 0,11 132h
+Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// <nv::f0.1:allCanTxRates{}[CAN_TX_CYCLIC_StatusCommandedDcControl]>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 
 [ParameterResponse]
 DLC=8
-Mux=VdcCmdRampRate 0,14 0133h
+Mux=VdcCmdRampRate 0,11 133h
 Var=rate unsigned 32,32 /u:V/s /d:1000	// Slew rate of voltage command.
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 
 [ParameterResponse]
 DLC=8
-Mux=IdcCmdRampRate 0,14 0134h
+Mux=IdcCmdRampRate 0,11 134h
 Var=rate unsigned 32,32 /u:A/s /d:1000	// Slew rate of current command.
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 
 [ParameterResponse]
 DLC=8
-Mux=DcControlDroop 0,14 0135h
+Mux=DcControlDroop 0,11 135h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 Var=resistance unsigned 16,16 /u:V/A /f:2E-005 /p:3
 
 [ParameterResponse]
 DLC=8
-Mux=SoftStart 0,14 0136h
+Mux=SoftStart 0,11 136h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=OpenLoopVoutGain unsigned 16,16 /f:0.001 /p:3 /d:1.025 // <factory> open loop output voltage gain
-Var=SoftStartInc unsigned 32,16 /f:0.0001 /p:4 /d:0.02 // <factory> // ramp increment for OpenLoopVoutGain (ramped at 1ms rate) 
+Var=Meta unsigned 11,3 /e:Meta
+Var=OpenLoopVoutGain unsigned 16,16 /f:0.001 /p:3 /d:1.025	// <factory> open loop output voltage gain  <nv::fVOUT_GAIN_SCALE:allAfeParams{}.openLoopVoutGain>
+Var=SoftStartInc unsigned 32,16 /f:0.0001 /p:4 /d:0.02	// <factory> ramp increment for OpenLoopVoutGain (ramped at 1ms rate)  <nv::fSOFTSTART_INC_SCALE:allAfeParams{}.softStartInc> 
 
 [ParameterResponse]
 DLC=8
-Mux=BusStabilizationDelay 0,14 0137h
+Mux=BusStabilizationDelay 0,11 137h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Delay unsigned 16,16 /u:ms // <factory> Post-precharge delay to allow the bus to stabilize
+Var=Meta unsigned 11,3 /e:Meta
+Var=Delay unsigned 16,16 /u:ms	// <factory> Post-precharge delay to allow the bus to stabilize  <nv::allAfeParams{}.holdoffDelay>
 
 [ParameterResponse]
 DLC=8
-Mux=PrechargeConfig 0,14 0138h
+Mux=PrechargeConfig 0,11 138h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=PrechargeTime unsigned 16,16 /u:ms /d:2500 // <factory> precharge time
-Var=Enable unsigned 32,2 /e:Enable /d:1 // <factory> If disabled, precharge is bypassed
+Var=Meta unsigned 11,3 /e:Meta
+Var=PrechargeTime unsigned 16,16 /u:ms /d:2500	// <factory> precharge time <nv::allHwParams{}.prechargeParams.softStartTime>
+Var=PrechargeType unsigned 32,2 /e:PrechargeType /d:1	// selects method of precharge including disabling precharge <nv:c:allHwParams{}.prechargeParams.prechargeType>
+Var=PrechargeRelay unsigned 34,2 /e:PrechargeRelay /d:2	// relay used for precharge <nv::allHwParams{}.prechargeParams.prechargeRelay>
 
 [ParameterResponse]
 DLC=8
-Mux=PrechargeVoltage 0,14 0139h
+Mux=PrechargeVoltage 0,11 139h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=VoltageMin unsigned 16,16 /u:VDC /d:200 // <factory> Minimum voltage the bus must reach for precharge to be successful
-Var=VoltageDeltaMin unsigned 32,16 /u:VDC /d:5 // <factory> minimum voltage rise required for precharge to be successful
+Var=Meta unsigned 11,3 /e:Meta
+Var=VoltageMin unsigned 16,16 /u:VDC /d:200	// <factory> Minimum voltage the bus must reach for precharge to be successful <nv::allHwParams{}.prechargeParams.vdcThresholds[PRECHARGE_VDC_MIN]>
+Var=VoltageDeltaMin unsigned 32,16 /u:VDC /d:5	// <factory> minimum voltage rise required for precharge to be successful <nv::allHwParams{}.prechargeParams.vdcThresholds[PRECHARGE_VDC_DELTA_MIN]>
 
 [ParameterResponse]
 DLC=8
-Mux=PrechargeAbort 0,14 013Ah
+Mux=PrechargeAbort 0,11 13Ah
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=AbortTime unsigned 16,16 /u:ms /d:500 // <factory> Time at which to check that precharge is causing a DC link voltage rise
-Var=AbortVoltage unsigned 32,16 /u:VDC /d:50 // <factory> Minimum voltage under which precharge will be aborted
-Var=AbortVoltageRise unsigned 48,16 /u:VDC /d:20 // <factory> minimum voltage rise under which precharge will be aborted
+Var=Meta unsigned 11,3 /e:Meta
+Var=AbortTime unsigned 16,16 /u:ms /d:500	// <factory> Time at which to check that precharge is causing a DC link voltage rise <nv::allHwParams{}.prechargeParams.abortTime>
+Var=AbortVoltage unsigned 32,16 /u:VDC /d:50	// <factory> Minimum voltage under which precharge will be aborted <nv::allHwParams{}.prechargeParams.vdcThresholds[PRECHARGE_VDC_ABORT]>
+Var=AbortVoltageRise unsigned 48,16 /u:VDC /d:20	// <factory> minimum voltage rise under which precharge will be aborted <nv::allHwParams{}.prechargeParams.vdcThresholds[PRECHARGE_VDC_RISE]>
+
+[ParameterResponse]
+DLC=8
+Mux=SimFeedback 0,11 13Bh	// simulated feedback for control board demo <DEMO>
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=Voltage unsigned 16,16 /u:V /f:0.1 /p:1 /d:208	// sets simulated grid voltage
+Var=Frequency unsigned 32,16 /u:Hz /f:0.1 /p:1 /d:60	// sets simulated grid frequency
+Var=Vdc unsigned 48,16 /u:V /max:1000 /d:400	// sets simulated DC link voltage
+
+[ParameterResponse]
+DLC=8
+Mux=VdcMaxControlKiGain 0,11 13Ch	// <factory>
+Var=gain signed 32,32 /f:1E-008 /p:8
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+
+[ParameterResponse]
+DLC=8
+Mux=VdcMaxControlKpGain 0,11 13Dh	// <factory>
+Var=gain signed 32,32 /f:1E-008 /p:8
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+
+[ParameterResponse]
+DLC=8
+Mux=VdcMinControlKiGain 0,11 13Eh	// <factory>
+Var=gain signed 32,32 /f:1E-008 /p:8
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+
+[ParameterResponse]
+DLC=8
+Mux=VdcMinControlKpGain 0,11 13Fh	// <factory>
+Var=gain signed 32,32 /f:1E-008 /p:8
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+
+[ParameterResponse]
+DLC=8
+Mux=IdcCurrentLimits 0,11 140h
+Var=max signed 16,16 /u:A /min:0 /max:1500	// <nv::allHwParams{}.customerLimits.IdcCurrentMax>
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+
+[ParameterResponse]
+DLC=8
+Mux=DeviceTempMeasure 0,11 0141h
+Var=Method unsigned 16,2 /max:1 /e:DeviceTempMethod
+Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
 
 [CCPResponse]
 ID=19EF41F7h
@@ -2683,7 +3160,7 @@ DLC=8
 CycleTime=10
 Var=WarningClr_echo unsigned 0,2 /e:WarningClear /ln:"Warning Clear"	// Echos the state of the WarningClear command within the CommandModeControl message.
 Var=State unsigned 12,4 /max:7 /e:State /ln:"State"	// Active control mode.
-Var=MX2Permissive unsigned 28,2 /e:Relay /ln:"MX2 Permissive"	// MX2 relay status
+Var=MX2Permissive unsigned 28,2 /e:RelayStatus /ln:"MX2 Permissive"	// MX2 relay status
 Var=PowerAvailAC unsigned 20,2 /e:PowerAvail /ln:"AC Available"	// Indicates that AC power is connected and that voltage and frequency are within nominal ranges.
 Var=PowerAvailDC unsigned 18,2 /e:PowerAvail /ln:"DC Available"	// Indicates that DC bus voltage is within operating range.
 Var=PowerCircuitEnabled unsigned 16,2 /e:IGBTsEnabled /ln:"Power Circuit Enabled"	// Indicates whether the switching devices are active.
@@ -2691,9 +3168,9 @@ Var=HardwareEnable unsigned 22,2 /e:WakeUpSignal /ln:"Hardware Enable"	// Status
 Var=Enable_echo unsigned 10,2 /e:Enable /ln:"Enable"	// Echos the state of the Enable command within the CommandModeControl message.
 Var=FaultClr_echo unsigned 8,2 /e:FaultClear /ln:"Fault Clear"	// Echos the state of the FaultClear command within the CommandModeControl message.
 Var=MessageValidModeControl unsigned 46,2 /e:MessageValid /ln:"Mode Message Valid"	// Indicates the validity of the CommandModeControl message.  Message must be received at least once per second and parameter data within range to be considered valid.
-Var=MX1Permissive unsigned 30,2 /e:Relay /ln:"MX1 Permissive"	// MX1 relay status
-Var=K2DCRunPermissive unsigned 24,2 /e:Relay /ln:"K2 Permissive"	// K2 DC Run relay status.
-Var=K1PrechargePermissive unsigned 26,2 /e:Relay /ln:"K1 Permissive"	// K1 precharge relay status.
+Var=MX1Permissive unsigned 30,2 /e:RelayStatus /ln:"MX1 Permissive"	// MX1 relay status
+Var=K2DCRunPermissive unsigned 24,2 /e:RelayStatus /ln:"K2 Permissive"	// K2 DC Run relay status.
+Var=K1PrechargePermissive unsigned 26,2 /e:RelayStatus /ln:"K1 Permissive"	// K1 precharge relay status.
 Var=MessageValidPowerCMD unsigned 44,2 /e:MessageValid /ln:"Power Message Valid"	// Indicates the validity of the CommandPower message.
 Var=PhaseRotation unsigned 42,2 /max:1 /e:PhaseRotation /ln:"Rotation"	// Phase rotation order.  When L1 phase angle leads L2 phase angle, rotation is considered positive.
 Var=LineVoltageDetected unsigned 40,2 /max:1 /e:LineVoltagePresent /ln:"Line Voltage Detected"	// Flag indicating if voltage is detected on L1, L2 or L3.
@@ -2704,7 +3181,7 @@ Var=LineVoltageDetectedRemote unsigned 48,2 /e:LineVoltagePresent /ln:"Remote Li
 Var=PumpRun unsigned 62,2 /max:1 /e:Status /ln:"Pump Running Status"
 Var=PumpFault unsigned 60,2 /max:1 /e:Status /ln:"Pump Faulted Status"
 Var=MessageValidCurrentCMD unsigned 58,2 /e:MessageValid /ln:"I Cmd Message Valid"	// Indicates the validity of the CommandCurrent message.
-Var=MessageValidDcControl unsigned 56,2 /e:MessageValid /ln:"DC Control Message Valid"  // Indicates the validity of the CommandDcControl message.
+Var=MessageValidDcControl unsigned 56,2 /e:MessageValid /ln:"DC Control Message Valid"	// Indicates the validity of the CommandDcControl message.
 Var=DI1 unsigned 38,2 /max:1 /e:OnOff
 Var=DI2 unsigned 36,2 /max:1 /e:OnOff
 Var=DI3 unsigned 34,2 /max:1 /e:OnOff
@@ -2733,7 +3210,7 @@ ID=1CFFC7F7h	// Measured (boosted) DC Bus voltage, DC Current, and estimated DC 
 Type=Extended
 DLC=8
 CycleTime=100
-Var=VoltageDCInput_measured unsigned 0,16 /u:VDC /min:0 /max:900 /ln:"DC Input" // Estimated DC input voltage <microgrid>
+Var=VoltageDCInput_measured unsigned 0,16 /u:VDC /max:900 /ln:"DC Input"	// Estimated DC input voltage <microgrid>
 Var=VoltageDCBus_measured signed 32,16 /u:VDC /min:0 /max:900 /ln:"DC Voltage"	// Measured DC bus voltage.
 Var=CurrentDC_measured signed 48,16 /u:ADC /min:-500 /max:500 /ln:"Estimated DC Current"	// Measured DC current.
 
@@ -2753,7 +3230,7 @@ Type=Extended
 DLC=8
 CycleTime=100
 Var=RealCurrent_echo signed 16,16 /u:A /min:-800 /max:800 /ln:"Real Current"	// Commanded real current while in grid following mode - positive real current is defined as power being put into the ac network.
-Var=ReactiveCurrent_echo signed 32,16 /u:A /min:-800 /max:800 /ln:"Reactive Current"	// Commanded reactive current while in grid following mode - positive reactive current is defined as the converter having a leading power factor.
+Var=ReactiveCurrent_echo signed 32,16 /u:A /min:-800 /max:800 /ln:"Reactive Current"	// Commanded reactive current while in grid following mode - positive reactive current is defined as the converter having a lagging power factor.
 
 [StatusMeasuredCurrent]
 ID=0CFFC1F7h	// Returns the actual measured current.

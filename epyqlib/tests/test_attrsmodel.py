@@ -7,6 +7,7 @@ import graham
 import PyQt5.QtCore
 import PyQt5.QtWidgets
 import pytest
+from pytestqt.qt_compat import qt_api
 
 import epyqlib.attrsmodel
 import epyqlib.tests.common
@@ -711,3 +712,165 @@ def test_to_int_or_none_re_locale():
 
     with epyqlib.tests.common.use_locale(('en_US', 'utf8'), 'us'):
         epyqlib.attrsmodel.to_int_or_none(int_string)
+
+
+def test_two_state_checkbox():
+    @graham.schemify('parameter')
+    @epyqlib.attrsmodel.ify()
+    @epyqlib.utils.qt.pyqtify()
+    @attr.s(hash=False)
+    class Parameter(epyqlib.treenode.TreeNode):
+        type = attr.ib(default='test_parameter', init=False)
+        name = attr.ib(default='New Parameter')
+        value = attr.ib(
+            default=None,
+            convert=epyqlib.attrsmodel.two_state_checkbox,
+        )
+        uuid = epyqlib.attrsmodel.attr_uuid()
+
+        def __attrs_post_init__(self):
+            super().__init__()
+
+    Root = epyqlib.attrsmodel.Root(
+        default_name='Parameters',
+        valid_types=(Parameter, Group)
+    )
+
+    columns = epyqlib.attrsmodel.columns(
+        (
+            (Parameter, 'name'),
+            (Group, 'name'),
+        ),
+        ((Parameter, 'value'),),
+    )
+
+    root = Root()
+    model = epyqlib.attrsmodel.Model(
+        root=root,
+        columns=columns,
+    )
+
+    parameter = Parameter()
+    root.append_child(parameter)
+
+    index = model.index_from_node(parameter)
+    column_index = columns.index_of('Value')
+    index = model.index(index.row(), column_index, index.parent())
+
+    flags = model.flags(index)
+    assert flags & PyQt5.QtCore.Qt.ItemIsUserCheckable
+
+
+def test_enumeration(qtbot):
+    @graham.schemify('leaf')
+    @epyqlib.attrsmodel.ify()
+    @epyqlib.utils.qt.pyqtify()
+    @attr.s(hash=False)
+    class TestEnumerationLeaf(epyqlib.treenode.TreeNode):
+        name = attr.ib(default='New Leaf')
+        enumeration_uuid = attr.ib(
+            default=None,
+            convert=epyqlib.attrsmodel.convert_uuid,
+        )
+        epyqlib.attrsmodel.attrib(
+            attribute=enumeration_uuid,
+            list_selection_root='test list_selection_root',
+        )
+        uuid = epyqlib.attrsmodel.attr_uuid()
+
+        def __attrs_post_init__(self):
+            super().__init__()
+
+    @graham.schemify('group')
+    @epyqlib.attrsmodel.ify()
+    @epyqlib.utils.qt.pyqtify()
+    @attr.s(hash=False)
+    class TestEnumerationGroup(epyqlib.treenode.TreeNode):
+        name = attr.ib(default='New Group')
+        children = attr.ib(
+            default=attr.Factory(list),
+            cmp=False,
+            init=False,
+            metadata={'valid_types': (TestEnumerationLeaf,)}
+        )
+        uuid = epyqlib.attrsmodel.attr_uuid()
+
+        def __attrs_post_init__(self):
+            super().__init__()
+
+        def can_drop_on(self, node):
+            return isinstance(node, tuple(self.addable_types().values()))
+
+    Root = epyqlib.attrsmodel.Root(
+        default_name='Test',
+        valid_types=(TestEnumerationLeaf, TestEnumerationGroup)
+    )
+
+    columns = epyqlib.attrsmodel.columns(
+        (
+            (TestEnumerationLeaf, 'name'),
+            (TestEnumerationGroup, 'name'),
+        ),
+        ((TestEnumerationLeaf, 'enumeration_uuid'),),
+    )
+
+    root = Root()
+    model = epyqlib.attrsmodel.Model(
+        root=root,
+        columns=columns,
+    )
+    model.add_drop_sources(root)
+
+    item = TestEnumerationLeaf()
+    root.append_child(item)
+
+    group = TestEnumerationGroup()
+    root.append_child(group)
+    model.list_selection_roots['test list_selection_root'] = group
+
+    enumerator_a = TestEnumerationLeaf()
+    group.append_child(enumerator_a)
+    enumerator_b = TestEnumerationLeaf()
+    group.append_child(enumerator_b)
+    enumerator_c = TestEnumerationLeaf()
+    group.append_child(enumerator_c)
+
+    view = PyQt5.QtWidgets.QTreeView()
+    view.setItemDelegate(epyqlib.attrsmodel.create_delegate())
+    view.setModel(model)
+
+    target_index = model.index_from_node(item)
+    target_index = model.index(
+        target_index.row(),
+        columns.index_of('Enumeration Uuid'),
+        target_index.parent(),
+    )
+
+    item.enumeration_uuid = enumerator_a.uuid
+
+    application = qt_api.QApplication.instance()
+
+    for row, enumerator in enumerate(group.children):
+        assert view.edit(
+            target_index,
+            PyQt5.QtWidgets.QAbstractItemView.AllEditTriggers,
+            None,
+        )
+        editor, = view.findChildren(PyQt5.QtWidgets.QComboBox)
+
+        editor.setCurrentIndex(row)
+
+        PyQt5.QtCore.QCoreApplication.postEvent(
+            editor,
+            PyQt5.QtGui.QKeyEvent(
+                PyQt5.QtCore.QEvent.KeyPress,
+                PyQt5.QtCore.Qt.Key_Enter,
+                PyQt5.QtCore.Qt.NoModifier,
+            ),
+        )
+
+        # this is fun.  if you get weird issues try doing this more times
+        for _ in range(3):
+            application.processEvents()
+
+        assert enumerator.uuid == item.enumeration_uuid

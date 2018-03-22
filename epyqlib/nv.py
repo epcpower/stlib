@@ -4,11 +4,16 @@
 
 import attr
 import can
+import enum
 from epyqlib.abstractcolumns import AbstractColumns
+import epyqlib.attrsmodel
 import epyqlib.canneo
+import epyqlib.pm.valuesetmodel
 import epyqlib.twisted.busproxy
 import epyqlib.twisted.nvs
+import epyqlib.utils.general
 import epyqlib.utils.twisted
+import itertools
 import json
 import epyqlib.pyqabstractitemmodel
 from epyqlib.treenode import TreeNode
@@ -27,7 +32,8 @@ __license__ = 'GPLv2+'
 
 class Columns(AbstractColumns):
     _members = ['name', 'read_only', 'factory', 'value', 'saturate', 'reset',
-                'clear', 'default', 'min', 'max', 'comment']
+                'clear', 'user_default', 'factory_default', 'minimum',
+                'maximum', 'comment']
 
 Columns.indexes = Columns.indexes()
 
@@ -48,6 +54,7 @@ class Configuration:
     to_nv_status = attr.ib()
     read_write_signal = attr.ib()
     read_write_status_signal = attr.ib()
+    meta_signal = attr.ib()
 
 
 configurations = {
@@ -58,6 +65,7 @@ configurations = {
         to_nv_status='SaveToEE_status',
         read_write_signal='ReadParam_command',
         read_write_status_signal='ReadParam_status',
+        meta_signal=None,
     ),
     'j1939': Configuration(
         set_frame='ParameterQuery',
@@ -66,6 +74,7 @@ configurations = {
         to_nv_status='SaveToEE_status',
         read_write_signal='ReadParam_command',
         read_write_status_signal = 'ReadParam_status',
+        meta_signal='Meta',
     )
 }
 
@@ -76,6 +85,53 @@ class Group(TreeNode):
 
     def __attrs_post_init__(self):
         super().__init__()
+
+
+class MetaEnum(epyqlib.utils.general.AutoNumberIntEnum):
+    value = 0
+    user_default = 1
+    factory_default = 2
+    minimum = 3
+    maximum = 4
+
+
+meta_limits = (MetaEnum.minimum, MetaEnum.maximum)
+meta_limits_first = (
+    meta_limits + tuple(sorted(set(MetaEnum) - set(meta_limits)))
+)
+
+MetaEnum.non_value = tuple(sorted(set(MetaEnum) - {MetaEnum.value}))
+
+meta_column_indexes = tuple(
+    getattr(Columns.indexes, meta.name)
+    for meta in MetaEnum
+)
+
+
+dynamic_column_indexes_by_meta = {
+    MetaEnum.value: [
+        Columns.indexes.value,
+        Columns.indexes.saturate,
+        Columns.indexes.reset,
+        Columns.indexes.clear,
+    ],
+    **{
+        meta: [getattr(Columns.indexes, meta.name)]
+        for meta in MetaEnum.non_value
+    },
+}
+
+
+column_index_by_meta = {
+    meta: getattr(Columns.indexes, meta.name)
+    for meta in MetaEnum
+}
+
+
+@attr.s
+@epyqlib.utils.general.enumerated_attrs(MetaEnum, default=None)
+class Meta:
+    pass
 
 
 class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
@@ -90,7 +146,9 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
     activity_ended = epyqlib.utils.qt.Signal(str)
 
     def __init__(self, neo, bus, stop_cyclic=None, start_cyclic=None,
-                 configuration=None, hierarchy=None, parent=None):
+                 configuration=None, hierarchy=None, metas=(MetaEnum.value,),
+                 access_level_path=None, access_password_path=None,
+                 parent=None):
         TreeNode.__init__(self)
         epyqlib.canneo.QtCanListener.__init__(self, parent=parent)
 
@@ -112,6 +170,13 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         self.neo = neo
         self.message_received_signal.connect(self.message_received)
 
+        self.access_level_node = None
+        if access_level_path is not None:
+            self.access_level_node = self.neo.signal_by_path(*access_level_path)
+
+        self.password_node = None
+        if access_password_path is not None:
+            self.password_node = self.neo.signal_by_path(*access_password_path)
 
         self.set_frames = [f for f in self.neo.frames
                        if f.name == self.configuration.set_frame]
@@ -170,6 +235,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 s for s in signals
                 if s.name not in [
                     self.configuration.read_write_signal,
+                    self.configuration.meta_signal,
                     '{}_MUX'.format(self.configuration.set_frame)
                 ]
             ]
@@ -191,10 +257,15 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     if signals is None:
                         signals = all_signals
 
-                    d = self.protocol.write_multiple(
-                        nv_signals=signals,
-                        priority=epyqlib.twisted.nvs.Priority.user
-                    )
+                    d = twisted.internet.defer.Deferred()
+                    d.callback(None)
+
+                    for enumerator in metas:
+                        d.addCallback(lambda _: self.protocol.write_multiple(
+                            nv_signals=signals,
+                            meta=enumerator,
+                            priority=epyqlib.twisted.nvs.Priority.user
+                        ))
                     d.addErrback(ignore_timeout)
 
                 frame._send.connect(send)
@@ -358,25 +429,45 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
     def names(self):
         return '\n'.join([n.fields.name for n in self.all_nv()])
 
-    def write_all_to_device(self, only_these=None, callback=None):
+    def write_all_to_device(self, only_these=None, callback=None, meta=None):
         return self._read_write_all(
             read=False,
             only_these=only_these,
             callback=callback,
+            meta=meta,
         )
 
-    def read_all_from_device(self, only_these=None, callback=None):
+    def read_all_from_device(
+            self,
+            only_these=None,
+            callback=None,
+            meta=None,
+            background=False,
+    ):
         return self._read_write_all(
             read=True,
             only_these=only_these,
             callback=callback,
+            meta=meta,
+            background=background,
         )
 
-    def _read_write_all(self, read, only_these=None, callback=None):
+    def _read_write_all(
+            self,
+            read,
+            only_these=None,
+            callback=None,
+            meta=None,
+            background=False,
+    ):
+        if meta is None:
+            meta = tuple(reversed(MetaEnum))
+
         activity = ('Reading from device' if read
                     else 'Writing to device')
 
-        self.activity_started.emit('{}...'.format(activity))
+        if not background:
+            self.activity_started.emit('{}...'.format(activity))
         d = twisted.internet.defer.Deferred()
         d.callback(None)
 
@@ -414,20 +505,36 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     d.addCallback(callback)
 
         def handle_frame(frame, signals):
-                frame.update_from_signals()
+            frame.update_from_signals()
+            for enumerator in meta:
                 if read:
                     d.addCallback(
-                        lambda _: self.protocol.read_multiple(
+                        lambda _, enumerator=enumerator: self.protocol.read_multiple(
                             nv_signals=signals,
+                            meta=enumerator,
                             priority=epyqlib.twisted.nvs.Priority.user,
                             passive=True,
                             all_values=True,
                         )
                     )
                 elif frame.read_write.min <= 0:
+                    not_none_signals = []
+                    for signal in signals:
+                        if enumerator == MetaEnum.value:
+                            value = signal.value
+                        else:
+                            value = getattr(signal.meta, enumerator.name).value
+
+                        if value is not None:
+                            not_none_signals.append(signal)
+
+                    if len(not_none_signals) == 0:
+                        continue
+
                     d.addCallback(
-                        lambda _: self.protocol.write_multiple(
-                            nv_signals=signals,
+                        lambda _, enumerator=enumerator, not_none_signals=not_none_signals: self.protocol.write_multiple(
+                            nv_signals=not_none_signals,
+                            meta=enumerator,
                             priority=epyqlib.twisted.nvs.Priority.user,
                             passive=True,
                             all_values=True,
@@ -449,12 +556,13 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
                 handle_frame(frame=frame, signals=signals)
 
-        d.addCallback(epyqlib.utils.twisted.detour_result,
-                      self.activity_ended.emit,
-                      'Finished {}...'.format(activity.lower()))
-        d.addErrback(epyqlib.utils.twisted.detour_result,
-                     self.activity_ended.emit,
-                     'Failed while {}...'.format(activity.lower()))
+        if not background:
+            d.addCallback(epyqlib.utils.twisted.detour_result,
+                          self.activity_ended.emit,
+                          'Finished {}...'.format(activity.lower()))
+            d.addErrback(epyqlib.utils.twisted.detour_result,
+                         self.activity_ended.emit,
+                         'Failed while {}...'.format(activity.lower()))
 
         return d
 
@@ -468,6 +576,15 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 return
 
             if multiplex_value is not None and multiplex_message in self.status_frames.values():
+                values = multiplex_message.unpack(msg.data, only_return=True)
+
+                if multiplex_message.meta_signal is not None:
+                    meta = epyqlib.nv.MetaEnum(
+                        values[multiplex_message.meta_signal],
+                    )
+                    if meta != epyqlib.nv.MetaEnum.value:
+                        return
+
                 multiplex_message.unpack(msg.data)
                 # multiplex_message.frame.update_canneo_from_matrix_signals()
 
@@ -491,6 +608,47 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
         return d
 
+    def to_value_set(self, include_secrets=False):
+        value_set = epyqlib.pm.valuesetmodel.create_blank()
+
+        for child in self.all_nv():
+            if not child.secret:
+                parameter = epyqlib.pm.valuesetmodel.Parameter(
+                    name=child.fields.name,
+                    value=child.get_human_value(for_file=True),
+                    user_default=child.meta.user_default.get_human_value(
+                        for_file=True
+                    ),
+                    factory_default=child.meta.factory_default.get_human_value(
+                        for_file=True
+                    ),
+                    minimum=child.meta.minimum.get_human_value(for_file=True),
+                    maximum=child.meta.maximum.get_human_value(for_file=True),
+                )
+            elif include_secrets:
+                def format_float(value):
+                    was_secret = child.secret
+                    child.secret = False
+                    result = child.format_float(value=value, for_file=True)
+                    child.secret = was_secret
+
+                    return result
+
+                parameter = epyqlib.pm.valuesetmodel.Parameter(
+                    name=child.fields.name,
+                    value=format_float(value=0),
+                    user_default=format_float(value=0),
+                    factory_default=format_float(value=0),
+                    minimum=format_float(value=child.min),
+                    maximum=format_float(value=child.max),
+                )
+            else:
+                continue
+
+            value_set.model.root.append_child(parameter)
+
+        return value_set
+
     def from_dict(self, d):
         only_in_file = list(d.keys())
 
@@ -507,13 +665,101 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             print("Unrecognized NV value named '{}' found when loading "
                   "from dict".format(name))
 
-    def defaults_from_dict(self, d):
+    def from_value_set(self, value_set):
+        only_in_file = value_set.model.root.nodes_by_filter(
+            filter=lambda node: isinstance(
+                node,
+                epyqlib.pm.valuesetmodel.Parameter,
+            ),
+        )
+        only_in_file = {
+            parameter.name
+            for parameter in only_in_file
+        }
+        only_in_file = {
+            (name, meta)
+            for name, meta in itertools.product(
+                only_in_file,
+                epyqlib.nv.MetaEnum,
+            )
+        }
+
+        for child in self.all_nv():
+            name = child.fields.name
+
+            try:
+                parameters = value_set.model.root.nodes_by_attribute(
+                    attribute_value=name,
+                    attribute_name='name',
+                )
+            except epyqlib.treenode.NotFoundError:
+                parameters = []
+
+
+            not_found_format = (
+                "Nv value named '{}' ({{}}) not found when loading "
+                "from value set".format(name)
+            )
+
+            if len(parameters) == 1:
+                parameter, = parameters
+
+                for meta in MetaEnum:
+                    only_in_file.discard((name, meta))
+
+                if parameter.value is not None:
+                    child.set_human_value(parameter.value)
+                else:
+                    print(not_found_format.format('value'))
+
+                for meta in MetaEnum:
+                    if meta == MetaEnum.value:
+                        continue
+
+                    v = getattr(parameter, meta.name)
+                    if v is not None:
+                        child.set_meta(
+                            data=v,
+                            meta=meta,
+                            check_range=False,
+                        )
+                    else:
+                        print(not_found_format.format(meta.name))
+            elif len(parameters) > 1:
+                print(
+                    "Nv value named '{}' occurred {} times when loading "
+                    "from value set".format(name, len(parameters)),
+                )
+            else:
+                print(
+                    "Nv value named '{}' not found when loading from "
+                    "value set".format(name),
+                )
+
+        for name, meta in sorted(only_in_file):
+            print("Unrecognized NV value named '{}' ({}) found when loading "
+                  "from value set".format(name, meta.name))
+
+    def defaults_from_dict(
+            self,
+            d,
+            default_metas=(MetaEnum.factory_default,),
+    ):
         only_in_file = list(d.keys())
 
         for child in self.all_nv():
             value = d.get(child.fields.name, None)
             if value is not None:
-                child.default_value = child.from_human(float(value))
+                for meta in default_metas:
+                    child.set_meta(
+                        data=float(value),
+                        meta=meta,
+                    )
+                    self.changed.emit(
+                        child, meta_column_indexes[meta],
+                        child, meta_column_indexes[meta],
+                        [Qt.DisplayRole],
+                    )
                 only_in_file.remove(child.fields.name)
             else:
                 print("Nv value named '{}' not found when loading from dict"
@@ -527,7 +773,11 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         self.activity_started.emit('Requested save to NV...')
         self.save_signal.set_value(self.save_value)
         self.save_frame.update_from_signals()
-        d = self.protocol.write(self.save_signal, passive=True)
+        d = self.protocol.write(
+            nv_signal=self.save_signal,
+            passive=True,
+            meta=MetaEnum.value,
+        )
         d.addBoth(
             epyqlib.utils.twisted.detour_result,
             self.module_to_nv_off,
@@ -536,17 +786,21 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         d.addErrback(
             epyqlib.utils.twisted.detour_result,
             self._module_to_nv_response,
-            0,
+            (0, None),
         )
         d.addErrback(epyqlib.utils.twisted.errbackhook)
 
     def module_to_nv_off(self):
         self.save_signal.set_value(not self.save_value)
-        d = self.protocol.write(self.save_signal, passive=True)
+        d = self.protocol.write(
+            nv_signal=self.save_signal,
+            passive=True,
+            meta=MetaEnum.value,
+        )
         d.addErrback(lambda _: None)
 
     def _module_to_nv_response(self, result):
-        if result == 1:
+        if result[0] == 1:
             feedback = 'Save to NV confirmed'
         else:
             feedback = 'Save to NV failed ({})'.format(
@@ -593,29 +847,59 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         list,
     )
 
-    def __init__(self, signal, frame, parent=None):
+    def __init__(self, signal, frame, parent=None, meta=None, meta_value=None):
         epyqlib.canneo.Signal.__init__(self, signal=signal, frame=frame,
                                     parent=parent)
         TreeNode.__init__(self)
+
+        if meta_value is None:
+            self.meta_value = MetaEnum.value
+        else:
+            self.meta_value = meta_value
 
         default = self.default_value
         if default is None:
             default = 0
 
-        self.factory = '<factory>' in (self.comment + self.frame.comment)
+        if self.frame is not None:
+            self.factory = '<factory>' in (self.comment + self.frame.comment)
 
         self.reset_value = None
 
         self.clear(mark_modified=False)
 
         self.fields = Columns(
-            name='{}:{}'.format(self.frame.mux_name, self.name),
             value=self.full_string,
-            min=self.format_float(value=self.min),
-            max=self.format_float(value=self.max),
-            default=self.format_strings(value=int(default))[0],
             comment=self.comment,
         )
+        if self.frame is not None:
+            self.fields.name = '{}:{}'.format(self.frame.mux_name, self.name)
+
+        self.meta = meta
+        if self.meta is None:
+            self.meta = Meta()
+
+            metas = (
+                MetaEnum.user_default,
+                MetaEnum.factory_default,
+                MetaEnum.minimum,
+                MetaEnum.maximum,
+            )
+            for meta in metas:
+                setattr(
+                    self.meta,
+                    meta.name,
+                    Nv(signal, frame=None, meta=self.meta, meta_value=meta)
+                )
+
+            for meta in metas:
+                getattr(self.meta, meta.name).set_value(None)
+
+                setattr(
+                    self.fields,
+                    meta.name,
+                    getattr(self.meta, meta.name).full_string,
+                )
 
     def _changed(self, column_start=None, column_end=None, roles=(
             Columns.indexes.value,)):
@@ -630,39 +914,99 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
             list(roles),
         )
 
+    def get_meta_signal(self, meta):
+        if meta == MetaEnum.value:
+            return self
+
+        return getattr(self.meta, meta.name)
+
+    def get_human_value(self, for_file=False, column=None):
+        if column is None:
+            column = Columns.indexes.value
+        column_name = Columns().index_from_attribute(column)
+
+        signal = self.get_meta_signal(getattr(MetaEnum, column_name))
+
+        if signal is self:
+            return super().get_human_value(for_file=False)
+
+        return signal.get_human_value(
+            for_file=for_file,
+            column=Columns.indexes.value,
+        )
+
     def signal_path(self):
         return self.frame.signal_path() + (self.name,)
 
-    def can_be_saturated(self):
-        if self.value is None:
+    def can_be_saturated(self, meta=MetaEnum.value):
+        signal = self.get_meta_signal(meta)
+
+        if signal.value is None:
             return False
 
-        return self.to_human(self.value) != self.saturation_value()
+        return signal.to_human(signal.value) != signal.saturation_value()
 
-    def saturate(self):
-        if not self.can_be_saturated():
+    def saturate(self, meta=MetaEnum.value):
+        signal = self.get_meta_signal(meta)
+
+        if not signal.can_be_saturated():
             return
 
-        self.set_data(self.saturation_value(), mark_modified=True)
+        self.set_meta(signal.saturation_value(), meta=meta, mark_modified=True)
 
     def saturation_value(self):
-        return min(max(self.min, self.to_human(self.value)), self.max)
+        if self.value is None:
+            return None
 
-    def can_be_reset(self):
-        return self.reset_value != self.value
+        s = self.to_human(self.value)
 
-    def reset(self):
-        if not self.can_be_reset():
+        if self.meta.minimum.value is not None:
+            s = max(self.to_human(self.meta.minimum.value), s)
+
+        if self.meta.maximum.value is not None:
+            s = min(self.to_human(self.meta.maximum.value), s)
+
+        return s
+
+    def can_be_reset(self, meta=MetaEnum.value):
+        signal = self.get_meta_signal(meta)
+        return signal.reset_value != signal.value
+
+    def reset(self, meta=MetaEnum.value):
+        signal = self.get_meta_signal(meta)
+
+        if not signal.can_be_reset():
             return
 
-        self.set_value(self.reset_value)
+        self.set_meta(signal.reset_value, meta=meta)
 
     def set_value(self, value, force=False, check_range=False):
         self.reset_value = value
-        epyqlib.canneo.Signal.set_value(self,
-                                        value=value,
-                                        force=force,
-                                        check_range=check_range)
+
+        min_max = {MetaEnum.minimum, MetaEnum.maximum}
+
+        if self.meta is not None:
+            extras = {}
+            if self.meta.minimum.value is None or self.meta_value in min_max:
+                extras['minimum'] = self.to_human(self.raw_minimum)
+            else:
+                extras['minimum'] = self.meta.minimum.to_human(
+                    self.meta.minimum.value,
+                )
+
+            if self.meta.maximum.value is None or self.meta_value in min_max:
+                extras['maximum'] = self.to_human(self.raw_maximum)
+            else:
+                extras['maximum'] = self.meta.maximum.to_human(
+                    self.meta.maximum.value,
+                )
+
+        super().set_value(
+            value=value,
+            force=force,
+            check_range=check_range,
+            **extras,
+        )
         self.fields.value = self.full_string
         self._changed()
 
@@ -683,16 +1027,35 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
 
         return True
 
-    def can_be_cleared(self):
-        return self.value is not None
+    def set_meta(self, data, meta, *args, **kwargs):
+        if meta == MetaEnum.value:
+            return self.set_data(data=data, *args, **kwargs)
 
-    def clear(self, mark_modified=True):
-        if not self.can_be_cleared():
+        meta_signal = getattr(self.meta, meta.name)
+
+        result = meta_signal.set_data(
+            data=data,
+            *args,
+            **kwargs,
+        )
+        setattr(self.fields, meta.name, meta_signal.full_string)
+
+        return result
+
+    def can_be_cleared(self, meta=MetaEnum.value):
+        signal = self.get_meta_signal(meta)
+
+        return signal.value is not None
+
+    def clear(self, mark_modified=True, meta=MetaEnum.value):
+        signal = self.get_meta_signal(meta)
+
+        if not signal.can_be_cleared():
             return
 
-        self.set_data(None, mark_modified=mark_modified)
-        if hasattr(self, 'status_signal'):
-            self.status_signal.set_value(None)
+        self.set_meta(None, meta=meta, mark_modified=mark_modified)
+        if hasattr(signal, 'status_signal'):
+            signal.status_signal.set_value(None)
 
     def is_factory(self):
         return self.factory
@@ -719,6 +1082,17 @@ class Frame(epyqlib.canneo.Frame, TreeNode):
                                    parent=parent,
                                    **kwargs)
         TreeNode.__init__(self, parent)
+
+        meta_signals = [
+            signal
+            for signal in self.signals
+            if signal.name == 'Meta'
+        ]
+
+        if len(meta_signals) == 0:
+            self.meta_signal = None
+        else:
+            self.meta_signal, = meta_signals
 
         for signal in self.signals:
             if signal.name in ("ReadParam_command", "ReadParam_status"):
@@ -761,7 +1135,8 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
     def __init__(self, root, parent=None):
         editable_columns = Columns.fill(False)
-        editable_columns.value = True
+        for enumerator in MetaEnum:
+            setattr(editable_columns, enumerator.name, True)
 
         epyqlib.pyqabstractitemmodel.PyQAbstractItemModel.__init__(
                 self, root=root, editable_columns=editable_columns,
@@ -771,9 +1146,10 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         self.headers = Columns(name='Name',
                                value='Value',
-                               min='Min',
-                               max='Max',
-                               default='Default',
+                               minimum='Min',
+                               maximum='Max',
+                               user_default='User Default',
+                               factory_default='Factory Default',
                                comment='Comment')
 
         root.activity_started.connect(self.activity_started)
@@ -786,6 +1162,11 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             factory=Icon(character='\uf084', check='is_factory'),
             read_only=Icon(character='\uf023', check='is_read_only')
         )
+
+        self.meta_columns = {
+            getattr(Columns.indexes, enumerator.name)
+            for enumerator in MetaEnum
+        }
 
         self.icon_columns = set(
             index
@@ -827,19 +1208,21 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         return None
 
     def data_display(self, index):
+        node = self.node_from_index(index)
         column = index.column()
         icon = self.icons[column]
         if icon is not None:
             if self.force_action_decorations:
                 return icon.character
             else:
-                node = self.node_from_index(index)
                 if isinstance(node, epyqlib.nv.Nv):
                     check = getattr(node, icon.check)
                     if check():
                         return icon.character
 
-        return super().data_display(index)
+        super_result = super().data_display(index)
+
+        return super_result
 
     def data_tool_tip(self, index):
         if index.column() == Columns.indexes.saturate:
@@ -861,39 +1244,45 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                     comment = ''
                 return '\n'.join(textwrap.wrap(comment, 60))
 
-    def dynamic_columns_changed(self, node, columns=None, roles=(Qt.DisplayRole,)):
+    def dynamic_columns_changed(
+            self,
+            node,
+            columns=None,
+            meta=MetaEnum.value,
+            roles=(Qt.DisplayRole,),
+    ):
         if columns is None:
-            columns = (
-                Columns.indexes.value,
-                Columns.indexes.saturate,
-                Columns.indexes.reset,
-                Columns.indexes.clear,
-            )
+            columns = dynamic_column_indexes_by_meta[meta]
 
         for column in columns:
             self.changed(node, column, node, column, roles)
 
-    def saturate_node(self, node):
-        node.saturate()
-        self.dynamic_columns_changed(node)
+    def saturate_node(self, node, meta=MetaEnum.value):
+        node.saturate(meta=meta)
+        self.dynamic_columns_changed(node, meta=meta)
 
-    def reset_node(self, node):
-        node.reset()
-        self.dynamic_columns_changed(node)
+    def reset_node(self, node, meta=MetaEnum.value):
+        node.reset(meta=meta)
+        self.dynamic_columns_changed(node, meta=meta)
 
-    def clear_node(self, node):
-        node.clear()
-        self.dynamic_columns_changed(node)
+    def clear_node(self, node, meta=MetaEnum.value):
+        node.clear(meta=meta)
+        self.dynamic_columns_changed(node, meta=meta)
 
     def check_range_changed(self, state):
         self.check_range = state == Qt.Checked
 
     def setData(self, index, data, role=None):
-        if index.column() == Columns.indexes.value:
+        column = index.column()
+        if column in self.meta_columns:
             if role == Qt.EditRole:
                 node = self.node_from_index(index)
-                success = node.set_data(
+                success = node.set_meta(
                     data,
+                    meta=getattr(
+                        MetaEnum,
+                        Columns().index_from_attribute(column),
+                    ),
                     mark_modified=True,
                     check_range=self.check_range,
                 )
@@ -945,6 +1334,29 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 )
 
     @pyqtSlot()
+    def write_to_value_set_file(self, parent=None):
+        fields = attr.fields(epyqlib.pm.valuesetmodel.ValueSet)
+        filters = fields.filters.default
+        path = epyqlib.utils.qt.file_dialog(
+            filters,
+            save=True,
+            parent=parent,
+        )
+
+        if path is not None:
+            value_set = self.root.to_value_set()
+            value_set.path = path
+
+            try:
+                value_set.save()
+            except epyqlib.pm.valuesetmodel.SaveCancelled:
+                message = 'Save cancelled'
+            else:
+                message = 'Saved to "{}"'.format(path)
+
+        self.activity_ended.emit(message)
+
+    @pyqtSlot()
     def read_from_file(self, parent=None):
         filters = [
             ('EPC Parameters', ['epp']),
@@ -964,6 +1376,24 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 self.activity_ended.emit(
                     'Loaded from "{}"'.format(filename)
                 )
+
+    @pyqtSlot()
+    def read_from_value_set_file(self, parent=None):
+        fields = attr.fields(epyqlib.pm.valuesetmodel.ValueSet)
+        filters = fields.filters.default
+        # filters = epyqlib.pm.valuesetmodel.ValueSet.filters.default
+        path = epyqlib.utils.qt.file_dialog(filters, parent=parent)
+
+        if path is None:
+            return
+
+        value_set = epyqlib.pm.valuesetmodel.loadp(path)
+
+        self.root.from_value_set(value_set)
+
+        self.activity_ended.emit(
+            'Loaded value set from "{}"'.format(path),
+        )
 
 
 if __name__ == '__main__':

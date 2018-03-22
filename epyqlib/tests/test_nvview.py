@@ -55,8 +55,11 @@ def test_secret_masked(qtbot):
 
     assert len(secret_nv) > 0
     for nv in secret_nv:
-        assert nv.fields.default == secret_mask
-        nv.set_human_value('1234')
+        nv.set_meta('1234', epyqlib.nv.MetaEnum.user_default)
+        assert nv.fields.user_default == secret_mask
+        nv.set_meta('1234', epyqlib.nv.MetaEnum.factory_default)
+        assert nv.fields.factory_default == secret_mask
+        nv.set_meta('1234', epyqlib.nv.MetaEnum.value)
         assert nv.fields.value == secret_mask
 
 

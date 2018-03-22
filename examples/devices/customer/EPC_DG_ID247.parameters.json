@@ -388,6 +388,15 @@
             ]
         },
         {
+            "name": "IGBT",
+            "children": [
+                [
+                    "DeviceTempMeasure",
+                    "Method"
+                ]
+            ]
+        },
+        {
             "name": "Hardware",
             "children": [
                 {
@@ -432,6 +441,23 @@
                         [
                             "UserSettings",
                             "UnderVoltageDC"
+                        ],
+                        [
+                            "IdcCurrentLimits",
+                            "max"
+                        ]
+                    ]
+                },
+                {
+                    "name": "Precharge",
+                    "children": [
+                        [
+                            "PrechargeConfig",
+                            "PrechargeType"
+                        ],
+                        [
+                            "PrechargeConfig",
+                            "PrechargeRelay"
                         ]
                     ]
                 },

@@ -9,13 +9,16 @@
     "node_id_type": "j1939",
     "name": "Distributed Generation",
     "tabs": {
-        "variables": 1
+        "variables": 1,
+        "scripting": 1
     },
     "ui_paths": {
         "Control": "distributed_generation_control.ui",
         "Setup and Status": "distributed_generation_setup_factory.ui"
     },
-    "parameter_defaults": "DG_Defaults-7.epp",
     "module": "distributed_generation.py",
-    "parameter_hierarchy": "EPC_DG_ID247_FACTORY.parameters.json"
+    "parameter_hierarchy": "EPC_DG_ID247_FACTORY.parameters.json",
+    "nv_meta_enum": "Meta",
+    "access_level_path": "ParameterQuery;AccessLevel;Level",
+    "access_password_path": "ParameterQuery;AccessLevel;Password"
 }

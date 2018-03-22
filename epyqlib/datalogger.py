@@ -82,8 +82,11 @@ class DataLogger:
 
         from twisted.internet import reactor
         while True:
-            recording = yield self.nv_protocol.read(recording_signal)
-            recording = int(recording)
+            recording = yield self.nv_protocol.read(
+                nv_signal=recording_signal,
+                meta=epyqlib.nv.MetaEnum.value,
+            )
+            recording = int(recording[0])
 
             if not recording:
                 break
@@ -94,8 +97,11 @@ class DataLogger:
                 callable=lambda: None,
             )
 
-        readable_octets = yield self.nv_protocol.read(readable_octets_signal)
-        readable_octets = int(readable_octets)
+        readable_octets = yield self.nv_protocol.read(
+            nv_signal=readable_octets_signal,
+            meta=epyqlib.nv.MetaEnum.value,
+        )
+        readable_octets = int(readable_octets[0])
 
         self.progress.configure(maximum=readable_octets)
 

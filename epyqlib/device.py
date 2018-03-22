@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 import attr
 import can
 import canmatrix.formats
+import collections
 import epyqlib.canneo
 import epyqlib.deviceextension
 import epyqlib.faultlogmodel
@@ -48,7 +49,9 @@ from epyqlib.widgets.abstractwidget import AbstractWidget
 from PyQt5 import uic
 from PyQt5.QtCore import (pyqtSlot, Qt, QFile, QFileInfo, QTextStream, QObject,
                           QSortFilterProxyModel, QIODevice)
-from PyQt5.QtWidgets import QWidget, QMessageBox, QInputDialog, QLineEdit
+from PyQt5.QtWidgets import (
+    QWidget, QMessageBox, QInputDialog, QLineEdit, QVBoxLayout)
+from PyQt5 import QtCore
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -123,6 +126,7 @@ class CanConfiguration:
     data_logger_reset_signal_path = attr.ib()
     data_logger_recording_signal_path = attr.ib()
     data_logger_configuration_is_valid_signal_path = attr.ib()
+    monitor_frame = attr.ib()
 
 
 can_configurations = {
@@ -132,7 +136,8 @@ can_configurations = {
         data_logger_recording_signal_path=(
             'StatusBits', 'DataloggerRecording'),
         data_logger_configuration_is_valid_signal_path=(
-            'StatusBits', 'DataloggerConfigurationIsValid')
+            'StatusBits', 'DataloggerConfigurationIsValid'),
+        monitor_frame='StatusBits',
     ),
     'j1939': CanConfiguration(
         data_logger_reset_signal_path=(
@@ -141,8 +146,9 @@ can_configurations = {
             'ParameterQuery', 'DataloggerStatus', 'DataloggerRecording'),
         data_logger_configuration_is_valid_signal_path=(
             'ParameterQuery', 'DataloggerStatus',
-            'DataloggerConfigurationIsValid')
-    )
+            'DataloggerConfigurationIsValid'),
+        monitor_frame='StatusBits',
+    ),
 }
 
 
@@ -151,6 +157,19 @@ def load(file):
         pass
     elif isinstance(file, io.IOBase):
         pass
+
+
+def ignore_timeout(failure):
+    acceptable_errors = (
+        epyqlib.twisted.nvs.RequestTimeoutError,
+        epyqlib.twisted.nvs.SendFailedError,
+        epyqlib.twisted.nvs.CanceledError,
+    )
+    if failure.type in acceptable_errors:
+        return None
+
+    return epyqlib.utils.twisted.errbackhook(
+        failure)
 
 
 class Device:
@@ -215,6 +234,12 @@ class Device:
         s = file.read()
         d = json.loads(s, object_pairs_hook=OrderedDict)
         self.raw_dict = d
+        d.setdefault('nv_meta_enum', None)
+        d.setdefault('access_level_path', None)
+        d.setdefault(
+            'access_password_path',
+            'ParameterQuery;FactoryAccess;FactoryAccess',
+        )
 
         self.module_path = d.get('module', None)
         self.plugin = None
@@ -412,9 +437,13 @@ class Device:
 
         can_configuration = can_configurations[can_configuration]
 
+        self.bus_online = False
+        self.bus_tx = False
+
         self.bus = BusProxy(bus=bus)
 
         self.nv_looping_set = None
+        self.nv_tab_looping_set = None
 
         self.rx_interval = rx_interval
         self.serial_number = serial_number
@@ -543,6 +572,7 @@ class Device:
                     else:
                         view.setModel(model)
 
+        self.widget_nvs = None
         if Elements.nv in self.elements:
             matrix_nv = list(canmatrix.formats.loadp(self.can_path).values())[0]
             self.frames_nv = epyqlib.canneo.Neo(
@@ -554,26 +584,67 @@ class Device:
             )
 
             self.nv_looping_set = epyqlib.twisted.loopingset.Set()
+            self.nv_tab_looping_set = epyqlib.twisted.loopingset.Set()
+
+            access_level_path = self.raw_dict['access_level_path']
+            if access_level_path is not None:
+                access_level_path = access_level_path.split(';')
+
+            access_password_path = self.raw_dict['access_password_path']
+            if access_password_path is not None:
+                access_password_path = access_password_path.split(';')
+
+            # TODO: CAMPid 0794311304143707516085683164039671793972
+            if self.raw_dict['nv_meta_enum'] == 'Meta':
+                self.metas = epyqlib.nv.meta_limits_first
+            else:
+                self.metas = (epyqlib.nv.MetaEnum.value,)
 
             self.nvs = epyqlib.nv.Nvs(
                 neo=self.frames_nv,
                 bus=self.bus,
                 configuration=nv_configuration,
                 hierarchy=hierarchy,
+                metas=self.metas,
+                access_level_path=access_level_path,
+                access_password_path=access_password_path,
             )
 
-            if 'parameter_defaults' in self.raw_dict:
+            default_metas = [
+                meta
+                for meta in (
+                    epyqlib.nv.MetaEnum.user_default,
+                    epyqlib.nv.MetaEnum.factory_default,
+                )
+                if meta not in self.metas
+            ]
+
+            if len(default_metas) > 0 and 'parameter_defaults' in self.raw_dict:
                 parameter_defaults_path = os.path.join(
                     os.path.dirname(self.config_path),
                     self.raw_dict['parameter_defaults']
                 )
                 with open(parameter_defaults_path) as f:
-                    self.nvs.defaults_from_dict(json.load(f))
-                    for nv in self.nvs.all_nv():
-                        if isinstance(nv, epyqlib.nv.Nv):
-                            if nv.default_value is not None:
-                                nv.fields.default = nv.format_strings(
-                                    value=int(nv.default_value))[0]
+                    self.nvs.defaults_from_dict(
+                        d=json.load(f),
+                        default_metas=default_metas,
+                    )
+
+            for nv in self.nvs.all_nv():
+                if isinstance(nv, epyqlib.nv.Nv):
+                    if epyqlib.nv.MetaEnum.minimum not in self.metas:
+                        if nv.min is not None:
+                            nv.set_meta(
+                                data=float(nv.min),
+                                meta=epyqlib.nv.MetaEnum.minimum,
+                            )
+
+                    if epyqlib.nv.MetaEnum.maximum not in self.metas:
+                        if nv.max is not None:
+                            nv.set_meta(
+                                data=float(nv.max),
+                                meta=epyqlib.nv.MetaEnum.maximum,
+                            )
 
             self.widget_frames_nv = epyqlib.canneo.Neo(
                 matrix=matrix_nv,
@@ -597,13 +668,20 @@ class Device:
 
                 column = epyqlib.nv.Columns.indexes.name
                 for view in nv_views:
+                    view.set_device(self)
                     view.set_can_contents(self.can_contents)
+                    if self.nvs.access_level_node is not None:
+                        view.set_access_level_signal_path(
+                            path=self.nvs.access_level_node.signal_path(),
+                        )
+
                     proxy = epyqlib.utils.qt.PySortFilterProxyModel(
                         filter_column=column,
                     )
                     proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
                     proxy.setSourceModel(nv_model)
                     view.setModel(proxy)
+                    view.set_metas(self.metas)
                     view.set_sorting_enabled(True)
                     view.sort_by_column(
                         column=column,
@@ -683,8 +761,10 @@ class Device:
                 }
                 if index in tabs:
                     self.nv_looping_set.stop()
+                    self.nv_tab_looping_set.start()
                 else:
                     self.nv_looping_set.start()
+                    self.nv_tab_looping_set.stop()
 
             self.ui.tabs.currentChanged.connect(tab_changed)
         if Tabs.scripting not in tabs:
@@ -692,16 +772,9 @@ class Device:
         if Tabs.fault_log not in tabs:
             self.ui.tabs.removeTab(self.ui.tabs.indexOf(self.ui.faultlog))
 
-        self.ui.offline_overlay = epyqlib.overlaylabel.OverlayLabel(parent=self.ui)
-        self.ui.offline_overlay.label.setText('offline')
-
         self.ui.tabs.setCurrentIndex(0)
 
-
-
-        notifier = self.bus.notifier
-        for notifiee in notifiees:
-            notifier.add(notifiee)
+        self.widget_nv_frames = collections.defaultdict(list)
 
         def flatten(dict_node):
             flat = set()
@@ -724,6 +797,8 @@ class Device:
         self.nv_looping_reads = {}
         if Tabs.variables in tabs:
             flat.append(self.ui.variable_selection)
+        if Tabs.nv in tabs:
+            flat.append(self.ui.nv)
         for dash in flat:
             # TODO: CAMPid 99457281212789437474299
             children = dash.findChildren(QObject)
@@ -761,7 +836,11 @@ class Device:
 
                         self.dash_missing_signals.add(
                             '{}:/{} - {}'.format(
-                                dash.file_name,
+                                (
+                                    dash.file_name
+                                    if hasattr(dash, 'file_name')
+                                    else '<builtin>'
+                                ),
                                 '/'.join(widget_path),
                                 ':'.join(signal_path) if len(signal_path) > 0
                                     else '<none specified>'
@@ -772,22 +851,16 @@ class Device:
                     if signal.frame.id == self.nvs.set_frames[0].id:
                         nv_signal = self.widget_nvs.neo.signal_by_path(*signal_path)
 
+                        self.widget_nv_frames[nv_signal.frame].append(
+                            nv_signal,
+                        )
+
                         if nv_signal.multiplex not in self.nv_looping_reads:
-                            def ignore_timeout(failure):
-                                acceptable_errors = (
-                                    epyqlib.twisted.nvs.RequestTimeoutError,
-                                    epyqlib.twisted.nvs.SendFailedError,
-                                    epyqlib.twisted.nvs.CanceledError,
-                                )
-                                if failure.type in acceptable_errors:
-                                    return None
-
-                                return epyqlib.utils.twisted.errbackhook(
-                                        failure)
-
                             def read(nv_signal=nv_signal):
                                 d = self.nvs.protocol.read(
-                                    nv_signal=nv_signal)
+                                    nv_signal=nv_signal,
+                                    meta=epyqlib.nv.MetaEnum.value,
+                                )
 
                                 d.addErrback(ignore_timeout)
 
@@ -795,13 +868,22 @@ class Device:
 
                             self.nv_looping_reads[nv_signal.multiplex] = read
 
-                        self.nv_looping_set.add_request(
-                            key=widget,
-                            request=epyqlib.twisted.loopingset.Request(
-                                f=self.nv_looping_reads[nv_signal.multiplex],
-                                period=1
+                        if dash is self.ui.nv:
+                            self.nv_tab_looping_set.add_request(
+                                key=widget,
+                                request=epyqlib.twisted.loopingset.Request(
+                                    f=self.nv_looping_reads[nv_signal.multiplex],
+                                    period=1,
+                                )
                             )
-                        )
+                        else:
+                            self.nv_looping_set.add_request(
+                                key=widget,
+                                request=epyqlib.twisted.loopingset.Request(
+                                    f=self.nv_looping_reads[nv_signal.multiplex],
+                                    period=1,
+                                )
+                            )
 
                         if hasattr(widget, 'tx') and widget.tx:
                             signal = self.widget_nvs.neo.signal_by_path(
@@ -824,6 +906,42 @@ class Device:
                                           widget=widget,
                                           signal=widget.edit)
                                 break
+
+        monitor_matrix = list(
+            canmatrix.formats.loadp(self.can_path).values()
+        )[0]
+        monitor_frames = epyqlib.canneo.Neo(
+            matrix=monitor_matrix,
+            node_id_adjust=self.node_id_adjust,
+        )
+        monitor_frame = monitor_frames.frame_by_name(
+            can_configuration.monitor_frame,
+        )
+
+        self.connection_monitor = FrameTimeout(frame=monitor_frame)
+
+        self.overlay_widget = epyqlib.overlaylabel.OverlayWidget(
+            parent=self.ui,
+        )
+        layout = QVBoxLayout()
+        self.overlay_widget.setLayout(layout)
+
+        self.ui.offline_overlay = epyqlib.overlaylabel.OverlayLabel()
+        self.ui.offline_overlay.label.setText('offline')
+        layout.addWidget(self.ui.offline_overlay)
+
+
+        self.ui.connection_monitor_overlay = epyqlib.overlaylabel.OverlayLabel()
+        layout.addWidget(self.ui.connection_monitor_overlay)
+
+        self.connection_monitor.lost.connect(self.connection_status_changed)
+        self.connection_monitor.found.connect(self.connection_status_changed)
+
+        self.connection_monitor.found.connect(self.read_nv_widget_min_max)
+
+        self.connection_monitor.start()
+
+        notifiees.append(self.connection_monitor)
 
         self.bus_status_changed(online=False, transmit=False)
 
@@ -882,6 +1000,9 @@ class Device:
             )
             self.ui.scripting_view.set_model(scripting_model)
 
+        for notifiee in notifiees:
+            self.bus.notifier.add(notifiee)
+
         self.extension.post()
 
     def absolute_path(self, path=''):
@@ -898,6 +1019,9 @@ class Device:
 
     @pyqtSlot(bool)
     def bus_status_changed(self, online, transmit):
+        self.bus_online = online
+        self.bus_tx = transmit
+
         style = epyqlib.overlaylabel.styles['red']
         text = ''
         if online:
@@ -911,6 +1035,47 @@ class Device:
         self.ui.offline_overlay.setVisible(len(text) > 0)
         self.ui.offline_overlay.setStyleSheet(style)
 
+        self.read_nv_widget_min_max()
+
+    def read_nv_widget_min_max(self):
+        print('bus_online', self.bus_online)
+        print('bus_tx', self.bus_tx)
+        print('present', self.connection_monitor.present)
+        active = all((
+            self.bus_online,
+            self.bus_tx,
+            self.connection_monitor.present,
+        ))
+
+        if not active:
+            return
+
+        print('reading min/max for nv widgets')
+
+        metas = (
+            epyqlib.nv.MetaEnum.minimum,
+            epyqlib.nv.MetaEnum.maximum,
+        )
+
+        for frame, signals in self.widget_nv_frames.items():
+            for meta in metas:
+                d = self.nvs.protocol.read_multiple(
+                    nv_signals=signals,
+                    meta=meta,
+                )
+
+                d.addErrback(ignore_timeout)
+
+    def connection_status_changed(self):
+        present = self.connection_monitor.present
+
+        text = 'no status'
+        if present:
+            text = ''
+
+        self.ui.connection_monitor_overlay.label.setText(text)
+        self.ui.connection_monitor_overlay.setVisible(len(text) > 0)
+
     def terminate(self):
         self.neo_frames.terminate()
         try:
@@ -920,7 +1085,48 @@ class Device:
             pass
         if self.nv_looping_set is not None:
             self.nv_looping_set.stop()
+        if self.nv_tab_looping_set is not None:
+            self.nv_tab_looping_set.stop()
         logging.debug('{} terminated'.format(object.__repr__(self)))
+
+
+class FrameTimeout(epyqlib.canneo.QtCanListener):
+    lost = epyqlib.utils.qt.Signal()
+    found = epyqlib.utils.qt.Signal()
+
+    def __init__(self, frame, relative=lambda t: 5 * t, absolute=0.5,
+                 parent=None):
+        super().__init__(self.message_received, parent=parent)
+
+        self.frame = frame
+
+        self.timeout = 1000 * max(
+            absolute,
+            relative(float(self.frame.cycle_time) / 1000),
+        )
+
+        self.present = False
+
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self._lost)
+
+    def _lost(self):
+        self.timer.stop()
+        self.present = False
+        self.lost.emit()
+
+    def start(self):
+        self._lost()
+
+    def message_received(self, msg):
+        if not self.frame.message_received(msg):
+            return
+
+        self.timer.start(self.timeout)
+
+        if not self.present:
+            self.present = True
+            self.found.emit()
 
 
 if __name__ == '__main__':

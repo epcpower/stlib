@@ -27,6 +27,9 @@ class NotFoundError(Exception):
     pass
 
 
+nothing = object()
+
+
 @functools.lru_cache(4096)
 def pack_bitstring(length, is_float, value, signed):
     if is_float:
@@ -191,12 +194,15 @@ class Signal:
         else:
             self.multiplex = signal._multiplex # {NoneType} None
 
+        self.raw_minimum, self.raw_maximum = signal.calculateRawRange()
+
         self.name = signal._name # {str} 'Enable_command'
         # self._receiver = signal._receiver # {str} ''
         self.signal_size = int(signal._signalsize) # {int} 2
         self.start_bit = int(signal.getStartbit()) # {int} 0
         self.unit = signal._unit # {str} ''
         self.enumeration = {int(k): v for k, v in signal._values.items()} # {dict} {'0': 'Disable', '2': 'Error', '1': 'Enable', '3': 'N/A'}
+        self.enumeration_name = signal.enumeration
         self.signed = signal._is_signed
         if self.multiplex is True:
             self.signed = False
@@ -208,15 +214,16 @@ class Signal:
         self.scaled_value = None
 
         self.frame = frame
-        # TODO: put this into the frame!
-        self.frame.signals.append(self)
+        if self.frame is not None:
+            # TODO: put this into the frame!
+            self.frame.signals.append(self)
 
         self.enumeration_format_re = {'re': '^\[(\d+)\]',
                                       'format': '[{v}] {s}',
                                       'no_value_format': '{s}'}
 
         # TODO: make this configurable in the .sym?
-        self.secret = self.name == 'FactoryAccess'
+        self.secret = self.name.casefold() in {'factoryaccess', 'password'}
 
         self.decimal_places = None
 
@@ -232,7 +239,7 @@ class Signal:
         return '{name}: sb:{start_bit}, osb:{ordering_start_bit}, len:{length}'.format(
             name=self.name,
             start_bit=self.start_bit,
-            ordering_start_bit=self.ordering_start_bit,
+            ordering_start_bit=getattr(self, 'ordering_start_bit', '-'),
             length=self.signal_size
         )
 
@@ -242,16 +249,19 @@ class Signal:
     def from_human(self, value):
         return round((value - self.offset) / self.factor)
 
-    def get_human_value(self, for_file=False):
+    def get_human_value(self, for_file=False, column=None, value=nothing):
+        if value is nothing:
+            value = self.value
+
         # TODO: handle offset
-        if self.value is None:
+        if value is None:
             return None
 
-        value = self.to_human(self.value)
+        value = self.to_human(value)
 
         return self.format_float(value, for_file=for_file)
 
-    def set_human_value(self, raw_value, force=False, check_range=False):
+    def calc_human_value(self, raw_value):
         # TODO: handle offset
         locale.setlocale(locale.LC_ALL, '')
 
@@ -280,9 +290,16 @@ class Signal:
         if value is not None:
             value = self.from_human(value)
 
-        self.set_value(value=value,
-                       force=force,
-                       check_range=check_range)
+        return value
+
+    def set_human_value(self, raw_value, force=False, check_range=False):
+            value = self.calc_human_value(raw_value)
+
+            self.set_value(
+                value=value,
+                force=force,
+                check_range=check_range,
+            )
 
     def enumeration_string(self, value, include_value=False):
         format = (self.enumeration_format_re['format']
@@ -325,7 +342,14 @@ class Signal:
 
         return self.decimal_places
 
-    def set_value(self, value, force=False, check_range=False):
+    def set_value(self, value, force=False, check_range=False, minimum=None,
+                  maximum=None):
+        if minimum is None:
+            minimum = self.min
+
+        if maximum is None:
+            maximum = self.max
+
         value_parameter = value
         if type(value) is float and math.isnan(value):
             return
@@ -336,10 +360,10 @@ class Signal:
             #       needed
             if check_range:
                 human_value = self.to_human(value)
-                if not self.min <= human_value <= self.max:
+                if not minimum <= human_value <= maximum:
                     raise OutOfRangeError('{} not in range [{}, {}]'.format(
                         *[self.format_float(f) for f
-                          in (human_value, self.min, self.max)]))
+                          in (human_value, minimum, maximum)]))
             self.value = value
 
             if value not in self.enumeration:
@@ -662,10 +686,13 @@ class Frame(QtCanListener):
                            data=data)
 
     def message_received(self, msg):
+        unpacked = False
+
         if (msg.arbitration_id == self.id and
                 bool(msg.id_type) == self.extended):
             if self.mux_frame is None:
                 self.unpack(msg.data)
+                unpacked = True
             elif self.mux_frame is self:
                 # print(self, self.name, self.mux_name, self.mux_frame, self.mux_frame.name, self.mux_frame.mux_name)
 
@@ -673,11 +700,16 @@ class Frame(QtCanListener):
                 mux_signal, = unpacked
 
                 # TODO: this if added to avoid exceptions temporarily
-                if mux_signal.value not in self.multiplex_frames:
-                    return
-                self.multiplex_frames[mux_signal.value].message_received(msg)
+                if mux_signal.value in self.multiplex_frames:
+                    unpacked = (
+                        self.multiplex_frames[mux_signal.value]
+                            .message_received(msg)
+                    )
             else:
                 self.unpack(msg.data)
+                unpacked = True
+
+        return unpacked
 
     def terminate(self):
         callers = tuple(r for r in self._cyclic_requests)
@@ -848,14 +880,14 @@ class Neo(QtCanListener):
             try:
                 return next(i)
             except StopIteration as e:
-                raise NotFoundError(', '.join(elements)) from e
+                raise NotFoundError(repr(elements)) from e
 
         element = get_next(i)
 
         frame = self.frame_by_name(element)
 
         if frame is None:
-            raise NotFoundError(', '.join(elements))
+            raise NotFoundError(repr(elements))
 
         if hasattr(frame, 'multiplex_frames'):
             element = get_next(i)
@@ -867,13 +899,13 @@ class Neo(QtCanListener):
             try:
                 [frame] = frames
             except ValueError:
-                raise NotFoundError(', '.join(elements))
+                raise NotFoundError(repr(elements))
 
         element = get_next(i)
 
         signal = frame.signal_by_name(element)
         if signal is None:
-            raise NotFoundError(', '.join(elements))
+            raise NotFoundError(repr(elements))
 
         return signal
 

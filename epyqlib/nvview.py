@@ -2,6 +2,8 @@
 
 #TODO: """DocString if there is one"""
 
+import attr
+import collections
 import epyqlib.nv
 try:
     import epyqlib.resources.code
@@ -30,7 +32,9 @@ __license__ = 'GPLv2+'
 class NvView(QtWidgets.QWidget):
     module_to_nv = pyqtSignal()
     read_from_file = pyqtSignal()
+    read_from_value_set_file = pyqtSignal()
     write_to_file = pyqtSignal()
+    write_to_value_set_file = pyqtSignal()
 
     def __init__(self, parent=None, in_designer=False):
         QtWidgets.QWidget.__init__(self, parent=parent)
@@ -54,7 +58,13 @@ class NvView(QtWidgets.QWidget):
         self.ui.write_to_module_button.clicked.connect(self.write_to_module)
         self.ui.read_from_module_button.clicked.connect(self.read_from_module)
         self.ui.write_to_file_button.clicked.connect(self.write_to_file)
+        self.ui.write_to_value_set_file_button.clicked.connect(
+            self.write_to_value_set_file,
+        )
         self.ui.read_from_file_button.clicked.connect(self.read_from_file)
+        self.ui.read_from_value_set_file_button.clicked.connect(
+            self.read_from_value_set_file,
+        )
         self.ui.write_to_auto_parameters_button.clicked.connect(
             self.write_to_auto_parameters,
         )
@@ -62,14 +72,27 @@ class NvView(QtWidgets.QWidget):
         view = self.ui.tree_view
         view.setContextMenuPolicy(Qt.CustomContextMenu)
         view.customContextMenuRequested.connect(self.context_menu)
-        view.setSelectionBehavior(view.SelectRows)
+        view.setSelectionBehavior(view.SelectItems)
         view.setSelectionMode(view.ExtendedSelection)
+        view.row_columns = {
+            epyqlib.nv.Columns.indexes.name,
+        }
+        self.meta_columns = {
+            getattr(epyqlib.nv.Columns.indexes, meta.name)
+            for meta in epyqlib.nv.MetaEnum
+        }
+        no_update_columns = set(epyqlib.nv.Columns.indexes)
+        no_update_columns -= {epyqlib.nv.Columns.indexes.name,}
+        no_update_columns -= self.meta_columns
+        view.no_update_columns = no_update_columns
 
         self.resize_columns = epyqlib.nv.Columns(
             name=True,
             value=True,
-            min=True,
-            max=True,
+            user_default=True,
+            factory_default=True,
+            minimum=True,
+            maximum=True,
             comment=True,
         )
 
@@ -84,6 +107,70 @@ class NvView(QtWidgets.QWidget):
         )
 
         self.can_contents = None
+        self.set_access_level_signal_path(path=None)
+
+        self.password_mapper = QtWidgets.QDataWidgetMapper()
+        self.password_mapper.setSubmitPolicy(
+            QtWidgets.QDataWidgetMapper.AutoSubmit,
+        )
+        self.access_level_mapper = QtWidgets.QDataWidgetMapper()
+        self.access_level_mapper.setSubmitPolicy(
+            QtWidgets.QDataWidgetMapper.AutoSubmit,
+        )
+
+        self.ui.access_level_password.setPlaceholderText('Access Code...')
+
+        self.metas = None
+        self.set_metas(())
+
+        self.resize_modes = None
+
+        self.device = None
+
+    def set_device(self, device):
+        self.device = device
+
+    def set_access_level_signal_path(self, path):
+        if path is None or path == '':
+            self.ui.current_access_level.signal_path = ''
+            self.ui.current_access_level.setHidden(True)
+            self.ui.access_level.setHidden(True)
+            self.ui.current_access_level.ignore = True
+        else:
+            self.ui.current_access_level.signal_path = ';'.join(path)
+            self.ui.current_access_level.setVisible(True)
+            self.ui.access_level.setVisible(True)
+            self.ui.current_access_level.ignore = False
+
+    def set_metas(self, metas):
+        self.metas = metas
+
+        show_but_no_edit = {
+            epyqlib.nv.MetaEnum.factory_default,
+            epyqlib.nv.MetaEnum.minimum,
+            epyqlib.nv.MetaEnum.maximum,
+        }
+
+        model = self.nonproxy_model()
+        if model is not None:
+            for meta in show_but_no_edit:
+                index = epyqlib.nv.column_index_by_meta[meta]
+                model.editable_columns[index] = (
+                    meta in self.metas
+                )
+
+        for meta in set(epyqlib.nv.MetaEnum) - show_but_no_edit:
+            self.ui.tree_view.setColumnHidden(
+                epyqlib.nv.column_index_by_meta[meta],
+                meta not in self.metas,
+            )
+
+        if set(self.metas) == {epyqlib.nv.MetaEnum.value}:
+            self.ui.tree_view.row_columns = set(epyqlib.nv.Columns.indexes)
+        else:
+            self.ui.tree_view.row_columns = {
+                epyqlib.nv.Columns.indexes.name,
+            }
 
     def filter_text_changed(self, text):
         self.ui.tree_view.model().setFilterWildcard(text)
@@ -104,8 +191,18 @@ class NvView(QtWidgets.QWidget):
 
     def write_to_module(self):
         model = self.nonproxy_model()
+
+        def not_none(nv):
+            if nv.value is not None:
+                return True
+
+            return any(
+                getattr(nv.meta, meta.name).value is not None
+                for meta in epyqlib.nv.MetaEnum.non_value
+            )
+
         only_these = [nv for nv in model.all_nv()
-                      if nv.value is not None]
+                      if not_none(nv) is not None]
         callback = functools.partial(
             self.update_signals,
             only_these=only_these
@@ -113,28 +210,58 @@ class NvView(QtWidgets.QWidget):
         d = model.root.write_all_to_device(
             callback=callback,
             only_these=only_these,
+            meta=tuple(
+                meta
+                for meta in epyqlib.nv.meta_limits_first
+                if meta in self.metas
+            ),
         )
         d.addErrback(epyqlib.utils.twisted.catch_expected)
         d.addErrback(epyqlib.utils.twisted.errbackhook)
 
+    def disable_column_resize(self):
+        self.resize_modes = {
+            index: (
+                self.ui.tree_view.header().sectionResizeMode(
+                    index,
+                )
+            )
+            for index in epyqlib.nv.column_index_by_meta.values()
+        }
+
+        for index in self.resize_modes:
+            self.ui.tree_view.header().setSectionResizeMode(
+                index,
+                QtWidgets.QHeaderView.Fixed,
+            )
+
+    def enable_column_resize(self):
+        for index, mode in self.resize_modes.items():
+            self.ui.tree_view.header().setSectionResizeMode(
+                index,
+                mode,
+            )
+
     def read_from_module(self):
-        resize_mode = self.ui.tree_view.header().sectionResizeMode(epyqlib.nv.Columns.indexes.value)
-        self.ui.tree_view.header().setSectionResizeMode(
-            epyqlib.nv.Columns.indexes.value, QtWidgets.QHeaderView.Fixed)
+        self.disable_column_resize()
+
         model = self.nonproxy_model()
         only_these = [nv for nv in model.all_nv()]
         callback = functools.partial(
             self.update_signals,
             only_these=only_these
         )
-        d = model.root.read_all_from_device(callback=callback,
-                                            only_these=only_these)
+        d = model.root.read_all_from_device(
+            callback=callback,
+            only_these=only_these,
+            meta=tuple(
+                meta
+                for meta in epyqlib.nv.meta_limits_first
+                if meta in self.metas
+            ),
+        )
 
-        def f():
-            self.ui.tree_view.header().setSectionResizeMode(
-                epyqlib.nv.Columns.indexes.value, resize_mode
-            )
-        d.addBoth(epyqlib.utils.twisted.detour_result, f)
+        d.addBoth(epyqlib.utils.twisted.detour_result, self.enable_column_resize)
         d.addErrback(epyqlib.utils.twisted.catch_expected)
         d.addErrback(epyqlib.utils.twisted.errbackhook)
 
@@ -143,13 +270,18 @@ class NvView(QtWidgets.QWidget):
             ('EPC Device', ['epc']),
             ('All Files', ['*'])
         ]
-        auto_parameters_device_file_path = pathlib.Path(
-            epyqlib.utils.qt.file_dialog(
-                filters=filters,
-                caption='Open Auto Parameters Template',
-                parent=self,
-            )
+        auto_parameters_device_file_path = epyqlib.utils.qt.file_dialog(
+            filters=filters,
+            caption='Open Auto Parameters Template',
+            parent=self,
         )
+        if auto_parameters_device_file_path is None:
+            return
+
+        auto_parameters_device_file_path = pathlib.Path(
+            auto_parameters_device_file_path
+        )
+
         auto_parameters_device = epyqlib.device.Device(
             file=auto_parameters_device_file_path,
             only_for_files=True,
@@ -184,15 +316,54 @@ class NvView(QtWidgets.QWidget):
             if not ok:
                 return
 
-        factory_access_code, ok = QtWidgets.QInputDialog.getText(
-            None,
-            'Factory Access Code',
-            'Factory Access Code',
-            QtWidgets.QLineEdit.Password,
-        )
+        root = self.nonproxy_model().root
 
-        if not ok:
-            return
+        @attr.s
+        class AccessInput:
+            node = attr.ib()
+            description = attr.ib()
+            secret = attr.ib()
+
+        access_inputs = (
+            AccessInput(
+                node=root.password_node,
+                description='Elevated Access Code',
+                secret=True,
+            ),
+            AccessInput(
+                node=root.access_level_node,
+                description='Elevated Access Level',
+                secret=False,
+            ),
+        )
+        access_parameters = {}
+
+        for access_input in access_inputs:
+            if access_input.node is None:
+                continue
+
+            parameters = [
+                None,
+                access_input.description,
+                access_input.description,
+            ]
+
+            if access_input.secret:
+                parameters.append(QtWidgets.QLineEdit.Password)
+
+            user_input, ok = QtWidgets.QInputDialog.getText(*parameters)
+
+            if not ok:
+                return
+
+            access_parameters[access_input.node] = int(user_input)
+
+        def node_path(node):
+            return [
+                node.frame.name,
+                node.frame.mux_name,
+                node.name,
+            ]
 
         with tempfile.TemporaryDirectory() as temporary_directory:
             temporary_directory = pathlib.Path(temporary_directory)
@@ -200,26 +371,26 @@ class NvView(QtWidgets.QWidget):
             directory_path.mkdir()
 
             parameter_path = (
-                auto_parameters_device.raw_dict['auto_parameters']
+                auto_parameters_device.raw_dict['auto_value_set']
             )
 
-            with open(directory_path / parameter_path, 'w') as file:
-                model = self.nonproxy_model()
-                d = model.root.to_dict(include_secrets=True)
-                factory_access_key, = (k for k in d if 'FactoryAccess' in k)
-                d[factory_access_key] = factory_access_code
-                s = json.dumps(d, sort_keys=True, indent=4)
-                file.write(s)
-                file.write('\n')
+            model = self.nonproxy_model()
+            value_set = model.root.to_value_set(include_secrets=True)
+            for node, user_input in access_parameters.items():
+                name = ':'.join(node_path(node)[1:])
+
+                def name_matches(node):
+                    return node.name == name
+
+                node, = value_set.model.root.nodes_by_filter(name_matches)
+                node.value = user_input
+
+            value_set.path = directory_path / parameter_path
+            value_set.save()
 
             can_path = auto_parameters_device.raw_dict['can_path']
 
-            file_names = (
-                *auto_parameters_device.referenced_files,
-                str(auto_parameters_device_file_path),
-            )
-
-            for file_name in file_names:
+            for file_name in auto_parameters_device.referenced_files:
                 if file_name in (can_path, parameter_path):
                     continue
 
@@ -229,6 +400,26 @@ class NvView(QtWidgets.QWidget):
                     auto_parameters_device_file_path.with_name(file_path.name),
                     directory_path,
                 )
+
+            with open(auto_parameters_device_file_path) as f:
+                raw_dict = json.load(
+                    f,
+                    object_pairs_hook=collections.OrderedDict,
+                )
+
+            keys_to_copy = (
+                'access_level_path',
+                'access_password_path',
+                'nv_meta_enum',
+            )
+            for key in keys_to_copy:
+                raw_dict[key] = self.device.raw_dict[key]
+
+            target_epc_name = (
+                directory_path / auto_parameters_device_file_path.name
+            )
+            with open(target_epc_name, 'w') as f:
+                json.dump(raw_dict, f, indent=4)
 
             with open(directory_path / can_path, 'wb') as f:
                 f.write(self.can_contents)
@@ -289,6 +480,77 @@ class NvView(QtWidgets.QWidget):
         self.ui.tree_view.setModel(proxy)
 
         model = self.nonproxy_model()
+
+        if model.root.password_node is not None:
+            self.password_mapper.setModel(model)
+            self.password_mapper.setRootIndex(model.index_from_node(
+                model.root.password_node.tree_parent,
+            ))
+            self.password_mapper.setCurrentIndex(
+                model.index_from_node(model.root.password_node).row(),
+            )
+            self.password_mapper.addMapping(
+                self.ui.access_level_password,
+                epyqlib.nv.Columns.indexes.value,
+            )
+
+        access_level_node = model.root.access_level_node
+        if access_level_node is not None:
+            self.access_level_mapper.setModel(model)
+            self.access_level_mapper.setRootIndex(model.index_from_node(
+                access_level_node.tree_parent,
+            ))
+            access_level_index = model.index_from_node(access_level_node)
+            self.access_level_mapper.setCurrentIndex(
+                access_level_index.row(),
+            )
+
+            # TODO: CAMPid 9754542524161542698615426
+            # TODO: use the userdata to make it easier to get in and out
+            self.ui.access_level.addItems(
+                model.root.access_level_node.enumeration_strings(
+                    include_values=True,
+                ),
+            )
+
+            self.access_level_mapper.addMapping(
+                self.ui.access_level,
+                epyqlib.nv.Columns.indexes.value,
+                'currentIndex'.encode('utf-8'),
+            )
+
+            delegate = self.access_level_mapper.itemDelegate()
+            self.ui.access_level.currentIndexChanged.connect(
+                lambda: delegate.commitData.emit(self.ui.access_level),
+            )
+
+            self.ui.access_level.setCurrentIndex(1)
+            self.ui.access_level.setCurrentIndex(0)
+
+        selected_nodes = tuple(
+            node
+            for node in (
+                model.root.password_node,
+                model.root.access_level_node,
+            )
+            if node is not None
+        )
+
+        callback = functools.partial(
+            self.update_signals,
+            only_these=selected_nodes
+        )
+
+        def write_access_level():
+            d = model.root.write_all_to_device(
+                only_these=selected_nodes,
+                callback=callback,
+            )
+            d.addErrback(epyqlib.utils.twisted.catch_expected)
+            d.addErrback(epyqlib.utils.twisted.errbackhook)
+
+        self.set_access_level.clicked.connect(write_access_level)
+
         model.activity_started.connect(self.activity_started)
         model.activity_ended.connect(self.activity_ended)
 
@@ -307,21 +569,38 @@ class NvView(QtWidgets.QWidget):
         )
         self.ui.read_from_file.connect(read_from_file)
 
+        read_from_value_set_file = functools.partial(
+            model.read_from_value_set_file,
+            parent=self
+        )
+        self.ui.read_from_value_set_file.connect(read_from_value_set_file)
+
         write_to_file = functools.partial(
             model.write_to_file,
             parent=self
         )
         self.ui.write_to_file.connect(write_to_file)
 
+        write_to_value_set_file = functools.partial(
+            model.write_to_value_set_file,
+            parent=self
+        )
+        self.ui.write_to_value_set_file.connect(write_to_value_set_file)
+
         for i in epyqlib.nv.Columns.indexes:
             if self.resize_columns[i]:
                 self.ui.tree_view.header().setSectionResizeMode(
                     i, QtWidgets.QHeaderView.ResizeToContents)
 
-        self.ui.tree_view.setItemDelegateForColumn(
-            epyqlib.nv.Columns.indexes.value,
-            epyqlib.delegates.ByFunction(model=model, proxy=proxy, parent=self)
-        )
+        for column in model.meta_columns:
+            self.ui.tree_view.setItemDelegateForColumn(
+                column,
+                epyqlib.delegates.ByFunction(
+                    model=model,
+                    proxy=proxy,
+                    parent=self,
+                )
+            )
 
         self.ui.tree_view.setColumnHidden(
             epyqlib.nv.Columns.indexes.factory,
@@ -392,72 +671,143 @@ class NvView(QtWidgets.QWidget):
         f = dispatch.get(node_type)
         if f is not None:
             f(position)
+        else:
+            self.other_context_menu(position)
+
+    def other_context_menu(self, position):
+        menu = QtWidgets.QMenu(parent=self.ui.tree_view)
+        menu.setSeparatorsCollapsible(True)
+
+        expand_all = menu.addAction('Expand All')
+        collapse_all = menu.addAction('Collapse All')
+
+        action = menu.exec(self.ui.tree_view.viewport().mapToGlobal(position))
+
+        if action is expand_all:
+            self.ui.tree_view.expandAll()
+        elif action is collapse_all:
+            self.ui.tree_view.collapseAll()
 
     def nv_context_menu(self, position):
         proxy = self.ui.tree_view.model()
         model = self.nonproxy_model()
 
         selection_model = self.ui.tree_view.selectionModel()
-        selected_indexes = selection_model.selectedRows()
+        selected_indexes = selection_model.selectedIndexes()
         selected_indexes = tuple(
             proxy.mapToSource(i) for i in selected_indexes
         )
-        selected_nodes = tuple(
-            model.node_from_index(i) for i in selected_indexes
-        )
-        selected_nodes = tuple(
-            node for node in selected_nodes if isinstance(node, epyqlib.nv.Nv)
-        )
+
+        selected_by_node = collections.defaultdict(list)
+        selected_by_meta = collections.defaultdict(list)
+
+        for index in selected_indexes:
+            node = model.node_from_index(index)
+            if not isinstance(node, epyqlib.nv.Nv):
+                continue
+            if index.column() not in self.meta_columns:
+                continue
+
+            meta = getattr(
+                epyqlib.nv.MetaEnum,
+                epyqlib.nv.Columns().index_from_attribute(index.column()),
+            )
+            if meta not in self.metas:
+                meta = epyqlib.nv.MetaEnum.value
+
+            if meta not in selected_by_node[node]:
+                selected_by_node[node].append(meta)
+
+            if node not in selected_by_meta[meta]:
+                selected_by_meta[meta].append(node)
+
 
         menu = QtWidgets.QMenu(parent=self.ui.tree_view)
+        menu.setSeparatorsCollapsible(True)
 
         read = menu.addAction('Read {}'.format(
             self.ui.read_from_module_button.text()))
         write = menu.addAction('Write {}'.format(
             self.ui.write_to_module_button.text()))
         saturate = menu.addAction('Saturate')
-        if not any(n.can_be_saturated() for n in selected_nodes):
+
+        def can_be(method_name, selected):
+            return any(
+                any(
+                    getattr(n, method_name)(meta=meta)
+                    for meta in metas
+                )
+                for n, metas in selected.items()
+            )
+
+        if not can_be('can_be_saturated', selected_by_node):
             saturate.setDisabled(True)
         reset = menu.addAction('Reset')
-        if not any(n.can_be_reset() for n in selected_nodes):
+        if not can_be('can_be_reset', selected_by_node):
             reset.setDisabled(True)
         clear = menu.addAction('Clear')
-        if not any(n.can_be_cleared() for n in selected_nodes):
+        if not can_be('can_be_cleared', selected_by_node):
             clear.setDisabled(True)
+
+        menu.addSeparator()
+        expand_all = menu.addAction('Expand All')
+        collapse_all = menu.addAction('Collapse All')
 
         action = menu.exec(self.ui.tree_view.viewport().mapToGlobal(position))
 
-        callback = functools.partial(
-            self.update_signals,
-            only_these=selected_nodes
-        )
-        if action is None:
-            pass
-        elif action is read:
-            d = model.root.read_all_from_device(
-                only_these=selected_nodes,
-                callback=callback,
-            )
-            d.addErrback(epyqlib.utils.twisted.catch_expected)
-            d.addErrback(epyqlib.utils.twisted.errbackhook)
-        elif action is write:
-            d = model.root.write_all_to_device(
-                only_these=selected_nodes,
-                callback=callback,
-            )
-            d.addErrback(epyqlib.utils.twisted.catch_expected)
-            d.addErrback(epyqlib.utils.twisted.errbackhook)
-        elif action is saturate:
-            for node in selected_nodes:
-                model.saturate_node(node)
-        elif action is reset:
-            for node in selected_nodes:
-                model.reset_node(node)
-        elif action is clear:
-            for node in selected_nodes:
-                model.clear_node(node)
+        d = twisted.internet.defer.Deferred()
+        d.callback(None)
 
-    def update_signals(self, d, only_these):
+        for meta, nodes in selected_by_meta.items():
+            callback = functools.partial(
+                self.update_signals,
+                only_these=nodes,
+            )
+            if action is None:
+                pass
+            elif action is read:
+                d.addCallback(
+                    lambda _, nodes=nodes, callback=callback, meta=meta:
+                    model.root.read_all_from_device(
+                        only_these=nodes,
+                        callback=callback,
+                        meta=(meta,),
+                    )
+                )
+            elif action is write:
+                d.addCallback(
+                    lambda _, nodes=nodes, callback=callback, meta=meta:
+                    model.root.write_all_to_device(
+                        only_these=nodes,
+                        callback=callback,
+                        meta=(meta,),
+                    )
+                )
+            elif action is saturate:
+                self.disable_column_resize()
+                for node in nodes:
+                    model.saturate_node(node, meta=meta)
+                self.enable_column_resize()
+            elif action is reset:
+                self.disable_column_resize()
+                for node in nodes:
+                    model.reset_node(node, meta=meta)
+                self.enable_column_resize()
+            elif action is clear:
+                self.disable_column_resize()
+                for node in nodes:
+                    model.clear_node(node, meta=meta)
+                self.enable_column_resize()
+            elif action is expand_all:
+                self.ui.tree_view.expandAll()
+            elif action is collapse_all:
+                self.ui.tree_view.collapseAll()
+
+        d.addErrback(epyqlib.utils.twisted.catch_expected)
+        d.addErrback(epyqlib.utils.twisted.errbackhook)
+
+    def update_signals(self, arg, only_these):
+        d, meta = arg
         model = self.nonproxy_model()
 
         frame = next(iter(d)).frame
@@ -467,12 +817,12 @@ class NvView(QtWidgets.QWidget):
         for signal in signals:
             if signal.status_signal in d:
                 value = d[signal.status_signal]
-                signal.set_data(value, check_range=False)
+                signal.set_meta(value, meta=meta, check_range=False)
 
         for signal in frame.set_frame.parameter_signals:
             model.dynamic_columns_changed(
                 signal,
-                columns=(epyqlib.nv.Columns.indexes.value,)
+                columns=(getattr(epyqlib.nv.Columns.indexes, meta.name),)
             )
 
 

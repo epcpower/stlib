@@ -13,12 +13,16 @@ import graham
 import graham.fields
 import marshmallow
 from PyQt5 import QtCore
+from PyQt5 import QtGui
+from PyQt5 import QtWidgets
 import PyQt5.QtCore
 
 import epyqlib.abstractcolumns
+import epyqlib.delegates
 import epyqlib.pyqabstractitemmodel
 import epyqlib.treenode
 import epyqlib.utils.general
+import epyqlib.utils.qt
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2017, EPC Power Corp.'
@@ -26,6 +30,19 @@ __license__ = 'GPLv2+'
 
 
 logger = logging.getLogger()
+
+
+class NotFoundError(Exception):
+    pass
+
+
+def name_from_uuid(node, value, model):
+    if value is None:
+        return None
+
+    target_node = model.node_from_uuid(value)
+
+    return target_node.name
 
 
 @attr.s
@@ -52,6 +69,7 @@ class Metadata:
     human_name = attr.ib(default=None)
     convert = attr.ib(default=None)
     no_column = attr.ib(default=False)
+    list_selection_root = attr.ib(default=None)
 
 
 metadata_key = object()
@@ -160,6 +178,22 @@ class Columns:
             return column
 
         return self.columns[item]
+
+    def index_of(self, item):
+        if isinstance(item, str):
+            index, = (
+                index
+                for index, column in enumerate(self.columns)
+                if column.name == item
+            )
+        elif isinstance(item, tuple):
+            index, = (
+                index
+                for index, column in enumerate(self.columns)
+                if column.fields[item[0]] == item[1]
+            )
+
+        return index
 
 
 def columns(*columns):
@@ -306,7 +340,14 @@ def convert_uuid(x):
     return uuid.UUID(x)
 
 
-def attr_uuid(metadata=None, default=attr.Factory(uuid.uuid4), **field_options):
+def attr_uuid(
+        metadata=None,
+        human_name='UUID',
+        data_display=None,
+        list_selection_root=None,
+        default=attr.Factory(uuid.uuid4),
+        **field_options,
+):
     if metadata is None:
         metadata = {}
 
@@ -321,7 +362,9 @@ def attr_uuid(metadata=None, default=attr.Factory(uuid.uuid4), **field_options):
     )
     attrib(
         attribute=attribute,
-        human_name='UUID',
+        human_name=human_name,
+        data_display=data_display,
+        list_selection_root=list_selection_root,
     )
 
     return attribute
@@ -414,9 +457,127 @@ def childless_can_delete(self, node=None):
     return self.tree_parent.can_delete(node=self)
 
 
+def to_source_model(index):
+    model = index.model()
+    while not isinstance(model, Model):
+        index = model.mapToSource(index)
+        model = index.model()
+
+    return index
+
+
+def create_delegate(parent=None):
+    selector = DelegateSelector(parent=parent)
+    delegate = epyqlib.delegates.Dispatch(
+        selector=selector.select,
+        parent=parent,
+    )
+
+    return delegate
+
+
+class DelegateSelector:
+    def __init__(self, parent=None):
+        self.parent = parent
+        self.regular = QtWidgets.QStyledItemDelegate(parent)
+        self.enumerations = {}
+
+    def enumeration_delegate(self, root):
+        return self.enumerations.setdefault(
+            root,
+            EnumerationDelegate(
+                text_column_name='Name',
+                root=root,
+                parent=self.parent,
+            ),
+        )
+
+    def select(self, index):
+        index = to_source_model(index)
+        model = index.model()
+        node = model.node_from_index(index)
+
+        column = model.columns[index.column()]
+        field_name = column.fields[type(node)]
+
+        list_selection_root = getattr(fields(type(node)), field_name)
+        list_selection_root = list_selection_root.list_selection_root
+        list_selection_root = model.list_selection_roots[list_selection_root]
+
+        if list_selection_root is not None:
+            delegate = self.enumeration_delegate(list_selection_root)
+        else:
+            delegate = self.regular
+
+        return delegate
+
+
+class CustomCombo(PyQt5.QtWidgets.QComboBox):
+    def hidePopup(self):
+        super().hidePopup()
+
+        QtCore.QCoreApplication.postEvent(
+            self,
+            QtGui.QKeyEvent(
+                QtCore.QEvent.KeyPress,
+                QtCore.Qt.Key_Enter,
+                QtCore.Qt.NoModifier,
+            ),
+        )
+
+
+class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
+    def __init__(self, text_column_name, root, parent):
+        super().__init__(parent)
+
+        self.text_column_name = text_column_name
+        self.root = root
+
+    def createEditor(self, parent, option, index):
+        return CustomCombo(parent=parent)
+
+    def setEditorData(self, editor, index):
+        super().setEditorData(editor, index)
+
+        model_index = to_source_model(index)
+        model = model_index.model()
+
+        editor.setModel(model)
+        editor.setModelColumn(model.columns.index_of(self.text_column_name))
+        editor.setRootModelIndex(model.index_from_node(self.root))
+
+        target_uuid = model.data(
+            model_index,
+            epyqlib.pyqabstractitemmodel.UserRoles.raw,
+        )
+        target_node = model.node_from_uuid(target_uuid)
+        target_index = model.index_from_node(target_node)
+        editor.setCurrentIndex(target_index.row())
+
+        editor.showPopup()
+
+    def setModelData(self, editor, model, index):
+        index = to_source_model(index)
+        model = index.model()
+
+        selected_index = model.index(
+            editor.currentIndex(),
+            0,
+            model.index_from_node(self.root),
+        )
+
+        node = model.node_from_index(selected_index)
+
+        model.setData(index, node.uuid, role=QtCore.Qt.EditRole)
+
+
 class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
     def __init__(self, root, columns, parent=None):
         super().__init__(root=root, parent=parent)
+
+        self.role_functions[epyqlib.pyqabstractitemmodel.UserRoles.raw] = (
+            self.data_raw
+        )
 
         self.mime_type = 'application/com.epcpower.pm.attrsmodel'
 
@@ -427,6 +588,8 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         self.connected_signals = {}
 
+        self.list_selection_roots = {}
+
         check_uuids(self.root)
 
         def connect(node, _):
@@ -436,7 +599,6 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             call_this=connect,
             internal_nodes=True,
         )
-
 
     def add_drop_sources(self, *sources):
         self.droppable_from.update(sources)
@@ -467,7 +629,12 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         if name is None:
             return None
 
-        return getattr(attr.fields(t), name)
+        return getattr(attributes(t).fields, name)
+
+    def data_raw(self, index):
+        field = self.get_field(index)
+        node = self.node_from_index(index)
+        return getattr(node, field.name)
 
     def data_display(self, index, replace_none='-'):
         field = self.get_field(index)
@@ -487,7 +654,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             attribute_field=attr.fields(Metadata).data_display,
         )
         if processor is not None:
-            return processor(data)
+            return processor(node, model=self, value=data)
 
         if data is None:
             return replace_none

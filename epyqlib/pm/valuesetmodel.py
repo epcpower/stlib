@@ -74,7 +74,7 @@ def copy_parameter_data(
             minimum = node.minimum
             maximum = node.maximum
 
-            if calculate_unspecified_min_max:
+            if calculate_unspecified_min_max and None in (minimum, maximum):
                 query_multiplexed_message, = can_root.nodes_by_attribute(
                     attribute_value='Parameter Query',
                     attribute_name='name',
@@ -84,7 +84,15 @@ def copy_parameter_data(
                     attribute_name='parameter_uuid',
                 )
 
-                minimum, maximum = signal.calculated_min_max()
+                calculated_minimum, calculated_maximum = (
+                     signal.calculated_min_max()
+                )
+
+                if minimum is None:
+                    minimum = calculated_minimum
+
+                if maximum is None:
+                    maximum = calculated_maximum
 
             value_set.model.root.append_child(
                 Parameter(

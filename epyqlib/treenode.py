@@ -123,19 +123,13 @@ class TreeNode:
         return len(self.children)
 
     def nodes_by_attribute(self, attribute_value, attribute_name):
-        def matches(node, matches):
+        def matches(node):
             if not hasattr(node, attribute_name):
-                return
+                return False
 
-            if getattr(node, attribute_name) == attribute_value:
-                matches.add(node)
+            return getattr(node, attribute_name) == attribute_value
 
-        nodes = set()
-        self.traverse(
-            call_this=matches,
-            payload=nodes,
-            internal_nodes=True
-        )
+        nodes = self.nodes_by_filter(filter=matches)
 
         if len(nodes) == 0:
             raise NotFoundError(
@@ -144,6 +138,20 @@ class TreeNode:
                     attribute_value,
                 )
             )
+
+        return nodes
+
+    def nodes_by_filter(self, filter):
+        def visit(node, matches):
+            if filter(node):
+                matches.add(node)
+
+        nodes = set()
+        self.traverse(
+            call_this=visit,
+            payload=nodes,
+            internal_nodes=True
+        )
 
         return nodes
 

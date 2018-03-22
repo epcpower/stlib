@@ -176,6 +176,17 @@ class AutoNumberIntEnum(enum.IntEnum):
         return obj
 
 
+def enumerated_attrs(enumeration, **kwargs):
+    def inner(cls):
+        for enumerator in enumeration:
+            setattr(cls, enumerator.name, attr.ib(**kwargs))
+
+        cls.enumeration = enumeration
+
+        return cls
+    return inner
+
+
 class TextTable:
     def __init__(self, format_string=None):
         self.format = format_string
