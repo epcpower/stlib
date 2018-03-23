@@ -61,6 +61,11 @@ def copy_parameter_data(
         calculate_unspecified_min_max=False,
         can_root=None,
 ):
+    query_multiplexed_message, = can_root.nodes_by_attribute(
+        attribute_value='Parameter Query',
+        attribute_name='name',
+    )
+
     def traverse(node, _):
         if isinstance(node, epyqlib.pm.parametermodel.Parameter):
             if human_names:
@@ -75,10 +80,6 @@ def copy_parameter_data(
             maximum = node.maximum
 
             if calculate_unspecified_min_max and None in (minimum, maximum):
-                query_multiplexed_message, = can_root.nodes_by_attribute(
-                    attribute_value='Parameter Query',
-                    attribute_name='name',
-                )
                 signal, = query_multiplexed_message.nodes_by_attribute(
                     attribute_value=node.uuid,
                     attribute_name='parameter_uuid',
@@ -104,8 +105,6 @@ def copy_parameter_data(
                 ),
             )
 
-            value_set.model.root.children.sort()
-
     if base_node is None:
         base_node = value_set.parameter_model.root
 
@@ -113,6 +112,8 @@ def copy_parameter_data(
         call_this=traverse,
         internal_nodes=False,
     )
+
+    value_set.model.root.children.sort()
 
 
 def name_attrib():
