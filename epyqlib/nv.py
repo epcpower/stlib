@@ -547,14 +547,14 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     d.addCallback(callback)
 
         if only_these is None:
-            self.traverse(call_this=handle_node)
-        else:
-            frames = set(nv.frame for nv in only_these)
-            for frame in frames:
-                signals = tuple(nv for nv in only_these
-                                if nv.frame is frame)
+            only_these = self.all_nv()
 
-                handle_frame(frame=frame, signals=signals)
+        frames = set(nv.frame for nv in only_these)
+        for frame in frames:
+            signals = tuple(nv for nv in only_these
+                            if nv.frame is frame)
+
+            handle_frame(frame=frame, signals=signals)
 
         if not background:
             d.addCallback(epyqlib.utils.twisted.detour_result,
