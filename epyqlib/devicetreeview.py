@@ -75,7 +75,10 @@ class DeviceTreeView(QtWidgets.QWidget):
 
         self.resize_columns = epyqlib.devicetree.Columns(
             name=True,
-            bitrate=False)
+            nickname=True,
+            bitrate=True,
+            transmit=True,
+        )
 
         self.ui.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
         self.ui.tree_view.customContextMenuRequested.connect(

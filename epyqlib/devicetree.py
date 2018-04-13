@@ -22,7 +22,7 @@ __license__ = 'GPLv2+'
 
 
 class Columns(AbstractColumns):
-    _members = ['name', 'bitrate', 'transmit']
+    _members = ['name', 'nickname', 'bitrate', 'transmit']
 
 Columns.indexes = Columns.indexes()
 
@@ -130,6 +130,7 @@ class Bus(TreeNode):
             name = 'Offline'
 
         self.fields = Columns(name=name,
+                              nickname='-',
                               bitrate=bitrates[self.bitrate],
                               transmit='')
 
@@ -210,12 +211,16 @@ class Bus(TreeNode):
 
         self.bus.set_bus(bus=real_bus)
 
+    def set_nickname(self, name):
+        self.fields.nickname = name
+
 
 class Device(TreeNode):
     def __init__(self, device):
         TreeNode.__init__(self)
 
         self.fields = Columns(name=device.name,
+                              nickname='-',
                               bitrate='',
                               transmit='')
 
@@ -223,6 +228,7 @@ class Device(TreeNode):
 
         self.device = device
         self.device.bus.transmit = self._checked.transmit == Qt.Checked
+        self.name = ''
 
     def terminate(self):
         self.device.terminate()
@@ -262,6 +268,10 @@ class Device(TreeNode):
             elif column == Columns.indexes.transmit:
                 self.device.bus.transmit = self._checked[column] == Qt.Checked
 
+    def set_nickname(self, name):
+        self.fields.nickname = name
+        self.device.nickname = name
+
 
 class Tree(TreeNode):
     def __init__(self):
@@ -270,6 +280,7 @@ class Tree(TreeNode):
 
 class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
     device_removed = pyqtSignal(epyqlib.device.Device)
+    details_changed = pyqtSignal()
 
     def __init__(self, root, parent=None):
         buses = [{
@@ -289,6 +300,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             bus.bus.went_offline.connect(went_offline)
 
         editable_columns = Columns.fill(False)
+        editable_columns.nickname= True
         editable_columns.bitrate = True
 
         checkbox_columns = Columns.fill(False)
@@ -299,7 +311,8 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 self, root=root, editable_columns=editable_columns,
                 checkbox_columns=checkbox_columns, parent=parent)
 
-        self.headers = Columns(name='Name',
+        self.headers = Columns(name='Bus/Device',
+                               nickname='Name',
                                bitrate='Bitrate',
                                transmit='Transmit')
 
@@ -333,6 +346,16 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 except ValueError:
                     return False
                 self.dataChanged.emit(index, index)
+                return True
+        elif index.column() == Columns.indexes.nickname:
+            if role == Qt.EditRole:
+                node = self.node_from_index(index)
+                try:
+                    node.set_nickname(data)
+                except ValueError:
+                    return False
+                self.dataChanged.emit(index, index)
+                self.details_changed.emit()
                 return True
         elif index.column() in [Columns.indexes.name, Columns.indexes.transmit]:
             if role == Qt.CheckStateRole:
