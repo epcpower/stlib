@@ -46,6 +46,8 @@ def cancelled_handler(error):
 
 
 class ScriptingView(QtWidgets.QWidget):
+    closing = QtCore.pyqtSignal()
+
     def __init__(self, parent=None, in_designer=False):
         super().__init__(parent=parent)
 
@@ -82,6 +84,11 @@ class ScriptingView(QtWidgets.QWidget):
 
         self.sequence = None
         self.update_buttons()
+
+    def closeEvent(self, event):
+        result = super().closeEvent(event)
+        self.closing.emit()
+        return result
 
     def update_buttons(self):
         active = self.sequence is not None

@@ -1,0 +1,14 @@
+3, red;ProcessToInverter;CommandModeControl;Enable, 0, red;ParameterQuery;AfeConfig;PhaseRotation, 0
++1, blue;ParameterQuery;AfeConfig;PhaseRotation, 1
++.1, red;ParameterQuery;AfeConfig;PhaseRotation, 0
+6, red;ProcessToInverter;CommandModeControl;Enable, 1, red;ParameterQuery;AfeConfig;PhaseRotation, 1
++1, red;ParameterQuery;AfeConfig;PhaseRotation, 0
++.1, red;ParameterQuery;AfeConfig;PhaseRotation, 1
++0, pause
++1, red;ProcessToInverter;CommandModeControl;Enable, 0, red;ParameterQuery;AfeConfig;PhaseRotation, 0
++1, red;ParameterQuery;AfeConfig;PhaseRotation, 1
++.1, red;ParameterQuery;AfeConfig;PhaseRotation, 0
+12, red;ProcessToInverter;CommandModeControl;Enable, 1, red;ParameterQuery;AfeConfig;PhaseRotation, 1
+#+1, red;ParameterQuery;AfeConfig;PhaseRotation, 0
+#15, red;ProcessToInverter;CommandModeControl;Enable, 0, red;ParameterQuery;AfeConfig;PhaseRotation, 0
+#+1, red;ParameterQuery;AfeConfig;PhaseRotation, 1

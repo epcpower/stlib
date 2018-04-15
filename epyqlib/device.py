@@ -996,8 +996,7 @@ class Device:
 
         if Elements.scripting in self.elements:
             scripting_model = epyqlib.scripting.Model(
-                tx_neo=self.neo_frames,
-                nvs=self.widget_nvs,
+                get_devices=lambda: {None: self, self.nickname: self},
             )
             self.ui.scripting_view.set_model(scripting_model)
 

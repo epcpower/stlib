@@ -23,10 +23,51 @@ class NoEventsError(epyqlib.utils.general.ExpectedException):
         return 'No script events found.'
 
 
+class NoDevicesError(epyqlib.utils.general.ExpectedException):
+    def expected_message(self):
+        return 'No devices found.'
+
+
+class MissingDevicesError(epyqlib.utils.general.ExpectedException):
+    def expected_message(self):
+        return 'Unable to find devices named: {}'.format(
+            ', '.join(repr(name) for name in sorted(self.args[0]))
+        )
+
+
 @attr.s(frozen=True)
 class Event:
     time = attr.ib()
     action = attr.ib()
+    device = attr.ib()
+
+    def resolve(self):
+        if self.action is pause_sentinel:
+            return self
+
+        signal = self.device.neo.signal_by_path(*self.action.signal)
+
+        # TODO: CAMPid 079320743340327834208
+        is_nv = signal.frame.id == self.device.nvs.set_frames[0].id
+        if is_nv:
+            print('switching', self.action.signal)
+            signal = self.device.nvs.neo.signal_by_path(*self.action.signal)
+
+        return attr.evolve(
+            self,
+            action=attr.evolve(
+                self.action,
+                signal=signal,
+                is_nv=is_nv,
+            )
+        )
+
+
+@attr.s(frozen=True)
+class Device:
+    name = attr.ib()
+    neo = attr.ib()
+    nvs = attr.ib()
 
 
 operators = {
@@ -64,12 +105,41 @@ class Action:
 pause_sentinel = Action(signal=[], value=0)
 
 
-def csv_load(f):
+special_leading_characters = set('#')
+
+def csv_load(f, devices):
     events = []
 
-    reader = csv.reader(line for line in f if line.lstrip()[0] != '#')
+    lines = tuple(
+        line.strip()
+        for line in f.readlines()
+    )
+
+    device_names = None
+
+    for line in lines:
+        if line[0] == '@':
+            s = line.split()
+            command = s[0][1:]
+            arguments = s[1:]
+
+        # add commands here if needed
+
+
+    device_map = {
+        device.name: device
+        for device in devices
+    }
+
+    reader = csv.reader(
+        line
+        for line in lines
+        if line[0] not in special_leading_characters,
+    )
 
     last_event_time = 0
+
+    missing_device_names = set()
 
     for i, row in enumerate(reader):
         raw_event_time = row[0]
@@ -92,71 +162,78 @@ def csv_load(f):
             event_time = selected_operator(last_event_time, event_time)
 
         raw_actions = [x.strip() for x in row[1:] if len(x) > 0]
-        print(list(epyqlib.utils.general.grouper(raw_actions, n=2)))
-        actions = []
-        for path, value in epyqlib.utils.general.grouper(raw_actions, n=2):
-            if path == 'pause':
-                actions.append(pause_sentinel)
-            else:
-                actions.append(Action(
-                    signal=path.split(';'),
-                    value=decimal.Decimal(value),
-                ))
 
-        events.extend([
-            Event(time=event_time, action=action)
-            for action in actions
-        ])
+        try:
+            events_group = tuple(events_from_raw_actions(
+                device_map=device_map,
+                event_time=event_time,
+                events=events,
+                raw_actions=raw_actions,
+            ))
+        except MissingDevicesError as e:
+            missing_device_names |= e.args[0]
+            continue
+
+        events.extend(events_group)
 
         last_event_time = event_time
+
+    if len(missing_device_names) > 0:
+        raise MissingDevicesError(missing_device_names)
 
     return sorted(events, key=lambda event: event.time)
 
 
-def csv_loads(s):
-    f = io.StringIO(s)
-    return csv_load(f)
+def events_from_raw_actions(device_map, event_time, events, raw_actions):
+    missing_device_names = set()
 
+    for path, value in epyqlib.utils.general.grouper(raw_actions, n=2):
+        if path == 'pause':
+            yield Event(
+                time=event_time,
+                action=pause_sentinel,
+                device=None,
+            )
+            continue
 
-def csv_loadp(path):
-    with open(path) as f:
-        return csv_load(f)
+        device_name, *signal = path.split(';')
+        if device_name == '':
+            device_name = None
 
+        try:
+            device = device_map[device_name]
+        except KeyError:
+            missing_device_names.add(device_name)
+            continue
 
-def resolve(event, tx_neo, nvs):
-    if event.action is pause_sentinel:
-        return event
-
-    signal = tx_neo.signal_by_path(*event.action.signal)
-
-    # TODO: CAMPid 079320743340327834208
-    is_nv = signal.frame.id == nvs.set_frames[0].id
-    if is_nv:
-        print('switching', event.action.signal)
-        signal = nvs.neo.signal_by_path(*event.action.signal)
-
-    return attr.evolve(
-        event,
-        action=attr.evolve(
-            event.action,
-            signal=signal,
-            is_nv=is_nv,
+        yield Event(
+            time=event_time,
+            device=device,
+            action=Action(
+                signal=signal,
+                value=decimal.Decimal(value),
+            )
         )
-    )
+
+    if len(missing_device_names) > 0:
+        raise MissingDevicesError(missing_device_names)
 
 
-def resolve_signals(events, tx_neo, nvs):
-    return [
-        resolve(event=event, tx_neo=tx_neo, nvs=nvs)
-        for event in events
-    ]
+def csv_loads(s, devices):
+    f = io.StringIO(s)
+    return csv_load(f, devices)
 
 
-def run(events, nvs, pause, loop):
+def csv_loadp(path, devices):
+    with open(path) as f:
+        return csv_load(f, devices)
+
+
+def run(events, pause, loop):
     sequence = epyqlib.utils.twisted.Sequence()
 
     zero_padded = itertools.chain(
-        (Event(time=0, action=None),),
+        (Event(time=0, action=None, device=None),),
         events,
     )
 
@@ -168,7 +245,7 @@ def run(events, nvs, pause, loop):
             kwargs = {}
         else:
             action = n.action
-            kwargs = dict(nvs=nvs)
+            kwargs = dict(nvs=n.device.nvs)
 
         sequence.add_delayed(
             delay=float(n.time - p.time),
@@ -183,31 +260,29 @@ def run(events, nvs, pause, loop):
 
 @attr.s
 class Model:
-    tx_neo = attr.ib()
-    nvs = attr.ib()
-
-    def demo(self):
-        events = epyqlib.scripting.csv_loadp(
-            pathlib.Path(__file__).parents[0] / 'scripting.csv',
-        )
-
-        events = epyqlib.scripting.resolve_signals(
-            events=events,
-            tx_neo=self.tx_neo,
-            nvs=self.nvs,
-        )
-        epyqlib.scripting.run(events=events, nvs=self.nvs)
+    get_devices = attr.ib()
 
     def run_s(self, event_string, pause, loop=False):
-        events = csv_loads(event_string)
+        devices = tuple(
+            Device(
+                name=name,
+                neo=device.neo_frames,
+                nvs=device.widget_nvs,
+            )
+            for name, device in self.get_devices().items()
+        )
+
+        if len(devices) == 0:
+            raise NoDevicesError()
+
+        events = csv_loads(event_string, devices)
 
         if len(events) == 0:
             raise NoEventsError()
 
-        events = epyqlib.scripting.resolve_signals(
-            events=events,
-            tx_neo=self.tx_neo,
-            nvs=self.nvs,
-        )
+        events = [
+            event.resolve()
+            for event in events
+        ]
 
-        return run(events=events, nvs=self.nvs, pause=pause, loop=loop)
+        return run(events=events, pause=pause, loop=loop)
