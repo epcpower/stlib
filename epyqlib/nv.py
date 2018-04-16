@@ -2,6 +2,9 @@
 
 #TODO: """DocString if there is one"""
 
+import logging
+logger = logging.getLogger(__name__)
+
 import attr
 import can
 import enum
@@ -301,13 +304,12 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
         unreferenced_paths = set(self.nv_by_path)
         if hierarchy is not None:
-            print('yeppers')
             def handle(children, tree_parent,
                        unreferenced_paths=unreferenced_paths):
                 unreferenced_groups = []
-                print(children, tree_parent)
+                logger.info(children, tree_parent)
                 for child in children:
-                    print(child)
+                    logger.info(child)
                     if isinstance(child, dict):
                         group = Group(
                             fields=Columns(
@@ -315,7 +317,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                             )
                         )
                         tree_parent.append_child(group)
-                        print('added group: {}'.format(group.fields.name))
+                        logger.info('added group: {}'.format(group.fields.name))
                         if child.get('unreferenced'):
                             unreferenced_groups.append(group)
                         else:
@@ -330,7 +332,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                             tree_parent.append_child(self.nv_by_path[path])
                             unreferenced_paths.discard(path)
                         elif path not in self.nv_by_path:
-                            print('Unknown parameter referenced: {}'
+                            logger.info('Unknown parameter referenced: {}'
                                   .format(path))
                         else:
                             raise Exception('Attempted to put parameter in '
@@ -341,14 +343,14 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             unreferenced_groups = handle(children=hierarchy['children'],
                                       tree_parent=self)
 
-            print('\\/ \\/ \\/ unreferenced parameter paths')
-            print(
+            logger.info('\\/ \\/ \\/ unreferenced parameter paths')
+            logger.info(
                 json.dumps(
                     tuple(p[1:] for p in sorted(unreferenced_paths)),
                     indent=4
                 )
             )
-            print('/\\ /\\ /\\ unreferenced parameter paths')
+            logger.info('/\\ /\\ /\\ unreferenced parameter paths')
         else:
             unreferenced_groups = (self,)
 
@@ -658,11 +660,11 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 child.set_human_value(value)
                 only_in_file.remove(child.fields.name)
             else:
-                print("Nv value named '{}' not found when loading from dict"
+                logger.info("Nv value named '{}' not found when loading from dict"
                       .format(child.fields.name))
 
         for name in only_in_file:
-            print("Unrecognized NV value named '{}' found when loading "
+            logger.info("Unrecognized NV value named '{}' found when loading "
                   "from dict".format(name))
 
     def from_value_set(self, value_set):
@@ -710,7 +712,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 if parameter.value is not None:
                     child.set_human_value(parameter.value)
                 else:
-                    print(not_found_format.format('value'))
+                    logger.info(not_found_format.format('value'))
 
                 for meta in MetaEnum:
                     if meta == MetaEnum.value:
@@ -724,20 +726,20 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                             check_range=False,
                         )
                     else:
-                        print(not_found_format.format(meta.name))
+                        logger.info(not_found_format.format(meta.name))
             elif len(parameters) > 1:
-                print(
+                logger.info(
                     "Nv value named '{}' occurred {} times when loading "
                     "from value set".format(name, len(parameters)),
                 )
             else:
-                print(
+                logger.info(
                     "Nv value named '{}' not found when loading from "
                     "value set".format(name),
                 )
 
         for name, meta in sorted(only_in_file):
-            print("Unrecognized NV value named '{}' ({}) found when loading "
+            logger.info("Unrecognized NV value named '{}' ({}) found when loading "
                   "from value set".format(name, meta.name))
 
     def defaults_from_dict(
@@ -762,11 +764,11 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     )
                 only_in_file.remove(child.fields.name)
             else:
-                print("Nv value named '{}' not found when loading from dict"
+                logger.info("Nv value named '{}' not found when loading from dict"
                       .format(child.fields.name))
 
         for name in only_in_file:
-            print("Unrecognized NV value named '{}' found when loading to "
+            logger.info("Unrecognized NV value named '{}' found when loading to "
                   "defaults from dict".format(name))
 
     def module_to_nv(self):
@@ -1399,5 +1401,5 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 if __name__ == '__main__':
     import sys
 
-    print('No script functionality here')
+    logger.info('No script functionality here')
     sys.exit(1)     # non-zero is a failure

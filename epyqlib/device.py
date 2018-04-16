@@ -402,7 +402,7 @@ class Device:
         filename = None
         for directory, directories, files in os.walk(path):
             for f in files:
-                print(f)
+                logger.info(f)
                 if os.path.splitext(f)[1] == '.epc':
                     filename = os.path.join(path, directory, f)
                     break
@@ -1038,9 +1038,9 @@ class Device:
         self.read_nv_widget_min_max()
 
     def read_nv_widget_min_max(self):
-        print('bus_online', self.bus_online)
-        print('bus_tx', self.bus_tx)
-        print('present', self.connection_monitor.present)
+        logger.info('bus_online', self.bus_online)
+        logger.info('bus_tx', self.bus_tx)
+        logger.info('present', self.connection_monitor.present)
         active = all((
             self.bus_online,
             self.bus_tx,
@@ -1050,7 +1050,7 @@ class Device:
         if not active:
             return
 
-        print('reading min/max for nv widgets')
+        logger.info('reading min/max for nv widgets')
 
         metas = (
             epyqlib.nv.MetaEnum.minimum,
@@ -1132,5 +1132,5 @@ class FrameTimeout(epyqlib.canneo.QtCanListener):
 if __name__ == '__main__':
     import sys
 
-    print('No script functionality here')
+    logger.info('No script functionality here')
     sys.exit(1)     # non-zero is a failure
