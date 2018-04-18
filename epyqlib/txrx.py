@@ -71,7 +71,7 @@ class MessageNode(epyqlib.canneo.Frame, TreeNode):
             signal.tx = self.tx
             self.append_child(signal)
 
-        identifier = epyqlib.canneo.format_identifier(frame._Id, frame._extended)
+        identifier = epyqlib.canneo.format_identifier(self.id, self.extended)
 
         if self.mux_name is None:
             name = self.name

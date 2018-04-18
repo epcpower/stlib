@@ -155,58 +155,58 @@ class Signal:
     value_changed = epyqlib.utils.qt.Signal(float)
 
     def __init__(self, signal, frame, connect=None, parent=None):
-        # self._attributes = signal._attributes # {dict} {'GenSigStartValue': '0.0', 'LongName': 'Enable'}
+        # self.attributes = signal._attributes # {dict} {'GenSigStartValue': '0.0', 'LongName': 'Enable'}
         try:
-            self.default_value = signal._attributes['GenSigStartValue']
+            self.default_value = signal.attributes['GenSigStartValue']
         except KeyError:
             self.default_value = None
         else:
             self.default_value = float(self.default_value)
-        self.long_name = signal._attributes.get('LongName', None)
-        self.hexadecimal_output = signal._attributes.get('HexadecimalOutput',
+        self.long_name = signal.attributes.get('LongName', None)
+        self.hexadecimal_output = signal.attributes.get('HexadecimalOutput',
                                                          None)
         self.hexadecimal_output = self.hexadecimal_output is not None
-        self.little_endian = signal._is_little_endian # {int} 0
-        self.comment = signal._comment # {str} 'Run command.  When set to a value of \\'Enable\\', causes transition to grid forming or grid following mode depending on whether AC power is detected.  Must be set to \\'Disable\\' to leave POR or FAULTED state.'
+        self.little_endian = signal.is_little_endian # {int} 0
+        self.comment = signal.comment # {str} 'Run command.  When set to a value of \\'Enable\\', causes transition to grid forming or grid following mode depending on whether AC power is detected.  Must be set to \\'Disable\\' to leave POR or FAULTED state.'
         if self.comment is None:
             self.comment = ''
         # TODO: CAMPid 03549854754276996754265427 (repeated <summary> check)
         self.is_summary = '<summary>' in self.comment
         # TODO: maybe not use a string, but used to help with decimal places
-        self.factor = signal._factor
+        self.factor = signal.factor
         try:
-            self.max = float(signal._max) # {str} '1'
+            self.max = float(signal.max) # {str} '1'
         except ValueError:
             # TODO: default based on signal range
             self.max = None
         try:
-            self.min = float(signal._min) # {str} '0'
+            self.min = float(signal.min) # {str} '0'
         except ValueError:
             # TODO: default based on signal range
             self.min = None
         try:
-            self.offset = float(signal._offset) # {str} '0'
+            self.offset = float(signal.offset) # {str} '0'
         except ValueError:
             self.offset = 0
 
-        if signal._multiplex == 'Multiplexor':
+        if signal.multiplex == 'Multiplexor':
             self.multiplex = True
         else:
-            self.multiplex = signal._multiplex # {NoneType} None
+            self.multiplex = signal.multiplex # {NoneType} None
 
         self.raw_minimum, self.raw_maximum = signal.calculateRawRange()
 
-        self.name = signal._name # {str} 'Enable_command'
-        # self._receiver = signal._receiver # {str} ''
-        self.signal_size = int(signal._signalsize) # {int} 2
+        self.name = signal.name # {str} 'Enable_command'
+        # self.receiver = signal.receiver # {str} ''
+        self.signal_size = int(signal.signalsize) # {int} 2
         self.start_bit = int(signal.getStartbit()) # {int} 0
-        self.unit = signal._unit # {str} ''
-        self.enumeration = {int(k): v for k, v in signal._values.items()} # {dict} {'0': 'Disable', '2': 'Error', '1': 'Enable', '3': 'N/A'}
+        self.unit = signal.unit # {str} ''
+        self.enumeration = {int(k): v for k, v in signal.values.items()} # {dict} {'0': 'Disable', '2': 'Error', '1': 'Enable', '3': 'N/A'}
         self.enumeration_name = signal.enumeration
-        self.signed = signal._is_signed
+        self.signed = signal.is_signed
         if self.multiplex is True:
             self.signed = False
-        self.float = signal._is_float
+        self.float = signal.is_float
 
         self._format = None
 
@@ -511,22 +511,22 @@ class Frame(QtCanListener):
 
         self.mux_frame = mux_frame
 
-        self.id = frame._Id # {int} 16755521
-        # self._SignalGroups = frame._SignalGroups # {list} []
-        self.size = frame._Size # {int} 8
-        # self._Transmitter = frame._Transmitter # {list} []
-        # self._attributes = frame._attributes # {dict} {'GenMsgCycleTime': '200'}
-        self.cycle_time = frame._attributes.get('GenMsgCycleTime', None)
-        self.mux_name = frame._attributes.get('mux_name', None)
-        self.sendable = frame._attributes.get('Sendable') == 'True'
-        self.receivable = frame._attributes.get('Receivable') == 'True'
-        self.comment = frame._comment # {str} 'Operational commands are received by the module via control bits within this message.'
+        self.id = frame.id # {int} 16755521
+        # self.SignalGroups = frame.SignalGroups # {list} []
+        self.size = frame.size # {int} 8
+        # self.Transmitter = frame.Transmitter # {list} []
+        # self.attributes = frame.attributes # {dict} {'GenMsgCycleTime': '200'}
+        self.cycle_time = frame.attributes.get('GenMsgCycleTime', None)
+        self.mux_name = frame.attributes.get('mux_name', None)
+        self.sendable = frame.attributes.get('Sendable') == 'True'
+        self.receivable = frame.attributes.get('Receivable') == 'True'
+        self.comment = frame.comment # {str} 'Operational commands are received by the module via control bits within this message.'
         if self.comment is None:
             self.comment = ''
-        self.extended = bool(frame._extended) # {int} 1
-        self.name = frame._name # {str} 'CommandModeControl'
-        # self._receiver = frame._receiver # {list} []
-        # self._signals = frame._signals # {list} [<canmatrix.canmatrix.Signal object at 0x7fddf8053fd0>, <canmatrix.canmatrix.Signal object at 0x7fddf8054048>, <canmatrix.canmatrix.Signal object at 0x7fddf80543c8>, <canmatrix.canmatrix.Signal object at 0x7fddf8054470>, <canmatrix.canmatrix.Signal object
+        self.extended = bool(frame.extended) # {int} 1
+        self.name = frame.name # {str} 'CommandModeControl'
+        # self.receiver = frame.receiver # {list} []
+        # self.signals = frame.signals # {list} [<canmatrix.canmatrix.Signal object at 0x7fddf8053fd0>, <canmatrix.canmatrix.Signal object at 0x7fddf8054048>, <canmatrix.canmatrix.Signal object at 0x7fddf80543c8>, <canmatrix.canmatrix.Signal object at 0x7fddf8054470>, <canmatrix.canmatrix.Signal object
 
         self._cyclic_requests = {}
         self._cyclic_period = None
@@ -539,18 +539,18 @@ class Frame(QtCanListener):
         self.data = None
 
         self.signals = []
-        for signal in frame._signals:
+        for signal in frame.signals:
             # TODO: CAMPid 03549854754276996754265427 (repeated <summary> check)
             skipping_summary_signal = (
                 strip_summary
-                and signal._comment is not None
-                and '<summary>' in signal._comment
+                and signal.comment is not None
+                and '<summary>' in signal.comment
             )
             if skipping_summary_signal:
                 continue
 
             if (multiplex_value is None or
-                        str(signal._multiplex) == multiplex_value):
+                        str(signal.multiplex) == multiplex_value):
                 neo_signal = signal_class(signal=signal, frame=self)
 
                 factor = neo_signal.factor
@@ -745,7 +745,7 @@ class Neo(QtCanListener):
 
         frames = []
 
-        for frame in matrix._fl._list:
+        for frame in matrix.frames:
             if node_id_adjust is not None:
                 frame._Id = node_id_adjust(
                     message_id=frame._Id,
@@ -754,8 +754,8 @@ class Neo(QtCanListener):
                     ),
                 )
             multiplex_signal = None
-            for signal in frame._signals:
-                if signal._multiplex == 'Multiplexor':
+            for signal in frame.signals:
+                if signal.multiplex == 'Multiplexor':
                     multiplex_signal = signal
                     break
 
@@ -764,7 +764,7 @@ class Neo(QtCanListener):
                     frame=frame,
                     strip_summary=strip_summary,
                 )
-                # for signal in frame._signals:
+                # for signal in frame.signals:
                 #     signal = signal_class(signal=signal, frame=neo_frame)
                 #     signal.set_human_value(signal.default_value *
                 #                            signal.factor[float])
@@ -772,31 +772,29 @@ class Neo(QtCanListener):
             else:
                 # Make a frame with just the multiplexor entry for
                 # parsing messages later
-                # TODO: add __copy__() and __deepcopy__() to canmatrix
                 multiplex_frame = canmatrix.Frame(
-                        name=frame._name,
-                        Id=frame._Id,
-                        dlc=frame._Size,
-                        transmitter=frame._Transmitter)
-                if 'GenMsgCycleTime' in frame._attributes:
+                        name=frame.name,
+                        Id=frame.id,
+                        dlc=frame.size,
+                        transmitter=frame.transmitter)
+                if 'GenMsgCycleTime' in frame.attributes:
                     multiplex_frame.addAttribute(
                         'GenMsgCycleTime',
-                        frame._attributes['GenMsgCycleTime']
+                        frame.attributes['GenMsgCycleTime']
                     )
-                multiplex_frame._extended = frame._extended
-                # TODO: add __copy__() and __deepcopy__() to canmatrix
+                multiplex_frame.extended = frame.extended
                 matrix_signal = canmatrix.Signal(
-                        name=multiplex_signal._name,
-                        startBit=multiplex_signal._startbit,
-                        signalSize=multiplex_signal._signalsize,
-                        is_little_endian=multiplex_signal._is_little_endian,
-                        is_signed=multiplex_signal._is_signed,
-                        factor=multiplex_signal._factor,
-                        offset=multiplex_signal._offset,
-                        min=multiplex_signal._min,
-                        max=multiplex_signal._max,
-                        unit=multiplex_signal._unit,
-                        multiplex=multiplex_signal._multiplex)
+                        name=multiplex_signal.name,
+                        startBit=multiplex_signal.startbit,
+                        signalSize=multiplex_signal.signalsize,
+                        is_little_endian=multiplex_signal.is_little_endian,
+                        is_signed=multiplex_signal.is_signed,
+                        factor=multiplex_signal.factor,
+                        offset=multiplex_signal.offset,
+                        min=multiplex_signal.min,
+                        max=multiplex_signal.max,
+                        unit=multiplex_signal.unit,
+                        multiplex=multiplex_signal.multiplex)
                 multiplex_frame.addSignal(matrix_signal)
                 multiplex_neo_frame = frame_class(
                     frame=multiplex_frame,
@@ -810,40 +808,40 @@ class Neo(QtCanListener):
 
                 multiplex_neo_frame.multiplex_frames = {}
 
-                for multiplex_value, multiplex_name in multiplex_signal._values.items():
+                for multiplex_value, multiplex_name in multiplex_signal.values.items():
                     # For each multiplexed frame, make a frame with
                     # just those signals.
                     matrix_frame = canmatrix.Frame(
-                            name=frame._name,
-                            Id=frame._Id,
-                            dlc=frame._Size,
-                            transmitter=frame._Transmitter)
-                    matrix_frame._extended = frame._extended
-                    if 'GenMsgCycleTime' in frame._attributes:
+                            name=frame.name,
+                            Id=frame.id,
+                            dlc=frame.size,
+                            transmitter=frame.transmitter)
+                    matrix_frame.extended = frame.extended
+                    if 'GenMsgCycleTime' in frame.attributes:
                         matrix_frame.addAttribute(
                             'GenMsgCycleTime',
-                            frame._attributes['GenMsgCycleTime']
+                            frame.attributes['GenMsgCycleTime']
                         )
                     matrix_frame.addAttribute('mux_name', multiplex_name)
                     matrix_frame.addComment(multiplex_signal.comments[int(
                         multiplex_value)])
                     matrix_signal = canmatrix.Signal(
-                            name=multiplex_signal._name,
-                            startBit=multiplex_signal._startbit,
-                            signalSize=multiplex_signal._signalsize,
-                            is_little_endian=multiplex_signal._is_little_endian,
-                            is_signed=multiplex_signal._is_signed,
-                            factor=multiplex_signal._factor,
-                            offset=multiplex_signal._offset,
-                            min=multiplex_signal._min,
-                            max=multiplex_signal._max,
-                            unit=multiplex_signal._unit,
-                            multiplex=multiplex_signal._multiplex)
+                            name=multiplex_signal.name,
+                            startBit=multiplex_signal.startbit,
+                            signalSize=multiplex_signal.signalsize,
+                            is_little_endian=multiplex_signal.is_little_endian,
+                            is_signed=multiplex_signal.is_signed,
+                            factor=multiplex_signal.factor,
+                            offset=multiplex_signal.offset,
+                            min=multiplex_signal.min,
+                            max=multiplex_signal.max,
+                            unit=multiplex_signal.unit,
+                            multiplex=multiplex_signal.multiplex)
                     # neo_signal = signal_class(signal=matrix_signal, frame=multiplex_neo_frame)
                     matrix_frame.addSignal(matrix_signal)
 
-                    for signal in frame._signals:
-                        if signal._multiplex == multiplex_value:
+                    for signal in frame.signals:
+                        if signal.multiplex == multiplex_value:
                             matrix_frame.addSignal(signal)
 
                     neo_frame = frame_class(
