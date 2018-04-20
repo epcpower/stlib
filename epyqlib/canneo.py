@@ -740,6 +740,8 @@ class Neo(QtCanListener):
                  strip_summary=True, parent=None):
         QtCanListener.__init__(self, self.message_received, parent=parent)
 
+        self.bus = bus
+
         self.frame_rx_timestamps = {}
         self.frame_rx_interval = rx_interval
 
@@ -856,11 +858,19 @@ class Neo(QtCanListener):
                     multiplex_neo_frame.\
                         multiplex_frames[multiplex_value] = neo_frame
 
-        if bus is not None:
-            for frame in frames:
-                frame.send.connect(bus.send)
-
         self.frames = tuple(frames)
+
+        if bus is not None:
+            self.set_bus(bus=bus)
+
+    def set_bus(self, bus):
+        if self.bus is not None:
+            raise Exception('Bus already set')
+
+        self.bus = bus
+
+        for frame in self.frames:
+            frame.send.connect(self.bus.send)
 
     def frame_by_id(self, id):
         return frame_by_id(id, self.frames)

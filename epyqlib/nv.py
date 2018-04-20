@@ -148,7 +148,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
     activity_started = epyqlib.utils.qt.Signal(str)
     activity_ended = epyqlib.utils.qt.Signal(str)
 
-    def __init__(self, neo, bus, stop_cyclic=None, start_cyclic=None,
+    def __init__(self, neo, bus=None, stop_cyclic=None, start_cyclic=None,
                  configuration=None, hierarchy=None, metas=(MetaEnum.value,),
                  access_level_path=None, access_password_path=None,
                  parent=None):
@@ -271,7 +271,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                         ))
                     d.addErrback(ignore_timeout)
 
-                frame._send.connect(send)
+                frame.send.connect(send)
 
             frame.parameter_signals = []
             for nv in signals:
@@ -415,6 +415,10 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 ', '.join(missing_read_write_signals),
             ))
 
+    def set_bus(self, bus):
+        self.transport.set_bus(bus=bus)
+        self.bus = bus
+
     def all_nv(self):
         def visit(node, all):
             if isinstance(node, Nv):
@@ -431,12 +435,19 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
     def names(self):
         return '\n'.join([n.fields.name for n in self.all_nv()])
 
-    def write_all_to_device(self, only_these=None, callback=None, meta=None):
+    def write_all_to_device(
+            self,
+            only_these=None,
+            callback=None,
+            meta=None,
+            background=False,
+    ):
         return self._read_write_all(
             read=False,
             only_these=only_these,
             callback=callback,
             meta=meta,
+            background=background,
         )
 
     def read_all_from_device(

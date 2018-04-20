@@ -450,6 +450,7 @@ class Device:
         self.name = '{name} :{id}'.format(name=name,
                                           id=self.node_id)
         self.nickname = ''
+        self.auto_read_nv_widget_min_max = True
 
         device_ui = 'device.ui'
         # TODO: CAMPid 9549757292917394095482739548437597676742
@@ -1038,6 +1039,9 @@ class Device:
         self.read_nv_widget_min_max()
 
     def read_nv_widget_min_max(self):
+        if not self.auto_read_nv_widget_min_max:
+            return
+
         logger.info('bus_online', self.bus_online)
         logger.info('bus_tx', self.bus_tx)
         logger.info('present', self.connection_monitor.present)

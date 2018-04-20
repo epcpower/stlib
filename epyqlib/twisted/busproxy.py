@@ -12,7 +12,7 @@ import epyqlib.canneo
 
 
 class BusProxy(epyqlib.canneo.QtCanListener):
-    def __init__(self, protocol, reactor, bus, parent=None):
+    def __init__(self, protocol, reactor, bus=None, parent=None):
         epyqlib.canneo.QtCanListener.__init__(self,
                                               receiver=self.readEvent,
                                               parent=parent)
@@ -21,9 +21,16 @@ class BusProxy(epyqlib.canneo.QtCanListener):
         self._reactor = reactor
         self._protocol = protocol
 
-        self._bus.notifier.add(self)
+        if self._bus is not None:
+            self.set_bus(bus=self._bus)
+
         self._protocol.makeConnection(self)
         # self.startReading()
+
+    def set_bus(self, bus):
+        bus.notifier.add(self)
+
+        self._bus = bus
 
     def write(self, message):
         return self._bus.send(msg=message)
