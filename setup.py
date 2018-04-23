@@ -24,6 +24,10 @@ setup(
     },
     install_requires=[
         'arrow',
+        'bitstruct',
+        'natsort',
+        'pyelftools',
+        'qt5reactor',
         'gitpython',
         'graham',
         'PyQt5',
