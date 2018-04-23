@@ -49,6 +49,10 @@ class NotFoundError(Exception):
     pass
 
 
+class TooManyMetaSignalsError(Exception):
+    pass
+
+
 @attr.s
 class Configuration:
     set_frame = attr.ib()
@@ -1105,7 +1109,12 @@ class Frame(epyqlib.canneo.Frame, TreeNode):
         if len(meta_signals) == 0:
             self.meta_signal = None
         else:
-            self.meta_signal, = meta_signals
+            try:
+                self.meta_signal, = meta_signals
+            except ValueError as e:
+                raise TooManyMetaSignalsError(
+                    'Too many meta signals in {}:{}'.format(self.name, self.mux_name),
+                ) from e
 
         for signal in self.signals:
             if signal.name in ("ReadParam_command", "ReadParam_status"):
