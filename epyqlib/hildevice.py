@@ -1,5 +1,6 @@
 import functools
 import json
+import operator
 import pathlib
 import uuid
 
@@ -247,3 +248,20 @@ class Device:
         )
 
         yield self.nvs.write_all_to_device(only_these=selected_nodes)
+
+
+    @twisted.internet.defer.inlineCallbacks
+    def wait_for(self, signal_path, op, value, timeout):
+        op = {
+            '<': operator.lt,
+            '<=': operator.le,
+            '==': operator.eq,
+            '!=': operator.ne,
+            '>=': operator.ge,
+            '>': operator.gt,
+        }.get(op, op)
+
+        yield epyqlib.utils.twisted.wait_for(
+            lambda: op(self.get_signal(signal_path), value),
+            timeout=timeout,
+        )

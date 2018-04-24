@@ -18,6 +18,27 @@ class RequestTimeoutError(TimeoutError):
     pass
 
 
+class WaitForTimedOut(Exception):
+    pass
+
+
+@twisted.internet.defer.inlineCallbacks
+def wait_for(check, period=0.1, timeout=10):
+    start = time.monotonic()
+
+    while True:
+        done = yield check()
+        if done:
+            return
+
+        if time.monotonic() - start > timeout:
+            raise WaitForTimedOut(
+                f'Condition not satisfied within {timeout:.1f} seconds',
+            )
+
+        yield epyqlib.utils.twisted.sleep(period)
+
+
 def errbackhook(error):
     epyqlib.utils.qt.custom_exception_message_box(
         brief='{}\n{}'.format(error.type.__name__, error.value),
