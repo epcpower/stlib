@@ -107,6 +107,8 @@ class Device:
     nvs = attr.ib(default=None)
     bus = attr.ib(default=None)
     cyclic_frames = attr.ib(default=attr.Factory(set))
+    default_elevated_access_level = attr.ib(default=None)
+    default_access_level_password = attr.ib(default=None)
     uuid = attr.ib(default=uuid.uuid4)
 
     def load(self):
@@ -225,7 +227,13 @@ class Device:
             )
 
     @twisted.internet.defer.inlineCallbacks
-    def set_access_level(self, password, level=2):
+    def set_access_level(self, level=None, password=None):
+        if level is None:
+            level = self.default_elevated_access_level
+
+        if password is None:
+            password = self.default_access_level_password
+
         self.nvs.password_node.set_value(password)
         self.nvs.access_level_node.set_value(level)
 
