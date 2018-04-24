@@ -228,6 +228,17 @@ class Device:
             )
 
     @twisted.internet.defer.inlineCallbacks
+    def get_nv(self, path, meta=epyqlib.nv.MetaEnum.value):
+        nv = self.find_nv(path)
+
+        value, _meta = yield self.nvs.protocol.read(
+            nv_signal=nv,
+            meta=meta,
+        )
+
+        return value
+
+    @twisted.internet.defer.inlineCallbacks
     def set_access_level(self, level=None, password=None):
         if level is None:
             level = self.default_elevated_access_level
