@@ -164,7 +164,7 @@ class Nv:
             if meta == epyqlib.nv.MetaEnum.value:
                 self.nv.set_value(value)
             else:
-                getattr(nv.meta, meta.name).set_value(value)
+                getattr(self.nv.meta, meta.name).set_value(value)
 
             # TODO: verify value was accepted
             yield self.device.nvs.protocol.write(
