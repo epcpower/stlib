@@ -99,6 +99,100 @@ class Definition:
         )
 
 
+operator_map = {
+    '<': operator.lt,
+    '<=': operator.le,
+    '==': operator.eq,
+    '!=': operator.ne,
+    '>=': operator.ge,
+    '>': operator.gt,
+}
+
+
+@attr.s
+class Signal:
+    signal = attr.ib()
+    device = attr.ib()
+
+    def get(self):
+        value = self.signal.to_human(self.signal.value)
+        return self.signal.enumeration.get(value, value)
+
+    def set(self, value):
+        self.signal.set_human_value(value)
+        self.signal.frame._send(update=True)
+
+    def cyclic_send(self, period):
+        self.device.cyclic_send_signal(self, period=period)
+
+    @twisted.internet.defer.inlineCallbacks
+    def wait_for(self, op, value, timeout):
+        op = operator_map.get(op, op)
+
+        def check():
+            return op(self.get(), value)
+
+        yield epyqlib.utils.twisted.wait_for(check, timeout=timeout)
+
+
+@attr.s
+class Nv:
+    nv = attr.ib()
+    device = attr.ib()
+
+    @twisted.internet.defer.inlineCallbacks
+    def set(
+            self,
+            value=None,
+            user_default=None,
+            factory_default=None,
+            minimum=None,
+            maximum=None,
+    ):
+        values = (
+            (epyqlib.nv.MetaEnum.maximum, maximum),
+            (epyqlib.nv.MetaEnum.minimum, minimum),
+            (epyqlib.nv.MetaEnum.factory_default, factory_default),
+            (epyqlib.nv.MetaEnum.user_default, user_default),
+            (epyqlib.nv.MetaEnum.value, value),
+        )
+
+        for meta, value in values:
+            if value is None:
+                continue
+
+            if meta == epyqlib.nv.MetaEnum.value:
+                self.nv.set_value(value)
+            else:
+                getattr(nv.meta, meta.name).set_value(value)
+
+            # TODO: verify value was accepted
+            yield self.device.nvs.protocol.write(
+                nv_signal=self.nv,
+                meta=meta,
+            )
+
+    @twisted.internet.defer.inlineCallbacks
+    def get(self, meta=epyqlib.nv.MetaEnum.value):
+        value, _meta = yield self.device.nvs.protocol.read(
+            nv_signal=self.nv,
+            meta=meta,
+        )
+
+        return value
+
+    @twisted.internet.defer.inlineCallbacks
+    def wait_for(self, op, value, timeout):
+        op = operator_map.get(op, op)
+
+        @twisted.internet.defer.inlineCallbacks
+        def check():
+            own_value = yield self.get_value()
+            return op(own_value, value)
+
+        yield epyqlib.utils.twisted.wait_for(check, timeout=timeout)
+
+
 @attr.s
 class Device:
     definition_path = attr.ib(converter=pathlib.Path)
@@ -162,26 +256,21 @@ class Device:
         self.bus.notifier.add(self.nvs)
 
     # @functools.lru_cache(maxsize=512)
-    def find_signal(self, path):
-        return self.neo.signal_by_path(*path)
+    def signal(self, *path):
+        return Signal(
+            signal=self.neo.signal_by_path(*path),
+            device=self,
+        )
 
     # @functools.lru_cache(maxsize=512)
-    def find_nv(self, path):
-        return self.nvs.signal_from_names(*path)
+    def nv(self, *path):
+        return Nv(
+            nv=self.nvs.signal_from_names(*path),
+            device=self,
+        )
 
-    def set_signal(self, path, value):
-        signal = self.find_signal(path)
-        signal.set_human_value(value)
-        signal.frame._send(update=True)
-
-    def get_signal(self, path):
-        signal = self.find_signal(path)
-        value = signal.to_human(signal.value)
-        return signal.enumeration.get(value, value)
-
-    def cyclic_send_signal(self, path, period):
-        signal = self.find_signal(path)
-        frame = signal.frame
+    def cyclic_send_signal(self, signal, period):
+        frame = signal.signal.frame
         frame.cyclic_request(self.uuid, period)
         if period is not None:
             self.cyclic_frames.add(frame)
@@ -191,52 +280,6 @@ class Device:
     def cancel_all_cyclic_sends(self):
         for frame in self.cyclic_frames:
             frame.cyclic_request(self.uuid, None)
-
-    @twisted.internet.defer.inlineCallbacks
-    def set_nv(
-            self,
-            path,
-            value=None,
-            user_default=None,
-            factory_default=None,
-            minimum=None,
-            maximum=None,
-    ):
-        nv = self.find_nv(path)
-
-        values = (
-            (epyqlib.nv.MetaEnum.maximum, maximum),
-            (epyqlib.nv.MetaEnum.minimum, minimum),
-            (epyqlib.nv.MetaEnum.factory_default, factory_default),
-            (epyqlib.nv.MetaEnum.user_default, user_default),
-            (epyqlib.nv.MetaEnum.value, value),
-        )
-
-        for meta, value in values:
-            if value is None:
-                continue
-
-            if meta == epyqlib.nv.MetaEnum.value:
-                nv.set_value(value)
-            else:
-                getattr(nv.meta, meta.name).set_value(value)
-
-            # TODO: verify value was accepted
-            yield self.nvs.protocol.write(
-                nv_signal=nv,
-                meta=meta,
-            )
-
-    @twisted.internet.defer.inlineCallbacks
-    def get_nv(self, path, meta=epyqlib.nv.MetaEnum.value):
-        nv = self.find_nv(path)
-
-        value, _meta = yield self.nvs.protocol.read(
-            nv_signal=nv,
-            meta=meta,
-        )
-
-        return value
 
     @twisted.internet.defer.inlineCallbacks
     def set_access_level(self, level=None, password=None):
@@ -259,20 +302,3 @@ class Device:
         )
 
         yield self.nvs.write_all_to_device(only_these=selected_nodes)
-
-
-    @twisted.internet.defer.inlineCallbacks
-    def wait_for(self, signal_path, op, value, timeout):
-        op = {
-            '<': operator.lt,
-            '<=': operator.le,
-            '==': operator.eq,
-            '!=': operator.ne,
-            '>=': operator.ge,
-            '>': operator.gt,
-        }.get(op, op)
-
-        yield epyqlib.utils.twisted.wait_for(
-            lambda: op(self.get_signal(signal_path), value),
-            timeout=timeout,
-        )
