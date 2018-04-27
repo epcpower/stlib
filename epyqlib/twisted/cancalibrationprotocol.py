@@ -866,16 +866,16 @@ CommandCodeProperties = collections.namedtuple(
 
 
 _command_code_properties = {
-    CommandCode.connect: CommandCodeProperties(timeout=1),
-    CommandCode.set_mta: CommandCodeProperties(timeout=1),
-    CommandCode.download: CommandCodeProperties(timeout=1),
-    CommandCode.disconnect: CommandCodeProperties(timeout=1),
-    CommandCode.build_checksum: CommandCodeProperties(timeout=1),
+    CommandCode.connect: CommandCodeProperties(timeout=5),
+    CommandCode.set_mta: CommandCodeProperties(timeout=5),
+    CommandCode.download: CommandCodeProperties(timeout=5),
+    CommandCode.disconnect: CommandCodeProperties(timeout=5),
+    CommandCode.build_checksum: CommandCodeProperties(timeout=5),
     CommandCode.clear_memory: CommandCodeProperties(timeout=30),
-    CommandCode.unlock: CommandCodeProperties(timeout=1),
-    CommandCode.action_service: CommandCodeProperties(timeout=1),
-    CommandCode.download_6: CommandCodeProperties(timeout=1),
-    CommandCode.upload: CommandCodeProperties(timeout=1)
+    CommandCode.unlock: CommandCodeProperties(timeout=5),
+    CommandCode.action_service: CommandCodeProperties(timeout=5),
+    CommandCode.download_6: CommandCodeProperties(timeout=5),
+    CommandCode.upload: CommandCodeProperties(timeout=5)
 }
 
 
