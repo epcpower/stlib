@@ -7,6 +7,7 @@ __license__ = 'GPLv2+'
 
 class TreeView(QtWidgets.QTreeView):
     def __init__(self, *args, **kwargs):
+        kwargs.pop('in_designer')
         super().__init__(*args, **kwargs)
 
         self.row_columns = set()
