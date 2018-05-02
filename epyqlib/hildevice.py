@@ -134,6 +134,15 @@ class Signal:
 
         yield epyqlib.utils.twisted.wait_for(check, timeout=timeout)
 
+    def scaling_factor(self):
+        return self.signal.factor
+
+    def decimal_places(self):
+        return self.signal.get_decimal_places()
+
+    def f_string(self):
+        return f'.{self.decimal_places()}f'
+
 
 @attr.s
 class Nv:
