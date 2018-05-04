@@ -116,11 +116,24 @@ class Signal:
 
     def get(self):
         value = self.signal.to_human(self.signal.value)
-        return self.signal.enumeration.get(value, value)
+
+        if value in self.signal.enumeration:
+            return self.signal.enumeration[value]
+
+        return value * self.units()
 
     def set(self, value):
+        units = self.units()
+        if units != epyqlib.utils.units.registry.dimensionless:
+            value = value.to(units).magnitude
+
         self.signal.set_human_value(value)
         self.signal.frame._send(update=True)
+
+    def units(self):
+        return epyqlib.utils.units.registry.parse_expression(
+            self.signal.unit,
+        )
 
     def cyclic_send(self, period):
         self.device.cyclic_send_signal(self, period=period)

@@ -26,6 +26,7 @@ setup(
         'arrow',
         'bitstruct',
         'natsort',
+        'pint',
         'pyelftools',
         'qt5reactor',
         'gitpython',
