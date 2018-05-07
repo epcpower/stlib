@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="EPyQ Library",
+    name="epyqlib",
     version="0.1",
     author="EPC Power Corp.",
     classifiers=[
