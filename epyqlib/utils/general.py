@@ -4,6 +4,8 @@ import itertools
 import logging
 import math
 import os
+import shutil
+import stat
 import traceback
 import textwrap
 import time
@@ -335,3 +337,21 @@ def identifier_path(it):
     return '__' + '_'.join(
         it.__module__.split('.') + [it.__qualname__]
     )
+
+
+# TODO: CAMPid 0238493420143087667542054268097120437916848
+# http://stackoverflow.com/a/21263493/228539
+def del_rw(action, name, exc):
+    os.chmod(name, stat.S_IWRITE)
+    if os.path.isdir(name):
+        os.rmdir(name)
+    else:
+        os.remove(name)
+
+
+def rmtree(path, ignore_errors=False):
+    try:
+        shutil.rmtree(path, onerror=del_rw)
+    except FileNotFoundError:
+        if not ignore_errors:
+            raise
