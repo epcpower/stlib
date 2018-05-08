@@ -34,6 +34,7 @@ setup(
         'PyQt5',
         'click',
         'python-docx',
+        'python-can',
     ],
     extras_requires={
         'deploy': [
