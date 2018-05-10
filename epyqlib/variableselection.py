@@ -6,6 +6,7 @@ import epyqlib.utils.qt
 import epyqlib.utils.twisted
 import io
 import os
+import pathlib
 from PyQt5 import QtWidgets, uic
 # from PyQt5.QtGui import QFontMetrics
 from PyQt5.QtCore import (QFile, QFileInfo, QTextStream, QSortFilterProxyModel,
@@ -149,8 +150,11 @@ class VariableSelection(QtWidgets.QWidget):
                 ('CSV', ['csv']),
                 ('All Files', ['*'])
             ]
+            csv_guess = str(
+                pathlib.Path(raw_filename).with_suffix('.' + filters[0][1][0])
+            )
             csv_filename = epyqlib.utils.qt.file_dialog(
-                filters, save=True, parent=self)
+                filters, save=True, parent=self, dir=csv_guess)
 
             if csv_filename is not None:
                 with open(raw_filename, 'rb') as f:
