@@ -820,6 +820,8 @@ class NvView(QtWidgets.QWidget):
                 signal.set_meta(value, meta=meta, check_range=False)
 
         for signal in frame.set_frame.parameter_signals:
+            QtWidgets.QApplication.instance().processEvents()
+
             model.dynamic_columns_changed(
                 signal,
                 columns=(getattr(epyqlib.nv.Columns.indexes, meta.name),)
