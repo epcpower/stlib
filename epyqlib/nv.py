@@ -275,7 +275,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                         ))
                     d.addErrback(ignore_timeout)
 
-                frame.send.connect(send)
+                frame._send.connect(send)
 
             frame.parameter_signals = []
             for nv in signals:
