@@ -488,39 +488,6 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         d = twisted.internet.defer.Deferred()
         d.callback(None)
 
-        already_visited_frames = set()
-
-        def handle_node(node, _=None):
-            if not isinstance(node, Nv):
-                return
-
-            if node.frame not in already_visited_frames:
-                already_visited_frames.add(node.frame)
-                node.frame.update_from_signals()
-                if read:
-                    d.addCallback(
-                        lambda _: self.protocol.read(
-                            node,
-                            priority=epyqlib.twisted.nvs.Priority.user,
-                            passive=True,
-                            all_values=True,
-                        )
-                    )
-                elif node.frame.read_write.min <= 0:
-                    d.addCallback(
-                        lambda _: self.protocol.write(
-                            node,
-                            priority=epyqlib.twisted.nvs.Priority.user,
-                            passive=True,
-                            all_values=True,
-                        )
-                    )
-                else:
-                    return
-
-                if callback is not None:
-                    d.addCallback(callback)
-
         def handle_frame(frame, signals):
             frame.update_from_signals()
             for enumerator in meta:
