@@ -6,6 +6,7 @@ import os
 import platform
 import shutil
 import stat
+import subprocess
 import sys
 
 if sys.platform not in ['win32', 'linux']:
@@ -25,22 +26,6 @@ except ImportError:
     print('')
 
     sys.exit(1)
-
-
-# TODO: CAMPid 9811163648546549994313612126896
-def pip_install(package, no_ssl_verify=False, virtual=False, editable=False):
-    pip_parameters = ['install']
-    if no_ssl_verify:
-        pip_parameters.append('--index-url=http://pypi.python.org/simple/')
-        pip_parameters.append('--trusted-host')
-        pip_parameters.append('pypi.python.org')
-    if not virtual:
-        pip_parameters.append('--user')
-    if editable:
-        pip_parameters.append('-e')
-    pip_parameters.append(package)
-    if pip.main(pip_parameters):
-        raise Exception('Failed to install {}'.format(package))
 
 
 # http://stackoverflow.com/a/10840586/228539
@@ -74,8 +59,22 @@ except FileNotFoundError:
     pass
 
 
-pip_install('tox')
-import tox
+try:
+    import tox
+except ModuleNotFoundError:
+    subprocess.run(
+        [
+            'pip',
+            'install',
+            '--user',
+            'tox',
+        ],
+        check=True
+    )
+    print()
+    print(' - - - Tox installed, please rerun this program - - -')
+    print()
+    sys.exit(0)
 
 tox_arguments = [
     '-e', 'devenv',
