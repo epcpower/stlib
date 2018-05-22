@@ -19,7 +19,7 @@ class MessageType(epyqlib.utils.general.AutoNumberIntEnum):
     Error = ()
 
 
-@attr.s
+@attr.s(hash=True)
 class Log(epyqlib.canneo.QtCanListener):
     name = attr.ib()
     messages = attr.ib(default=None, hash=False)
