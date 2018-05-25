@@ -29,6 +29,7 @@ class AbstractTxWidget(epyqlib.widgets.abstractwidget.AbstractWidget):
                 widget.installEventFilter(self)
 
         self._period = None
+        self.check_range = True
 
     @pyqtProperty(bool)
     def tx(self):
@@ -89,7 +90,10 @@ class AbstractTxWidget(epyqlib.widgets.abstractwidget.AbstractWidget):
     def widget_value_changed(self, value):
         if self.signal_object is not None and self.tx:
             try:
-                self.signal_object.set_human_value(value, check_range=True)
+                self.signal_object.set_human_value(
+                    value,
+                    check_range=self.check_range,
+                )
             except epyqlib.canneo.OutOfRangeError as e:
                 message = textwrap.dedent('''\
                 Frame: {frame}
@@ -110,6 +114,9 @@ class AbstractTxWidget(epyqlib.widgets.abstractwidget.AbstractWidget):
                     self.signal_object.frame.send_now(
                         signals=(self.signal_object,),
                     )
+
+    def set_check_range(self, check):
+        self.check_range = check
 
 
 if __name__ == '__main__':

@@ -668,6 +668,8 @@ class Device:
                 nv_model = epyqlib.nv.NvModel(self.nvs)
                 self.nvs.changed.connect(nv_model.changed)
 
+                self.first_nv_view = nv_views[0]
+
                 column = epyqlib.nv.Columns.indexes.name
                 for view in nv_views:
                     view.set_device(self)
@@ -898,6 +900,14 @@ class Device:
                     frames.add(frame)
                     self.dash_connected_signals.add(signal)
                     widget.set_signal(signal)
+
+                    if hasattr(widget, 'tx') and widget.tx:
+                        self.first_nv_view.ui.enforce_range_limits_check_box.stateChanged.connect(
+                            widget.set_check_range,
+                        )
+                        widget.set_check_range(
+                            self.first_nv_view.ui.enforce_range_limits_check_box.checkState(),
+                        )
 
                 if edit_actions is not None:
                     # TODO: CAMPid 97453289314763416967675427
