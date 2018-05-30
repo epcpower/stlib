@@ -912,7 +912,7 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         signal = self.get_meta_signal(getattr(MetaEnum, column_name))
 
         if signal is self:
-            return super().get_human_value(for_file=False)
+            return super().get_human_value(for_file=for_file)
 
         return signal.get_human_value(
             for_file=for_file,
