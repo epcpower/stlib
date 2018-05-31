@@ -740,7 +740,7 @@ class Neo(QtCanListener):
                  strip_summary=True, parent=None):
         QtCanListener.__init__(self, self.message_received, parent=parent)
 
-        self.bus = bus
+        self.bus = None
 
         self.frame_rx_timestamps = {}
         self.frame_rx_interval = rx_interval
