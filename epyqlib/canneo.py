@@ -23,6 +23,10 @@ class OutOfRangeError(ValueError):
     pass
 
 
+class UnableToPackError(Exception):
+    pass
+
+
 class NotFoundError(Exception):
     pass
 
@@ -462,7 +466,20 @@ class Signal:
         if value is None:
             value = 0
 
-        return pack_bitstring(self.signal_size, self.float, value, self.signed)
+        try:
+            return pack_bitstring(self.signal_size, self.float, value, self.signed)
+        except OverflowError as e:
+            names = (self.frame.name, self.frame.mux_name, self.name)
+            name = ':'.join(name for name in names if name is not None)
+            raise UnableToPackError(
+                'Unable to pack {value} into {name} with range '
+                '[{minimum}, {maximum}]'.format(
+                    value=value,
+                    name=name,
+                    minimum=self.raw_minimum,
+                    maximum=self.raw_maximum,
+                )
+            ) from e
 
     def unpack_bitstring(self, bits):
         return unpack_bitstring(self.signal_size, self.float, self.signed, bits)

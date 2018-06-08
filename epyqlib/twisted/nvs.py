@@ -262,9 +262,11 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
             set(request.frame.parameter_signals) - set(nonskip.keys())
         )
 
-
         if len(skip_signals) == 0:
-            self._read_write(request)
+            try:
+                self._read_write(request)
+            except Exception as e:
+                request.deferred.errback(e)
         else:
             d = twisted.internet.defer.Deferred()
             d.callback(None)
