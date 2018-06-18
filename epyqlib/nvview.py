@@ -2,7 +2,6 @@
 
 #TODO: """DocString if there is one"""
 
-import attr
 import collections
 import epyqlib.nv
 try:
@@ -12,17 +11,16 @@ except ImportError:
 import epyqlib.utils.qt
 import functools
 import io
-import json
 import os
 import pathlib
-import shutil
-import subprocess
-import tempfile
 import twisted.internet.defer
 from PyQt5 import QtWidgets, uic, QtCore
 from PyQt5.QtCore import (pyqtSignal, pyqtSlot, QFile, QFileInfo, QTextStream,
                           QCoreApplication, Qt, QItemSelectionModel,
                           QModelIndex, QSortFilterProxyModel)
+
+import epyqlib.autodevice.build
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -261,31 +259,62 @@ class NvView(QtWidgets.QWidget):
             ),
         )
 
-        d.addBoth(epyqlib.utils.twisted.detour_result, self.enable_column_resize)
+        d.addBoth(
+            epyqlib.utils.twisted.detour_result,
+            self.enable_column_resize,
+        )
         d.addErrback(epyqlib.utils.twisted.catch_expected)
         d.addErrback(epyqlib.utils.twisted.errbackhook)
 
     def write_to_auto_parameters(self):
-        filters = [
-            ('EPC Device', ['epc']),
-            ('All Files', ['*'])
-        ]
+        builder = epyqlib.autodevice.build.Builder()
+
+        root = self.nonproxy_model().root
+
+        def name_from_node(node):
+            if node is None:
+                return None
+
+            return ':'.join((root.password_node.frame.mux_name,
+                          root.password_node.name))
+
+        builder.set_access_level_names(
+            password_name=name_from_node(root.password_node),
+            access_level_name=name_from_node(root.access_level_node),
+        )
+
         auto_parameters_device_file_path = epyqlib.utils.qt.file_dialog(
-            filters=filters,
+            filters=[
+                ('EPC Device', ['epc']),
+                ('All Files', ['*'])
+            ],
             caption='Open Auto Parameters Template',
             parent=self,
+            path_factory=pathlib.Path,
         )
         if auto_parameters_device_file_path is None:
             return
 
-        auto_parameters_device_file_path = pathlib.Path(
-            auto_parameters_device_file_path
-        )
+        builder.set_template(path=auto_parameters_device_file_path)
 
-        auto_parameters_device = epyqlib.device.Device(
-            file=auto_parameters_device_file_path,
-            only_for_files=True,
+        parameter_source_path = epyqlib.utils.qt.file_dialog(
+            filters=[
+                ('Parameter Value Set', ['pmvs']),
+                ('EPC Parameters', ['epp']),
+            ],
+            caption='Open Parameter Or Value Set File',
+            parent=self,
+            path_factory=pathlib.Path,
         )
+        if parameter_source_path is None:
+            return
+
+        if parameter_source_path.suffix == '.pmvs':
+            builder.load_pmvs(parameter_source_path)
+        elif parameter_source_path.suffix == '.epp':
+            builder.load_epp(parameter_source_path)
+        else:
+            raise Exception("Must pick either a *.pmvs or *.epp file")
 
         filters = [
             ('EPC Device', ['epz']),
@@ -300,12 +329,9 @@ class NvView(QtWidgets.QWidget):
         if filename is None:
             return
 
-        filename = pathlib.Path(filename)
+        builder.set_target(path=filename)
 
-        archive_code = epyqlib.utils.qt.get_code()
-        if archive_code is not None:
-            archive_code = archive_code.decode('ascii')
-        else:
+        if builder.archive_code is None:
             archive_code, ok = QtWidgets.QInputDialog.getText(
                 None,
                 '.epz Password',
@@ -316,29 +342,9 @@ class NvView(QtWidgets.QWidget):
             if not ok:
                 return
 
-        root = self.nonproxy_model().root
+            builder.archive_code = archive_code
 
-        @attr.s
-        class AccessInput:
-            node = attr.ib()
-            description = attr.ib()
-            secret = attr.ib()
-
-        access_inputs = (
-            AccessInput(
-                node=root.password_node,
-                description='Elevated Access Code',
-                secret=True,
-            ),
-            AccessInput(
-                node=root.access_level_node,
-                description='Elevated Access Level',
-                secret=False,
-            ),
-        )
-        access_parameters = {}
-
-        for access_input in access_inputs:
+        for access_input in builder.access_parameters:
             if access_input.node is None:
                 continue
 
@@ -356,120 +362,12 @@ class NvView(QtWidgets.QWidget):
             if not ok:
                 return
 
-            access_parameters[access_input.node] = int(user_input)
+            access_input.value = int(user_input)
 
-        def node_path(node):
-            return [
-                node.frame.name,
-                node.frame.mux_name,
-                node.name,
-            ]
-
-        with tempfile.TemporaryDirectory() as temporary_directory:
-            temporary_directory = pathlib.Path(temporary_directory)
-            directory_path = temporary_directory / filename.stem
-            directory_path.mkdir()
-
-            parameter_path = (
-                auto_parameters_device.raw_dict['auto_value_set']
-            )
-
-            model = self.nonproxy_model()
-            value_set = model.root.to_value_set(include_secrets=True)
-            for node, user_input in access_parameters.items():
-                name = ':'.join(node_path(node)[1:])
-
-                def name_matches(node):
-                    return node.name == name
-
-                node, = value_set.model.root.nodes_by_filter(name_matches)
-                node.value = user_input
-
-            value_set.path = directory_path / parameter_path
-            value_set.save()
-
-            can_path = auto_parameters_device.raw_dict['can_path']
-
-            for file_name in auto_parameters_device.referenced_files:
-                if file_name in (can_path, parameter_path):
-                    continue
-
-                file_path = pathlib.Path(file_name)
-
-                shutil.copy(
-                    auto_parameters_device_file_path.with_name(file_path.name),
-                    directory_path,
-                )
-
-            with open(auto_parameters_device_file_path) as f:
-                raw_dict = json.load(
-                    f,
-                    object_pairs_hook=collections.OrderedDict,
-                )
-
-            keys_to_copy = (
-                'access_level_path',
-                'access_password_path',
-                'nv_meta_enum',
-            )
-            for key in keys_to_copy:
-                raw_dict[key] = self.device.raw_dict[key]
-
-            target_epc_name = (
-                directory_path / auto_parameters_device_file_path.name
-            )
-            with open(target_epc_name, 'w') as f:
-                json.dump(raw_dict, f, indent=4)
-
-            with open(directory_path / can_path, 'wb') as f:
-                f.write(self.can_contents)
-
-            backup_path = None
-            if filename.exists():
-                backup_path = temporary_directory / filename.name
-                shutil.move(filename, backup_path)
-
-            try:
-                password_option = []
-                if len(archive_code) > 0:
-                    password_option = ['-p{}'.format(archive_code)]
-
-                paths = (
-                    pathlib.Path('7z'),
-                    pathlib.Path('C:')/os.sep/'Program Files'/'7-Zip'/'7z.exe',
-                    (
-                        pathlib.Path('C:')/os.sep
-                        /'Program Files (x86)'/'7-Zip'/'7z.exe',
-                    ),
-                )
-                for path in paths:
-                    try:
-                        subprocess.run(
-                            [
-                                str(path),
-                                'a',
-                                '-tzip',
-                                str(filename),
-                                str(directory_path),
-                                *password_option,
-                            ],
-                            check=True,
-                        )
-                    except FileNotFoundError:
-                        continue
-                    else:
-                        break
-                else:
-                    raise Exception(
-                        'Unable to find 7z binary as any of: {}'.format(
-                            paths,
-                        )
-                    )
-            except Exception as e:
-                if backup_path is not None:
-                    shutil.move(backup_path, filename)
-
-                raise e
+        builder.create(
+            original_raw_dict=self.device.raw_dict,
+            can_contents=self.can_contents,
+        )
 
     def set_can_contents(self, can_contents):
         self.can_contents = can_contents

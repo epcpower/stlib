@@ -261,6 +261,7 @@ def file_dialog(
         save=False,
         caption='',
         parent=None,
+        path_factory=str,
         **kwargs,
 ):
     # TODO: CAMPid 9857216134675885472598426718023132
@@ -290,9 +291,9 @@ def file_dialog(
     )[0]
 
     if len(file) == 0:
-        file = None
+        return None
 
-    return file
+    return path_factory(file)
 
 
 def get_code():

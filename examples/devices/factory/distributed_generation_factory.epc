@@ -18,6 +18,16 @@
     },
     "module": "distributed_generation.py",
     "parameter_hierarchy": "EPC_DG_ID247_FACTORY.parameters.json",
+    "fault_log": {
+        "nv_message_names": [
+            "StatusFaults",
+            "StatusFaults2",
+            "StatusWarnings"
+        ],
+        "process_message_names": [
+            "StatusBits"
+        ]
+    },
     "nv_meta_enum": "Meta",
     "access_level_path": "ParameterQuery;AccessLevel;Level",
     "access_password_path": "ParameterQuery;AccessLevel;Password"

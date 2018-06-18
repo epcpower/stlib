@@ -16,7 +16,11 @@ project_path = os.path.abspath(os.path.join(
 
 scripts_path = os.path.join(project_path, 'venv', 'Scripts')
 
-device_path = os.path.join(library_path, 'examples', 'devices')
+examples_path = os.path.join(library_path, 'examples')
+
+device_path = os.path.join(examples_path, 'devices')
+
+defaults_path = os.path.join(examples_path, 'defaults.pmvs')
 
 devices = {
     'customer': os.path.join('customer', 'distributed_generation.epc'),

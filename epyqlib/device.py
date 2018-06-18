@@ -375,28 +375,38 @@ class Device:
                 hierarchy=hierarchy,
                 **kwargs)
 
-    def _init_from_zip(self, zip_file, rx_interval=0, **kwargs):
+    def _init_from_zip(
+            self,
+            zip_file,
+            rx_interval=0,
+            archive_code=None,
+            **kwargs,
+    ):
         self.from_zip = True
         path = tempfile.mkdtemp()
 
         code = epyqlib.utils.qt.get_code()
 
-        while True:
-            try:
-                zip_file.extractall(path=path, pwd=code)
-            except RuntimeError:
-                code, ok = QInputDialog.getText(
-                    None,
-                    '.epz Password',
-                    '.epz Password',
-                    QLineEdit.Password)
+        if archive_code is not None:
+            code = archive_code.encode('ascii')
+            zip_file.extractall(path=path, pwd=code)
+        else:
+            while True:
+                try:
+                    zip_file.extractall(path=path, pwd=code)
+                except RuntimeError:
+                    code, ok = QInputDialog.getText(
+                        None,
+                        '.epz Password',
+                        '.epz Password',
+                        QLineEdit.Password)
 
-                if not ok:
-                    raise CancelError('User canceled password dialog')
+                    if not ok:
+                        raise CancelError('User canceled password dialog')
 
-                code = code.encode('ascii')
-            else:
-                break
+                    code = code.encode('ascii')
+                else:
+                    break
 
         # TODO error dialog if no .epc found in zip file
         filename = None
