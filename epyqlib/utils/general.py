@@ -24,6 +24,10 @@ class ExpectedException(Exception):
         return 'This is expected: {}'.format(str(self))
 
 
+class UnmatchedSerialNumberError(Exception):
+    pass
+
+
 class Container:
     def __init__(self, **kwargs):
         for k, v in kwargs.items():

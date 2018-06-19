@@ -20,7 +20,8 @@ examples_path = os.path.join(library_path, 'examples')
 
 device_path = os.path.join(examples_path, 'devices')
 
-defaults_path = os.path.join(examples_path, 'defaults.pmvs')
+default_parameters_path = os.path.join(examples_path, 'defaults.pmvs')
+small_parameters_path = os.path.join(examples_path, 'small.pmvs')
 
 devices = {
     'customer': os.path.join('customer', 'distributed_generation.epc'),

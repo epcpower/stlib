@@ -364,6 +364,17 @@ class NvView(QtWidgets.QWidget):
 
             access_input.value = int(user_input)
 
+        dialog = QtWidgets.QInputDialog(self)
+        dialog.setInputMode(QtWidgets.QInputDialog.IntInput)
+        dialog.setIntMinimum(0)
+        dialog.setOkButtonText('Yes')
+        dialog.setCancelButtonText('No')
+        dialog.setWindowTitle('Serial Number Lock')
+        dialog.setLabelText('Lock to a specific serial number?')
+
+        if dialog.exec():
+            builder.required_serial_number = dialog.intValue()
+
         builder.create(
             original_raw_dict=self.device.raw_dict,
             can_contents=self.can_contents,

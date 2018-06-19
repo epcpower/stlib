@@ -10,7 +10,7 @@ import pytest_twisted
 import epyqlib.autodevice.build
 import epyqlib.device
 import epyqlib.tests.common
-
+import epyqlib.utils.general
 
 example_archive_code = 'the archive code'
 example_access_password = '1'
@@ -22,9 +22,13 @@ def create_example_auto_device(
         archive_code=example_archive_code,
         access_password=example_access_password,
         access_level=example_access_level,
+        serial_number=None,
 ):
     builder = epyqlib.autodevice.build.Builder()
     builder.archive_code = archive_code
+
+    if serial_number is not None:
+        builder.required_serial_number = serial_number
 
     builder.set_access_level_names(
         password_name='AccessLevel:Password',
@@ -40,7 +44,7 @@ def create_example_auto_device(
     template = pathlib.Path(epyqlib.autodevice.__file__).with_name('template')
     builder.set_template(path=template/'auto_parameters.epc')
 
-    builder.load_pmvs(epyqlib.tests.common.defaults_path)
+    builder.load_pmvs(epyqlib.tests.common.small_parameters_path)
 
     builder.set_target(path=target)
 
@@ -88,6 +92,72 @@ def test_general_load(tmpdir):
 
     real_bus = can.interface.Bus(bustype='socketcan', channel='can0')
     bus = epyqlib.busproxy.BusProxy(bus=real_bus)
+
+    device = epyqlib.device.Device(
+        file=device_path,
+        archive_code=example_archive_code,
+        node_id=247,
+        bus=bus,
+    )
+
+    yield device.extension.no_gui_load_parameters()
+
+
+@pytest.mark.require_device
+@pytest_twisted.inlineCallbacks
+def test_invalid_serial(tmpdir):
+    temporary_directory = pathlib.Path(tmpdir)
+    device_path = temporary_directory/'device.epz'
+
+    # string should never match a serial number
+    create_example_auto_device(target=device_path, serial_number='a')
+
+    real_bus = can.interface.Bus(bustype='socketcan', channel='can0')
+    bus = epyqlib.busproxy.BusProxy(bus=real_bus)
+
+    device = epyqlib.device.Device(
+        file=device_path,
+        archive_code=example_archive_code,
+        node_id=247,
+        bus=bus,
+    )
+
+    with pytest.raises(epyqlib.utils.general.UnmatchedSerialNumberError):
+        yield device.extension.no_gui_load_parameters()
+
+
+@pytest.mark.require_device
+@pytest_twisted.inlineCallbacks
+def test_valid_serial(tmpdir):
+    temporary_directory = pathlib.Path(tmpdir)
+    device_path = temporary_directory/'device.epz'
+
+    create_example_auto_device(target=device_path)
+
+    real_bus = can.interface.Bus(bustype='socketcan', channel='can0')
+    bus = epyqlib.busproxy.BusProxy(bus=real_bus)
+
+    device = epyqlib.device.Device(
+        file=device_path,
+        archive_code=example_archive_code,
+        node_id=247,
+        bus=bus,
+    )
+
+    serial_nv = device.extension.nvs.signal_from_names(
+        *device.extension.serial_number_names,
+    )
+    present_serial, _ = yield device.extension.nv_protocol.read(
+        nv_signal=serial_nv,
+        meta=epyqlib.nv.MetaEnum.value,
+    )
+
+    device.bus.set_bus()
+
+    create_example_auto_device(
+        target=device_path,
+        serial_number=present_serial,
+    )
 
     device = epyqlib.device.Device(
         file=device_path,

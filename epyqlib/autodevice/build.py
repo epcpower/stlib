@@ -30,12 +30,13 @@ class AccessInput:
 
 @attr.s
 class Builder:
-    template = attr.ib(default=None)
-    template_path = attr.ib(default=None)
-    value_set = attr.ib(default=None)
-    target = attr.ib(default=None)
     access_parameters = attr.ib(default=None)
+    required_serial_number = attr.ib(default=None)
     archive_code = attr.ib()
+    _template = attr.ib(default=None, init=False)
+    _template_path = attr.ib(default=None, init=False)
+    _value_set = attr.ib(default=None, init=False)
+    _target = attr.ib(default=None, init=False)
 
     @archive_code.default
     def _(self):
@@ -60,34 +61,34 @@ class Builder:
         )
 
     def set_template(self, path):
-        self.template_path = pathlib.Path(path)
+        self._template_path = pathlib.Path(path)
 
-        self.template = epyqlib.device.Device(
-            file=os.fspath(self.template_path),
+        self._template = epyqlib.device.Device(
+            file=os.fspath(self._template_path),
             only_for_files=True,
         )
 
         auto_value_set_key = 'auto_value_set'
-        if auto_value_set_key not in self.template.raw_dict:
+        if auto_value_set_key not in self._template.raw_dict:
             raise InvalidAutoParametersDeviceError(
                 'Key {} not found'.format(auto_value_set_key)
             )
 
     def load_pmvs(self, path):
-        self.value_set = epyqlib.pm.valuesetmodel.loadp(path)
+        self._value_set = epyqlib.pm.valuesetmodel.loadp(path)
 
     def load_epp(self, parameter_path, can_path):
-        matrix = canmatrix.formats.loadp(can_path).values()
+        matrix, = canmatrix.formats.loadp(can_path).values()
         neo = epyqlib.canneo.Neo(matrix=matrix)
         nvs = epyqlib.nv.Nvs(neo=neo)
         with open(parameter_path) as f:
             parameters = json.load(f)
         nvs.from_dict(parameters)
-        self.value_set = nvs.to_value_set(include_secrets=True)
+        self._value_set = nvs.to_value_set(include_secrets=True)
 
     def get_or_create_parameter(self, name):
         try:
-            nodes = self.value_set.model.root.nodes_by_attribute(
+            nodes = self._value_set.model.root.nodes_by_attribute(
                 attribute_value=name,
                 attribute_name='name',
             )
@@ -95,7 +96,7 @@ class Builder:
             node = epyqlib.pm.valuesetmodel.Parameter(
                 name=name,
             )
-            self.value_set.model.root.append_child(node)
+            self._value_set.model.root.append_child(node)
         else:
             try:
                 node, = nodes
@@ -108,50 +109,45 @@ class Builder:
         return node
 
     def set_target(self, path):
-        self.target = pathlib.Path(path)
+        self._target = pathlib.Path(path)
 
     def create(self, original_raw_dict, can_contents):
         for access_input in self.access_parameters:
             access_input.node = self.get_or_create_parameter(access_input.node)
 
-        # def node_path(node):
-        #     return [
-        #         node.frame.name,
-        #         node.frame.mux_name,
-        #         node.name,
-        #     ]
-
         with tempfile.TemporaryDirectory() as temporary_directory:
             temporary_directory = pathlib.Path(temporary_directory)
-            directory_path = temporary_directory / self.target.stem
+            directory_path = temporary_directory / self._target.stem
             directory_path.mkdir()
 
             for access_input in self.access_parameters:
-                # name = ':'.join(node_path(access_input.node)[1:])
-
                 node = self.get_or_create_parameter(name=access_input.node)
 
                 node.value = access_input.value
 
-            self.value_set.path = directory_path / self.template.raw_dict[
+            self._value_set.path = directory_path / self._template.raw_dict[
                 'auto_value_set'
             ]
-            self.value_set.save()
+            self._value_set.save()
 
-            can_path = self.template.raw_dict['can_path']
+            can_path = self._template.raw_dict['can_path']
 
-            for file_name in self.template.referenced_files:
-                if file_name in (can_path, self.template.raw_dict['auto_value_set']):
+            for file_name in self._template.referenced_files:
+                skips = (
+                    can_path,
+                    self._template.raw_dict['auto_value_set'],
+                )
+                if file_name in skips:
                     continue
 
                 file_path = pathlib.Path(file_name)
 
                 shutil.copy(
-                    self.template_path.parent/file_path.name,
+                    self._template_path.parent/file_path.name,
                     directory_path,
                 )
 
-            with open(self.template_path) as f:
+            with open(self._template_path) as f:
                 raw_dict = json.load(
                     f,
                     object_pairs_hook=collections.OrderedDict,
@@ -168,19 +164,48 @@ class Builder:
             for key in keys_to_copy:
                 raw_dict[key] = original_raw_dict[key]
 
+            raw_dict['required_serial_number'] = self.required_serial_number
+
+            can_path = directory_path / can_path
+            with open(can_path, 'wb') as f:
+                f.write(can_contents)
+
+            matrix, = canmatrix.formats.loadp(os.fspath(can_path)).values()
+            neo = epyqlib.canneo.Neo(
+                matrix=matrix,
+                frame_class=epyqlib.nv.Frame,
+                signal_class=epyqlib.nv.Nv,
+                strip_summary=False,
+            )
+            nvs = epyqlib.nv.Nvs(
+                neo=neo,
+                configuration=original_raw_dict['nv_configuration'],
+            )
+
+            serial_nv, = [
+                nv
+                for nv in nvs.all_nv()
+                if (
+                    'serial' in nv.name.casefold()
+                    and 'number' in nv.name.casefold()
+                )
+            ]
+
+            raw_dict['serial_number_names'] = (
+                serial_nv.frame.mux_name,
+                serial_nv.name,
+            )
+
             target_epc_name = (
                 directory_path / 'auto_parameters.epc'
             )
             with open(target_epc_name, 'w') as f:
                 json.dump(raw_dict, f, indent=4)
 
-            with open(directory_path / can_path, 'wb') as f:
-                f.write(can_contents)
-
             backup_path = None
-            if self.target.exists():
-                backup_path = temporary_directory / self.target.name
-                shutil.move(self.target, backup_path)
+            if self._target.exists():
+                backup_path = temporary_directory / self._target.name
+                shutil.move(self._target, backup_path)
 
             try:
                 password_option = []
@@ -189,10 +214,19 @@ class Builder:
 
                 paths = (
                     pathlib.Path('7z'),
-                    pathlib.Path('C:') / os.sep / 'Program Files' / '7-Zip' / '7z.exe',
                     (
-                        pathlib.Path('C:') / os.sep
-                        / 'Program Files (x86)' / '7-Zip' / '7z.exe',
+                        pathlib.Path('C:')
+                        / os.sep
+                        / 'Program Files'
+                        / '7-Zip'
+                        / '7z.exe',
+                    ),
+                    (
+                        pathlib.Path('C:')
+                        / os.sep
+                        / 'Program Files (x86)'
+                        / '7-Zip'
+                        / '7z.exe',
                     ),
                 )
                 for path in paths:
@@ -202,7 +236,7 @@ class Builder:
                                 str(path),
                                 'a',
                                 '-tzip',
-                                str(self.target),
+                                str(self._target),
                                 str(directory_path),
                                 *password_option,
                             ],
@@ -220,6 +254,6 @@ class Builder:
                     )
             except Exception as e:
                 if backup_path is not None:
-                    shutil.move(backup_path, self.target)
+                    shutil.move(backup_path, self._target)
 
                 raise e

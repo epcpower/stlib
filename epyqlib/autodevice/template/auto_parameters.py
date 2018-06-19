@@ -11,6 +11,7 @@ import epyqlib.canneo
 import epyqlib.nv
 import epyqlib.pm.valuesetmodel
 import epyqlib.twisted.nvs
+import epyqlib.utils.general
 import epyqlib.utils.qt
 import epyqlib.utils.twisted
 
@@ -62,6 +63,8 @@ class DeviceExtension:
         self.value_type = None
         self.parameter_names = None
         self.metas = None
+        self.required_serial_number = None
+        self.serial_number_names = None
 
     def post(self):
         self.value_type, parameter_path = value_file(self.device().raw_dict)
@@ -80,6 +83,13 @@ class DeviceExtension:
             node_id_adjust=self.device().node_id_adjust,
             strip_summary=False,
         )
+
+        self.required_serial_number = self.device().raw_dict[
+            'required_serial_number'
+        ]
+        self.serial_number_names = self.device().raw_dict[
+            'serial_number_names'
+        ]
 
         access_level_path = self.device().raw_dict['access_level_path']
         if access_level_path is not None:
@@ -165,10 +175,27 @@ class DeviceExtension:
 
     @twisted.internet.defer.inlineCallbacks
     def _check_serial_number(self):
-        pass
+        serial_nv = self.nvs.signal_from_names(
+            'SN',
+            'SerialNumber',
+        )
+        actual, _ = yield self.nv_protocol.read(
+            nv_signal=serial_nv,
+            meta=epyqlib.nv.MetaEnum.value,
+        )
+        actual = int(actual)
+        expected = self.device().raw_dict['required_serial_number']
+
+        if actual != expected:
+            raise epyqlib.utils.general.UnmatchedSerialNumberError(
+                f'Expected {expected} but found {actual}'
+            )
 
     @twisted.internet.defer.inlineCallbacks
     def _load_parameters(self):
+        if self.required_serial_number is not None:
+            yield self._check_serial_number()
+
         access_nodes = tuple(
             node
             for node in (
