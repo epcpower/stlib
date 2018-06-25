@@ -269,25 +269,25 @@ class Builder:
                         / os.sep
                         / 'Program Files'
                         / '7-Zip'
-                        / '7z.exe',
+                        / '7z.exe'
                     ),
                     (
                         pathlib.Path('C:')
                         / os.sep
                         / 'Program Files (x86)'
                         / '7-Zip'
-                        / '7z.exe',
+                        / '7z.exe'
                     ),
                 )
                 for path in paths:
                     try:
                         subprocess.run(
                             [
-                                str(path),
+                                os.fspath(path),
                                 'a',
                                 '-tzip',
-                                str(self._target),
-                                str(directory_path),
+                                os.fspath(self._target),
+                                os.fspath(directory_path),
                                 *password_option,
                             ],
                             check=True,
