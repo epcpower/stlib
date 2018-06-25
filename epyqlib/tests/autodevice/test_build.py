@@ -21,6 +21,8 @@ example_archive_code = 'the archive code'
 example_access_password = '1'
 example_access_level = '2'
 
+raw_template = pathlib.Path(epyqlib.autodevice.__file__).with_name('template')
+
 
 @attr.s
 class AutoDevice:
@@ -36,6 +38,7 @@ def create_example_auto_device(
     access_level=example_access_level,
     serial_number=None,
     parameter_type='pmvs',
+    template=raw_template/'auto_parameters.epc',
 ):
     builder = epyqlib.autodevice.build.Builder()
     builder.archive_code = archive_code
@@ -54,8 +57,10 @@ def create_example_auto_device(
         elif 'Level' in access_input.node:
             access_input.value = access_level
 
-    template = pathlib.Path(epyqlib.autodevice.__file__).with_name('template')
-    builder.set_template(path=template/'auto_parameters.epc')
+    builder.set_template(
+        path=template,
+        archive=template.suffix.casefold() == '.zip',
+    )
 
     device_files = epyqlib.tests.common.new_devices[(version, 'factory')]
 
@@ -153,6 +158,30 @@ def wait_until_present(device, period=1):
 
 
 def test_contains_epc(auto_device):
+    with zipfile.ZipFile(auto_device.path) as z:
+        assert any(name.endswith('.epc') for name in z.namelist())
+
+
+def test_from_zip(version, parameter_type, access_password, tmpdir):
+    temporary_directory = pathlib.Path(tmpdir)
+    target = temporary_directory / 'auto_device.epz'
+
+    zip_path = temporary_directory/'archive.zip'
+    with zipfile.ZipFile(zip_path, 'w') as z:
+        for template_file in raw_template.iterdir():
+            z.write(
+                filename=template_file,
+                arcname=template_file.name,
+            )
+
+    auto_device = create_example_auto_device(
+        version=version,
+        target=target,
+        parameter_type=parameter_type,
+        access_password=access_password,
+        template=zip_path,
+    )
+
     with zipfile.ZipFile(auto_device.path) as z:
         assert any(name.endswith('.epc') for name in z.namelist())
 

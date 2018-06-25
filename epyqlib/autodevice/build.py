@@ -5,6 +5,7 @@ import pathlib
 import shutil
 import subprocess
 import tempfile
+import zipfile
 
 import attr
 import canmatrix.formats
@@ -38,6 +39,7 @@ class Builder:
     _value_set = attr.ib(default=None, init=False)
     _target = attr.ib(default=None, init=False)
     _original_raw_dict = attr.ib(default=None, init=False)
+    _temporary_directory = attr.ib(default=None, init=False)
 
     @archive_code.default
     def _(self):
@@ -61,8 +63,19 @@ class Builder:
             ),
         )
 
-    def set_template(self, path):
-        self._template_path = pathlib.Path(path)
+    def set_template(self, path, archive=False):
+        path = pathlib.Path(path)
+
+        if archive:
+            self._temporary_directory = tempfile.TemporaryDirectory()
+            with zipfile.ZipFile(path) as z:
+                z.extractall(self._temporary_directory.name)
+
+            self._template_path, = pathlib.Path(
+                self._temporary_directory.name,
+            ).glob('**/*.epc')
+        else:
+            self._template_path = path
 
         self._template = epyqlib.device.Device(
             file=os.fspath(self._template_path),
@@ -282,3 +295,6 @@ class Builder:
                     shutil.move(backup_path, self._target)
 
                 raise e
+
+        if self._temporary_directory is not None:
+            self._temporary_directory.cleanup()

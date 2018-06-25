@@ -286,7 +286,8 @@ class NvView(QtWidgets.QWidget):
 
         auto_parameters_device_file_path = epyqlib.utils.qt.file_dialog(
             filters=[
-                ('EPC Device', ['epc']),
+                ('EPC Auto Device Template Archive', ['zip']),
+                ('EPC Auto Device Template', ['epc']),
                 ('All Files', ['*'])
             ],
             caption='Open Auto Parameters Template',
@@ -296,7 +297,12 @@ class NvView(QtWidgets.QWidget):
         if auto_parameters_device_file_path is None:
             return
 
-        builder.set_template(path=auto_parameters_device_file_path)
+        builder.set_template(
+            path=auto_parameters_device_file_path,
+            archive=(
+                auto_parameters_device_file_path.suffix.casefold() == '.zip'
+            ),
+        )
 
         parameter_source_path = epyqlib.utils.qt.file_dialog(
             filters=[
