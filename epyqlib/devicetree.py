@@ -194,7 +194,7 @@ class Bus(TreeNode):
                 self.bus.transmit = checked == Qt.Checked
 
     def set_bus(self):
-        if self.interface == None:
+        if self.interface is None:
             return
 
         self.bus.set_bus(None)
