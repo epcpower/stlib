@@ -105,6 +105,7 @@ class NvView(QtWidgets.QWidget):
         )
 
         self.can_contents = None
+        self.can_suffix = None
         self.set_access_level_signal_path(path=None)
 
         self.password_mapper = QtWidgets.QDataWidgetMapper()
@@ -309,10 +310,17 @@ class NvView(QtWidgets.QWidget):
         if parameter_source_path is None:
             return
 
+        builder.set_original_raw_dict(self.device.raw_dict)
+
         if parameter_source_path.suffix == '.pmvs':
             builder.load_pmvs(parameter_source_path)
         elif parameter_source_path.suffix == '.epp':
-            builder.load_epp(parameter_source_path)
+            with open(parameter_source_path) as parameters:
+                builder.load_epp(
+                    can=io.BytesIO(self.can_contents),
+                    can_suffix=self.can_suffix,
+                    parameters=parameters,
+                )
         else:
             raise Exception("Must pick either a *.pmvs or *.epp file")
 
@@ -364,24 +372,39 @@ class NvView(QtWidgets.QWidget):
 
             access_input.value = int(user_input)
 
-        dialog = QtWidgets.QInputDialog(self)
-        dialog.setInputMode(QtWidgets.QInputDialog.IntInput)
-        dialog.setIntMinimum(0)
-        dialog.setOkButtonText('Yes')
-        dialog.setCancelButtonText('No')
-        dialog.setWindowTitle('Serial Number Lock')
-        dialog.setLabelText('Lock to a specific serial number?')
+        text = ''
 
-        if dialog.exec():
-            builder.required_serial_number = dialog.intValue()
+        while True:
+            dialog = QtWidgets.QInputDialog(self)
+            dialog.setInputMode(QtWidgets.QInputDialog.TextInput)
+            dialog.setOkButtonText('Yes')
+            dialog.setCancelButtonText('No')
+            dialog.setWindowTitle('Serial Number Lock')
+            dialog.setLabelText('Lock to a specific serial number?')
+            dialog.setTextValue(text)
 
-        builder.create(
-            original_raw_dict=self.device.raw_dict,
-            can_contents=self.can_contents,
-        )
+            if not dialog.exec():
+                break
 
-    def set_can_contents(self, can_contents):
+            text = dialog.textValue()
+
+            try:
+                builder.required_serial_number = int(text)
+            except ValueError:
+                epyqlib.utils.qt.dialog(
+                    parent=self,
+                    message=(
+                        f'Unable to parse input {text!r}, must be an integer',
+                    ),
+                )
+            else:
+                break
+
+        builder.create(can_contents=self.can_contents)
+
+    def set_can_contents(self, can_contents, suffix):
         self.can_contents = can_contents
+        self.can_suffix = suffix
 
     def setModel(self, model):
         proxy = model

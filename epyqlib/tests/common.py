@@ -1,56 +1,104 @@
 import contextlib
 import locale
 import os
+import pathlib
 import sys
 
 import attr
 
 
-library_path = os.path.abspath(os.path.join(
-    os.path.dirname(__file__), '..', '..',
-))
+library_path = pathlib.Path(__file__).parents[2].resolve()
 
-project_path = os.path.abspath(os.path.join(
-    os.path.dirname(__file__), '..', '..',
-))
+project_path = library_path.parents[1]
 
-scripts_path = os.path.join(project_path, 'venv', 'Scripts')
+scripts_path = project_path/'venv'/'Scripts'
 
-examples_path = os.path.join(library_path, 'examples')
+examples_path = library_path/'examples'/'develop'
 
-device_path = os.path.join(examples_path, 'devices')
+device_path = examples_path/'devices'
 
-default_parameters_path = os.path.join(examples_path, 'defaults.pmvs')
-small_parameters_path = os.path.join(examples_path, 'small.pmvs')
+default_parameters_path = examples_path/'defaults.pmvs'
+small_parameters_path = examples_path/'small.pmvs'
 
 devices = {
-    'customer': os.path.join('customer', 'distributed_generation.epc'),
-    'factory': os.path.join('factory', 'distributed_generation_factory.epc'),
+    'customer': pathlib.Path('customer')/'distributed_generation.epc',
+    'factory': pathlib.Path('factory')/'distributed_generation_factory.epc',
 }
 
 devices = {
-    k: os.path.normpath(os.path.join(device_path, v))
+    k: device_path / v
     for k, v in devices.items()
 }
 
 symbol_files = {
-    'customer': os.path.join('customer', 'EPC_DG_ID247.sym'),
-    'factory': os.path.join('factory', 'EPC_DG_ID247_FACTORY.sym'),
+    'customer': pathlib.Path('customer')/'EPC_DG_ID247.sym',
+    'factory': pathlib.Path('factory')/'EPC_DG_ID247_FACTORY.sym',
 }
 
 symbol_files = {
-    k: os.path.normpath(os.path.join(device_path, v))
+    k: device_path / v
     for k, v in symbol_files.items()
 }
 
 hierarchy_files = {
-    'customer': os.path.join('customer', 'EPC_DG_ID247.parameters.json'),
-    'factory': os.path.join('factory', 'EPC_DG_ID247_FACTORY.parameters.json'),
+    'customer': pathlib.Path('customer')/'EPC_DG_ID247.parameters.json',
+    'factory': pathlib.Path('factory')/'EPC_DG_ID247_FACTORY.parameters.json',
 }
 
 hierarchy_files = {
-    k: os.path.normpath(os.path.join(device_path, v))
+    k: device_path / v
     for k, v in hierarchy_files.items()
+}
+
+
+def single(x):
+    y, = x
+
+    return y
+
+
+@attr.s
+class DeviceFiles:
+    can = attr.ib()
+    hierarchy = attr.ib()
+    device = attr.ib()
+    epp = attr.ib()
+    pmvs = attr.ib()
+
+    @classmethod
+    def build(cls, base, version, level):
+        version = pathlib.Path(base) / version
+        path = version / 'devices' / level
+
+        print(path, list(path.glob('*')))
+
+        return DeviceFiles(
+            can=single(path.glob('*.sym')),
+            hierarchy=single(path.glob('*.json')),
+            device=single(path.glob('*.epc')),
+            epp=version/'small.epp',
+            pmvs=version/'small.pmvs',
+        )
+
+new_examples_path = library_path/'examples'
+
+new_devices = {
+    (version, level): DeviceFiles.build(
+        base=new_examples_path,
+        version=version,
+        level=level,
+    )
+    for version in (
+        'develop',
+        'v1.2.5',
+    )
+    for level in (
+        'customer',
+        'factory',
+    )
+    if (version, level) not in (
+        ('v1.2.5', 'customer'),
+    )
 }
 
 

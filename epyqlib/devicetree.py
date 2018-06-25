@@ -241,6 +241,9 @@ class Device(TreeNode):
         return self._checked[column]
 
     def set_checked(self, checked, column):
+        if self.device.bus is None:
+            return
+
         if column in [Columns.indexes.name, Columns.indexes.transmit]:
             if checked == Qt.Checked:
                 if self.tree_parent.checked(column) == Qt.Checked:

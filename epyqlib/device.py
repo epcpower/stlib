@@ -33,6 +33,7 @@ import itertools
 import json
 import math
 import os
+import pathlib
 import shutil
 import tempfile
 import textwrap
@@ -183,6 +184,31 @@ class Device:
             constructor = self._init_from_parameters
 
         constructor(*args, **kwargs)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.terminate()
+
+    def terminate(self):
+        if self.bus is not None:
+            while self.notifiees:
+                self.bus.notifier.discard(self.notifiees.pop())
+
+        self.bus = None
+
+        self.neo_frames.terminate()
+        try:
+            self.ui.tabs.currentChanged.disconnect()
+        except TypeError:
+            # We don't really mind if there aren't any slots connect
+            pass
+        if self.nv_looping_set is not None:
+            self.nv_looping_set.stop()
+        if self.nv_tab_looping_set is not None:
+            self.nv_tab_looping_set.stop()
+        logging.debug('{} terminated'.format(object.__repr__(self)))
 
     def __del__(self):
         if self.bus is not None:
@@ -683,7 +709,10 @@ class Device:
                 column = epyqlib.nv.Columns.indexes.name
                 for view in nv_views:
                     view.set_device(self)
-                    view.set_can_contents(self.can_contents)
+                    view.set_can_contents(
+                        can_contents=self.can_contents,
+                        suffix=pathlib.Path(self.can_path).suffix,
+                    )
                     if self.nvs.access_level_node is not None:
                         view.set_access_level_signal_path(
                             path=self.nvs.access_level_node.signal_path(),
@@ -1021,6 +1050,7 @@ class Device:
             )
             self.ui.scripting_view.set_model(scripting_model)
 
+        self.notifiees = notifiees
         for notifiee in notifiees:
             self.bus.notifier.add(notifiee)
 
@@ -1100,19 +1130,6 @@ class Device:
         self.ui.connection_monitor_overlay.label.setText(text)
         self.ui.connection_monitor_overlay.setVisible(len(text) > 0)
 
-    def terminate(self):
-        self.neo_frames.terminate()
-        try:
-            self.ui.tabs.currentChanged.disconnect()
-        except TypeError:
-            # We don't really mind if there aren't any slots connect
-            pass
-        if self.nv_looping_set is not None:
-            self.nv_looping_set.stop()
-        if self.nv_tab_looping_set is not None:
-            self.nv_tab_looping_set.stop()
-        logging.debug('{} terminated'.format(object.__repr__(self)))
-
 
 class FrameTimeout(epyqlib.canneo.QtCanListener):
     lost = epyqlib.utils.qt.Signal()
@@ -1124,7 +1141,7 @@ class FrameTimeout(epyqlib.canneo.QtCanListener):
 
         self.frame = frame
 
-        self.timeout = 1000 * max(
+        self.timeout = max(
             absolute,
             relative(float(self.frame.cycle_time) / 1000),
         )
@@ -1146,7 +1163,7 @@ class FrameTimeout(epyqlib.canneo.QtCanListener):
         if not self.frame.message_received(msg):
             return
 
-        self.timer.start(self.timeout)
+        self.timer.start(1000 * self.timeout)
 
         if not self.present:
             self.present = True

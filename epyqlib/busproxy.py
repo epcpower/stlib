@@ -227,7 +227,7 @@ class NotifierProxy(QtCanListener):
     def message_received(self, message):
         if (self.filtered_ids is None or
                 message.arbitration_id in self.filtered_ids):
-            for listener in self.listeners:
+            for listener in tuple(self.listeners):
                 listener.message_received_signal.emit(message)
 
     def add(self, listener):

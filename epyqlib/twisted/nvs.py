@@ -3,6 +3,7 @@ import enum
 import logging
 import queue
 import textwrap
+import time
 
 import attr
 import twisted.internet.defer
@@ -77,6 +78,7 @@ class Request:
     passive = attr.ib(cmp=False)
     all_values = attr.ib(cmp=False)
     frame = attr.ib(cmp=False)
+    send_time = attr.ib(default=None)
 
 
 class Protocol(twisted.protocols.policies.TimeoutMixin):
@@ -357,6 +359,8 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
             self.send_failed()
             return
 
+        request.send_time = time.time()
+
         self.setTimeout(self._timeout)
 
     def dataReceived(self, msg):
@@ -425,10 +429,16 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
         request = self._request_memory
         # TODO: report all requested signals
         signal = tuple(request.signals)[0]
+        mux_name = signal.frame.mux_name
+
         e = RequestTimeoutError(
             state=self.state,
-            item='{}:{}'.format(signal.frame.mux_name, signal.name),
+            item=(
+                f'{mux_name}:{signal.name} '
+                f'({request.meta.name}, {request.send_time}, {time.time()}'
+            ),
         )
+
         logger.debug(str(e))
         if self._previous_state in [State.idle]:
             self.state = self._previous_state

@@ -37,6 +37,7 @@ class Builder:
     _template_path = attr.ib(default=None, init=False)
     _value_set = attr.ib(default=None, init=False)
     _target = attr.ib(default=None, init=False)
+    _original_raw_dict = attr.ib(default=None, init=False)
 
     @archive_code.default
     def _(self):
@@ -74,17 +75,40 @@ class Builder:
                 'Key {} not found'.format(auto_value_set_key)
             )
 
+    def set_original_raw_dict(self, original_raw_dict):
+        self._original_raw_dict = original_raw_dict
+
     def load_pmvs(self, path):
         self._value_set = epyqlib.pm.valuesetmodel.loadp(path)
 
-    def load_epp(self, parameter_path, can_path):
-        matrix, = canmatrix.formats.loadp(can_path).values()
-        neo = epyqlib.canneo.Neo(matrix=matrix)
-        nvs = epyqlib.nv.Nvs(neo=neo)
-        with open(parameter_path) as f:
-            parameters = json.load(f)
+    def load_epp(self, parameters, can, can_suffix):
+        matrix, = canmatrix.formats.load(
+            can,
+            importType=can_suffix[1:],
+        ).values()
+        neo = epyqlib.canneo.Neo(
+            matrix=matrix,
+            frame_class=epyqlib.nv.Frame,
+            signal_class=epyqlib.nv.Nv,
+            strip_summary=False,
+        )
+        nvs = epyqlib.nv.Nvs(
+            neo=neo,
+            configuration=self._original_raw_dict['nv_configuration'],
+        )
+        parameters = json.load(parameters)
         nvs.from_dict(parameters)
         self._value_set = nvs.to_value_set(include_secrets=True)
+
+    def load_epp_paths(self, parameter_path, can_path):
+        can_suffix = pathlib.Path(can_path).suffix
+        with open(can_path, 'rb') as can:
+            with open(parameter_path) as parameters:
+                self.load_epp(
+                    can=can,
+                    can_suffix=can_suffix,
+                    parameters=parameters,
+                )
 
     def get_or_create_parameter(self, name):
         try:
@@ -111,7 +135,7 @@ class Builder:
     def set_target(self, path):
         self._target = pathlib.Path(path)
 
-    def create(self, original_raw_dict, can_contents):
+    def create(self, can_contents):
         for access_input in self.access_parameters:
             access_input.node = self.get_or_create_parameter(access_input.node)
 
@@ -162,7 +186,8 @@ class Builder:
                 'nv_meta_enum',
             )
             for key in keys_to_copy:
-                raw_dict[key] = original_raw_dict[key]
+                if key in self._original_raw_dict:
+                    raw_dict[key] = self._original_raw_dict[key]
 
             raw_dict['required_serial_number'] = self.required_serial_number
 
@@ -179,7 +204,7 @@ class Builder:
             )
             nvs = epyqlib.nv.Nvs(
                 neo=neo,
-                configuration=original_raw_dict['nv_configuration'],
+                configuration=self._original_raw_dict['nv_configuration'],
             )
 
             serial_nv, = [
