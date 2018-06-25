@@ -1,11 +1,13 @@
 import collections
 import json
+import os
 import pathlib
 import time
 import zipfile
 
 import attr
 import can
+import dotenv
 import pytest
 import pytest_twisted
 import twisted
@@ -29,8 +31,8 @@ class AutoDevice:
 def create_example_auto_device(
     version,
     target,
+    access_password,
     archive_code=example_archive_code,
-    access_password=example_access_password,
     access_level=example_access_level,
     serial_number=None,
     parameter_type='pmvs',
@@ -83,6 +85,18 @@ def create_example_auto_device(
     return AutoDevice(version=version, path=target)
 
 
+@pytest.fixture(scope='session')
+def access_password():
+    env = dict(os.environ)
+    dotenv_normal = dotenv.dotenv_values()
+    dotenv_local = dotenv.dotenv_values(dotenv.find_dotenv('.env.local'))
+
+    env.update(dotenv_normal)
+    env.update(dotenv_local)
+
+    return env.get('ST_ACCESS_PASSWORD')
+
+
 @pytest.fixture(params=['epp', 'pmvs'])
 def parameter_type(request):
     return request.param
@@ -99,7 +113,7 @@ def version(request):
 
 
 @pytest.fixture
-def auto_device(version, parameter_type, tmpdir):
+def auto_device(version, parameter_type, access_password, tmpdir):
     temporary_directory = pathlib.Path(tmpdir)
     target = temporary_directory / 'auto_device.epz'
 
@@ -107,6 +121,7 @@ def auto_device(version, parameter_type, tmpdir):
         version=version,
         target=target,
         parameter_type=parameter_type,
+        access_password=access_password,
     )
 
 
@@ -159,12 +174,13 @@ def test_general_load(auto_device, bus):
 
 @pytest.mark.require_device
 @pytest_twisted.inlineCallbacks
-def test_invalid_serial(auto_device, bus):
+def test_invalid_serial(auto_device, bus, access_password):
     # string should never match a serial number
     create_example_auto_device(
         version=auto_device.version,
         target=auto_device.path,
         serial_number='a',
+        access_password=access_password,
     )
 
     device = epyqlib.device.Device(
@@ -182,7 +198,7 @@ def test_invalid_serial(auto_device, bus):
 
 @pytest.mark.require_device
 @pytest_twisted.inlineCallbacks
-def test_valid_serial(auto_device, tmpdir, bus):
+def test_valid_serial(auto_device, tmpdir, bus, access_password):
     temporary_directory = pathlib.Path(tmpdir)
 
     device = epyqlib.device.Device(
@@ -207,6 +223,7 @@ def test_valid_serial(auto_device, tmpdir, bus):
         version=auto_device.version,
         target=device_path,
         serial_number=present_serial,
+        access_password=access_password,
     )
 
     device = epyqlib.device.Device(

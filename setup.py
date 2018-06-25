@@ -25,6 +25,7 @@ setup(
     install_requires=[
         'arrow',
         'bitstruct',
+        'python-dotenv',
         'natsort',
         'pint',
         'pyelftools',
