@@ -1,4 +1,5 @@
 import contextlib
+import functools
 import locale
 import os
 import pathlib
@@ -72,7 +73,7 @@ class DeviceFiles:
 
         print(path, list(path.glob('*')))
 
-        return DeviceFiles(
+        return cls(
             can=single(path.glob('*.sym')),
             hierarchy=single(path.glob('*.json')),
             device=single(path.glob('*.epc')),
@@ -80,26 +81,30 @@ class DeviceFiles:
             pmvs=version/'small.pmvs',
         )
 
+
 new_examples_path = library_path/'examples'
 
-new_devices = {
-    (version, level): DeviceFiles.build(
-        base=new_examples_path,
-        version=version,
-        level=level,
-    )
-    for version in (
-        'develop',
-        'v1.2.5',
-    )
-    for level in (
-        'customer',
-        'factory',
-    )
-    if (version, level) not in (
-        ('v1.2.5', 'customer'),
-    )
-}
+
+@functools.lru_cache()
+def new_devices():
+    return {
+        (version, level): DeviceFiles.build(
+            base=new_examples_path,
+            version=version,
+            level=level,
+        )
+        for version in (
+            'develop',
+            'v1.2.5',
+        )
+        for level in (
+            'customer',
+            'factory',
+        )
+        if (version, level) not in (
+            ('v1.2.5', 'customer'),
+        )
+    }
 
 
 @attr.s

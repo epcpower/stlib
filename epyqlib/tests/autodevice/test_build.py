@@ -60,7 +60,7 @@ def create_example_auto_device(
         archive=template.suffix.casefold() == '.zip',
     )
 
-    device_files = epyqlib.tests.common.new_devices[(version, 'factory')]
+    device_files = epyqlib.tests.common.new_devices()[(version, 'factory')]
 
     with open(device_files.device) as f:
         original_raw_dict = json.load(
