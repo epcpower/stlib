@@ -21,6 +21,18 @@ class MultipleFoundError(Exception):
     pass
 
 
+raw_template = pathlib.Path(epyqlib.autodevice.__file__).with_name('template')
+
+
+def create_template_archive(path):
+    with zipfile.ZipFile(path, 'w') as z:
+        for template_file in raw_template.iterdir():
+            z.write(
+                filename=template_file,
+                arcname=pathlib.Path('autodevice')/template_file.name,
+            )
+
+
 @attr.s
 class AccessInput:
     node = attr.ib()

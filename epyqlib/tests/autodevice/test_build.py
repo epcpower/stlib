@@ -21,8 +21,6 @@ example_archive_code = 'the archive code'
 example_access_password = '1'
 example_access_level = '2'
 
-raw_template = pathlib.Path(epyqlib.autodevice.__file__).with_name('template')
-
 
 @attr.s
 class AutoDevice:
@@ -38,7 +36,7 @@ def create_example_auto_device(
     access_level=example_access_level,
     serial_number=None,
     parameter_type='pmvs',
-    template=raw_template/'auto_parameters.epc',
+    template=epyqlib.autodevice.build.raw_template/'auto_parameters.epc',
 ):
     builder = epyqlib.autodevice.build.Builder()
     builder.archive_code = archive_code
@@ -167,12 +165,8 @@ def test_from_zip(version, parameter_type, access_password, tmpdir):
     target = temporary_directory / 'auto_device.epz'
 
     zip_path = temporary_directory/'archive.zip'
-    with zipfile.ZipFile(zip_path, 'w') as z:
-        for template_file in raw_template.iterdir():
-            z.write(
-                filename=template_file,
-                arcname=template_file.name,
-            )
+
+    epyqlib.autodevice.build.create_template_archive(zip_path)
 
     auto_device = create_example_auto_device(
         version=version,

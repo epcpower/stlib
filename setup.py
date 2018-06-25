@@ -20,6 +20,7 @@ setup(
             'genbuildinfo = epyqlib.genbuildinfo:write_build_file',
             'versionfile = epyqlib.cli.versionfile:cli',
             'generateversion = epyqlib.cli.generateversion:cli',
+            'autodevice = epyqlib.autodevice.cli:cli',
         ]
     },
     install_requires=[
