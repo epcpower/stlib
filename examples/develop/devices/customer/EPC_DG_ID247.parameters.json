@@ -209,7 +209,7 @@
                                             "name": "RideThrough",
                                             "children": [
                                                 {
-                                                    "name": 0,
+                                                    "name": "0",
                                                     "children": [
                                                         [
                                                             "FrequencyLowRideThrough_0_seconds_A",
@@ -294,7 +294,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 1,
+                                                    "name": "1",
                                                     "children": [
                                                         [
                                                             "FrequencyLowRideThrough_1_seconds_A",
@@ -379,7 +379,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 2,
+                                                    "name": "2",
                                                     "children": [
                                                         [
                                                             "FrequencyLowRideThrough_2_seconds_A",
@@ -464,7 +464,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 3,
+                                                    "name": "3",
                                                     "children": [
                                                         [
                                                             "FrequencyLowRideThrough_3_seconds_A",
@@ -558,7 +558,7 @@
                                             "name": "Trip",
                                             "children": [
                                                 {
-                                                    "name": 0,
+                                                    "name": "0",
                                                     "children": [
                                                         [
                                                             "FrequencyLowTrip_0_seconds_A",
@@ -643,7 +643,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 1,
+                                                    "name": "1",
                                                     "children": [
                                                         [
                                                             "FrequencyLowTrip_1_seconds_A",
@@ -728,7 +728,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 2,
+                                                    "name": "2",
                                                     "children": [
                                                         [
                                                             "FrequencyLowTrip_2_seconds_A",
@@ -813,7 +813,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 3,
+                                                    "name": "3",
                                                     "children": [
                                                         [
                                                             "FrequencyLowTrip_3_seconds_A",
@@ -912,7 +912,7 @@
                                             "name": "RideThrough",
                                             "children": [
                                                 {
-                                                    "name": 0,
+                                                    "name": "0",
                                                     "children": [
                                                         [
                                                             "FrequencyHighRideThrough_0_seconds_A",
@@ -997,7 +997,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 1,
+                                                    "name": "1",
                                                     "children": [
                                                         [
                                                             "FrequencyHighRideThrough_1_seconds_A",
@@ -1082,7 +1082,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 2,
+                                                    "name": "2",
                                                     "children": [
                                                         [
                                                             "FrequencyHighRideThrough_2_seconds_A",
@@ -1167,7 +1167,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 3,
+                                                    "name": "3",
                                                     "children": [
                                                         [
                                                             "FrequencyHighRideThrough_3_seconds_A",
@@ -1261,7 +1261,7 @@
                                             "name": "Trip",
                                             "children": [
                                                 {
-                                                    "name": 0,
+                                                    "name": "0",
                                                     "children": [
                                                         [
                                                             "FrequencyHighTrip_0_seconds_A",
@@ -1346,7 +1346,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 1,
+                                                    "name": "1",
                                                     "children": [
                                                         [
                                                             "FrequencyHighTrip_1_seconds_A",
@@ -1431,7 +1431,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 2,
+                                                    "name": "2",
                                                     "children": [
                                                         [
                                                             "FrequencyHighTrip_2_seconds_A",
@@ -1516,7 +1516,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 3,
+                                                    "name": "3",
                                                     "children": [
                                                         [
                                                             "FrequencyHighTrip_3_seconds_A",
@@ -1620,7 +1620,7 @@
                                             "name": "RideThrough",
                                             "children": [
                                                 {
-                                                    "name": 0,
+                                                    "name": "0",
                                                     "children": [
                                                         [
                                                             "VoltageLowRideThrough_0_seconds_A",
@@ -1705,7 +1705,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 1,
+                                                    "name": "1",
                                                     "children": [
                                                         [
                                                             "VoltageLowRideThrough_1_seconds_A",
@@ -1790,7 +1790,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 2,
+                                                    "name": "2",
                                                     "children": [
                                                         [
                                                             "VoltageLowRideThrough_2_seconds_A",
@@ -1875,7 +1875,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 3,
+                                                    "name": "3",
                                                     "children": [
                                                         [
                                                             "VoltageLowRideThrough_3_seconds_A",
@@ -1969,7 +1969,7 @@
                                             "name": "Trip",
                                             "children": [
                                                 {
-                                                    "name": 0,
+                                                    "name": "0",
                                                     "children": [
                                                         [
                                                             "VoltageLowTrip_0_seconds_A",
@@ -2054,7 +2054,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 1,
+                                                    "name": "1",
                                                     "children": [
                                                         [
                                                             "VoltageLowTrip_1_seconds_A",
@@ -2139,7 +2139,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 2,
+                                                    "name": "2",
                                                     "children": [
                                                         [
                                                             "VoltageLowTrip_2_seconds_A",
@@ -2224,7 +2224,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 3,
+                                                    "name": "3",
                                                     "children": [
                                                         [
                                                             "VoltageLowTrip_3_seconds_A",
@@ -2323,7 +2323,7 @@
                                             "name": "RideThrough",
                                             "children": [
                                                 {
-                                                    "name": 0,
+                                                    "name": "0",
                                                     "children": [
                                                         [
                                                             "VoltageHighRideThrough_0_seconds_A",
@@ -2408,7 +2408,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 1,
+                                                    "name": "1",
                                                     "children": [
                                                         [
                                                             "VoltageHighRideThrough_1_seconds_A",
@@ -2493,7 +2493,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 2,
+                                                    "name": "2",
                                                     "children": [
                                                         [
                                                             "VoltageHighRideThrough_2_seconds_A",
@@ -2578,7 +2578,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 3,
+                                                    "name": "3",
                                                     "children": [
                                                         [
                                                             "VoltageHighRideThrough_3_seconds_A",
@@ -2672,7 +2672,7 @@
                                             "name": "Trip",
                                             "children": [
                                                 {
-                                                    "name": 0,
+                                                    "name": "0",
                                                     "children": [
                                                         [
                                                             "VoltageHighTrip_0_seconds_A",
@@ -2757,7 +2757,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 1,
+                                                    "name": "1",
                                                     "children": [
                                                         [
                                                             "VoltageHighTrip_1_seconds_A",
@@ -2842,7 +2842,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 2,
+                                                    "name": "2",
                                                     "children": [
                                                         [
                                                             "VoltageHighTrip_2_seconds_A",
@@ -2927,7 +2927,7 @@
                                                     ]
                                                 },
                                                 {
-                                                    "name": 3,
+                                                    "name": "3",
                                                     "children": [
                                                         [
                                                             "VoltageHighTrip_3_seconds_A",
@@ -3025,7 +3025,7 @@
                             "name": "VoltVar",
                             "children": [
                                 {
-                                    "name": 0,
+                                    "name": "0",
                                     "children": [
                                         [
                                             "VoltVar_0_percent_nominal_volts_A",
@@ -3122,7 +3122,7 @@
                                     ]
                                 },
                                 {
-                                    "name": 1,
+                                    "name": "1",
                                     "children": [
                                         [
                                             "VoltVar_1_percent_nominal_volts_A",
@@ -3219,7 +3219,7 @@
                                     ]
                                 },
                                 {
-                                    "name": 2,
+                                    "name": "2",
                                     "children": [
                                         [
                                             "VoltVar_2_percent_nominal_volts_A",
@@ -3316,7 +3316,7 @@
                                     ]
                                 },
                                 {
-                                    "name": 3,
+                                    "name": "3",
                                     "children": [
                                         [
                                             "VoltVar_3_percent_nominal_volts_A",
@@ -3422,7 +3422,7 @@
                             "name": "HzWatts",
                             "children": [
                                 {
-                                    "name": 0,
+                                    "name": "0",
                                     "children": [
                                         [
                                             "HzWatts_0_hertz_A",
@@ -3515,7 +3515,7 @@
                                     ]
                                 },
                                 {
-                                    "name": 1,
+                                    "name": "1",
                                     "children": [
                                         [
                                             "HzWatts_1_hertz_A",
@@ -3608,7 +3608,7 @@
                                     ]
                                 },
                                 {
-                                    "name": 2,
+                                    "name": "2",
                                     "children": [
                                         [
                                             "HzWatts_2_hertz_A",
@@ -3701,7 +3701,7 @@
                                     ]
                                 },
                                 {
-                                    "name": 3,
+                                    "name": "3",
                                     "children": [
                                         [
                                             "HzWatts_3_hertz_A",
@@ -3803,7 +3803,7 @@
                             "name": "VoltWatts",
                             "children": [
                                 {
-                                    "name": 0,
+                                    "name": "0",
                                     "children": [
                                         [
                                             "VoltWatts_0_percent_nominal_volts_A",
@@ -3896,7 +3896,7 @@
                                     ]
                                 },
                                 {
-                                    "name": 1,
+                                    "name": "1",
                                     "children": [
                                         [
                                             "VoltWatts_1_percent_nominal_volts_A",
@@ -3989,7 +3989,7 @@
                                     ]
                                 },
                                 {
-                                    "name": 2,
+                                    "name": "2",
                                     "children": [
                                         [
                                             "VoltWatts_2_percent_nominal_volts_A",
@@ -4082,7 +4082,7 @@
                                     ]
                                 },
                                 {
-                                    "name": 3,
+                                    "name": "3",
                                     "children": [
                                         [
                                             "VoltWatts_3_percent_nominal_volts_A",

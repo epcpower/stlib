@@ -3995,7 +3995,7 @@ DLC=8
 Mux=GridRefConfig 0,11 1  // UL1741 grid power reference configuration
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=OutPFSet signed 16,16 /f:0.001 /p:3 /min:-1.0 /max:1.0 /d:1.0    // Fixed power factor reference. 
+Var=OutPFSet signed 16,16 /f:0.001 /p:3 /min:-1.0 /max:1.0 /d:1.0 // Fixed power factor reference.
 Var=VarMode unsigned 32,2 /e:VarRef /max:2 // Select between fixed power factor, volt-var, or normal reactive power or current commands
 Var=WattMode unsigned 34,2 /e:WattRef /max:3 // Select between Frequency-Watt, Volt-Watt, or normal real power or current commands
 
@@ -4273,14 +4273,14 @@ DLC=8
 Mux=RealPwrCmdRampRate 0,11 070h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=rate unsigned 32,32 /u:kW/s /f:0.001 /max:10000 /p:3 /d:2000	// slew limit for change in real power command
+Var=rate unsigned 32,32 /u:kW/s /f:0.001 /max:10000 /p:3 /d:2000	// slew limit for change in real power command  <nv::fPU_POWER:allAfeParams{}.pRampRate>
 
 [ParameterResponse]
 DLC=8
 Mux=ReactivePwrCmdRampRate 0,11 071h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=rate unsigned 32,32 /u:kVA/s /f:0.001 /max:10000 /p:3 /d:2000	// slew limit for change in reactive power command
+Var=rate unsigned 32,32 /u:kVA/s /f:0.001 /max:10000 /p:3 /d:2000	// slew limit for change in reactive power command  <nv::fPU_POWER:allAfeParams{}.qRampRate>
 
 [ParameterResponse]
 DLC=8
@@ -4523,7 +4523,7 @@ DLC=8
 Mux=FrequencyRampRate 0,11 09Fh
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=rate unsigned 32,32 /u:Hz/s /max:1000 /d:10	// Slew limit for change in frequency command.
+Var=rate unsigned 32,32 /u:Hz/s /max:1000 /d:10	// Slew limit for change in frequency command.  <nv::f1:allAfeParams{}.fRampRate>
 
 [ParameterResponse]
 DLC=8
@@ -4572,14 +4572,14 @@ DLC=8
 Mux=RealCurrentCmdRampRate 0,11 121h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=rate unsigned 32,32 /u:A/s /max:50000 /d:1000	// slew limit for change in real current command
+Var=rate unsigned 32,32 /u:A/s /max:50000 /d:1000	// slew limit for change in real current command  <nv::fPU_IlineRMS:allAfeParams{}.idRampRate>
 
 [ParameterResponse]
 DLC=8
 Mux=ReactiveCurrentCmdRampRate 0,11 122h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=rate unsigned 32,32 /u:A/s /max:50000 /d:1000	// slew limit for change in reactive current command
+Var=rate unsigned 32,32 /u:A/s /max:50000 /d:1000	// slew limit for change in reactive current command  < nv::fPU_IlineRMS:allAfeParams{}.iqRampRate>
 
 [ParameterResponse]
 DLC=8
@@ -4649,14 +4649,14 @@ Var=Meta unsigned 11,3 /e:Meta
 [ParameterResponse]
 DLC=8
 Mux=VdcCmdRampRate 0,11 133h
-Var=rate unsigned 32,32 /u:V/s /d:1000	// Slew rate of voltage command.
+Var=rate unsigned 32,32 /u:V/s /d:1000	// Slew rate of voltage command.  <nv::fPU_Vdc:allAfeParams{}.vdcRampRate>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 
 [ParameterResponse]
 DLC=8
 Mux=IdcCmdRampRate 0,11 134h
-Var=rate unsigned 32,32 /u:A/s /d:1000	// Slew rate of current command.
+Var=rate unsigned 32,32 /u:A/s /d:1000	// Slew rate of current command.  <nv::fPU_Idc:allAfeParams{}.idcRampRate>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 

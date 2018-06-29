@@ -338,7 +338,7 @@ DLC=8
 Mux=AffSteps 0,11 021h	// <factory>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=affSteps unsigned 16,16 /f:0.1 /max:100
+Var=AffSteps unsigned 16,16 /f:0.1 /max:100
 
 [ParameterQuery]
 DLC=8
@@ -532,7 +532,7 @@ Var=Meta unsigned 11,3 /e:Meta
 Var=r signed 32,32 /f:1E-006 /p:6 /d:0.1	// <nv::fIGBT_THERMAL_IMPEDANCE_SCALE:allIgbtParams{}.rdi>
 
 [ParameterQuery]
-Mux=CurrentControlBuckGains 0,11 003Ch	// <factory> 
+Mux=CurrentControlBuckGains 0,11 003Ch	// <factory>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=Kp signed 16,16 /f:0.001 /p:3	// Proportional Gain
@@ -1538,6 +1538,23 @@ Var=Max unsigned 16,16 /f:0.01 /p:2 /max:100 /d:5
 
 [ParameterQuery]
 DLC=8
+Mux=IdcInjectionRef 0,11 02B1h // <factory>
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=phaseA signed 16,16 /u:A /f:0.001 /d:0  // Dc current Command in Phase A
+Var=phaseB signed 32,16 /u:A /f:0.001 /d:0  // Dc current Command in Phase B
+Var=phaseC signed 48,16 /u:A /f:0.001 /d:0  // Dc current Command in Phase C
+
+[ParameterQuery]
+DLC=8
+Mux=PowerRating 0,11 02B2h // <factory>
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=Power unsigned 16,16 /u:kW /f:0.1 /d:375 
+Var=Current unsigned 32,16 /u:A /d:450
+
+[ParameterQuery]
+DLC=8
 Mux=FrequencyLowRideThrough_0_seconds_A 0,11 0144h	// <table>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
@@ -4645,23 +4662,6 @@ Var=VoltVar unsigned 48,4 /max:3
 Var=HzWatts unsigned 52,4 /max:3
 Var=VoltWatts unsigned 56,4 /max:3
 
-[ParameterQuery]
-DLC=8
-Mux=IdcInjectionRef 0,11 02B1h // <factory>
-Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Meta unsigned 11,3 /e:Meta
-Var=phaseA signed 16,16 /u:A /f:0.001 /d:0  // Dc current Command in Phase A
-Var=phaseB signed 32,16 /u:A /f:0.001 /d:0  // Dc current Command in Phase B
-Var=phaseC signed 48,16 /u:A /f:0.001 /d:0  // Dc current Command in Phase C
-
-[ParameterQuery]
-DLC=8
-Mux=PowerRating 0,11 02B2h // <factory>
-Var=Meta unsigned 11,3 /e:Meta
-Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Power unsigned 16,16 /u:kW /f:0.1 /d:375 
-Var=Current unsigned 32,16 /u:A /d:450
-
 [CCP]
 ID=19EFF741h
 Type=Extended
@@ -4749,7 +4749,7 @@ DLC=8
 Mux=GridRefConfig 0,11 1  // UL1741 grid power reference configuration
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=OutPFSet signed 16,16 /f:0.001 /p:3 /min:-1.0 /max:1.0 /d:1.0    // Fixed power factor reference. 
+Var=OutPFSet signed 16,16 /f:0.001 /p:3 /min:-1.0 /max:1.0 /d:1.0 // Fixed power factor reference.
 Var=VarMode unsigned 32,2 /e:VarRef /max:2 // Select between fixed power factor, volt-var, or normal reactive power or current commands
 Var=WattMode unsigned 34,2 /e:WattRef /max:3 // Select between Frequency-Watt, Volt-Watt, or normal real power or current commands
 
@@ -5012,15 +5012,10 @@ Var=max signed 32,16 /f:0.001 /p:3	// upper limit
 
 [ParameterResponse]
 DLC=8
-Var=legInductance3 unsigned 48,16 /u:uH /f:0.1 /min:0.1 /max:2000 /d:150 /ln:"Leg 3 Inductance"	// <nv::f10e6:allDcdcParams{}.legInductance[2]>
-Var=Meta unsigned 11,3 /e:Meta
-Var=Meta unsigned 11,3 /e:Meta
-Var=Meta unsigned 11,3 /e:Meta
-Var=Meta unsigned 11,3 /e:Meta
 Mux=AffSteps 0,11 021h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=affSteps unsigned 16,16 /f:0.1 /max:100
+Var=AffSteps unsigned 16,16 /f:0.1 /max:100
 
 [ParameterResponse]
 DLC=8
@@ -5124,24 +5119,24 @@ DLC=8
 Mux=TOL_ACFast 0,11 02Eh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=level unsigned 16,16 /u:ARMS /max:800 /d:560
-Var=time unsigned 32,16 /u:seconds /min:1 /max:3600 /d:10
+Var=level unsigned 16,16 /u:ARMS /max:800 /d:560	// <nv::f1:allHwParams{}.tol[TOL_AC_FAST].level>
+Var=time unsigned 32,16 /u:seconds /min:1 /max:3600 /d:10	// <nv::f1:allHwParams{}.tol[TOL_AC_FAST].time>
 
 [ParameterResponse]
 DLC=8
 Mux=TOL_ACSlow 0,11 02Fh	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=level unsigned 16,16 /u:ARMS /max:800 /d:440
-Var=time unsigned 32,16 /u:seconds /min:1 /max:3600 /d:600
+Var=level unsigned 16,16 /u:ARMS /max:800 /d:440	// <nv::f1:allHwParams{}.tol[TOL_AC_SLOW].level>
+Var=time unsigned 32,16 /u:seconds /min:1 /max:3600 /d:600	// <nv::f1:allHwParams{}.tol[TOL_AC_SLOW].time>
 
 [ParameterResponse]
 DLC=8
 Mux=TOL_DCFast 0,11 030h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=level unsigned 16,16 /u:ADC /max:800 /d:235
-Var=time unsigned 32,16 /u:seconds /min:1 /max:3600 /d:10
+Var=level unsigned 16,16 /u:ADC /max:800 /d:235	// <nv::f1:allHwParams{}.tol[TOL_DC].level>
+Var=time unsigned 32,16 /u:seconds /min:1 /max:3600 /d:10	// <nv::f1:allHwParams{}.tol[TOL_DC].time>
 
 [ParameterResponse]
 DLC=8
@@ -5245,7 +5240,6 @@ Var=min signed 16,16 /u:A /min:-1400 /max:0 /d:-500
 Var=max signed 32,16 /u:A /min:0 /max:1400 /d:500
 
 [ParameterResponse]
-Var=Meta unsigned 11,3 /e:Meta
 DLC=8
 Mux=LoggerChunk01 0,11 040h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
@@ -5392,14 +5386,14 @@ DLC=8
 Mux=RealPwrCmdRampRate 0,11 070h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=rate unsigned 32,32 /u:kW/s /f:0.001 /max:10000 /p:3 /d:2000	// slew limit for change in real power command
+Var=rate unsigned 32,32 /u:kW/s /f:0.001 /max:10000 /p:3 /d:2000	// slew limit for change in real power command  <nv::fPU_POWER:allAfeParams{}.pRampRate>
 
 [ParameterResponse]
 DLC=8
 Mux=ReactivePwrCmdRampRate 0,11 071h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=rate unsigned 32,32 /u:kVA/s /f:0.001 /max:10000 /p:3 /d:2000	// slew limit for change in reactive power command
+Var=rate unsigned 32,32 /u:kVA/s /f:0.001 /max:10000 /p:3 /d:2000	// slew limit for change in reactive power command  <nv::fPU_POWER:allAfeParams{}.qRampRate>
 
 [ParameterResponse]
 DLC=8
@@ -5739,7 +5733,7 @@ DLC=8
 Mux=FrequencyRampRate 0,11 09Fh
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=rate unsigned 32,32 /u:Hz/s /max:1000 /d:10	// Slew limit for change in frequency command.
+Var=rate unsigned 32,32 /u:Hz/s /max:1000 /d:10	// Slew limit for change in frequency command.  <nv::f1:allAfeParams{}.fRampRate>
 
 [ParameterResponse]
 DLC=8
@@ -5753,7 +5747,7 @@ DLC=8
 Mux=PhaseImbalanceRampRate 0,11 101h	// <factory>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=rate unsigned 32,32 /u:%/s /max:10000	// slew limit for change in phase Imbalance commands
+Var=rate unsigned 32,32 /u:%/s /max:10000	// slew limit for change in phase Imbalance commands  <nv::f100:allAfeParams{}.phaseImbalanceRampRate>
 
 [ParameterResponse]
 DLC=8
@@ -5975,14 +5969,14 @@ DLC=8
 Mux=RealCurrentCmdRampRate 0,11 121h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=rate unsigned 32,32 /u:A/s /max:50000 /d:1000	// slew limit for change in real current command
+Var=rate unsigned 32,32 /u:A/s /max:50000 /d:1000	// slew limit for change in real current command  <nv::fPU_IlineRMS:allAfeParams{}.idRampRate>
 
 [ParameterResponse]
 DLC=8
 Mux=ReactiveCurrentCmdRampRate 0,11 122h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=rate unsigned 32,32 /u:A/s /max:50000 /d:1000	// slew limit for change in reactive current command
+Var=rate unsigned 32,32 /u:A/s /max:50000 /d:1000	// slew limit for change in reactive current command  < nv::fPU_IlineRMS:allAfeParams{}.iqRampRate>
 
 [ParameterResponse]
 DLC=8
@@ -6024,21 +6018,21 @@ DLC=8
 Mux=VDCScale 0,11 128h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=volts unsigned 32,32 /u:V /f:1E-005 /p:5 /d:1004
+Var=volts unsigned 32,32 /u:V /f:1E-005 /p:5 /d:1004 	// <nv::fFBK_SCALING_SCALE:allHwParams{}.scales.vdc>
 
 [ParameterResponse]
 DLC=8
 Mux=VlineScale 0,11 129h	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=volts unsigned 32,32 /u:V /f:1E-005 /p:5 /d:499.5
+Var=volts unsigned 32,32 /u:V /f:1E-005 /p:5 /d:499.5 	// <nv::fFBK_SCALING_SCALE:allHwParams{}.scales.vLine>
 
 [ParameterResponse]
 DLC=8
 Mux=IlineScale 0,11 12Ah	// <factory>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=amps unsigned 32,32 /u:V /f:1E-005 /p:5 /d:888.989
+Var=amps unsigned 32,32 /u:V /f:1E-005 /p:5 /d:888.989 	// <nv::fFBK_SCALING_SCALE:allHwParams{}.scales.iLine>
 
 [ParameterResponse]
 DLC=8
@@ -6094,14 +6088,14 @@ Var=Meta unsigned 11,3 /e:Meta
 [ParameterResponse]
 DLC=8
 Mux=VdcCmdRampRate 0,11 133h
-Var=rate unsigned 32,32 /u:V/s /d:1000	// Slew rate of voltage command.
+Var=rate unsigned 32,32 /u:V/s /d:1000	// Slew rate of voltage command.  <nv::fPU_Vdc:allAfeParams{}.vdcRampRate>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 
 [ParameterResponse]
 DLC=8
 Mux=IdcCmdRampRate 0,11 134h
-Var=rate unsigned 32,32 /u:A/s /d:1000	// Slew rate of current command.
+Var=rate unsigned 32,32 /u:A/s /d:1000	// Slew rate of current command.  <nv::fPU_Idc:allAfeParams{}.idcRampRate>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 
@@ -6218,6 +6212,23 @@ Mux=PllPiRange 0,11 0143h // <factory>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=Max unsigned 16,16 /f:0.01 /p:2 /max:100 /d:5
+
+[ParameterResponse]
+DLC=8
+Mux=IdcInjectionRef 0,11 02B1h // <factory>
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=phaseA signed 16,16 /u:A /f:0.001 /d:0  // Dc current Command in Phase A
+Var=phaseB signed 32,16 /u:A /f:0.001 /d:0  // Dc current Command in Phase B
+Var=phaseC signed 48,16 /u:A /f:0.001 /d:0  // Dc current Command in Phase C
+
+[ParameterResponse]
+DLC=8
+Mux=PowerRating 0,11 02B2h // <factory>
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=Power unsigned 16,16 /u:kW /f:0.1 /d:375 
+Var=Current unsigned 32,16 /u:A /d:450
 
 [ParameterResponse]
 DLC=8
@@ -9327,23 +9338,6 @@ Var=VoltageHighTrip unsigned 44,4 /max:3
 Var=VoltVar unsigned 48,4 /max:3
 Var=HzWatts unsigned 52,4 /max:3
 Var=VoltWatts unsigned 56,4 /max:3
-
-[ParameterResponse]
-DLC=8
-Mux=IdcInjectionRef 0,11 02B1h // <factory>
-Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Meta unsigned 11,3 /e:Meta
-Var=phaseA signed 16,16 /u:A /f:0.001 /d:0  // Dc current Command in Phase A
-Var=phaseB signed 32,16 /u:A /f:0.001 /d:0  // Dc current Command in Phase B
-Var=phaseC signed 48,16 /u:A /f:0.001 /d:0  // Dc current Command in Phase C
-
-[ParameterResponse]
-DLC=8
-Mux=PowerRating 0,11 02B2h // <factory>
-Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Meta unsigned 11,3 /e:Meta
-Var=Power unsigned 16,16 /u:kW /f:0.1 /d:375 
-Var=Current unsigned 32,16 /u:A /d:450
 
 [CCPResponse]
 ID=19EF41F7h
