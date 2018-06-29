@@ -1061,7 +1061,12 @@ class Signal:
         # return SignalWrapper(owner=instance, wrapped=o.signal)
         return signal
 
-    def object(self, instance):
+    def qobject_host(self, instance):
+        """Return the QObject which hosts the pyqtSignal on the passed instance.
+                
+        ``TheClass.the_signal.qobject_host(an_instance)`` will return the ``QObject``
+        instance used to host the signal ``an_instance.the_signal``.
+        """
         return getattr(instance, self.attribute_name)[self.object_cls]
 
 
