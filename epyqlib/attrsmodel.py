@@ -502,9 +502,11 @@ class DelegateSelector:
 
         list_selection_root = getattr(fields(type(node)), field_name)
         list_selection_root = list_selection_root.list_selection_root
-        list_selection_root = model.list_selection_roots[list_selection_root]
 
         if list_selection_root is not None:
+            list_selection_root = model.list_selection_roots[
+                list_selection_root
+            ]
             delegate = self.enumeration_delegate(list_selection_root)
         else:
             delegate = self.regular
