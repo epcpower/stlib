@@ -1091,3 +1091,18 @@ class Connections:
     def disconnect(self):
         for slot in self.slots:
             self.signal.disconnect(slot)
+
+
+def set_expanded_tree(view, index, expanded):
+    if not expanded:
+        view.setExpanded(index, expanded)
+
+    for row in range(index.model().rowCount(index)):
+        set_expanded_tree(
+            view=view,
+            index=index.child(row, 0),
+            expanded=expanded,
+        )
+
+    if expanded:
+        view.setExpanded(index, expanded)

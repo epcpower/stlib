@@ -21,12 +21,11 @@ __copyright__ = 'Copyright 2017, EPC Power Corp.'
 __license__ = 'GPLv2+'
 
 
-@graham.schemify('parameter')
+@graham.schemify(tag='parameter')
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Parameter(epyqlib.treenode.TreeNode):
-    type = attr.ib(default='test_parameter', init=False)
     name = attr.ib(default='New Parameter')
     value = attr.ib(default=None, convert=epyqlib.attrsmodel.to_decimal_or_none)
     uuid = epyqlib.attrsmodel.attr_uuid()
@@ -35,12 +34,11 @@ class Parameter(epyqlib.treenode.TreeNode):
         super().__init__()
 
 
-@graham.schemify('group')
+@graham.schemify(tag='group')
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Group(epyqlib.treenode.TreeNode):
-    type = attr.ib(default='test_group', init=False)
     name = attr.ib(default='New Group')
     children = attr.ib(
         default=attr.Factory(list),
@@ -126,8 +124,12 @@ def all_fields_in_columns(types, root_type, columns):
     assert missing == set(), columns_to_code(missing)
 
 
-def make_a_model(root_cls=Root, group_cls=Group, parameter_cls=Parameter,
-                 columns=columns):
+def make_a_model(
+    root_cls=Root,
+    group_cls=Group,
+    parameter_cls=Parameter,
+    columns=columns,
+):
     root = root_cls()
 
     model = epyqlib.attrsmodel.Model(
@@ -435,7 +437,10 @@ def test_prepopulated_connections(qtbot):
         expected=['37', '23'],
     )
 
-    parameter = Parameter(name='Parameter A', value=values.initial)
+    parameter = Parameter(
+        name='Parameter A',
+        value=values.initial,
+    )
 
     root = Root()
     root.append_child(parameter)
@@ -462,13 +467,13 @@ def test_prepopulated_connections(qtbot):
 
 
 def test_with_pyqtpropertys(qtbot):
-    @graham.schemify('parameter')
+    @graham.schemify(tag='pyqtproperty_parameter')
     @epyqlib.attrsmodel.ify()
     @epyqlib.utils.qt.pyqtify(
         property_decorator=lambda: PyQt5.QtCore.pyqtProperty('PyQt_PyObject'),
     )
     @attr.s(hash=False)
-    class Parameter(epyqlib.treenode.TreeNode):
+    class PyQtPropertyParameter(epyqlib.treenode.TreeNode):
         type = attr.ib(default='test_parameter', init=False)
         name = attr.ib(default='New Parameter')
         value = attr.ib(default=None,
@@ -480,17 +485,17 @@ def test_with_pyqtpropertys(qtbot):
 
     Root = epyqlib.attrsmodel.Root(
         default_name='Parameters',
-        valid_types=(Parameter, Group)
+        valid_types=(PyQtPropertyParameter, Group)
     )
 
     columns = epyqlib.attrsmodel.columns(
-        ((Parameter, 'name'),),
-        ((Parameter, 'value'),),
+        ((PyQtPropertyParameter, 'name'),),
+        ((PyQtPropertyParameter, 'value'),),
     )
 
     model = make_a_model(
         root_cls=Root,
-        parameter_cls=Parameter,
+        parameter_cls=PyQtPropertyParameter,
         columns=columns,
     )
 
@@ -584,7 +589,7 @@ def test_children_changed_signals():
     assert removed_items == [(group, parameter, 0)]
 
 
-@graham.schemify('pass_through')
+@graham.schemify(tag='pass_through')
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @epyqlib.utils.qt.pyqtify_passthrough_properties(
@@ -715,11 +720,11 @@ def test_to_int_or_none_re_locale():
 
 
 def test_two_state_checkbox():
-    @graham.schemify('parameter')
+    @graham.schemify(tag='checkbox_parameter')
     @epyqlib.attrsmodel.ify()
     @epyqlib.utils.qt.pyqtify()
     @attr.s(hash=False)
-    class Parameter(epyqlib.treenode.TreeNode):
+    class CheckboxParameter(epyqlib.treenode.TreeNode):
         type = attr.ib(default='test_parameter', init=False)
         name = attr.ib(default='New Parameter')
         value = attr.ib(
@@ -733,15 +738,15 @@ def test_two_state_checkbox():
 
     Root = epyqlib.attrsmodel.Root(
         default_name='Parameters',
-        valid_types=(Parameter, Group)
+        valid_types=(CheckboxParameter, Group)
     )
 
     columns = epyqlib.attrsmodel.columns(
         (
-            (Parameter, 'name'),
+            (CheckboxParameter, 'name'),
             (Group, 'name'),
         ),
-        ((Parameter, 'value'),),
+        ((CheckboxParameter, 'value'),),
     )
 
     root = Root()
@@ -750,7 +755,7 @@ def test_two_state_checkbox():
         columns=columns,
     )
 
-    parameter = Parameter()
+    parameter = CheckboxParameter()
     root.append_child(parameter)
 
     index = model.index_from_node(parameter)
@@ -762,7 +767,7 @@ def test_two_state_checkbox():
 
 
 def test_enumeration(qtbot):
-    @graham.schemify('leaf')
+    @graham.schemify(tag='leaf')
     @epyqlib.attrsmodel.ify()
     @epyqlib.utils.qt.pyqtify()
     @attr.s(hash=False)
@@ -781,7 +786,7 @@ def test_enumeration(qtbot):
         def __attrs_post_init__(self):
             super().__init__()
 
-    @graham.schemify('group')
+    @graham.schemify(tag='group')
     @epyqlib.attrsmodel.ify()
     @epyqlib.utils.qt.pyqtify()
     @attr.s(hash=False)

@@ -185,7 +185,7 @@ class Parameter(epyqlib.treenode.TreeNode):
     can_delete = epyqlib.attrsmodel.childless_can_delete
 
 
-@graham.schemify(tag='group')
+@graham.schemify(tag='group', register=True)
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
@@ -211,6 +211,7 @@ class Group(epyqlib.treenode.TreeNode):
                 # TODO: would be nice to self reference without a name
                 marshmallow.fields.Nested('Group'),
                 marshmallow.fields.Nested('Array'),
+                marshmallow.fields.Nested('Table'),
                 marshmallow.fields.Nested(graham.schema(Parameter)),
             )),
         ),
@@ -368,7 +369,7 @@ class InvalidArrayLength(Exception):
     pass
 
 
-@graham.schemify(tag='array')
+@graham.schemify(tag='array', register=True)
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
@@ -483,6 +484,87 @@ class Array(epyqlib.treenode.TreeNode):
         return True
 
 
+@graham.schemify(tag='table_enumeration_reference')
+@epyqlib.attrsmodel.ify()
+@epyqlib.utils.qt.pyqtify()
+@attr.s(hash=False)
+class TableEnumerationReference(epyqlib.treenode.TreeNode):
+    name = attr.ib(
+        default='New Enumeration Reference',
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(),
+        ),
+    )
+
+    uuid = epyqlib.attrsmodel.attr_uuid()
+
+    enumeration_uuid = epyqlib.attrsmodel.attr_uuid(
+        default=None,
+        allow_none=True,
+        human_name='Enumeration',
+        data_display=epyqlib.attrsmodel.name_from_uuid,
+        list_selection_root='enumerations',
+    )
+
+    def __attrs_post_init__(self):
+        super().__init__()
+
+    def can_drop_on(self, node):
+        return False
+    
+    can_delete = epyqlib.attrsmodel.childless_can_delete
+
+    def link(self, enumeration):
+        self.enumeration_uuid = enumeration.uuid
+
+
+@graham.schemify(tag='table', register=True)
+@epyqlib.attrsmodel.ify()
+@epyqlib.utils.qt.pyqtify()
+@attr.s(hash=False)
+class Table(epyqlib.treenode.TreeNode):
+    name = attr.ib(
+        default='New Table',
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(),
+        ),
+    )
+
+    children = attr.ib(
+        default=attr.Factory(list),
+        cmp=False,
+        metadata=graham.create_metadata(
+            field=graham.fields.MixedList(fields=(
+                marshmallow.fields.Nested(graham.schema(Array)),
+                marshmallow.fields.Nested(graham.schema(
+                    TableEnumerationReference,
+                )),
+            )),
+        ),
+    )
+    uuid = epyqlib.attrsmodel.attr_uuid()
+
+    def __attrs_post_init__(self):
+        super().__init__()
+
+    def can_drop_on(self, node):
+        return isinstance(node, tuple(self.addable_types().values()))
+
+    def can_delete(self, node=None):
+        if node is None:
+            return self.tree_parent.can_delete(node=self)
+
+        if node not in self.children:
+            raise epyqlib.attrsmodel.ConsistencyError(
+                'Specified node not found in children'
+            )
+
+        if len(self.children) > 1:
+            return False
+
+        return True
+
+
 @graham.schemify(tag='enumerator')
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
@@ -512,7 +594,7 @@ class Enumerator(epyqlib.treenode.TreeNode):
     can_delete = epyqlib.attrsmodel.childless_can_delete
 
 
-@graham.schemify(tag='enumeration')
+@graham.schemify(tag='enumeration', register=True)
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
@@ -592,7 +674,7 @@ class AccessLevel(epyqlib.treenode.TreeNode):
     can_delete = epyqlib.attrsmodel.childless_can_delete
 
 
-@graham.schemify(tag='access_levels')
+@graham.schemify(tag='access_levels', register=True)
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
@@ -665,6 +747,8 @@ types = epyqlib.attrsmodel.Types(
         Enumerations,
         AccessLevel,
         AccessLevels,
+        Table,
+        TableEnumerationReference,
     ),
 )
 
@@ -680,6 +764,7 @@ columns = epyqlib.attrsmodel.columns(
     merge('length', Array),
     merge('named_enumerators', Array),
     merge('units', Parameter),
+    merge('enumeration_uuid', Parameter, TableEnumerationReference),
 
     merge('value', Enumerator, AccessLevel),
     merge('default', Parameter, ArrayParameterElement),
@@ -701,7 +786,6 @@ columns = epyqlib.attrsmodel.columns(
     merge('original_multiplexer_name', Parameter),
     merge('original_signal_name', Parameter),
 
-    merge('enumeration_uuid', Parameter),
     merge('parameter_uuid', Parameter),
     merge('uuid', *types.types.values()),
 

@@ -552,9 +552,10 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
             model_index,
             epyqlib.pyqabstractitemmodel.UserRoles.raw,
         )
-        target_node = model.node_from_uuid(target_uuid)
-        target_index = model.index_from_node(target_node)
-        editor.setCurrentIndex(target_index.row())
+        if target_uuid is not None:
+            target_node = model.node_from_uuid(target_uuid)
+            target_index = model.index_from_node(target_node)
+            editor.setCurrentIndex(target_index.row())
 
         editor.showPopup()
 
