@@ -120,7 +120,7 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
     def _transaction_over(self):
         self.setTimeout(None)
         import twisted.internet
-        twisted.internet.reactor.callLater(0.02, self._transaction_over_after_delay)
+        twisted.internet.reactor.callLater(0, self._transaction_over_after_delay)
         d = self._deferred
         self._deferred = None
         self._request_memory = None
