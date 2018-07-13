@@ -773,7 +773,11 @@ def get_die_path(die):
     while die._parent is not None:
         die = die._parent
 
-        name = die.attributes['DW_AT_name'].value.decode('utf-8')
+        attribute = die.attributes.get('DW_AT_name')
+        if attribute is None:
+            name = '<unknown>'
+        else:
+            name = attribute.value.decode('utf-8')
         name = name.lstrip('./')
         path.append(name)
 
@@ -906,7 +910,10 @@ def process_file(filename):
 
     variables = []
     for die in objects['DW_TAG_variable']:
-        location = die.attributes['DW_AT_location'].value
+        location = die.attributes.get('DW_AT_location', [])
+        if location:
+            location = location.value
+
         # TODO: check this better
         if len(location) != 5:
             continue
