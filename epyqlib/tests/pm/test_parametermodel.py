@@ -1,5 +1,6 @@
 import collections
 import json
+import pathlib
 
 import attr
 import graham
@@ -7,6 +8,10 @@ import pytest
 from PyQt5 import QtCore
 
 import epyqlib.pm.parametermodel
+
+
+with open(pathlib.Path(__file__).with_suffix('.json')) as f:
+    serialized_sample = f.read()
 
 
 @attr.s
@@ -309,187 +314,3 @@ def test_all_fields_in_columns():
         root_type=epyqlib.pm.parametermodel.Root,
         columns=epyqlib.pm.parametermodel.columns,
     )
-
-
-serialized_sample = '''\
-{
-    "_type": "root",
-    "name": "Parameters",
-    "children": [
-        {
-            "_type": "group",
-            "name": "Group A",
-            "type_name": null,
-            "children": [
-                {
-                    "_type": "parameter",
-                    "name": "Parameter A A",
-                    "type_name": null,
-                    "default": null,
-                    "minimum": null,
-                    "maximum": null,
-                    "units": null,
-                    "enumeration_uuid": null,
-                    "decimal_places": null,
-                    "display_hexadecimal": false,
-                    "nv_format": null,
-                    "nv_factor": null,
-                    "nv_cast": false,
-                    "read_only": false,
-                    "access_level_uuid": null,
-                    "parameter_uuid": null,
-                    "comment": null,
-                    "original_frame_name": null,
-                    "original_multiplexer_name": null,
-                    "original_signal_name": null,
-                    "uuid": "fd184494-35a2-4b3a-970c-9a3d98cc15cd"
-                },
-                {
-                    "_type": "group",
-                    "name": "Group A B",
-                    "type_name": null,
-                    "children": [],
-                    "uuid": "5db07237-82c8-488f-925b-1a2a2802fb5b"
-                },
-                {
-                    "_type": "table",
-                    "name": "Table A",
-                    "children": [],
-                    "uuid": "58b7bf0d-4dec-4707-a976-d49a856eb3ba"
-                }
-            ],
-            "uuid": "78fb0043-b46f-4198-86ed-3ba8d48bf4c8"
-        },
-        {
-            "_type": "parameter",
-            "name": "Parameter B",
-            "type_name": null,
-            "default": "42",
-            "minimum": null,
-            "maximum": null,
-            "units": null,
-            "enumeration_uuid": null,
-            "decimal_places": null,
-            "display_hexadecimal": false,
-            "nv_format": null,
-            "nv_factor": null,
-            "nv_cast": false,
-            "read_only": false,
-            "access_level_uuid": null,
-            "parameter_uuid": null,
-            "comment": null,
-            "original_frame_name": null,
-            "original_multiplexer_name": null,
-            "original_signal_name": null,
-            "uuid": "ee545382-a651-479b-9dc2-a4c3d42c230c"
-        },
-        {
-            "_type": "group",
-            "name": "Group C",
-            "type_name": null,
-            "children": [],
-            "uuid": "7878effc-2d29-4719-bf0d-192e18d0f27c"
-        },
-        {
-            "_type": "enumerations",
-            "name": "Enumerations",
-            "children": [
-                {
-                    "_type": "enumeration",
-                    "name": "Letters",
-                    "children": [
-                        {
-                            "_type": "enumerator",
-                            "name": "a",
-                            "value": null,
-                            "uuid": "a2cf0c0c-c55a-4a0c-b830-571b5abe089b"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "b",
-                            "value": null,
-                            "uuid": "effdff81-7da1-4cd8-863f-44f33c75813e"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "c",
-                            "value": null,
-                            "uuid": "2902368d-352e-441b-99e0-45998bad0d6d"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "d",
-                            "value": null,
-                            "uuid": "37ffb8b2-668a-46e1-a0d9-6a561ad5db7c"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "e",
-                            "value": null,
-                            "uuid": "519d3d04-239b-4423-9693-c961ca955c34"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "f",
-                            "value": null,
-                            "uuid": "c23a395a-dbd0-46f2-ae10-ee057ea098d5"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "g",
-                            "value": null,
-                            "uuid": "23195ab8-b62e-4cb0-a521-5b774ae7c3e5"
-                        }
-                    ],
-                    "uuid": "fd1b8036-8aef-4914-9165-ed3118bd8ecd"
-                },
-                {
-                    "_type": "enumeration",
-                    "name": "numbers",
-                    "children": [
-                        {
-                            "_type": "enumerator",
-                            "name": "1",
-                            "value": null,
-                            "uuid": "165ccc7b-7ffc-4546-add2-11f0855f86d1"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "2",
-                            "value": null,
-                            "uuid": "64e3e07c-dd4f-439a-850c-69508bfd545c"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "3",
-                            "value": null,
-                            "uuid": "98f4f322-06ee-44bd-8063-4b174af22b2c"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "4",
-                            "value": null,
-                            "uuid": "d152135a-991c-464e-bee0-81115f9159b6"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "5",
-                            "value": null,
-                            "uuid": "371a8511-a6d4-4c9c-be5c-5cc6cba6e190"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "6",
-                            "value": null,
-                            "uuid": "6f448d09-1b42-432d-ac07-5e1470e70e3e"
-                        }
-                    ],
-                    "uuid": "86111e99-624c-499e-a560-6a77db461e43"
-                }
-            ],
-            "uuid": "4f71f673-af26-4c70-8d3e-910902163e98"
-        }
-    ],
-    "uuid": "ce63b990-8061-4b9f-9ad7-d2b60fe8b4c9"
-}
-'''
