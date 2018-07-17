@@ -108,6 +108,11 @@ operator_map = {
     '>': operator.gt,
 }
 
+reverse_operator_map = {
+    v: k
+    for k, v in operator_map.items()
+}
+
 
 @attr.s
 class Signal:
@@ -141,11 +146,19 @@ class Signal:
     @twisted.internet.defer.inlineCallbacks
     def wait_for(self, op, value, timeout):
         op = operator_map.get(op, op)
+        operator_string = reverse_operator_map.get(op, str(op))
 
         def check():
             return op(self.get(), value)
 
-        yield epyqlib.utils.twisted.wait_for(check, timeout=timeout)
+        yield epyqlib.utils.twisted.wait_for(
+            check=check,
+            timeout=timeout,
+            message=(
+                f'{self.signal.name} not {operator_string} {value} '
+                f'within {timeout:.1f} seconds'
+            ),
+        )
 
     def scaling_factor(self):
         return self.signal.factor
@@ -206,13 +219,21 @@ class Nv:
     @twisted.internet.defer.inlineCallbacks
     def wait_for(self, op, value, timeout):
         op = operator_map.get(op, op)
+        operator_string = reverse_operator_map.get(op, str(op))
 
         @twisted.internet.defer.inlineCallbacks
         def check():
             own_value = yield self.get_value()
             return op(own_value, value)
 
-        yield epyqlib.utils.twisted.wait_for(check, timeout=timeout)
+        yield epyqlib.utils.twisted.wait_for(
+            check=check,
+            timeout=timeout,
+            message=(
+                f'{self.nv.name} not {operator_string} {value} '
+                f'within {timeout:.1f} seconds'
+            ),
+        )
 
 
 @attr.s

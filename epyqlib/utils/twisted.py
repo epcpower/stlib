@@ -23,7 +23,10 @@ class WaitForTimedOut(Exception):
 
 
 @twisted.internet.defer.inlineCallbacks
-def wait_for(check, period=0.1, timeout=10):
+def wait_for(check, period=0.1, timeout=10, message=None):
+    if message is None:
+        message = f'Condition not satisfied within {timeout:.1f} seconds'
+
     start = time.monotonic()
 
     while True:
@@ -32,9 +35,7 @@ def wait_for(check, period=0.1, timeout=10):
             return
 
         if time.monotonic() - start > timeout:
-            raise WaitForTimedOut(
-                f'Condition not satisfied within {timeout:.1f} seconds',
-            )
+            raise WaitForTimedOut(message)
 
         yield epyqlib.utils.twisted.sleep(period)
 
