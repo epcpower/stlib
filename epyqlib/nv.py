@@ -6,6 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 import attr
+import collections
 import can
 import enum
 from epyqlib.abstractcolumns import AbstractColumns
@@ -650,7 +651,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                   "from dict".format(name))
 
     def from_value_set(self, value_set):
-        only_in_file = value_set.model.root.nodes_by_filter(
+        parameter_nodes = value_set.model.root.nodes_by_filter(
             filter=lambda node: isinstance(
                 node,
                 epyqlib.pm.valuesetmodel.Parameter,
@@ -658,7 +659,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         )
         only_in_file = {
             parameter.name
-            for parameter in only_in_file
+            for parameter in parameter_nodes
         }
         only_in_file = {
             (name, meta)
@@ -668,17 +669,14 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             )
         }
 
+        d = collections.defaultdict(list)
+        for parameter in parameter_nodes:
+            d[parameter.name].append(parameter)
+
         for child in self.all_nv():
             name = child.fields.name
 
-            try:
-                parameters = value_set.model.root.nodes_by_attribute(
-                    attribute_value=name,
-                    attribute_name='name',
-                )
-            except epyqlib.treenode.NotFoundError:
-                parameters = []
-
+            parameters = d.get(name, [])
 
             not_found_format = (
                 "Nv value named '{}' ({{}}) not found when loading "
