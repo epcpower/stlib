@@ -10,6 +10,7 @@ import twisted.internet.defer
 
 import epyqlib.canneo
 import epyqlib.nv
+import epyqlib.utils.twisted
 
 
 class FormatVersionError(Exception):
@@ -217,13 +218,20 @@ class Nv:
         return value
 
     @twisted.internet.defer.inlineCallbacks
-    def wait_for(self, op, value, timeout):
+    def wait_for(self, op, value, timeout, ignore_read_failures=False):
         op = operator_map.get(op, op)
         operator_string = reverse_operator_map.get(op, str(op))
 
         @twisted.internet.defer.inlineCallbacks
         def check():
-            own_value = yield self.get_value()
+            try:
+                own_value = yield self.get()
+            except epyqlib.twisted.nvs.RequestTimeoutError:
+                if ignore_read_failures:
+                    return False
+
+                raise
+
             return op(own_value, value)
 
         yield epyqlib.utils.twisted.wait_for(
@@ -247,6 +255,8 @@ class Device:
     cyclic_frames = attr.ib(default=attr.Factory(set))
     default_elevated_access_level = attr.ib(default=None)
     default_access_level_password = attr.ib(default=None)
+    save_nv = attr.ib(default=None)
+    save_nv_value = attr.ib(default=None)
     uuid = attr.ib(default=uuid.uuid4)
 
     def load(self):
@@ -282,6 +292,12 @@ class Device:
             access_password_path=self.definition.access_password_path,
         )
 
+        self.save_nv = self.nv(
+            self.nvs.save_frame.mux_name,
+            self.nvs.save_signal.name,
+        )
+        self.save_nv_value = self.nvs.save_value
+
     def set_bus(self, bus):
         if self.bus is not None:
             raise BusAlreadySetError()
@@ -310,6 +326,26 @@ class Device:
         return Nv(
             nv=self.nvs.signal_from_names(*path),
             device=self,
+        )
+
+    @twisted.internet.defer.inlineCallbacks
+    def active_to_nv(self, wait=False):
+        yield self.save_nv.set(value=self.save_nv_value)
+
+        if wait:
+            yield self.wait_for_nv_save_completion()
+
+    @twisted.internet.defer.inlineCallbacks
+    def wait_for_nv_save_completion(self):
+        nv = self.nv('StatusWarnings', 'eeSaveInProgress')
+
+        yield epyqlib.utils.twisted.sleep(2)
+
+        yield nv.wait_for(
+            op='==',
+            value=0,
+            timeout=120,
+            ignore_read_failures=True,
         )
 
     def cyclic_send_signal(self, signal, period):
