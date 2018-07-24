@@ -1,19 +1,12 @@
-#!/usr/bin/env python3
-
-#TODO: """DocString if there is one"""
-
-import enum
-import functools
 import io
 import os
-import weakref
 from PyQt5 import QtWidgets, uic
 from PyQt5.QtCore import (pyqtProperty, pyqtSlot, Qt, QFile,
                           QFileInfo, QTextStream)
 from PyQt5.QtGui import QFontMetrics
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
+__copyright__ = 'Copyright 2018, EPC Power Corp.'
 __license__ = 'GPLv2+'
 
 
@@ -23,15 +16,6 @@ styles = {
     'blue': "background-color: rgba(255, 255, 255, 0);"
                            "color: rgba(85, 85, 255, 25);"
 }
-
-
-def parent_resizeEvent(event, child, parent_resizeEvent):
-    child = child()
-    if child is not None:
-        child.resize(event.size())
-        parent = parent_resizeEvent()
-        if parent is not None:
-            parent(event)
 
 
 class OverlayLabel(QtWidgets.QWidget):
@@ -53,17 +37,6 @@ class OverlayLabel(QtWidgets.QWidget):
         sio = io.StringIO(ts.readAll())
         self.ui = uic.loadUi(sio, self)
 
-        parent_widget = self.parentWidget()
-
-        if parent_widget is not None:
-            new_resizeEvent = functools.partial(
-                parent_resizeEvent,
-                child=weakref.ref(self),
-                parent_resizeEvent=weakref.ref(parent_widget.resizeEvent)
-            )
-
-            parent_widget.resizeEvent = new_resizeEvent
-
         self.setStyleSheet(styles['red'])
 
         self.ui.setAttribute(Qt.WA_TransparentForMouseEvents)
@@ -71,8 +44,13 @@ class OverlayLabel(QtWidgets.QWidget):
         self._width_ratio = 0.8
         self._height_ratio = 0.8
 
-        if parent_widget is not None:
-            self.update_overlay_size(parent_widget.size())
+    @pyqtProperty(str)
+    def text(self):
+        self.ui.label.text()
+
+    @text.setter
+    def text(self, text):
+        self.ui.label.setText(text)
 
     @pyqtProperty(float)
     def width_ratio(self):
@@ -114,35 +92,5 @@ class OverlayLabel(QtWidgets.QWidget):
             (size.height() * self.height_ratio) / rect.height()
         )
 
-        self.label.setStyleSheet('font-size: {}px; font-weight: bold'.format(
+        self.ui.label.setStyleSheet('font-size: {}px; font-weight: bold'.format(
             round(min(pixel_size_width, pixel_size_height))))
-
-
-class OverlayWidget(QtWidgets.QWidget):
-    def __init__(self, parent=None, in_designer=False):
-        super().__init__(parent=parent)
-
-        self.in_designer = in_designer
-
-        parent_widget = self.parentWidget()
-
-        if parent_widget is not None:
-            new_resizeEvent = functools.partial(
-                parent_resizeEvent,
-                child=weakref.ref(self),
-                parent_resizeEvent=weakref.ref(parent_widget.resizeEvent)
-            )
-
-            parent_widget.resizeEvent = new_resizeEvent
-
-        self.setAttribute(Qt.WA_TransparentForMouseEvents)
-
-    def resizeEvent(self, event):
-        QtWidgets.QWidget.resizeEvent(self, event)
-
-
-if __name__ == '__main__':
-    import sys
-
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure

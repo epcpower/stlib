@@ -49,13 +49,13 @@ import epyqlib.updateepc
 from epyqlib.widgets.abstractwidget import AbstractWidget
 from PyQt5 import uic
 from PyQt5.QtCore import (pyqtSlot, Qt, QFile, QFileInfo, QTextStream, QObject,
-                          QSortFilterProxyModel, QIODevice)
+                          QSortFilterProxyModel, QIODevice, QTimer)
 from PyQt5.QtWidgets import (
-    QWidget, QMessageBox, QInputDialog, QLineEdit, QVBoxLayout)
+    QWidget, QMessageBox, QInputDialog, QLineEdit, QVBoxLayout, QStackedLayout)
 from PyQt5 import QtCore
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
+__copyright__ = 'Copyright 2018, EPC Power Corp.'
 __license__ = 'GPLv2+'
 
 
@@ -969,27 +969,15 @@ class Device:
             can_configuration.monitor_frame,
         )
 
-        self.connection_monitor = FrameTimeout(frame=monitor_frame)
-
-        self.overlay_widget = epyqlib.overlaylabel.OverlayWidget(
-            parent=self.ui,
+        self.ui.overlay_stack.layout().setStackingMode(
+            QStackedLayout.StackingMode.StackAll,
         )
-        layout = QVBoxLayout()
-        self.overlay_widget.setLayout(layout)
+        self.ui.overlays.setAttribute(Qt.WA_TransparentForMouseEvents)
 
-        self.ui.offline_overlay = epyqlib.overlaylabel.OverlayLabel()
-        self.ui.offline_overlay.label.setText('offline')
-        layout.addWidget(self.ui.offline_overlay)
-
-
-        self.ui.connection_monitor_overlay = epyqlib.overlaylabel.OverlayLabel()
-        layout.addWidget(self.ui.connection_monitor_overlay)
-
+        self.connection_monitor = FrameTimeout(frame=monitor_frame)
         self.connection_monitor.lost.connect(self.connection_status_changed)
         self.connection_monitor.found.connect(self.connection_status_changed)
-
         self.connection_monitor.found.connect(self.read_nv_widget_min_max)
-
         self.connection_monitor.start()
 
         notifiees.append(self.connection_monitor)

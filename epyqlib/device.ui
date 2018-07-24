@@ -15,95 +15,129 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QTabWidget" name="tabs">
-     <property name="currentIndex">
-      <number>1</number>
-     </property>
-     <widget class="QWidget" name="txrx">
-      <attribute name="title">
-       <string>Tx/Rx</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <item>
-        <widget class="QSplitter" name="splitter">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
+    <widget class="QStackedWidget" name="overlay_stack">
+     <widget class="QWidget" name="overlays">
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="0">
+        <widget class="OverlayLabel" name="offline_overlay" native="true">
+         <property name="text" stdset="0">
+          <string>offline</string>
          </property>
-         <widget class="QWidget" name="layoutWidget">
-          <layout class="QVBoxLayout" name="verticalLayout_2">
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="OverlayLabel" name="connection_monitor_overlay" native="true"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="main_stack">
+      <layout class="QGridLayout" name="gridLayout_2">
+       <property name="leftMargin">
+        <number>0</number>
+       </property>
+       <property name="topMargin">
+        <number>0</number>
+       </property>
+       <property name="rightMargin">
+        <number>0</number>
+       </property>
+       <property name="bottomMargin">
+        <number>0</number>
+       </property>
+       <item row="0" column="0">
+        <widget class="QTabWidget" name="tabs">
+         <property name="currentIndex">
+          <number>1</number>
+         </property>
+         <widget class="QWidget" name="txrx">
+          <attribute name="title">
+           <string>Tx/Rx</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_3">
            <item>
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>Transmit</string>
+            <widget class="QSplitter" name="splitter">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
              </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
+             <widget class="QWidget" name="layoutWidget">
+              <layout class="QVBoxLayout" name="verticalLayout_2">
+               <item>
+                <widget class="QLabel" name="label">
+                 <property name="text">
+                  <string>Transmit</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="TxRxView" name="tx" native="true"/>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="layoutWidget_2">
+              <layout class="QVBoxLayout" name="verticalLayout_5">
+               <item>
+                <widget class="QLabel" name="label_2">
+                 <property name="text">
+                  <string>Receive</string>
+                 </property>
+                 <property name="alignment">
+                  <set>Qt::AlignCenter</set>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="TxRxView" name="rx" native="true"/>
+               </item>
+              </layout>
+             </widget>
             </widget>
-           </item>
-           <item>
-            <widget class="TxRxView" name="tx"/>
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="layoutWidget_2">
-          <layout class="QVBoxLayout" name="verticalLayout_5">
+         <widget class="QWidget" name="variables">
+          <attribute name="title">
+           <string>Data Logger</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_6">
            <item>
-            <widget class="QLabel" name="label_2">
-             <property name="text">
-              <string>Receive</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignCenter</set>
-             </property>
-            </widget>
+            <widget class="VariableSelection" name="variable_selection" native="true"/>
            </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="nv">
+          <attribute name="title">
+           <string>Parameters</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_4">
            <item>
-            <widget class="TxRxView" name="rx"/>
+            <widget class="NvView" name="nv" native="true"/>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="scripting">
+          <attribute name="title">
+           <string>Scripting</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="0" column="0">
+            <widget class="ScriptingView" name="scripting_view" native="true"/>
+           </item>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="faultlog">
+          <attribute name="title">
+           <string>Fault Log</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="0" column="0">
+            <widget class="FaultLogView" name="fault_log_view" native="true"/>
            </item>
           </layout>
          </widget>
         </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="variables">
-      <attribute name="title">
-       <string>Data Logger</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_6">
-       <item>
-        <widget class="VariableSelection" name="variable_selection"/>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="nv">
-      <attribute name="title">
-       <string>Parameters</string>
-      </attribute>
-      <layout class="QVBoxLayout" name="verticalLayout_4">
-       <item>
-        <widget class="NvView" name="nv"/>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="scripting">
-      <attribute name="title">
-       <string>Scripting</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0">
-        <widget class="ScriptingView" name="scripting_view"/>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="faultlog">
-      <attribute name="title">
-       <string>Fault Log</string>
-      </attribute>
-      <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="0">
-        <widget class="FaultLogView" name="fault_log_view"/>
        </item>
       </layout>
      </widget>
@@ -136,6 +170,11 @@
    <class>FaultLogView</class>
    <extends>QWidget</extends>
    <header>epyqlib.faultlogview</header>
+  </customwidget>
+  <customwidget>
+   <class>OverlayLabel</class>
+   <extends>QWidget</extends>
+   <header>epyqlib.overlaylabel</header>
   </customwidget>
  </customwidgets>
  <resources/>
