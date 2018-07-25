@@ -304,6 +304,12 @@ class Variables(epyqlib.treenode.TreeNode):
         return id(self)
 
 
+@attr.s
+class CacheAndRawChunks:
+    cache = attr.ib()
+    raw_chunks = attr.ib()
+
+
 class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
     binary_loaded = pyqtSignal()
 
@@ -631,7 +637,9 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             block_header_type=x
         )
 
-        cache = self.create_log_cache(block_header_node)
+        cache_and_raw_chunk = self.create_log_cache(block_header_node)
+        cache = cache_and_raw_chunk.cache
+        raw_chunks = cache_and_raw_chunk.raw_chunks
 
         [x] = self.names['DataLogger_RecordHeader']
         # TODO: hardcoded 32-bit addressing and offset assumption
@@ -655,6 +663,15 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 reference=node
             )
             cache.add(chunk)
+
+        raw_chunks.insert(0, cache.new_chunk(
+            address=record_header_node.variable.address,
+            bytes=(
+                b'\x00'
+                * record_header_node.variable.type.bytes
+                * (self.bits_per_byte // 8)
+            ),
+        ))
 
         if self.git_hash is not None:
             [hash_node] = [n for n in block_header_node.children
@@ -691,7 +708,8 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             csv_path=csv_path,
             data_stream=data_stream,
             variables_and_chunks=variables_and_chunks,
-            sample_period_us=sample_period_us
+            sample_period_us=sample_period_us,
+            raw_chunks=raw_chunks,
         )
 
         return d
@@ -721,7 +739,16 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             return False
 
         cache = self.create_cache(test=contained_by_a_chunk, subscribe=False)
-        return cache
+        raw_chunks = [
+            cache.new_chunk(
+                address=address,
+                bytes=b'\x00' * size * (self.bits_per_byte // 8),
+            )
+            for address, size in chunk_ranges
+            if address != 0 and size != 0
+        ]
+
+        return CacheAndRawChunks(cache=cache, raw_chunks=raw_chunks)
 
     def parse_block_header_into_node(self, raw_header, bits_per_byte, block_header_type):
         # TODO: hardcoded 32-bit addressing and offset assumption

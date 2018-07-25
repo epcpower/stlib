@@ -171,8 +171,14 @@ def pull_raw_log(device, bus=None, parent=None):
     return logger.pull_raw_log(path=filename)
 
 
-def generate_records(cache, chunks, data_stream, variables_and_chunks,
-                     sample_period_us):
+def generate_records(
+        cache,
+        chunks,
+        data_stream,
+        variables_and_chunks,
+        sample_period_us,
+        raw_chunks,
+):
     chunk_list = list(chunks)
 
     scaling_cache = {}
@@ -211,7 +217,7 @@ def generate_records(cache, chunks, data_stream, variables_and_chunks,
             )
             cache.subscribe(partial, chunk)
 
-        for chunk in chunk_list:
+        for chunk in raw_chunks:
             chunk_bytes = bytearray(
                 data_stream.read(len(chunk)))
             if len(chunk_bytes) != len(chunk):
@@ -226,13 +232,28 @@ def generate_records(cache, chunks, data_stream, variables_and_chunks,
         yield row
 
 
-def parse_log(cache, chunks, csv_path, data_stream, variables_and_chunks,
-              sample_period_us):
+def parse_log(
+        cache,
+        chunks,
+        csv_path,
+        data_stream,
+        variables_and_chunks,
+        sample_period_us,
+        raw_chunks,
+):
     with open(csv_path, 'w', newline='') as f:
         writer = None
 
-        for row in generate_records(cache, chunks, data_stream,
-                                    variables_and_chunks, sample_period_us):
+        records = generate_records(
+            cache=cache,
+            chunks=chunks,
+            data_stream=data_stream,
+            variables_and_chunks=variables_and_chunks,
+            sample_period_us=sample_period_us,
+            raw_chunks=raw_chunks,
+        )
+
+        for row in records:
             if writer is None:
                 writer = csv.DictWriter(
                     f,
