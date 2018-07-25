@@ -502,7 +502,7 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 # TODO: CAMPid 0457543543696754329525426
                 chunk = cache.new_chunk(
                     address=int(node.fields.address, 16),
-                    bytes=b'\x00' * node.fields.size * (self.bits_per_byte // 8),
+                    bytes=self.zero_bytes(node.fields.size),
                     reference=node
                 )
                 cache.add(chunk)
@@ -521,6 +521,9 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         )
 
         return cache
+
+    def zero_bytes(self, length):
+        return b'\x00' * (self.bits_per_byte // 8) * length
 
     def update_chunk(self, data, node):
         node.chunk_updated(data)
@@ -553,7 +556,7 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 # TODO: CAMPid 0457543543696754329525426
                 chunk = self.cache.new_chunk(
                     address=int(node.fields.address, 16),
-                    bytes=b'\x00' * node.fields.size * (self.bits_per_byte // 8),
+                    bytes=self.zero_bytes(node.fields.size),
                     reference=node
                 )
                 self.cache.add(chunk)
@@ -658,19 +661,14 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         for node in record_header_node.leaves():
             chunk = cache.new_chunk(
                 address=int(node.fields.address, 16),
-                bytes=b'\x00' * node.fields.size
-                      * (self.bits_per_byte // 8),
+                bytes=self.zero_bytes(node.fields.size),
                 reference=node
             )
             cache.add(chunk)
 
         raw_chunks.insert(0, cache.new_chunk(
             address=record_header_node.variable.address,
-            bytes=(
-                b'\x00'
-                * record_header_node.variable.type.bytes
-                * (self.bits_per_byte // 8)
-            ),
+            bytes=self.zero_bytes(record_header_node.variable.type.bytes),
         ))
 
         if self.git_hash is not None:
@@ -742,7 +740,7 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         raw_chunks = [
             cache.new_chunk(
                 address=address,
-                bytes=b'\x00' * size * (self.bits_per_byte // 8),
+                bytes=self.zero_bytes(size),
             )
             for address, size in chunk_ranges
             if address != 0 and size != 0
@@ -767,8 +765,7 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         for node in block_header_node.leaves():
             chunk = block_header_cache.new_chunk(
                 address=int(node.fields.address, 16),
-                bytes=b'\x00' * node.fields.size
-                      * (bits_per_byte // 8),
+                bytes=self.zero_bytes(node.fields.size),
                 reference=node
             )
             block_header_cache.add(chunk)
@@ -776,8 +773,7 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             block_header_cache.subscribe(node.chunk_updated, chunk)
         block_header_chunk = block_header_cache.new_chunk(
             address=int(block_header_node.fields.address, 16),
-            bytes=b'\x00' * block_header_node.fields.size
-                  * (bits_per_byte // 8)
+            bytes=self.zero_bytes(block_header_node.fields.size),
         )
         block_header_chunk.set_bytes(raw_header)
         block_header_cache.update(block_header_chunk)
@@ -832,7 +828,7 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         # TODO: just call get_variable_value()?
         chunk = self.cache.new_chunk(
             address=int(variable.fields.address, 16),
-            bytes=b'\x00' * variable.fields.size * (self.bits_per_byte // 8)
+            bytes=self.zero_bytes(variable.fields.size),
         )
 
         # TODO: hardcoded station address, tsk-tsk
