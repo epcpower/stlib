@@ -35,14 +35,10 @@ class TxRxView(QtWidgets.QWidget):
     def setModel(self, model):
         self.ui.tree_view.setModel(model)
 
-        tx = self.nonproxy_model().root.tx
-        if tx:
-            self.ui.searchbox.connect_to_view(
-                view=self.ui.tree_view,
-                column=epyqlib.txrx.Columns.indexes.name,
-            )
-
-        self.ui.searchbox.setHidden(not tx)
+        self.ui.searchbox.connect_to_view(
+            view=self.ui.tree_view,
+            column=epyqlib.txrx.Columns.indexes.name,
+        )
 
         self.ui.tree_view.header().setStretchLastSection(False)
 
