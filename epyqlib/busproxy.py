@@ -155,7 +155,7 @@ class BusProxy:
 
         if was_online:
             if isinstance(self.bus, can.BusABC):
-                self.real_notifier.running.clear()
+                self.real_notifier.stop()
                 time.sleep(1.1 * self.timeout)
             else:
                 self.bus.notifier.remove(self.notifier)
