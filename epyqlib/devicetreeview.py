@@ -106,6 +106,8 @@ class DeviceTreeView(QtWidgets.QWidget):
         flash_action = None
         pull_raw_log_action = None
         check_compatibility_action = None
+        write_to_epz_action = None
+        blink_action = None
 
         menu = QMenu()
         if isinstance(node, epyqlib.devicetree.Device):
@@ -115,11 +117,11 @@ class DeviceTreeView(QtWidgets.QWidget):
             pull_raw_log_action = menu.addAction('Pull Raw Log...')
             pull_raw_log_action.setEnabled(offline)
 
-            write_to_epz = menu.addAction('Write To Epz...')
-            write_to_epz.setEnabled(not node.device.from_zip)
+            write_to_epz_action = menu.addAction('Write To Epz...')
+            write_to_epz_action.setEnabled(not node.device.from_zip)
             # TODO: stdlib zipfile can't create an encrypted .zip
             #       make a good solution that will...
-            write_to_epz.setVisible(False)
+            write_to_epz_action.setVisible(False)
 
             check_compatibility_action = menu.addAction('Check Compatibility')
             check_compatibility_action.setEnabled(not offline)
@@ -131,6 +133,11 @@ class DeviceTreeView(QtWidgets.QWidget):
             flash_action.setEnabled(
                 not node._checked.name
                 and not node.fields.name == 'Offline'
+            )
+            blink_action = menu.addAction('Blink adapter')
+            blink_action.setEnabled(
+                node.interface == 'pcan'
+                and node.bus.bus is not None
             )
 
         action = menu.exec_(self.ui.tree_view.viewport().mapToGlobal(position))
@@ -150,10 +157,15 @@ class DeviceTreeView(QtWidgets.QWidget):
                        channel=node.channel)
         elif action is pull_raw_log_action:
             self.pull_raw_log(node=node)
-        elif action is write_to_epz:
+        elif action is write_to_epz_action:
             self.write_to_epz(device=node.device)
         elif action is check_compatibility_action:
             self.check_compatibility(device=node.device)
+        elif action is blink_action:
+            self.blink(bus=node.bus)
+
+    def blink(self, bus):
+        bus.flash()
 
     def check_compatibility(self, device):
         shas = device.shas

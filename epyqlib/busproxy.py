@@ -9,6 +9,7 @@ import time
 
 from epyqlib.canneo import QtCanListener
 import epyqlib.utils.qt
+from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication
 
 # See file COPYING in this source tree
@@ -32,6 +33,11 @@ class BusProxy:
         self.set_bus(bus)
 
         self._transmit = transmit
+
+        self.flash_timer = QtCore.QTimer()
+        self.flash_timer.setSingleShot(True)
+        self.flash_timer.setInterval(10 * 1000)
+        self.flash_timer.timeout.connect(self.stop_flashing)
 
     @property
     def transmit(self):
@@ -149,7 +155,13 @@ class BusProxy:
 
     def flash(self):
         if self.bus is not None:
-            return self.bus.flash()
+            result = self.bus.flash(True)
+            self.flash_timer.start()
+            return result
+
+    def stop_flashing(self):
+        if self.bus is not None:
+            return self.bus.flash(False)
 
     def terminate(self):
         self.set_bus()
