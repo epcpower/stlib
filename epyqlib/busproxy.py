@@ -92,9 +92,14 @@ class BusProxy:
                 #       messages later
                 msg.timestamp = None
 
-                # TODO: I would use message=message (or msg=msg) but:
-                #       https://bitbucket.org/hardbyte/python-can/issues/52/inconsistent-send-signatures
-                self.bus.send(msg)
+                try:
+                    # TODO: I would use message=message (or msg=msg) but:
+                    #       https://bitbucket.org/hardbyte/python-can/issues/52/inconsistent-send-signatures
+                    self.bus.send(msg)
+                except can.CanError:
+                    # TODO: specifically implemented for a transmit queue
+                    #       full situation to avoid infinite dialogs
+                    self.set_bus()
 
                 # TODO: get a real value for sent, but for now python-can
                 #       doesn't provide that info.  also, it would be async...
