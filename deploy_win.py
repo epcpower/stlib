@@ -226,7 +226,7 @@ with open(third_party_license, 'w', encoding='utf-8', newline='\n') as out:
     licenses = [
         ('bitstruct', ('venv', 'src', 'bitstruct', 'LICENSE'), None, False),
         ('canmatrix', ('venv', 'src', 'canmatrix', 'LICENSE'), None, False),
-        ('python-can', ('venv', 'src', 'python-can', 'LICENSE.txt'), None, False),
+        ('python-can', (), 'https://raw.githubusercontent.com/hardbyte/python-can/develop/LICENSE.txt', False),
         ('Python', (os.environ['PYTHON'], 'LICENSE.txt'), None, False),
         ('PyQt5', (pyqt5_license_path,), None, False),
         ('Qt', (), 'https://www.gnu.org/licenses/gpl-3.0.txt', True),
