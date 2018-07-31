@@ -17,7 +17,7 @@ import twisted.internet.defer
 from PyQt5 import QtWidgets, uic, QtCore
 from PyQt5.QtCore import (pyqtSignal, pyqtSlot, QFile, QFileInfo, QTextStream,
                           QCoreApplication, Qt, QItemSelectionModel,
-                          QModelIndex, QSortFilterProxyModel)
+                          QModelIndex, QAbstractProxyModel)
 
 import epyqlib.autodevice.build
 
@@ -126,6 +126,26 @@ class NvView(QtWidgets.QWidget):
 
         self.device = None
 
+        self.diff_proxy = None
+
+        self.ui.diff_reference_column.currentIndexChanged[int].connect(
+            self.diff_reference_column_changed,
+        )
+
+    def configure_diff_proxy(self, proxy):
+        self.diff_proxy = proxy
+        self.diff_reference_column_changed(
+            self.ui.diff_reference_column.currentIndex(),
+        )
+
+    def diff_reference_column_changed(self, index):
+        if self.diff_proxy is not None:
+            column = self.ui.diff_reference_column.itemData(
+                index,
+                epyqlib.pyqabstractitemmodel.UserRoles.raw,
+            )
+            self.diff_proxy.reference_column = column
+
     def set_device(self, device):
         self.device = device
 
@@ -177,7 +197,7 @@ class NvView(QtWidgets.QWidget):
     # TODO: CAMPid 07943342700734207878034207087
     def nonproxy_model(self):
         model = self.ui.tree_view.model()
-        while isinstance(model, QSortFilterProxyModel):
+        while isinstance(model, QAbstractProxyModel):
             model = model.sourceModel()
 
         return model
@@ -412,11 +432,11 @@ class NvView(QtWidgets.QWidget):
         self.can_contents = can_contents
         self.can_suffix = suffix
 
-    def setModel(self, model):
-        proxy = model
+    def configure_sort_proxy(self, proxy):
         proxy.setSortRole(epyqlib.pyqabstractitemmodel.UserRoles.sort)
-        self.ui.tree_view.setModel(proxy)
 
+    def setModel(self, model):
+        self.ui.tree_view.setModel(model)
         model = self.nonproxy_model()
 
         if model.root.password_node is not None:
@@ -535,7 +555,6 @@ class NvView(QtWidgets.QWidget):
                 column,
                 epyqlib.delegates.ByFunction(
                     model=model,
-                    proxy=proxy,
                     parent=self,
                 )
             )
@@ -561,9 +580,19 @@ class NvView(QtWidgets.QWidget):
 
         model.force_action_decorations = False
 
+        self.ui.diff_reference_column.clear()
+        for i, column in enumerate(epyqlib.nv.diffable_columns):
+            self.ui.diff_reference_column.addItem(model.headers[column])
+            self.ui.diff_reference_column.setItemData(
+                i,
+                column,
+                epyqlib.pyqabstractitemmodel.UserRoles.raw,
+            )
+        self.ui.diff_reference_column.setCurrentIndex(0)
+
     def clicked(self, index):
-        model = self.nonproxy_model()
-        index = self.ui.tree_view.model().mapToSource(index)
+        index = epyqlib.utils.qt.resolve_index_to_model(index)
+        model = index.model()
         node = model.node_from_index(index)
 
         if isinstance(node, epyqlib.nv.Nv):
@@ -592,12 +621,9 @@ class NvView(QtWidgets.QWidget):
             self.progress = None
 
     def context_menu(self, position):
-        proxy = self.ui.tree_view.model()
-
         index = self.ui.tree_view.indexAt(position)
-        index = proxy.mapToSource(index)
-
-        model = self.nonproxy_model()
+        index = epyqlib.utils.qt.resolve_index_to_model(index)
+        model = index.model()
 
         node = model.node_from_index(index)
         node_type = type(node)
@@ -627,13 +653,15 @@ class NvView(QtWidgets.QWidget):
             self.ui.tree_view.collapseAll()
 
     def nv_context_menu(self, position):
-        proxy = self.ui.tree_view.model()
-        model = self.nonproxy_model()
+        index = self.ui.tree_view.indexAt(position)
+        index = epyqlib.utils.qt.resolve_index_to_model(index)
+        model = index.model()
 
         selection_model = self.ui.tree_view.selectionModel()
         selected_indexes = selection_model.selectedIndexes()
         selected_indexes = tuple(
-            proxy.mapToSource(i) for i in selected_indexes
+            epyqlib.utils.qt.resolve_index_to_model(i)
+            for i in selected_indexes
         )
 
         selected_by_node = collections.defaultdict(list)
@@ -658,7 +686,6 @@ class NvView(QtWidgets.QWidget):
 
             if node not in selected_by_meta[meta]:
                 selected_by_meta[meta].append(node)
-
 
         menu = QtWidgets.QMenu(parent=self.ui.tree_view)
         menu.setSeparatorsCollapsible(True)

@@ -5,6 +5,8 @@ from PyQt5.QtCore import pyqtSlot, Qt, QCoreApplication, QEvent, QPoint
 from PyQt5 import QtWidgets
 from PyQt5.QtGui import QMouseEvent
 
+import epyqlib.utils.qt
+
 
 class Dispatch(QtWidgets.QStyledItemDelegate):
     def __init__(self, selector, parent):
@@ -67,16 +69,14 @@ class Delegate:
 
 
 class ByFunction(QtWidgets.QStyledItemDelegate):
-    def __init__(self, model, parent, proxy=None, function=default):
+    def __init__(self, model, parent, function=default):
         QtWidgets.QStyledItemDelegate.__init__(self, parent=parent)
 
         self.model = model
-        self.proxy = proxy
         self.function = function
 
     def get_delegate_node(self, index):
-        if self.proxy is not None:
-            index = self.proxy.mapToSource(index)
+        index = epyqlib.utils.qt.resolve_index_to_model(index)
         # TODO: way too particular
         node = self.model.node_from_index(index)
 

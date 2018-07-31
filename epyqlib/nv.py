@@ -42,6 +42,18 @@ class Columns(AbstractColumns):
 Columns.indexes = Columns.indexes()
 
 
+diffable_columns = [
+    Columns.indexes.value,
+    Columns.indexes.user_default,
+    Columns.indexes.factory_default,
+    Columns.indexes.minimum,
+    Columns.indexes.maximum,
+]
+
+diff_highlight = QtGui.QColor('orange')
+diff_highlight.setAlphaF(0.4)
+
+
 class NoNv(Exception):
     pass
 

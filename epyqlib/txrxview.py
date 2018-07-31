@@ -61,7 +61,6 @@ class TxRxView(QtWidgets.QWidget):
             epyqlib.txrx.Columns.indexes.value,
             epyqlib.delegates.ByFunction(
                 model=self.nonproxy_model(),
-                proxy=model,
                 parent=self,
             )
         )

@@ -4,6 +4,7 @@ import itertools
 import attr
 import pytest
 import PyQt5.QtCore
+import PyQt5.QtGui
 
 import epyqlib.tests.common
 import epyqlib.utils.qt
@@ -205,7 +206,7 @@ def test_resolve_index_to_model():
     view.setModel(proxy)
 
     assert (
-        epyqlib.utils.qt.resolve_models(view)
+        epyqlib.utils.qt.resolve_models(model=view.model())
         == [proxy, middle_proxy, back_proxy, model]
     )
 
@@ -224,20 +225,18 @@ def test_resolve_index_to_model():
 
     with pytest.raises(epyqlib.utils.qt.TargetModelNotReached):
         epyqlib.utils.qt.resolve_index_to_model(
-            view=view,
             index=proxy_first_index,
             target=object(),
         )
 
-    index, found_model = epyqlib.utils.qt.resolve_index_to_model(
-        view=view,
+    index = epyqlib.utils.qt.resolve_index_to_model(
         index=proxy_first_index,
     )
 
     found_data = model.data(index, PyQt5.QtCore.Qt.DisplayRole)
 
     assert found_data == target_data
-    assert found_model == model
+    assert index.model() == model
 
     proxy_index = epyqlib.utils.qt.resolve_index_from_model(
         model=model,
@@ -366,3 +365,121 @@ def test_signal_to_pyqtslot():
 #     actual = ' '.join(actual)
 #
 #     assert actual == expected
+
+
+@attr.s
+class DiffProxy:
+    model = attr.ib()
+    proxy = attr.ib()
+
+    def visit_all(self, visitor):
+        for row in range(self.proxy.rowCount()):
+            for column in range(self.proxy.columnCount()):
+                visitor(row, column)
+
+    def lists(self):
+        return [
+            [None for _ in range(self.proxy.rowCount())]
+            for _ in range(self.proxy.columnCount())
+        ]
+
+    def role_lists(self):
+        return {role: self.lists() for role in self.proxy.highlights}
+
+    def collect(self):
+        results = {
+            self.proxy.diff_role: self.lists(),
+            **{
+                role: self.lists()
+                for role in self.proxy.highlights
+            },
+        }
+
+        def collect(row, column, collected=results):
+            for role, lists in collected.items():
+                index = self.proxy.index(
+                    row,
+                    column,
+                    PyQt5.QtCore.QModelIndex(),
+                )
+
+                lists[row][column] = self.proxy.data(index, role)
+
+        self.visit_all(visitor=collect)
+
+        return results
+
+
+@pytest.fixture
+def diff_proxy_test_model():
+    rows = 4
+    columns = 4
+
+    highlight = PyQt5.QtGui.QColor('orange')
+    highlight_role = PyQt5.QtCore.Qt.ItemDataRole.BackgroundRole
+
+    model = PyQt5.QtGui.QStandardItemModel(rows, columns)
+
+    for row in range(rows):
+        for column in range(columns):
+            model.setItem(row, column, PyQt5.QtGui.QStandardItem())
+
+    proxy = epyqlib.utils.qt.DiffProxyModel(
+        columns=range(rows),
+        highlights={highlight_role: highlight},
+    )
+    proxy.setSourceModel(model)
+
+    return DiffProxy(model=model, proxy=proxy)
+
+
+def test_diffproxymodel_no_reference_column(diff_proxy_test_model):
+    diff_proxy_test_model.proxy.reference_column = None
+
+    results = diff_proxy_test_model.collect()
+    results = {
+        role: results[role]
+        for role in diff_proxy_test_model.proxy.highlights
+    }
+
+    expected = diff_proxy_test_model.role_lists()
+
+    assert expected == results
+
+
+def test_diffproxymodel_some_differences(diff_proxy_test_model):
+    reference_column = 2
+    root = diff_proxy_test_model.model.invisibleRootItem()
+    rows = root.rowCount()
+    columns = root.columnCount()
+
+    for row in range(rows):
+        for column in range(columns):
+            root.child(row, column).setData(row)
+
+    diff = {
+        (2, 1): 42,
+        (3, 3): 42,
+    }
+
+    expected = diff_proxy_test_model.role_lists()
+
+    for (row, column), value in diff.items():
+        item = root.child(row, column)
+        item.setData(
+            value,
+            diff_proxy_test_model.proxy.diff_role,
+        )
+
+        for role, highlight in diff_proxy_test_model.proxy.highlights.items():
+            expected[role][row][column] = highlight
+
+    diff_proxy_test_model.proxy.reference_column = reference_column
+
+    results = diff_proxy_test_model.collect()
+    results = {
+        role: results[role]
+        for role in diff_proxy_test_model.proxy.highlights
+    }
+
+    assert expected == results

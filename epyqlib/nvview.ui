@@ -211,6 +211,16 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Diff Reference Column:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="diff_reference_column"/>
+       </item>
       </layout>
      </item>
      <item>

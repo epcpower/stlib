@@ -718,12 +718,28 @@ class Device:
                             path=self.nvs.access_level_node.signal_path(),
                         )
 
-                    proxy = epyqlib.utils.qt.PySortFilterProxyModel(
+                    sort_proxy = epyqlib.utils.qt.PySortFilterProxyModel(
                         filter_column=column,
                     )
-                    proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
-                    proxy.setSourceModel(nv_model)
-                    view.setModel(proxy)
+                    sort_proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
+                    sort_proxy.setSourceModel(nv_model)
+
+                    diff_proxy = epyqlib.utils.qt.DiffProxyModel(
+                        columns=epyqlib.nv.diffable_columns,
+                        reference_column=(
+                            epyqlib.nv.Columns.indexes.user_default
+                        ),
+                        highlights={
+                            QtCore.Qt.ItemDataRole.BackgroundRole:
+                                epyqlib.nv.diff_highlight,
+                        },
+                    )
+                    diff_proxy.setSourceModel(sort_proxy)
+
+                    view.setModel(diff_proxy)
+                    view.configure_sort_proxy(sort_proxy)
+                    view.configure_diff_proxy(diff_proxy)
+
                     view.set_metas(self.metas)
                     view.set_sorting_enabled(True)
                     view.sort_by_column(

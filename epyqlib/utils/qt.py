@@ -724,6 +724,52 @@ class PySortFilterProxyModel(QtCore.QSortFilterProxyModel):
         return None
 
 
+@attr.s
+class DiffProxyModel(QtCore.QIdentityProxyModel):
+    parent = attr.ib(default=None)
+    columns = attr.ib(factory=set, converter=set)
+    _reference_column = attr.ib(default=None)
+    highlights = attr.ib(
+        factory=lambda: {QtCore.Qt.ItemDataRole.BackgroundRole: None},
+    )
+    diff_role = attr.ib(default=QtCore.Qt.ItemDataRole.DisplayRole)
+
+    def __attrs_post_init__(self):
+        super().__init__(self.parent)
+
+    def data(self, index, role):
+        column = index.column()
+
+        if (
+            self.reference_column is not None
+            and column != self.reference_column
+            and role in self.highlights
+            and column in self.columns
+        ):
+            this_value = super().data(
+                index,
+                self.diff_role,
+            )
+            that_value = super().data(
+                index.siblingAtColumn(self.reference_column),
+                self.diff_role,
+            )
+
+            if this_value != that_value:
+                return self.highlights[role]
+
+        return super().data(index, role)
+
+    @property
+    def reference_column(self):
+        return self._reference_column
+
+    @reference_column.setter
+    def reference_column(self, column):
+        self._reference_column = column
+        # self.modelReset.emit()
+
+
 def load_ui(filepath, base_instance):
     # TODO: CAMPid 9549757292917394095482739548437597676742
     ui_file = QtCore.QFile(filepath)
@@ -943,12 +989,12 @@ class TargetModelNotReached(Exception):
     pass
 
 
-def resolve_models(view, target=None):
+def resolve_models(model, target=None):
     sentinel = object()
     if target is None:
         target = sentinel
 
-    models = [view.model()]
+    models = [model]
 
     while isinstance(models[-1], PyQt5.QtCore.QAbstractProxyModel):
         models.append(models[-1].sourceModel())
@@ -962,22 +1008,27 @@ def resolve_models(view, target=None):
     return models
 
 
-def resolve_index_to_model(view, index, target=None):
+def resolve_index_to_model(index, target=None):
+    model = index.model()
+
+    if model is target:
+        return index
+
     model_pairs = epyqlib.utils.general.pairwise(
-        resolve_models(view, target=target),
+        resolve_models(model=model, target=target),
     )
 
     for first, second in model_pairs:
         index = first.mapToSource(index)
 
         if second is target:
-            return index, second
+            return index
 
-    return index, second
+    return index
 
 
 def resolve_index_from_model(model, view, index):
-    models = resolve_models(view=view, target=model)
+    models = resolve_models(model=view.model(), target=model)
 
     for model in models[-2::-1]:
         index = model.mapFromSource(index)
