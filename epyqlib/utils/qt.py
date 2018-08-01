@@ -769,15 +769,16 @@ class DiffProxyModel(QtCore.QIdentityProxyModel):
         self._reference_column = column
         self.all_changed()
 
-    def all_changed(self):
-        indexes = [QtCore.QModelIndex()]
-
-        column_group_limits = [
+    def column_group_limits(self):
+        return [
             (group[0], group[-1])
             for group in epyqlib.utils.general.contiguous_groups(
                 sorted(self.columns),
             )
         ]
+
+    def all_changed(self):
+        indexes = [QtCore.QModelIndex()]
 
         while len(indexes) > 0:
             parent = indexes.pop()
@@ -789,12 +790,29 @@ class DiffProxyModel(QtCore.QIdentityProxyModel):
                     for row in range(row_count)
                 ])
 
-                for start, end in column_group_limits:
+                for start, end in self.column_group_limits():
                     self.dataChanged.emit(
                         self.index(0, start, parent),
                         self.index(row_count - 1, end, parent),
                         self.highlights,
                     )
+
+    def setData(self, index, value, role):
+        changed = super().setData(index, value)
+
+        if changed and role == self.diff_role:
+            column = index.column()
+            if column == self.reference_column:
+                for start, end in self.column_group_limits():
+                    self.dataChanged.emit(
+                        index.siblingAtColumn(start),
+                        index.siblingAtColumn(end),
+                        self.highlights,
+                    )
+            elif column in self.columns:
+                self.dataChanged.emit(index, index, self.highlights)
+
+        return changed
 
 
 def load_ui(filepath, base_instance):

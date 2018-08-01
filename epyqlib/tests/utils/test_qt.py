@@ -367,7 +367,7 @@ def test_signal_to_pyqtslot():
 #     assert actual == expected
 
 
-@attr.s
+@attr.s(slots=True)
 class DiffProxy:
     model = attr.ib()
     proxy = attr.ib()
@@ -425,7 +425,7 @@ def diff_proxy_test_model():
             model.setItem(row, column, PyQt5.QtGui.QStandardItem())
 
     proxy = epyqlib.utils.qt.DiffProxyModel(
-        columns=range(rows),
+        columns=range(1, rows),
         highlights={highlight_role: highlight},
     )
     proxy.setSourceModel(model)
@@ -485,28 +485,52 @@ def test_diffproxymodel_some_differences(diff_proxy_test_model):
     assert expected == results
 
 
-@attr.s
+@attr.s(slots=True)
 class ChangedData:
     start = attr.ib()
     end = attr.ib()
     roles = attr.ib()
 
 
-def test_diffproxymodel_all_changed(diff_proxy_test_model):
-    collected = []
+@attr.s(slots=True)
+class DataChanges:
+    # waiting on https://github.com/python-attrs/attrs/pull/420
+    __weakref__ = attr.ib(
+        repr=False,
+        cmp=False,
+        hash=False,
+        init=False,
+    )
+    changes = attr.ib(factory=list)
 
-    def collect(start, end, roles):
-        collected.append(ChangedData(
+    def collect(self, start, end, roles):
+        self.changes.append(ChangedData(
             start=start,
             end=end,
             roles=roles,
         ))
 
-    diff_proxy_test_model.proxy.dataChanged.connect(collect)
+    def results(self, container):
+        for changed_data in self.changes:
+            start = changed_data.start
+            end = changed_data.end
+
+            for row in range(start.row(), end.row() + 1):
+                for column in range(start.column(), end.column() + 1):
+                    for role in changed_data.roles:
+                        if role in container:
+                            container[role][row][column] = True
+
+        return container
+
+
+def test_diffproxymodel_all_changed(diff_proxy_test_model):
+    changes = DataChanges()
+
+    diff_proxy_test_model.proxy.dataChanged.connect(changes.collect)
     diff_proxy_test_model.proxy.all_changed()
 
     expected = diff_proxy_test_model.role_lists(fill=False)
-    changed = diff_proxy_test_model.role_lists(fill=False)
 
     root = diff_proxy_test_model.model.invisibleRootItem()
 
@@ -515,13 +539,52 @@ def test_diffproxymodel_all_changed(diff_proxy_test_model):
             for column in diff_proxy_test_model.proxy.columns:
                 expected[role][row][column] = True
 
-    for changed_data in collected:
-        start = changed_data.start
-        end = changed_data.end
+    assert expected == changes.results(
+        container=diff_proxy_test_model.role_lists(fill=False),
+    )
 
-        for row in range(start.row(), end.row() + 1):
-            for column in range(start.column(), end.column() + 1):
-                for role in changed_data.roles:
-                    changed[role][row][column] = True
 
-    assert expected == changed
+def test_diffproxymodel_edit_reference_emits(diff_proxy_test_model):
+    diff_proxy_test_model.proxy.reference_column = 2
+    changes = DataChanges()
+
+    proxy = diff_proxy_test_model.proxy
+    proxy.dataChanged.connect(changes.collect)
+    row = 0
+    assert proxy.setData(
+        index=proxy.index(row, proxy.reference_column),
+        value=42,
+        role=proxy.diff_role,
+    )
+
+    expected = diff_proxy_test_model.role_lists(fill=False)
+    for role in proxy.highlights:
+        for column in proxy.columns:
+            expected[role][row][column] = True
+
+    assert expected == changes.results(
+        container=diff_proxy_test_model.role_lists(fill=False),
+    )
+
+
+def test_diffproxymodel_edit_nonreference_emits(diff_proxy_test_model):
+    diff_proxy_test_model.proxy.reference_column = 2
+    edit_column = 1
+    changes = DataChanges()
+
+    proxy = diff_proxy_test_model.proxy
+    proxy.dataChanged.connect(changes.collect)
+    row = 0
+    assert proxy.setData(
+        index=proxy.index(row, edit_column),
+        value=42,
+        role=proxy.diff_role,
+    )
+
+    expected = diff_proxy_test_model.role_lists(fill=False)
+    for role in proxy.highlights:
+        expected[role][row][edit_column] = True
+
+    assert expected == changes.results(
+        container=diff_proxy_test_model.role_lists(fill=False),
+    )
