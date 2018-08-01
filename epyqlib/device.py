@@ -729,9 +729,13 @@ class Device:
                         reference_column=(
                             epyqlib.nv.Columns.indexes.user_default
                         ),
-                        highlights={
+                        diff_highlights={
                             QtCore.Qt.ItemDataRole.BackgroundRole:
                                 epyqlib.nv.diff_highlight,
+                        },
+                        reference_highlights={
+                            QtCore.Qt.ItemDataRole.BackgroundRole:
+                                epyqlib.nv.reference_highlight,
                         },
                     )
                     diff_proxy.setSourceModel(sort_proxy)

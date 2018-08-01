@@ -729,9 +729,8 @@ class DiffProxyModel(QtCore.QIdentityProxyModel):
     parent = attr.ib(default=None)
     columns = attr.ib(factory=set, converter=set)
     _reference_column = attr.ib(default=None)
-    highlights = attr.ib(
-        factory=lambda: {QtCore.Qt.ItemDataRole.BackgroundRole: None},
-    )
+    diff_highlights = attr.ib(factory=dict)
+    reference_highlights = attr.ib(factory=dict)
     diff_role = attr.ib(default=QtCore.Qt.ItemDataRole.DisplayRole)
 
     def __attrs_post_init__(self):
@@ -740,23 +739,28 @@ class DiffProxyModel(QtCore.QIdentityProxyModel):
     def data(self, index, role):
         column = index.column()
 
-        if (
-            self.reference_column is not None
-            and column != self.reference_column
-            and role in self.highlights
-            and column in self.columns
-        ):
-            this_value = super().data(
-                index,
-                self.diff_role,
-            )
-            that_value = super().data(
-                index.siblingAtColumn(self.reference_column),
-                self.diff_role,
-            )
+        if self.reference_column is not None:
+            if (
+                column == self.reference_column
+                and role in self.reference_highlights
+            ):
+                return self.reference_highlights[role]
+            elif (
+                column != self.reference_column
+                and role in self.diff_highlights
+                and column in self.columns
+            ):
+                this_value = super().data(
+                    index,
+                    self.diff_role,
+                )
+                that_value = super().data(
+                    index.siblingAtColumn(self.reference_column),
+                    self.diff_role,
+                )
 
-            if this_value != that_value:
-                return self.highlights[role]
+                if this_value != that_value:
+                    return self.diff_highlights[role]
 
         return super().data(index, role)
 
@@ -777,6 +781,9 @@ class DiffProxyModel(QtCore.QIdentityProxyModel):
             )
         ]
 
+    def roles(self):
+        return {*self.diff_highlights, *self.reference_highlights}
+
     def all_changed(self):
         indexes = [QtCore.QModelIndex()]
 
@@ -794,7 +801,7 @@ class DiffProxyModel(QtCore.QIdentityProxyModel):
                     self.dataChanged.emit(
                         self.index(0, start, parent),
                         self.index(row_count - 1, end, parent),
-                        self.highlights,
+                        self.roles(),
                     )
 
     def setData(self, index, value, role):
@@ -807,10 +814,10 @@ class DiffProxyModel(QtCore.QIdentityProxyModel):
                     self.dataChanged.emit(
                         index.siblingAtColumn(start),
                         index.siblingAtColumn(end),
-                        self.highlights,
+                        self.diff_highlights,
                     )
             elif column in self.columns:
-                self.dataChanged.emit(index, index, self.highlights)
+                self.dataChanged.emit(index, index, self.diff_highlights)
 
         return changed
 

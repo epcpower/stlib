@@ -53,6 +53,9 @@ diffable_columns = [
 diff_highlight = QtGui.QColor('orange')
 diff_highlight.setAlphaF(0.4)
 
+reference_highlight = QtGui.QColor('green')
+reference_highlight.setAlphaF(0.2)
+
 
 class NoNv(Exception):
     pass

@@ -384,14 +384,20 @@ class DiffProxy:
         ]
 
     def role_lists(self, fill=None):
-        return {role: self.lists(fill=fill) for role in self.proxy.highlights}
+        return {
+            role: self.lists(fill=fill)
+            for role in self.roles()
+        }
+
+    def roles(self):
+        return {*self.proxy.diff_highlights, *self.proxy.reference_highlights}
 
     def collect(self):
         results = {
             self.proxy.diff_role: self.lists(),
             **{
                 role: self.lists()
-                for role in self.proxy.highlights
+                for role in self.roles()
             },
         }
 
@@ -415,9 +421,6 @@ def diff_proxy_test_model():
     rows = 4
     columns = 4
 
-    highlight = PyQt5.QtGui.QColor('orange')
-    highlight_role = PyQt5.QtCore.Qt.ItemDataRole.BackgroundRole
-
     model = PyQt5.QtGui.QStandardItemModel(rows, columns)
 
     for row in range(rows):
@@ -426,7 +429,16 @@ def diff_proxy_test_model():
 
     proxy = epyqlib.utils.qt.DiffProxyModel(
         columns=range(1, rows),
-        highlights={highlight_role: highlight},
+        diff_highlights={
+            PyQt5.QtCore.Qt.ItemDataRole.BackgroundRole: (
+                PyQt5.QtGui.QColor('orange')
+            )
+        },
+        reference_highlights={
+            PyQt5.QtCore.Qt.ItemDataRole.BackgroundRole: (
+                PyQt5.QtGui.QColor('green')
+            )
+        },
     )
     proxy.setSourceModel(model)
 
@@ -439,7 +451,7 @@ def test_diffproxymodel_no_reference_column(diff_proxy_test_model):
     results = diff_proxy_test_model.collect()
     results = {
         role: results[role]
-        for role in diff_proxy_test_model.proxy.highlights
+        for role in diff_proxy_test_model.proxy.diff_highlights
     }
 
     expected = diff_proxy_test_model.role_lists()
@@ -471,15 +483,23 @@ def test_diffproxymodel_some_differences(diff_proxy_test_model):
             diff_proxy_test_model.proxy.diff_role,
         )
 
-        for role, highlight in diff_proxy_test_model.proxy.highlights.items():
+        diff_highlights = diff_proxy_test_model.proxy.diff_highlights.items()
+        for role, highlight in diff_highlights:
             expected[role][row][column] = highlight
+
+    reference_highlights = (
+        diff_proxy_test_model.proxy.reference_highlights.items()
+    )
+    for row in range(rows):
+        for role, highlight in reference_highlights:
+            expected[role][row][reference_column] = highlight
 
     diff_proxy_test_model.proxy.reference_column = reference_column
 
     results = diff_proxy_test_model.collect()
     results = {
         role: results[role]
-        for role in diff_proxy_test_model.proxy.highlights
+        for role in diff_proxy_test_model.proxy.diff_highlights
     }
 
     assert expected == results
@@ -534,7 +554,7 @@ def test_diffproxymodel_all_changed(diff_proxy_test_model):
 
     root = diff_proxy_test_model.model.invisibleRootItem()
 
-    for role in diff_proxy_test_model.proxy.highlights:
+    for role in diff_proxy_test_model.proxy.diff_highlights:
         for row in range(root.rowCount()):
             for column in diff_proxy_test_model.proxy.columns:
                 expected[role][row][column] = True
@@ -558,7 +578,7 @@ def test_diffproxymodel_edit_reference_emits(diff_proxy_test_model):
     )
 
     expected = diff_proxy_test_model.role_lists(fill=False)
-    for role in proxy.highlights:
+    for role in proxy.diff_highlights:
         for column in proxy.columns:
             expected[role][row][column] = True
 
@@ -582,7 +602,7 @@ def test_diffproxymodel_edit_nonreference_emits(diff_proxy_test_model):
     )
 
     expected = diff_proxy_test_model.role_lists(fill=False)
-    for role in proxy.highlights:
+    for role in proxy.diff_highlights:
         expected[role][row][edit_column] = True
 
     assert expected == changes.results(
