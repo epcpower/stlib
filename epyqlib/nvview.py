@@ -581,11 +581,18 @@ class NvView(QtWidgets.QWidget):
         model.force_action_decorations = False
 
         self.ui.diff_reference_column.clear()
-        for i, column in enumerate(epyqlib.nv.diffable_columns):
-            self.ui.diff_reference_column.addItem(model.headers[column])
+        items = (
+            ('No Diff', None),
+            *(
+                (model.headers[column], column)
+                for column in epyqlib.nv.diffable_columns
+            )
+        )
+        for i, (text, value) in enumerate(items):
+            self.ui.diff_reference_column.addItem(text)
             self.ui.diff_reference_column.setItemData(
                 i,
-                column,
+                value,
                 epyqlib.pyqabstractitemmodel.UserRoles.raw,
             )
         self.ui.diff_reference_column.setCurrentIndex(0)
