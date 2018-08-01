@@ -767,7 +767,34 @@ class DiffProxyModel(QtCore.QIdentityProxyModel):
     @reference_column.setter
     def reference_column(self, column):
         self._reference_column = column
-        # self.modelReset.emit()
+        self.all_changed()
+
+    def all_changed(self):
+        indexes = [QtCore.QModelIndex()]
+
+        column_group_limits = [
+            (group[0], group[-1])
+            for group in epyqlib.utils.general.contiguous_groups(
+                sorted(self.columns),
+            )
+        ]
+
+        while len(indexes) > 0:
+            parent = indexes.pop()
+            if self.hasChildren(parent):
+                row_count = self.rowCount(parent)
+
+                indexes.extend([
+                    self.index(row, 0, parent)
+                    for row in range(row_count)
+                ])
+
+                for start, end in column_group_limits:
+                    self.dataChanged.emit(
+                        self.index(0, start, parent),
+                        self.index(row_count - 1, end, parent),
+                        self.highlights,
+                    )
 
 
 def load_ui(filepath, base_instance):

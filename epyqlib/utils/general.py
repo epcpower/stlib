@@ -359,3 +359,16 @@ def rmtree(path, ignore_errors=False):
     except FileNotFoundError:
         if not ignore_errors:
             raise
+
+
+def contiguous_groups(s):
+    groups = []
+    group = []
+
+    for previous, current in pairwise(itertools.chain(s, (math.inf,))):
+        group.append(previous)
+        if current > previous + 1:
+            groups.append(group)
+            group = []
+
+    return groups

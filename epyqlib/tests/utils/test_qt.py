@@ -377,14 +377,14 @@ class DiffProxy:
             for column in range(self.proxy.columnCount()):
                 visitor(row, column)
 
-    def lists(self):
+    def lists(self, fill=None):
         return [
-            [None for _ in range(self.proxy.rowCount())]
+            [fill for _ in range(self.proxy.rowCount())]
             for _ in range(self.proxy.columnCount())
         ]
 
-    def role_lists(self):
-        return {role: self.lists() for role in self.proxy.highlights}
+    def role_lists(self, fill=None):
+        return {role: self.lists(fill=fill) for role in self.proxy.highlights}
 
     def collect(self):
         results = {
@@ -483,3 +483,45 @@ def test_diffproxymodel_some_differences(diff_proxy_test_model):
     }
 
     assert expected == results
+
+
+@attr.s
+class ChangedData:
+    start = attr.ib()
+    end = attr.ib()
+    roles = attr.ib()
+
+
+def test_diffproxymodel_all_changed(diff_proxy_test_model):
+    collected = []
+
+    def collect(start, end, roles):
+        collected.append(ChangedData(
+            start=start,
+            end=end,
+            roles=roles,
+        ))
+
+    diff_proxy_test_model.proxy.dataChanged.connect(collect)
+    diff_proxy_test_model.proxy.all_changed()
+
+    expected = diff_proxy_test_model.role_lists(fill=False)
+    changed = diff_proxy_test_model.role_lists(fill=False)
+
+    root = diff_proxy_test_model.model.invisibleRootItem()
+
+    for role in diff_proxy_test_model.proxy.highlights:
+        for row in range(root.rowCount()):
+            for column in diff_proxy_test_model.proxy.columns:
+                expected[role][row][column] = True
+
+    for changed_data in collected:
+        start = changed_data.start
+        end = changed_data.end
+
+        for row in range(start.row(), end.row() + 1):
+            for column in range(start.column(), end.column() + 1):
+                for role in changed_data.roles:
+                    changed[role][row][column] = True
+
+    assert expected == changed
