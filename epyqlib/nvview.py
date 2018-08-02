@@ -629,11 +629,14 @@ class NvView(QtWidgets.QWidget):
 
     def context_menu(self, position):
         index = self.ui.tree_view.indexAt(position)
-        index = epyqlib.utils.qt.resolve_index_to_model(index)
-        model = index.model()
+        if index.isValid():
+            index = epyqlib.utils.qt.resolve_index_to_model(index)
+            model = index.model()
 
-        node = model.node_from_index(index)
-        node_type = type(node)
+            node = model.node_from_index(index)
+            node_type = type(node)
+        else:
+            node_type = None
 
         dispatch = {
             epyqlib.nv.Nv: self.nv_context_menu
