@@ -128,8 +128,8 @@ class DeviceTreeView(QtWidgets.QWidget):
 
             remove_device_action = menu.addAction('Close')
         if isinstance(node, epyqlib.devicetree.Bus):
-            add_device_action = menu.addAction('Load device...')
-            flash_action = menu.addAction('Flash...')
+            add_device_action = menu.addAction('Open device file...')
+            flash_action = menu.addAction('Load firmware...')
             flash_action.setEnabled(
                 not node._checked.name
                 and not node.fields.name == 'Offline'
