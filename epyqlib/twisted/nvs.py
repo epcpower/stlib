@@ -251,14 +251,17 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
                     break
 
     def _read_before_write(self, request):
-        nonskip = {
-            s: (
-                s.value
-                if request.meta == epyqlib.nv.MetaEnum.value
-                else getattr(s.meta, request.meta.name).value
-            )
-            for s in request.signals
-        }
+        if isinstance(request.signals, dict):
+            nonskip = request.signals
+        else:
+            nonskip = {
+                s: (
+                    s.value
+                    if request.meta == epyqlib.nv.MetaEnum.value
+                    else getattr(s.meta, request.meta.name).value
+                )
+                for s in request.signals
+            }
 
         skip_signals = (
             set(request.frame.parameter_signals) - set(nonskip.keys())

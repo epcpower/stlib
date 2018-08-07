@@ -17,6 +17,7 @@ import epyqlib.twisted.busproxy
 import epyqlib.twisted.nvs
 import epyqlib.utils.general
 import epyqlib.utils.twisted
+import functools
 import itertools
 import json
 import epyqlib.pyqabstractitemmodel
@@ -196,6 +197,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         self.access_level_node = None
         if access_level_path is not None:
             self.access_level_node = self.neo.signal_by_path(*access_level_path)
+            self.access_level_node.write_only = True
 
         self.password_node = None
         if access_password_path is not None:
@@ -458,6 +460,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
     def write_all_to_device(
             self,
             only_these=None,
+            values=(),
             callback=None,
             meta=None,
             background=False,
@@ -465,6 +468,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         return self._read_write_all(
             read=False,
             only_these=only_these,
+            values=values,
             callback=callback,
             meta=meta,
             background=background,
@@ -489,6 +493,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             self,
             read,
             only_these=None,
+            values=(),
             callback=None,
             meta=None,
             background=False,
@@ -504,47 +509,48 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         d = twisted.internet.defer.Deferred()
         d.callback(None)
 
-        def handle_frame(frame, signals):
-            frame.update_from_signals()
-            for enumerator in meta:
-                if read:
-                    d.addCallback(
-                        lambda _, enumerator=enumerator: self.protocol.read_multiple(
-                            nv_signals=signals,
-                            meta=enumerator,
-                            priority=epyqlib.twisted.nvs.Priority.user,
-                            passive=True,
-                            all_values=True,
-                        )
+        def handle_frame(frame, signals, enumerator):
+            if read:
+                d.addCallback(
+                    lambda _, enumerator=enumerator: self.protocol.read_multiple(
+                        nv_signals=signals,
+                        meta=enumerator,
+                        priority=epyqlib.twisted.nvs.Priority.user,
+                        passive=True,
+                        all_values=True,
                     )
-                elif frame.read_write.min <= 0:
-                    not_none_signals = []
-                    for signal in signals:
-                        if enumerator == MetaEnum.value:
-                            value = signal.value
-                        else:
-                            value = getattr(signal.meta, enumerator.name).value
+                )
+            elif frame.read_write.min <= 0:
+                not_none_signals = {}
+                for signal in signals:
+                    values_key = (signal, enumerator)
+                    if values_key in values:
+                        value = values[values_key]
+                    elif enumerator == MetaEnum.value:
+                        value = signal.value
+                    else:
+                        value = getattr(signal.meta, enumerator.name).value
 
-                        if value is not None:
-                            not_none_signals.append(signal)
+                    if value is not None:
+                        not_none_signals[signal] = value
 
-                    if len(not_none_signals) == 0:
-                        continue
-
-                    d.addCallback(
-                        lambda _, enumerator=enumerator, not_none_signals=not_none_signals: self.protocol.write_multiple(
-                            nv_signals=not_none_signals,
-                            meta=enumerator,
-                            priority=epyqlib.twisted.nvs.Priority.user,
-                            passive=True,
-                            all_values=True,
-                        )
-                    )
-                else:
+                if len(not_none_signals) == 0:
                     return
 
-                if callback is not None:
-                    d.addCallback(callback)
+                d.addCallback(
+                    lambda _, enumerator=enumerator, not_none_signals=not_none_signals: self.protocol.write_multiple(
+                        nv_signals=not_none_signals,
+                        meta=enumerator,
+                        priority=epyqlib.twisted.nvs.Priority.user,
+                        passive=True,
+                        all_values=True,
+                    )
+                )
+            else:
+                return
+
+            if callback is not None:
+                d.addCallback(callback)
 
         if only_these is None:
             only_these = self.all_nv()
@@ -554,7 +560,13 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             signals = tuple(nv for nv in only_these
                             if nv.frame is frame)
 
-            handle_frame(frame=frame, signals=signals)
+            frame.update_from_signals()
+            for enumerator in meta:
+                handle_frame(
+                    frame=frame,
+                    signals=signals,
+                    enumerator=enumerator,
+                )
 
         if not background:
             d.addCallback(epyqlib.utils.twisted.detour_result,
@@ -898,6 +910,8 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
                     getattr(self.meta, meta.name).full_string,
                 )
 
+        self.write_only = False
+
     def _changed(self, column_start=None, column_end=None, roles=(
             Columns.indexes.value,)):
         if column_start is None:
@@ -977,7 +991,39 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
 
         self.set_meta(signal.reset_value, meta=meta)
 
+    def check_value(self, value, force=False, check_range=False):
+        min_max = {MetaEnum.minimum, MetaEnum.maximum}
+
+        if self.meta is not None:
+            extras = {}
+            if self.meta.minimum.value is None or self.meta_value in min_max:
+                extras['minimum'] = self.to_human(self.raw_minimum)
+            else:
+                extras['minimum'] = self.meta.minimum.to_human(
+                    self.meta.minimum.value,
+                )
+
+            if self.meta.maximum.value is None or self.meta_value in min_max:
+                extras['maximum'] = self.to_human(self.raw_maximum)
+            else:
+                extras['maximum'] = self.meta.maximum.to_human(
+                    self.meta.maximum.value,
+                )
+
+        return super().check_value(
+            value=value,
+            check_range=check_range,
+            **extras,
+        )
+
     def set_value(self, value, force=False, check_range=False):
+        ok = self.check_value(
+            value=value,
+            check_range=check_range,
+        )
+        if not ok:
+            return False
+
         self.reset_value = value
 
         min_max = {MetaEnum.minimum, MetaEnum.maximum}
@@ -1007,7 +1053,21 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         self.fields.value = self.full_string
         self._changed()
 
+    def check_data(self, data, check_range=True):
+        try:
+            if data is None:
+                return self.check_value(data)
+            else:
+                return self.check_human_value(data, check_range=check_range)
+        except ValueError:
+            return False
+
+        return True
+
     def set_data(self, data, mark_modified=False, check_range=True):
+        if not self.check_data(data=data, check_range=check_range):
+            return False
+
         # self.fields.value = value
         reset_value = self.reset_value
         try:
@@ -1024,7 +1084,26 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
 
         return True
 
+    def check_meta(self, data, meta, *args, **kwargs):
+        if meta == MetaEnum.value:
+            extras = {}
+            if 'check_range' in kwargs:
+                extras['check_range'] = kwargs['check_range']
+            return self.check_data(data, *args, **extras)
+
+        meta_signal = getattr(self.meta, meta.name)
+
+        return meta_signal.check_data(
+            data=data,
+            *args,
+            **kwargs,
+        )
+
     def set_meta(self, data, meta, *args, **kwargs):
+        result = self.check_meta(data, meta, *args, **kwargs)
+        if not result:
+            return result
+
         if meta == MetaEnum.value:
             return self.set_data(data=data, *args, **kwargs)
 
@@ -1182,6 +1261,8 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             self.data_sort
         )
 
+        self.transaction_actions = None
+
     def all_nv(self):
         return self.root.all_nv()
 
@@ -1274,25 +1355,121 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
     def check_range_changed(self, state):
         self.check_range = state == Qt.Checked
 
+    def start_transaction(self):
+        self.transaction_actions = []
+
+    def submit_transaction(self):
+        callback = None
+        meta = None
+        nodes = set()
+
+        values = {}
+        for action in self.transaction_actions:
+            values.update(action['values'])
+
+            if action['callback'] is not None:
+                if callback is None:
+                    callback = action['callback']
+                elif action['callback'] != callback:
+                    raise Exception('transactions are not that fancy')
+
+            if action['meta'] is not None:
+                if meta is None:
+                    meta = action['meta']
+                elif action['meta'] != meta:
+                    raise Exception('transactions are not that fancy')
+
+            nodes = nodes.union(action['only_these'])
+
+        if callback is not None:
+            callback = functools.partial(
+                callback,
+                only_these=nodes,
+            )
+
+        print(callable(callback), callback)
+
+        d = self.root.write_all_to_device(
+            only_these=nodes,
+            values=values,
+            callback=callback,
+            meta=meta,
+        )
+
+        d.addBoth(
+            epyqlib.utils.twisted.detour_result,
+            self.transaction_done,
+        )
+        d.addErrback(epyqlib.utils.twisted.catch_expected)
+        d.addErrback(epyqlib.utils.twisted.errbackhook)
+
+    def transaction_done(self):
+        self.transaction_actions = None
+
     def setData(self, index, data, role=None):
         column = index.column()
         if column in self.meta_columns:
             if role == Qt.EditRole:
                 node = self.node_from_index(index)
-                success = node.set_meta(
+                meta = getattr(
+                    MetaEnum,
+                    Columns().index_from_attribute(column),
+                )
+                valid = node.check_meta(
                     data,
-                    meta=getattr(
-                        MetaEnum,
-                        Columns().index_from_attribute(column),
-                    ),
-                    mark_modified=True,
+                    meta=meta,
                     check_range=self.check_range,
                 )
 
-                self.dataChanged.emit(index, index)
-                return success
+                if valid:
+                    nodes = (node,)
+
+                    if self.transaction_actions is None:
+                        callback = functools.partial(
+                            self.update_signals,
+                            only_these=nodes,
+                        )
+
+                        d = self.root.write_all_to_device(
+                            only_these=nodes,
+                            values={(node, meta): node.calc_human_value(data)},
+                            callback=callback,
+                            meta=(meta,),
+                        )
+                        d.addErrback(epyqlib.utils.twisted.catch_expected)
+                        d.addErrback(epyqlib.utils.twisted.errbackhook)
+                    else:
+                        self.transaction_actions.append(dict(
+                            only_these=nodes,
+                            values={(node, meta): node.calc_human_value(data)},
+                            callback=self.update_signals,
+                            meta=(meta,),
+                        ))
 
         return False
+
+    # TODO: CAMPid 0347987975t427567139419439349
+    def update_signals(self, arg, only_these):
+        d, meta = arg
+        model = self
+
+        frame = next(iter(d)).frame
+
+        signals = set(only_these) & set(frame.set_frame.parameter_signals)
+
+        for signal in signals:
+            if signal.status_signal in d:
+                if not signal.status_signal.write_only:
+                    value = d[signal.status_signal]
+                    signal.set_meta(value, meta=meta, check_range=False)
+
+        for signal in frame.set_frame.parameter_signals:
+            QtWidgets.QApplication.instance().processEvents()
+
+            model.dynamic_columns_changed(
+                signal,
+                columns=(getattr(epyqlib.nv.Columns.indexes, meta.name),)
+            )
 
     @pyqtSlot()
     def module_to_nv(self):

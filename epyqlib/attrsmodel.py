@@ -514,6 +514,7 @@ class DelegateSelector:
         return delegate
 
 
+# TODO: CAMPid 374895478431714307074310
 class CustomCombo(PyQt5.QtWidgets.QComboBox):
     def hidePopup(self):
         super().hidePopup()

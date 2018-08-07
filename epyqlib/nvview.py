@@ -23,8 +23,12 @@ import epyqlib.autodevice.build
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
+__copyright__ = 'Copyright 2018, EPC Power Corp.'
 __license__ = 'GPLv2+'
+
+
+class ActivityError(Exception):
+    pass
 
 
 class NvView(QtWidgets.QWidget):
@@ -110,11 +114,11 @@ class NvView(QtWidgets.QWidget):
 
         self.password_mapper = QtWidgets.QDataWidgetMapper()
         self.password_mapper.setSubmitPolicy(
-            QtWidgets.QDataWidgetMapper.AutoSubmit,
+            QtWidgets.QDataWidgetMapper.ManualSubmit,
         )
         self.access_level_mapper = QtWidgets.QDataWidgetMapper()
         self.access_level_mapper.setSubmitPolicy(
-            QtWidgets.QDataWidgetMapper.AutoSubmit,
+            QtWidgets.QDataWidgetMapper.ManualSubmit,
         )
 
         self.ui.access_level_password.setPlaceholderText('Access Code...')
@@ -482,9 +486,6 @@ class NvView(QtWidgets.QWidget):
                 lambda: delegate.commitData.emit(self.ui.access_level),
             )
 
-            self.ui.access_level.setCurrentIndex(1)
-            self.ui.access_level.setCurrentIndex(0)
-
         selected_nodes = tuple(
             node
             for node in (
@@ -494,18 +495,13 @@ class NvView(QtWidgets.QWidget):
             if node is not None
         )
 
-        callback = functools.partial(
-            self.update_signals,
-            only_these=selected_nodes
-        )
-
         def write_access_level():
-            d = model.root.write_all_to_device(
-                only_these=selected_nodes,
-                callback=callback,
-            )
-            d.addErrback(epyqlib.utils.twisted.catch_expected)
-            d.addErrback(epyqlib.utils.twisted.errbackhook)
+            model.start_transaction()
+
+            self.password_mapper.submit()
+            self.access_level_mapper.submit()
+
+            model.submit_transaction()
 
         self.set_access_level.clicked.connect(write_access_level)
 
@@ -614,6 +610,11 @@ class NvView(QtWidgets.QWidget):
     @pyqtSlot(str)
     def activity_started(self, string):
         self.ui.status_label.setText(string)
+        if self.progress is not None:
+            raise ActivityError(
+                'New activity started while another is active: '
+                f'new: {string}'
+            )
         self.progress = epyqlib.utils.qt.Progress()
         self.progress.connect(
             progress=epyqlib.utils.qt.progress_dialog(parent=self),
@@ -781,18 +782,21 @@ class NvView(QtWidgets.QWidget):
         d.addErrback(epyqlib.utils.twisted.catch_expected)
         d.addErrback(epyqlib.utils.twisted.errbackhook)
 
+    # TODO: CAMPid 0347987975t427567139419439349
     def update_signals(self, arg, only_these):
         d, meta = arg
         model = self.nonproxy_model()
 
         frame = next(iter(d)).frame
 
-        signals = set(only_these) & set(frame.set_frame.parameter_signals)
+        signals = set(only_these)
+        signals &= set(frame.set_frame.parameter_signals)
 
         for signal in signals:
             if signal.status_signal in d:
-                value = d[signal.status_signal]
-                signal.set_meta(value, meta=meta, check_range=False)
+                if not signal.status_signal.write_only:
+                    value = d[signal.status_signal]
+                    signal.set_meta(value, meta=meta, check_range=False)
 
         for signal in frame.set_frame.parameter_signals:
             QtWidgets.QApplication.instance().processEvents()

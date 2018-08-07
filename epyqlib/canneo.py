@@ -296,6 +296,14 @@ class Signal:
 
         return value
 
+    def check_human_value(self, raw_value, check_range=False):
+        value = self.calc_human_value(raw_value)
+
+        return self.check_value(
+            value=value,
+            check_range=check_range,
+        )
+
     def set_human_value(self, raw_value, force=False, check_range=False):
             value = self.calc_human_value(raw_value)
 
@@ -346,28 +354,40 @@ class Signal:
 
         return self.decimal_places
 
-    def set_value(self, value, force=False, check_range=False, minimum=None,
-                  maximum=None):
+    def check_value(self, value, check_range=False, minimum=None, maximum=None):
         if minimum is None:
             minimum = self.min
 
         if maximum is None:
             maximum = self.max
 
-        value_parameter = value
         if type(value) is float and math.isnan(value):
-            return
+            return False
+
+        if check_range:
+            human_value = self.to_human(value)
+            if not minimum <= human_value <= maximum:
+                raise OutOfRangeError('{} not in range [{}, {}]'.format(
+                    *[self.format_float(f) for f
+                      in (human_value, minimum, maximum)]))
+
+        return True
+
+    def set_value(self, value, force=False, check_range=False, minimum=None,
+                  maximum=None):
+        ok = Signal.check_value(
+            self=self,
+            value=value,
+            check_range=check_range,
+            minimum=minimum,
+            maximum=maximum,
+        )
+        if not ok:
+            return False
+
+        value_parameter = value
 
         if self.value != value or force:
-            # TODO: be careful here, should all be int which is immutable
-            #       and therefore safe but...  otherwise a copy would be
-            #       needed
-            if check_range:
-                human_value = self.to_human(value)
-                if not minimum <= human_value <= maximum:
-                    raise OutOfRangeError('{} not in range [{}, {}]'.format(
-                        *[self.format_float(f) for f
-                          in (human_value, minimum, maximum)]))
             self.value = value
 
             if value not in self.enumeration:

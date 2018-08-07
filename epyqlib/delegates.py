@@ -2,7 +2,7 @@ import weakref
 
 import attr
 from PyQt5.QtCore import pyqtSlot, Qt, QCoreApplication, QEvent, QPoint
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtGui import QMouseEvent
 
 import epyqlib.utils.qt
@@ -68,6 +68,21 @@ class Delegate:
     model_setter = attr.ib(default=None)
 
 
+# TODO: CAMPid 374895478431714307074310
+class CustomCombo(QtWidgets.QComboBox):
+    def hidePopup(self):
+        super().hidePopup()
+
+        QtCore.QCoreApplication.postEvent(
+            self,
+            QtGui.QKeyEvent(
+                QtCore.QEvent.KeyPress,
+                QtCore.Qt.Key_Enter,
+                QtCore.Qt.NoModifier,
+            ),
+        )
+
+
 class ByFunction(QtWidgets.QStyledItemDelegate):
     def __init__(self, model, parent, function=default):
         QtWidgets.QStyledItemDelegate.__init__(self, parent=parent)
@@ -92,12 +107,9 @@ class ByFunction(QtWidgets.QStyledItemDelegate):
         delegate, node = self.get_delegate_node(index=index)
 
         if delegate.creator is None:
-            widget = QtWidgets.QStyledItemDelegate.createEditor(
-                self, parent, option, index)
+            widget = super().createEditor(parent, option, index)
         else:
             widget = delegate.creator(index=index, node=node, parent=parent)
-            # TODO: this is combobox specific
-            widget.currentIndexChanged.connect(self.current_index_changed)
 
         if delegate.modifier is not None:
             delegate.modifier(widget=widget)
@@ -124,13 +136,9 @@ class ByFunction(QtWidgets.QStyledItemDelegate):
             index=index,
         )
 
-    @pyqtSlot()
-    def current_index_changed(self):
-        self.commitData.emit(self.sender())
-
 
 def create_combo(index, node, parent):
-    widget = QtWidgets.QComboBox(parent=parent)
+    widget = CustomCombo(parent=parent)
 
     # TODO: use the userdata to make it easier to get in and out
     widget.addItems(node.enumeration_strings(include_values=True))
