@@ -100,7 +100,7 @@ def access_password():
     return env.get('ST_ACCESS_PASSWORD')
 
 
-@pytest.fixture(params=['epp', 'pmvs'])
+@pytest.fixture(params=['epp', 'pmvs'], scope='session')
 def parameter_type(request):
     return request.param
 
@@ -110,15 +110,14 @@ versions = ['develop', 'v1.2.5']
 version_to_test = 'develop'
 
 
-@pytest.fixture(params=[version_to_test])
+@pytest.fixture(params=[version_to_test], scope='session')
 def version(request):
     return request.param
 
 
-@pytest.fixture
-def auto_device(version, parameter_type, access_password, tmpdir):
-    temporary_directory = pathlib.Path(tmpdir)
-    target = temporary_directory / 'auto_device.epz'
+@pytest.fixture(scope='session')
+def auto_device(version, parameter_type, access_password, tmpdir_factory):
+    target = tmpdir_factory.mktemp('auto_device').join('auto_device.epz')
 
     yield create_example_auto_device(
         version=version,
