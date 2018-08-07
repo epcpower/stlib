@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='UTF-8'?>
+<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>Form</class>
  <widget class="EpcForm" name="Form">
@@ -20,99 +20,6 @@
    <bool>false</bool>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="3" column="1">
-    <widget class="QGroupBox" name="groupBox_2">
-     <property name="title">
-      <string>Temperatures</string>
-     </property>
-     <layout class="QGridLayout" name="gridLayout_3">
-      <item row="1" column="1">
-       <layout class="QVBoxLayout" name="verticalLayout_12">
-        <item>
-         <widget class="Scale" name="scale_10">
-          <property name="signal_path" stdset="0">
-           <string>StatusTemps;TempInlet_measured</string>
-          </property>
-          </widget>
-        </item>
-        <item>
-         <widget class="Epc" name="epc_8">
-          <property name="signal_path" stdset="0">
-           <string>StatusTemps;TempInlet_measured</string>
-          </property>
-          <property name="label_visible" stdset="0">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="1" column="0">
-       <layout class="QVBoxLayout" name="verticalLayout_11">
-        <item>
-         <widget class="Scale" name="scale_9">
-          <property name="signal_path" stdset="0">
-           <string>StatusTemps;TempInternal_measured</string>
-          </property>
-          </widget>
-        </item>
-        <item>
-         <widget class="Epc" name="epc_7">
-          <property name="signal_path" stdset="0">
-           <string>StatusTemps;TempInternal_measured</string>
-          </property>
-          <property name="label_visible" stdset="0">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="0" column="0">
-       <layout class="QVBoxLayout" name="verticalLayout_8">
-        <item>
-         <widget class="Scale" name="scale_6">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusDeviceTemps;TempDeviceBrdgA_measured</string>
-          </property>
-          </widget>
-        </item>
-        <item>
-         <widget class="Epc" name="epc_4">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusDeviceTemps;TempDeviceBrdgA_measured</string>
-          </property>
-          <property name="label_visible" stdset="0">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="0" column="1">
-       <layout class="QVBoxLayout" name="verticalLayout_9">
-        <item>
-         <widget class="Scale" name="scale_7">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusDeviceTemps;TempDeviceBrdgB_measured</string>
-          </property>
-          </widget>
-        </item>
-        <item>
-         <widget class="Epc" name="epc_5">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusDeviceTemps;TempDeviceBrdgB_measured</string>
-          </property>
-          <property name="label_visible" stdset="0">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-     </layout>
-    </widget>
-   </item>
    <item row="2" column="0" colspan="2">
     <widget class="QGroupBox" name="groupBox_4">
      <property name="title">
@@ -122,12 +29,12 @@
       <item row="3" column="1">
        <widget class="CompoundScale" name="compoundscale_4">
         <property name="command_signal_path" stdset="0">
-         <string>ParameterQuery;FrequencyRef;Frequency</string>
+         <string>ParameterQuery;PpcNominalFrequency;fNom</string>
         </property>
         <property name="status_signal_path" stdset="0">
          <string>StatusAC;Frequency_measured</string>
         </property>
-        </widget>
+       </widget>
       </item>
       <item row="3" column="0">
        <widget class="CompoundScale" name="compoundscale_3">
@@ -286,7 +193,7 @@
           <property name="currentIndex">
            <number>0</number>
           </property>
-          <widget class="QWidget" name="page_5">
+          <widget class="QWidget" name="meas_power">
            <layout class="QGridLayout" name="gridLayout_9">
             <property name="leftMargin">
              <number>0</number>
@@ -368,7 +275,7 @@
             </item>
            </layout>
           </widget>
-          <widget class="QWidget" name="page_6">
+          <widget class="QWidget" name="meas_current">
            <layout class="QGridLayout" name="gridLayout_10">
             <property name="leftMargin">
              <number>0</number>
@@ -457,9 +364,9 @@
       <item row="2" column="0" colspan="2">
        <widget class="QStackedWidget" name="stacked_command">
         <property name="currentIndex">
-         <number>0</number>
+         <number>3</number>
         </property>
-        <widget class="QWidget" name="page">
+        <widget class="QWidget" name="cmd_power">
          <layout class="QHBoxLayout" name="horizontalLayout">
           <property name="leftMargin">
            <number>0</number>
@@ -484,7 +391,7 @@
             <property name="status_signal_path" stdset="0">
              <string>StatusMeasuredPower;RealPower_measured</string>
             </property>
-            </widget>
+           </widget>
           </item>
           <item>
            <widget class="CompoundScale" name="reactive_power_command">
@@ -497,11 +404,11 @@
             <property name="status_signal_path" stdset="0">
              <string>StatusMeasuredPower;ReactivePower_measured</string>
             </property>
-            </widget>
+           </widget>
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="page_2">
+        <widget class="QWidget" name="cmd_current">
          <layout class="QHBoxLayout" name="horizontalLayout_2">
           <property name="leftMargin">
            <number>0</number>
@@ -526,7 +433,7 @@
             <property name="status_signal_path" stdset="0">
              <string>StatusMeasuredCurrent;RealCurrent_measured</string>
             </property>
-            </widget>
+           </widget>
           </item>
           <item>
            <widget class="CompoundScale" name="reactive_current_command">
@@ -539,11 +446,11 @@
             <property name="status_signal_path" stdset="0">
              <string>StatusMeasuredCurrent;ReactiveCurrent_measured</string>
             </property>
-            </widget>
+           </widget>
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="page_3">
+        <widget class="QWidget" name="cmd_dclink">
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
            <widget class="CompoundScale" name="dc_current_limit_command">
@@ -573,7 +480,126 @@
           </item>
          </layout>
         </widget>
+        <widget class="QWidget" name="cmd_voltage">
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
+          <item>
+           <widget class="CompactEpc" name="voltage_droop_mode">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="signal_path" stdset="0">
+             <string>ProcessToInverter;CommandVoltage;dummy</string>
+            </property>
+            <property name="label_visible" stdset="0">
+             <bool>false</bool>
+            </property>
+            <property name="units_visible" stdset="0">
+             <bool>false</bool>
+            </property>
+            <property name="tx" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="editable" stdset="0">
+             <bool>false</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>Temperatures</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_3">
+      <item row="1" column="1">
+       <layout class="QVBoxLayout" name="verticalLayout_12">
+        <item>
+         <widget class="Scale" name="scale_10">
+          <property name="signal_path" stdset="0">
+           <string>StatusTemps;TempInlet_measured</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="Epc" name="epc_8">
+          <property name="signal_path" stdset="0">
+           <string>StatusTemps;TempInlet_measured</string>
+          </property>
+          <property name="label_visible" stdset="0">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="1" column="0">
+       <layout class="QVBoxLayout" name="verticalLayout_11">
+        <item>
+         <widget class="Scale" name="scale_9">
+          <property name="signal_path" stdset="0">
+           <string>StatusTemps;TempInternal_measured</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="Epc" name="epc_7">
+          <property name="signal_path" stdset="0">
+           <string>StatusTemps;TempInternal_measured</string>
+          </property>
+          <property name="label_visible" stdset="0">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="0" column="0">
+       <layout class="QVBoxLayout" name="verticalLayout_8">
+        <item>
+         <widget class="Scale" name="scale_6">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusDeviceTemps;TempDeviceBrdgA_measured</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="Epc" name="epc_4">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusDeviceTemps;TempDeviceBrdgA_measured</string>
+          </property>
+          <property name="label_visible" stdset="0">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="0" column="1">
+       <layout class="QVBoxLayout" name="verticalLayout_9">
+        <item>
+         <widget class="Scale" name="scale_7">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusDeviceTemps;TempDeviceBrdgB_measured</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="Epc" name="epc_5">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusDeviceTemps;TempDeviceBrdgB_measured</string>
+          </property>
+          <property name="label_visible" stdset="0">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>
@@ -610,7 +636,7 @@
           <property name="signal_path" stdset="0">
            <string>StatusDCParameters;VoltageDCBus_measured</string>
           </property>
-          </widget>
+         </widget>
         </item>
         <item>
          <widget class="Epc" name="epc_2">
@@ -631,7 +657,7 @@
           <property name="signal_path" stdset="0">
            <string>StatusDCParameters;CurrentDC_measured</string>
           </property>
-          </widget>
+         </widget>
         </item>
         <item>
          <widget class="Epc" name="epc">
@@ -650,8 +676,250 @@
    </item>
    <item row="1" column="0" colspan="2">
     <layout class="QGridLayout" name="gridLayout_5">
-     <item row="2" column="0" colspan="3">
+     <item row="0" column="1" colspan="2">
+      <widget class="Enum" name="enum_7">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="signal_path" stdset="0">
+        <string>StatusBits;State</string>
+       </property>
+       <property name="tx" stdset="0">
+        <bool>false</bool>
+       </property>
+       <property name="blue" stdset="0">
+        <string>State</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3" rowspan="4">
+      <layout class="QGridLayout" name="gridLayout_4">
+       <item row="2" column="1">
+        <widget class="Lcd" name="lcd_3">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="display_units" stdset="0">
+          <string/>
+         </property>
+         <property name="signal_path" stdset="0">
+          <string>StatusDCParameters;VoltageDCBus_measured</string>
+         </property>
+         <property name="label_override" stdset="0">
+          <string>DC Voltage</string>
+         </property>
+         <property name="label_visible" stdset="0">
+          <bool>false</bool>
+         </property>
+         <property name="units_visible" stdset="0">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="Lcd" name="lcd">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="display_units" stdset="0">
+          <string/>
+         </property>
+         <property name="signal_path" stdset="0">
+          <string>StatusAC;CurrentAC_measured</string>
+         </property>
+         <property name="label_visible" stdset="0">
+          <bool>false</bool>
+         </property>
+         <property name="units_visible" stdset="0">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="Lcd" name="lcd_2">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="signal_path" stdset="0">
+          <string>StatusAC;VoltageAC_measured</string>
+         </property>
+         <property name="label_visible" stdset="0">
+          <bool>false</bool>
+         </property>
+         <property name="units_visible" stdset="0">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>DC Voltage</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Line Voltage</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>AC Current</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="0" column="0" rowspan="2">
+      <widget class="CompoundToggle" name="compoundtoggle_5">
+       <property name="box_title" stdset="0">
+        <string>Enable</string>
+       </property>
+       <property name="command_signal_path" stdset="0">
+        <string>ProcessToInverter;CommandModeControl;Enable</string>
+       </property>
+       <property name="status_signal_path" stdset="0">
+        <string>StatusBits;Enable_echo</string>
+       </property>
+       <property name="status_off_on_color" stdset="0">
+        <color>
+         <red>192</red>
+         <green>32</green>
+         <blue>32</blue>
+        </color>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="4" colspan="2">
+      <layout class="QGridLayout" name="gridLayout_8">
+       <item row="0" column="1">
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="2" column="1">
+        <spacer name="horizontalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_7">
+         <property name="text">
+          <string>Control Mode</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="2" alignment="Qt::AlignRight">
+        <widget class="QLabel" name="label_13">
+         <property name="text">
+          <string>Local Sequence</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QComboBox" name="power_current_combo"/>
+       </item>
+       <item row="2" column="2" alignment="Qt::AlignRight">
+        <widget class="QLabel" name="label_14">
+         <property name="text">
+          <string>Remote Sequence</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="3">
+        <widget class="CompactEpc" name="compactepc_3">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="signal_path" stdset="0">
+          <string>StatusBits;PhaseSequenceRemote</string>
+         </property>
+         <property name="label_visible" stdset="0">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="3">
+        <widget class="CompactEpc" name="compactepc_2">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="signal_path" stdset="0">
+          <string>StatusBits;PhaseSequence</string>
+         </property>
+         <property name="label_visible" stdset="0">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="0" column="4" rowspan="2">
+      <widget class="CompoundToggle" name="compoundtoggle_4">
+       <property name="box_title" stdset="0">
+        <string>Phase Sequence</string>
+       </property>
+       <property name="command_signal_path" stdset="0">
+        <string>ParameterQuery;AfeConfig;PhaseSequence</string>
+       </property>
+       <property name="status_signal_path" stdset="0">
+        <string>ParameterQuery;AfeConfig;PhaseSequence</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" colspan="3">
       <layout class="QVBoxLayout" name="verticalLayout_3">
+       <item>
+        <spacer name="verticalSpacer_2">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
        <item>
         <widget class="Led" name="led_48">
          <property name="signal_path" stdset="0">
@@ -690,7 +958,7 @@
          <property name="signal_path" stdset="0">
           <string>ParameterQuery;DataloggerStatus;DataloggerRecording</string>
          </property>
-         </widget>
+        </widget>
        </item>
        <item>
         <spacer name="verticalSpacer">
@@ -706,142 +974,6 @@
         </spacer>
        </item>
       </layout>
-     </item>
-     <item row="0" column="3" rowspan="3">
-      <layout class="QGridLayout" name="gridLayout_4">
-       <item row="0" column="1">
-        <widget class="Lcd" name="lcd">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="signal_path" stdset="0">
-          <string>StatusAC;CurrentAC_measured</string>
-         </property>
-         <property name="label_visible" stdset="0">
-          <bool>false</bool>
-         </property>
-         <property name="units_visible" stdset="0">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="label">
-         <property name="text">
-          <string>Meas. AC current</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="1">
-        <widget class="Lcd" name="lcd_3">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="signal_path" stdset="0">
-          <string>StatusDCParameters;VoltageDCBus_measured</string>
-         </property>
-         <property name="label_visible" stdset="0">
-          <bool>false</bool>
-         </property>
-         <property name="units_visible" stdset="0">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="label_3">
-         <property name="text">
-          <string>DC Voltage</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_2">
-         <property name="text">
-          <string>Meas. AC Voltage</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="1">
-        <widget class="Lcd" name="lcd_2">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="signal_path" stdset="0">
-          <string>StatusAC;VoltageAC_measured</string>
-         </property>
-         <property name="label_visible" stdset="0">
-          <bool>false</bool>
-         </property>
-         <property name="units_visible" stdset="0">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="2">
-        <widget class="QLabel" name="label_4">
-         <property name="text">
-          <string>VDC</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="2">
-        <widget class="QLabel" name="label_5">
-         <property name="text">
-          <string>VRMS</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="2">
-        <widget class="QLabel" name="label_6">
-         <property name="text">
-          <string>A</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="0" column="0" rowspan="2">
-      <widget class="CompoundToggle" name="compoundtoggle_5">
-       <property name="box_title" stdset="0">
-        <string>Enable</string>
-       </property>
-       <property name="command_signal_path" stdset="0">
-        <string>ProcessToInverter;CommandModeControl;Enable</string>
-       </property>
-       <property name="status_signal_path" stdset="0">
-        <string>StatusBits;Enable_echo</string>
-       </property>
-       <property name="status_off_on_color" stdset="0">
-        <color>
-         <red>192</red>
-         <green>32</green>
-         <blue>32</blue>
-        </color>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="4" rowspan="2">
-      <widget class="CompoundToggle" name="compoundtoggle_4">
-       <property name="box_title" stdset="0">
-        <string>Phase Rotation</string>
-       </property>
-       <property name="command_signal_path" stdset="0">
-        <string>ParameterQuery;AfeConfig;PhaseRotation</string>
-       </property>
-       <property name="status_signal_path" stdset="0">
-        <string>ParameterQuery;AfeConfig;PhaseRotation</string>
-       </property>
-       </widget>
      </item>
      <item row="1" column="1">
       <widget class="Led" name="led_26">
@@ -876,38 +1008,6 @@
        </property>
       </widget>
      </item>
-     <item row="0" column="5" rowspan="2">
-      <widget class="CompoundToggle" name="compoundtoggle_6">
-       <property name="box_title" stdset="0">
-        <string>Phase Mode</string>
-       </property>
-       <property name="command_signal_path" stdset="0">
-        <string>ParameterQuery;AfeConfig;EnableSplitPhase</string>
-       </property>
-       <property name="status_signal_path" stdset="0">
-        <string>ParameterQuery;AfeConfig;EnableSplitPhase</string>
-       </property>
-       </widget>
-     </item>
-     <item row="0" column="1" colspan="2">
-      <widget class="Enum" name="enum_7">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="signal_path" stdset="0">
-        <string>StatusBits;State</string>
-       </property>
-       <property name="tx" stdset="0">
-        <bool>false</bool>
-       </property>
-       <property name="blue" stdset="0">
-        <string>State</string>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="2">
       <widget class="Button" name="button_2">
        <property name="signal_path" stdset="0">
@@ -921,91 +1021,31 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="4" colspan="2">
-      <layout class="QGridLayout" name="gridLayout_8">
-       <item row="0" column="1">
-        <spacer name="verticalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="2" column="1">
-        <spacer name="horizontalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_7">
-         <property name="text">
-          <string>Control Mode</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="2" alignment="Qt::AlignRight">
-        <widget class="QLabel" name="label_13">
-         <property name="text">
-          <string>Rotation</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QComboBox" name="power_current_combo"/>
-       </item>
-       <item row="2" column="2" alignment="Qt::AlignRight">
-        <widget class="QLabel" name="label_14">
-         <property name="text">
-          <string>Remote Rotation</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="3">
-        <widget class="CompactEpc" name="compactepc_3">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="signal_path" stdset="0">
-          <string>StatusBits;PhaseRotationRemote</string>
-         </property>
-         <property name="label_visible" stdset="0">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="3">
-        <widget class="CompactEpc" name="compactepc_2">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="signal_path" stdset="0">
-          <string>StatusBits;PhaseRotation</string>
-         </property>
-         <property name="label_visible" stdset="0">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-      </layout>
+     <item row="0" column="5" rowspan="2">
+      <widget class="CompoundToggle" name="compoundtoggle_6">
+       <property name="box_title" stdset="0">
+        <string>Phase Configuration</string>
+       </property>
+       <property name="command_signal_path" stdset="0">
+        <string>ParameterQuery;AfeConfig;PhaseDisplacement</string>
+       </property>
+       <property name="status_signal_path" stdset="0">
+        <string>ParameterQuery;AfeConfig;PhaseDisplacement</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="Button" name="button">
+       <property name="signal_path" stdset="0">
+        <string>ProcessToInverter;CommandModeControl;IslandReconnect</string>
+       </property>
+       <property name="label_visible" stdset="0">
+        <bool>false</bool>
+       </property>
+       <property name="tx" stdset="0">
+        <bool>true</bool>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>

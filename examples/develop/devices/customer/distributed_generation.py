@@ -5,6 +5,14 @@ __license__ = 'GPLv2+'
 def referenced_files(raw_dict):
     return ()
 
+class ReferenceSource:
+    def __init__(self, frames, cmd, meas):
+        self.frames = frames
+        self.cmd = cmd
+        self.meas = meas
+        
+def get_frame(widget):
+    return widget.ui.command.signal_object.frame
 
 class DeviceExtension:
     def __init__(self, device):
@@ -14,43 +22,57 @@ class DeviceExtension:
         self.combo = None
         self.command = None
         self.measured = None
-        self.power_command_frames = ()
-        self.current_command_frames = ()
         self.pump_reset_controller_signal = None
-        self.dc_control_command_frames = () # Added new object for dc control.
-
+        self.ref_sources = {}
+    
     def post(self):
         self.dash = self.device.ui.tabs.widget(0)
         self.setup = self.device.ui.tabs.widget(1)
-
-        self.combo = self.dash.power_current_combo
-        self.command = self.dash.stacked_command
-        self.measured = self.dash.stacked_measured
-
-        self.power_command_frames = {
-            widget.ui.command.signal_object.frame
-            for widget in
-            (self.dash.real_power_command, self.dash.reactive_power_command)
+        
+        d = self.dash
+        
+        self.combo = d.power_current_combo
+        self.command = d.stacked_command
+        self.measured = d.stacked_measured
+        
+        self.ref_sources = {
+            'Power':ReferenceSource(
+                frames = (
+                    get_frame(d.real_power_command), 
+                    get_frame(d.reactive_power_command),
+                ), 
+                cmd=d.cmd_power, 
+                meas=d.meas_current,
+            ), 
+            'Current':ReferenceSource(
+                frames = (
+                    get_frame(d.real_current_command),
+                    get_frame(d.reactive_current_command),
+                ), 
+                cmd=d.cmd_current, 
+                meas=d.meas_power,
+            ), 
+            'DC Control':ReferenceSource(
+                frames = (
+                    get_frame(d.dc_current_limit_command), 
+                    get_frame(d.dc_voltage_limit_command),
+                ), 
+                cmd=d.cmd_dclink, 
+                meas=d.meas_power,
+            ), 
+            'Voltage':ReferenceSource(
+                frames = (d.voltage_droop_mode.ui.signal_object.frame,),
+                cmd=d.cmd_power, 
+                meas=d.meas_current,
+            )
         }
-
-        self.current_command_frames = {
-            widget.ui.command.signal_object.frame
-            for widget in
-            (self.dash.real_current_command, self.dash.reactive_current_command)
-        }
-
-        # This updates the new dc_control_command_frames object.
-        self.dc_control_command_frames = {
-            widget.ui.command.signal_object.frame
-            for widget in
-            (self.dash.dc_current_limit_command, self.dash.dc_voltage_limit_command)
-        }
-
+        
+        d.voltage_droop_mode.ui.setVisible(False)
+        
         self.combo.currentTextChanged.connect(self.combo_changed)
-
-        self.combo.addItem('Power')
-        self.combo.addItem('Current')
-        self.combo.addItem('DC Control') # Added new option to the drop down menu.
+        
+        for r in self.ref_sources:
+            self.combo.addItem(r)
 
         self.setup.pump_reset_button.value.pressed.connect(
             self.setup.pump_reset_controller_button.pressed
@@ -60,19 +82,16 @@ class DeviceExtension:
         )
 
     def combo_changed(self, text):
-        if text == 'Power':
-            self.command.setCurrentIndex(0)
-            self.measured.setCurrentIndex(1)
-        elif text == 'Current':
-            self.command.setCurrentIndex(1)
-            self.measured.setCurrentIndex(0)
-        elif text == 'DC Control': 
-            self.command.setCurrentIndex(2) # Added new else if statement.
-            self.measured.setCurrentIndex(0)
+        active_ref = self.ref_sources[text]
+        self.command.setCurrentWidget(active_ref.cmd)
+        self.measured.setCurrentWidget(active_ref.meas)
+        for k, v in self.ref_sources.items():
+            for frame in v.frames:
+                frame.block_cyclic = text != k
 
-        for frame in self.power_command_frames:
-            frame.block_cyclic = text != 'Power'
-        for frame in self.current_command_frames:
-            frame.block_cyclic = text != 'Current'
-        for frame in self.dc_control_command_frames: # Added new for loop for the 3rd option.
-            frame.block_cyclic = text != 'DC Control'
+        show_power_cmd = (text != 'Voltage')
+        for widget in (self.dash.real_power_command, 
+                       self.dash.reactive_power_command):
+            widget.ui.command.setVisible(show_power_cmd)
+            widget.ui.echo.setVisible(show_power_cmd)
+
