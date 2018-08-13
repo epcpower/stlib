@@ -28,6 +28,7 @@
                     "original_frame_name": null,
                     "original_multiplexer_name": null,
                     "original_signal_name": null,
+                    "visibility": null,
                     "uuid": "fd184494-35a2-4b3a-970c-9a3d98cc15cd"
                 },
                 {
@@ -67,6 +68,7 @@
             "original_frame_name": null,
             "original_multiplexer_name": null,
             "original_signal_name": null,
+            "visibility": null,
             "uuid": "ee545382-a651-479b-9dc2-a4c3d42c230c"
         },
         {

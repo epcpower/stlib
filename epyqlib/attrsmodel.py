@@ -135,6 +135,13 @@ def attributes(cls):
 def fields(cls):
     return attributes(cls).fields
 
+def list_selection_roots(cls):
+    d = {}
+    for field in fields(cls):
+        if field.list_selection_root:
+            d[field.name] = field.list_selection_root
+    return d
+
 
 def attrib(*args, attribute, **kwargs):
     # https://github.com/python-attrs/attrs/issues/278
@@ -244,6 +251,14 @@ class Types:
             return type_.data_class
 
         return type_
+    
+    def list_selection_roots(self):
+        roots = set()
+        for v in self.types.values():
+            t = list_selection_roots(v)
+            roots.update(t.values())
+        
+        return roots
 
 
 def create_addable_types(types):

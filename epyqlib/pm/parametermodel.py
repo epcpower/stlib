@@ -152,6 +152,15 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
+    visibility = epyqlib.attrsmodel.attr_uuid(
+        default=None,
+        allow_none=True,
+        # convert=lambda x: x if x is None else AccessLevelsAccessLevel(x),
+        human_name='Visibility',
+        data_display=epyqlib.attrsmodel.name_from_uuid,
+        list_selection_root='visibility',
+    )
+
     uuid = epyqlib.attrsmodel.attr_uuid()
 
     def __attrs_post_init__(self):
@@ -776,6 +785,7 @@ columns = epyqlib.attrsmodel.columns(
     merge('nv_cast', Parameter),
     merge('read_only', Parameter),
     merge('access_level_uuid', Parameter),
+    merge('visibility', Parameter),
 
     merge('display_hexadecimal', Parameter),
     merge('decimal_places', Parameter),

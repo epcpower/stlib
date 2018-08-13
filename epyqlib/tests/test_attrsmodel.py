@@ -879,3 +879,88 @@ def test_enumeration(qtbot):
             application.processEvents()
 
         assert enumerator.uuid == item.enumeration_uuid
+
+
+def test_all_selection_roots_avail():
+    @graham.schemify(tag='parameter')
+    @epyqlib.attrsmodel.ify()
+    @epyqlib.utils.qt.pyqtify()
+    @attr.s(hash=False)
+    class C(epyqlib.treenode.TreeNode):
+        a = attr.ib(default=None)
+        b = attr.ib(default=None)
+        c = attr.ib(default=None)
+        epyqlib.attrsmodel.attrib(
+           attribute=c,
+           list_selection_root='c root',
+        )
+        d = attr.ib(default=None)
+        epyqlib.attrsmodel.attrib(
+           attribute=d,
+           list_selection_root='d root',
+        )
+
+        def __attrs_post_init__(self):
+            super().__init__()
+
+    expected = {'c':'c root', 'd':'d root'}
+    assert epyqlib.attrsmodel.list_selection_roots(C) == expected
+
+
+def test_types_list_selection_roots():
+    @graham.schemify(tag='parameter')
+    @epyqlib.attrsmodel.ify()
+    @epyqlib.utils.qt.pyqtify()
+    @attr.s(hash=False)
+    class C(epyqlib.treenode.TreeNode):
+        a = attr.ib(default=None)
+        b = attr.ib(default=None)
+
+        c = attr.ib(default=None)
+        epyqlib.attrsmodel.attrib(
+            attribute=c,
+            list_selection_root='c root',
+        )
+
+        d = attr.ib(default=None)
+        epyqlib.attrsmodel.attrib(
+            attribute=d,
+            list_selection_root='d root',
+        )
+
+        def __attrs_post_init__(self):
+            super().__init__()
+
+    @graham.schemify(tag='parameter')
+    @epyqlib.attrsmodel.ify()
+    @epyqlib.utils.qt.pyqtify()
+    @attr.s(hash=False)
+    class D(epyqlib.treenode.TreeNode):
+        e = attr.ib(default=None)
+        f = attr.ib(default=None)
+
+        g = attr.ib(default=None)
+        epyqlib.attrsmodel.attrib(
+            attribute=g,
+            list_selection_root='g root',
+        )
+
+        h = attr.ib(default=None)
+        epyqlib.attrsmodel.attrib(
+            attribute=h,
+            list_selection_root='h root',
+        )
+
+        def __attrs_post_init__(self):
+            super().__init__()
+
+    types = epyqlib.attrsmodel.Types(types=(C, D))
+
+    expected = {
+        'c root',
+        'd root',
+        'g root',
+        'h root',
+    }
+
+    assert set(types.list_selection_roots()) == expected
