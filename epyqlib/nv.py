@@ -680,7 +680,8 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         for child in self.all_nv():
             value = d.get(child.fields.name, None)
             if value is not None:
-                child.set_human_value(value)
+                child.scratch.set_human_value(value)
+                child.fields.scratch = child.scratch.full_string
                 only_in_file.remove(child.fields.name)
             else:
                 logger.info("Nv value named '{}' not found when loading from dict"
