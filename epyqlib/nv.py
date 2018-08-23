@@ -36,15 +36,28 @@ __license__ = 'GPLv2+'
 
 
 class Columns(AbstractColumns):
-    _members = ['name', 'read_only', 'factory', 'value', 'saturate', 'reset',
-                'clear', 'user_default', 'factory_default', 'minimum',
-                'maximum', 'comment']
+    _members = [
+        'name',
+        'read_only',
+        'factory',
+        'value',
+        'saturate',
+        'reset',
+        'clear',
+        'scratch',
+        'user_default',
+        'factory_default',
+        'minimum',
+        'maximum',
+        'comment',
+    ]
 
 Columns.indexes = Columns.indexes()
 
 
 diffable_columns = [
     Columns.indexes.value,
+    Columns.indexes.scratch,
     Columns.indexes.user_default,
     Columns.indexes.factory_default,
     Columns.indexes.minimum,
@@ -856,7 +869,15 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         list,
     )
 
-    def __init__(self, signal, frame, parent=None, meta=None, meta_value=None):
+    def __init__(
+        self,
+        signal,
+        frame,
+        parent=None,
+        meta=None,
+        meta_value=None,
+        base=True,
+    ):
         epyqlib.canneo.Signal.__init__(self, signal=signal, frame=frame,
                                     parent=parent)
         TreeNode.__init__(self)
@@ -884,10 +905,12 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         if self.frame is not None:
             self.fields.name = '{}:{}'.format(self.frame.mux_name, self.name)
 
-        self.meta = meta
-        if self.meta is None:
+        if meta is None:
             self.meta = Meta()
+        else:
+            self.meta = meta
 
+        if base:
             metas = (
                 MetaEnum.user_default,
                 MetaEnum.factory_default,
@@ -898,7 +921,7 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
                 setattr(
                     self.meta,
                     meta.name,
-                    Nv(signal, frame=None, meta=self.meta, meta_value=meta)
+                    Nv(signal, frame=None, meta=self.meta, meta_value=meta, base=False)
                 )
 
             for meta in metas:
@@ -909,6 +932,10 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
                     meta.name,
                     getattr(self.meta, meta.name).full_string,
                 )
+
+            self.scratch = Nv(signal, frame=None, meta=self.meta, base=False)
+            self.scratch.set_value(None)
+            self.fields.scratch = self.scratch.full_string
 
         self.write_only = False
 
@@ -934,9 +961,13 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
     def get_human_value(self, for_file=False, column=None):
         if column is None:
             column = Columns.indexes.value
-        column_name = Columns().index_from_attribute(column)
 
-        signal = self.get_meta_signal(getattr(MetaEnum, column_name))
+        if column == Columns.indexes.scratch:
+            signal = self.scratch
+        else:
+            column_name = Columns().index_from_attribute(column)
+
+            signal = self.get_meta_signal(getattr(MetaEnum, column_name))
 
         if signal is self:
             return super().get_human_value(for_file=for_file)
@@ -994,8 +1025,9 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
     def check_value(self, value, force=False, check_range=False):
         min_max = {MetaEnum.minimum, MetaEnum.maximum}
 
+        extras = {}
+
         if self.meta is not None:
-            extras = {}
             if self.meta.minimum.value is None or self.meta_value in min_max:
                 extras['minimum'] = self.to_human(self.raw_minimum)
             else:
@@ -1218,6 +1250,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         editable_columns = Columns.fill(False)
         for enumerator in MetaEnum:
             setattr(editable_columns, enumerator.name, True)
+        editable_columns.scratch = True
 
         epyqlib.pyqabstractitemmodel.PyQAbstractItemModel.__init__(
                 self, root=root, editable_columns=editable_columns,
@@ -1226,7 +1259,8 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         self.check_range = True
 
         self.headers = Columns(name='Name',
-                               value='Value',
+                               value='Active',
+                               scratch='Scratch',
                                minimum='Min',
                                maximum='Max',
                                user_default='User Default',
@@ -1408,7 +1442,17 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
     def setData(self, index, data, role=None):
         column = index.column()
-        if column in self.meta_columns:
+        if column == Columns.indexes.scratch:
+            if role == Qt.EditRole:
+                node = self.node_from_index(index)
+                valid = node.check_data(
+                    data,
+                    check_range=self.check_range,
+                )
+                if valid:
+                    node.scratch.set_human_value(data, check_range=self.check_range)
+                    node.fields.scratch = node.scratch.full_string
+        elif column in self.meta_columns:
             if role == Qt.EditRole:
                 node = self.node_from_index(index)
                 meta = getattr(

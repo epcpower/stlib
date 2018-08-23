@@ -86,6 +86,7 @@ class NvView(QtWidgets.QWidget):
         no_update_columns = set(epyqlib.nv.Columns.indexes)
         no_update_columns -= {epyqlib.nv.Columns.indexes.name,}
         no_update_columns -= self.meta_columns
+        no_update_columns.remove(epyqlib.nv.Columns.indexes.scratch)
         view.no_update_columns = no_update_columns
 
         self.resize_columns = epyqlib.nv.Columns(
