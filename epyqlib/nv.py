@@ -1132,9 +1132,10 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         )
 
     def set_meta(self, data, meta, *args, **kwargs):
-        result = self.check_meta(data, meta, *args, **kwargs)
-        if not result:
-            return result
+        if data is not None:
+            result = self.check_meta(data, meta, *args, **kwargs)
+            if not result:
+                return result
 
         if meta == MetaEnum.value:
             return self.set_data(data=data, *args, **kwargs)
