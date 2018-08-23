@@ -678,12 +678,17 @@ class NvView(QtWidgets.QWidget):
 
         selected_by_node = collections.defaultdict(list)
         selected_by_meta = collections.defaultdict(list)
+        selected_column_by_node = collections.defaultdict(set)
 
         for index in selected_indexes:
             node = model.node_from_index(index)
+            column = index.column()
+
+            selected_column_by_node[node].add(column)
+
             if not isinstance(node, epyqlib.nv.Nv):
                 continue
-            if index.column() not in self.meta_columns:
+            if column not in self.meta_columns:
                 continue
 
             meta = getattr(
@@ -726,6 +731,18 @@ class NvView(QtWidgets.QWidget):
         if not can_be('can_be_cleared', selected_by_node):
             clear.setDisabled(True)
 
+        copy_to_column_menu = menu.addMenu('Copy To Column')
+        copy_to_column_menu.setDisabled(
+            any(len(metas) > 1 for metas in selected_column_by_node.values()),
+        )
+        copy_to_columns = {
+            copy_to_column_menu.addAction(model.headers[column]): column
+            for column in (
+                *epyqlib.nv.meta_column_indexes,
+                epyqlib.nv.Columns.indexes.scratch,
+            )
+        }
+
         menu.addSeparator()
         expand_all = menu.addAction('Expand All')
         collapse_all = menu.addAction('Collapse All')
@@ -735,50 +752,61 @@ class NvView(QtWidgets.QWidget):
         d = twisted.internet.defer.Deferred()
         d.callback(None)
 
-        for meta, nodes in selected_by_meta.items():
-            callback = functools.partial(
-                self.update_signals,
-                only_these=nodes,
-            )
-            if action is None:
-                pass
-            elif action is read:
-                d.addCallback(
-                    lambda _, nodes=nodes, callback=callback, meta=meta:
-                    model.root.read_all_from_device(
-                        only_these=nodes,
-                        callback=callback,
-                        meta=(meta,),
-                    )
+        if action in copy_to_columns:
+            column = copy_to_columns[action]
+            model.start_transaction()
+            for index in selected_indexes:
+                model.setData(
+                    index=index.siblingAtColumn(column),
+                    data=model.data(index=index, role=Qt.EditRole),
+                    role=Qt.EditRole,
                 )
-            elif action is write:
-                d.addCallback(
-                    lambda _, nodes=nodes, callback=callback, meta=meta:
-                    model.root.write_all_to_device(
-                        only_these=nodes,
-                        callback=callback,
-                        meta=(meta,),
-                    )
+            model.submit_transaction()
+        else:
+            for meta, nodes in selected_by_meta.items():
+                callback = functools.partial(
+                    self.update_signals,
+                    only_these=nodes,
                 )
-            elif action is saturate:
-                self.disable_column_resize()
-                for node in nodes:
-                    model.saturate_node(node, meta=meta)
-                self.enable_column_resize()
-            elif action is reset:
-                self.disable_column_resize()
-                for node in nodes:
-                    model.reset_node(node, meta=meta)
-                self.enable_column_resize()
-            elif action is clear:
-                self.disable_column_resize()
-                for node in nodes:
-                    model.clear_node(node, meta=meta)
-                self.enable_column_resize()
-            elif action is expand_all:
-                self.ui.tree_view.expandAll()
-            elif action is collapse_all:
-                self.ui.tree_view.collapseAll()
+                if action is None:
+                    pass
+                elif action is read:
+                    d.addCallback(
+                        lambda _, nodes=nodes, callback=callback, meta=meta:
+                        model.root.read_all_from_device(
+                            only_these=nodes,
+                            callback=callback,
+                            meta=(meta,),
+                        )
+                    )
+                elif action is write:
+                    d.addCallback(
+                        lambda _, nodes=nodes, callback=callback, meta=meta:
+                        model.root.write_all_to_device(
+                            only_these=nodes,
+                            callback=callback,
+                            meta=(meta,),
+                        )
+                    )
+                elif action is saturate:
+                    self.disable_column_resize()
+                    for node in nodes:
+                        model.saturate_node(node, meta=meta)
+                    self.enable_column_resize()
+                elif action is reset:
+                    self.disable_column_resize()
+                    for node in nodes:
+                        model.reset_node(node, meta=meta)
+                    self.enable_column_resize()
+                elif action is clear:
+                    self.disable_column_resize()
+                    for node in nodes:
+                        model.clear_node(node, meta=meta)
+                    self.enable_column_resize()
+                elif action is expand_all:
+                    self.ui.tree_view.expandAll()
+                elif action is collapse_all:
+                    self.ui.tree_view.collapseAll()
 
         d.addErrback(epyqlib.utils.twisted.catch_expected)
         d.addErrback(epyqlib.utils.twisted.errbackhook)
