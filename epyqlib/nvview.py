@@ -592,7 +592,8 @@ class NvView(QtWidgets.QWidget):
                 value,
                 epyqlib.pyqabstractitemmodel.UserRoles.raw,
             )
-        self.ui.diff_reference_column.setCurrentIndex(0)
+            if value == epyqlib.nv.Columns.indexes.user_default:
+                self.ui.diff_reference_column.setCurrentIndex(i)
 
     def clicked(self, index):
         index = epyqlib.utils.qt.resolve_index_to_model(index)
