@@ -72,8 +72,15 @@ class NvView(QtWidgets.QWidget):
         )
 
         view = self.ui.tree_view
+
         view.setContextMenuPolicy(Qt.CustomContextMenu)
         view.customContextMenuRequested.connect(self.context_menu)
+
+        view.header().setContextMenuPolicy(Qt.CustomContextMenu)
+        view.header().customContextMenuRequested.connect(
+            self.header_context_menu,
+        )
+
         view.setSelectionBehavior(view.SelectItems)
         view.setSelectionMode(view.ExtendedSelection)
         view.row_columns = {
@@ -811,6 +818,45 @@ class NvView(QtWidgets.QWidget):
 
         d.addErrback(epyqlib.utils.twisted.catch_expected)
         d.addErrback(epyqlib.utils.twisted.errbackhook)
+
+    def header_context_menu(self, pos):
+        menu = QtWidgets.QMenu(parent=self.ui.tree_view)
+
+        source_column = self.ui.tree_view.header().logicalIndexAt(pos)
+
+        model = self.nonproxy_model()
+
+        copy_to_column_menu = menu.addMenu('Copy To Column')
+        copy_to_columns = {
+            copy_to_column_menu.addAction(
+                model.headers[column],
+            ): column
+            for column in (
+                *epyqlib.nv.meta_column_indexes,
+                epyqlib.nv.Columns.indexes.scratch,
+            )
+        }
+        this_action, = (
+            k
+            for k, v in copy_to_columns.items()
+            if v == source_column
+        )
+        this_action.setDisabled(True)
+
+        action = menu.exec(self.ui.tree_view.mapToGlobal(pos))
+
+        if action in copy_to_columns:
+            column = copy_to_columns[action]
+            model.start_transaction()
+            for node in model.all_nv():
+                index = model.index_from_node(node)
+                index = index.siblingAtColumn(source_column)
+                model.setData(
+                    index=index.siblingAtColumn(column),
+                    data=model.data(index=index, role=Qt.EditRole),
+                    role=Qt.EditRole,
+                )
+            model.submit_transaction()
 
     # TODO: CAMPid 0347987975t427567139419439349
     def update_signals(self, arg, only_these):
