@@ -629,7 +629,9 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         d = {}
         for child in self.all_nv():
             if include_secrets or not child.secret:
-                d[child.fields.name] = child.get_human_value(for_file=True)
+                d[child.fields.name] = child.scratch.get_human_value(
+                    for_file=True,
+                )
 
         return d
 
