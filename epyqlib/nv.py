@@ -1579,7 +1579,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             else:
                 message = 'Saved to "{}"'.format(path)
 
-        self.activity_ended.emit(message)
+            self.activity_ended.emit(message)
 
     @pyqtSlot()
     def read_from_file(self, parent=None):

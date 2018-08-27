@@ -31,7 +31,10 @@ class ActivityError(Exception):
     pass
 
 
-class NvView(QtWidgets.QWidget):
+Ui, UiBase = uic.loadUiType(pathlib.Path(__file__).with_suffix('.ui'))
+
+
+class NvView(UiBase):
     module_to_nv = pyqtSignal()
     read_from_file = pyqtSignal()
     read_from_value_set_file = pyqtSignal()
@@ -39,22 +42,12 @@ class NvView(QtWidgets.QWidget):
     write_to_value_set_file = pyqtSignal()
 
     def __init__(self, parent=None, in_designer=False):
-        QtWidgets.QWidget.__init__(self, parent=parent)
+        super().__init__(parent=parent)
 
         self.in_designer = in_designer
 
-        ui = 'nvview.ui'
-        # TODO: CAMPid 9549757292917394095482739548437597676742
-        if not QFileInfo(ui).isAbsolute():
-            ui_file = os.path.join(
-                QFileInfo.absolutePath(QFileInfo(__file__)), ui)
-        else:
-            ui_file = ui
-        ui_file = QFile(ui_file)
-        ui_file.open(QFile.ReadOnly | QFile.Text)
-        ts = QTextStream(ui_file)
-        sio = io.StringIO(ts.readAll())
-        self.ui = uic.loadUi(sio, self)
+        self.ui = Ui()
+        self.ui.setupUi(self)
 
         self.ui.module_to_nv_button.clicked.connect(self.module_to_nv)
         self.ui.write_to_module_button.clicked.connect(self.write_to_module)
@@ -511,7 +504,7 @@ class NvView(QtWidgets.QWidget):
 
             model.submit_transaction()
 
-        self.set_access_level.clicked.connect(write_access_level)
+        self.ui.set_access_level.clicked.connect(write_access_level)
 
         model.activity_started.connect(self.activity_started)
         model.activity_ended.connect(self.activity_ended)
@@ -523,31 +516,31 @@ class NvView(QtWidgets.QWidget):
             self.ui.enforce_range_limits_check_box.checkState(),
         )
 
-        self.ui.module_to_nv.connect(model.module_to_nv)
+        self.module_to_nv.connect(model.module_to_nv)
 
         read_from_file = functools.partial(
             model.read_from_file,
             parent=self
         )
-        self.ui.read_from_file.connect(read_from_file)
+        self.read_from_file.connect(read_from_file)
 
         read_from_value_set_file = functools.partial(
             model.read_from_value_set_file,
             parent=self
         )
-        self.ui.read_from_value_set_file.connect(read_from_value_set_file)
+        self.read_from_value_set_file.connect(read_from_value_set_file)
 
         write_to_file = functools.partial(
             model.write_to_file,
             parent=self
         )
-        self.ui.write_to_file.connect(write_to_file)
+        self.write_to_file.connect(write_to_file)
 
         write_to_value_set_file = functools.partial(
             model.write_to_value_set_file,
             parent=self
         )
-        self.ui.write_to_value_set_file.connect(write_to_value_set_file)
+        self.write_to_value_set_file.connect(write_to_value_set_file)
 
         for i in epyqlib.nv.Columns.indexes:
             if self.resize_columns[i]:
