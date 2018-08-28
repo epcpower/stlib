@@ -196,6 +196,8 @@ class NvView(UiBase):
                 epyqlib.nv.Columns.indexes.name,
             }
 
+        self.update_diff_reference_columns()
+
     def filter_text_changed(self, text):
         self.ui.tree_view.model().setFilterWildcard(text)
 
@@ -577,14 +579,37 @@ class NvView(UiBase):
 
         model.force_action_decorations = False
 
+        self.update_diff_reference_columns()
+
+    def update_diff_reference_columns(self):
+        model = self.nonproxy_model()
+
         self.ui.diff_reference_column.clear()
+
+        if model is None:
+            return
+
         items = (
             ('No Diff', None),
             *(
                 (model.headers[column], column)
                 for column in epyqlib.nv.diffable_columns
+                if not self.ui.tree_view.isColumnHidden(column)
             )
         )
+
+        default_reference_preference = [
+            epyqlib.nv.Columns.indexes.user_default,
+            epyqlib.nv.Columns.indexes.factory_default,
+            epyqlib.nv.Columns.indexes.scratch,
+        ]
+
+        default_reference = next(
+            index
+            for index in default_reference_preference
+            if not self.ui.tree_view.isColumnHidden(index)
+        )
+
         for i, (text, value) in enumerate(items):
             self.ui.diff_reference_column.addItem(text)
             self.ui.diff_reference_column.setItemData(
@@ -592,7 +617,7 @@ class NvView(UiBase):
                 value,
                 epyqlib.pyqabstractitemmodel.UserRoles.raw,
             )
-            if value == epyqlib.nv.Columns.indexes.user_default:
+            if value == default_reference:
                 self.ui.diff_reference_column.setCurrentIndex(i)
 
     def clicked(self, index):
