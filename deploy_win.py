@@ -308,7 +308,7 @@ for path in os.listdir(base):
     )
 
 runit(args=[
-    os.path.join('c:/', 'Qt', 'QtIFW2.0.1', 'bin', 'binarycreator.exe'),
+    os.path.join('c:/', 'Qt', 'QtIFW3.0.1', 'bin', 'binarycreator.exe'),
     '-c', os.path.join('installer', 'config', 'config.xml'),
     '-p', os.path.join('installer', 'packages'),
     'epyq.exe'],
