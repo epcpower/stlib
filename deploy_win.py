@@ -7,9 +7,11 @@ import sys
 import epyq
 import epyqlib.tee
 import glob
+import inspect
 import io
 import json
 import os
+import shlex
 import stat
 import sys
 
@@ -98,22 +100,43 @@ parser.add_argument('--name', '-n', type=str, required=True)
 
 args = parser.parse_args()
 
-def runit(args, cwd=None, env=None):
-    proc = subprocess.Popen(
-        args=args,
-        cwd=cwd,
-        shell=True,
-        env=env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT
-        )
+# TODO: CAMPid 079079043724533410718467080456813604134316946765431341384014
+def report_and_check_call(command, *args, cwd=None, shell=False, **kwargs):
+    print('\nCalling:')
+    print('    Caller: {}'.format(callers_line_info()))
+    print('    CWD: {}'.format(repr(cwd)))
+    print('    As passed: {}'.format(repr(command)))
+    print('    Full: {}'.format(
+        ' '.join(shlex.quote(os.fspath(x)) for x in command),
+    ))
 
-    for line in proc.stdout:
-        sys.stdout.write(str(line, 'UTF-8'))
+    if shell:
+        print('    {}'.format(repr(command)))
+    else:
+        for arg in command:
+            print('    {}'.format(repr(arg)))
 
-    proc.wait()
-    if proc.returncode != 0:
-        raise subprocess.CalledProcessError(proc.returncode, args)
+    sys.stdout.flush()
+    subprocess.check_call(command, *args, cwd=cwd, **kwargs)
+
+
+# TODO: CAMPid 974597249731467124675t40136706803641679349342342
+# https://github.com/altendky/altendpy/issues/8
+def callers_line_info():
+    here = inspect.currentframe()
+    caller = here.f_back
+
+    if caller is None:
+        return None
+
+    there = caller.f_back
+    info = inspect.getframeinfo(there)
+
+    return 'File "{}", line {}, in {}'.format(
+        info.filename,
+        info.lineno,
+        info.function,
+    )
 
 qt_root = os.path.join('C:/', 'Qt', 'Qt5.7.0')
 
@@ -285,8 +308,8 @@ for source, destination in to_copy:
     shutil.copy(os.path.join('epyq', source), os.path.join(config, destination))
 
 
-runit(
-    args=[
+report_and_check_call(
+    command=[
         sys.executable,
         os.path.join('installer', 'config.py'),
         '--template', os.path.join('installer', 'config', 'config_template.xml'),
@@ -298,8 +321,8 @@ runit(
 base = os.path.join('build', 'installer', 'packages')
 for path in os.listdir(base):
     package_file = os.path.join(base, path, 'meta', 'package.xml')
-    runit(
-        args=[
+    report_and_check_call(
+        command=[
             sys.executable,
             os.path.join('installer', 'config.py'),
             '--template', package_file,
@@ -307,8 +330,8 @@ for path in os.listdir(base):
         ]
     )
 
-runit(args=[
-    os.path.join('c:/', 'Qt', 'QtIFW3.0.1', 'bin', 'binarycreator.exe'),
+report_and_check_call(command=[
+    os.path.join('c:/', 'Qt', 'QtIFW-3.0.1', 'bin', 'binarycreator.exe'),
     '-c', os.path.join('installer', 'config', 'config.xml'),
     '-p', os.path.join('installer', 'packages'),
     'epyq.exe'],
