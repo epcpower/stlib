@@ -981,7 +981,6 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         pass
 
     def set_from_device(self, column):
-        print('set_from_device', column)
         self._set_stale(stale=False, column=column)
 
     def stale(self, column):
