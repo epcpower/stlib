@@ -49,6 +49,13 @@ def errbackhook(error):
     return error
 
 
+def discard_cancelled(failure):
+    if issubclass(failure.type, twisted.internet.defer.CancelledError):
+        return None
+
+    return failure
+
+
 def catch_expected(error):
     if issubclass(error.type, epyqlib.utils.general.ExpectedException):
         epyqlib.utils.qt.raw_exception_message_box(

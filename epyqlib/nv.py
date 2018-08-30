@@ -450,6 +450,11 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 ', '.join(missing_read_write_signals),
             ))
 
+        self.cyclic_reader = CyclicReader(nvs=self)
+
+    def terminate(self):
+        self.cancel_cyclic_read_all()
+
     def set_stale(self):
         for nv in self.all_nv():
             nv.set_stale()
@@ -865,6 +870,59 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 'Signal not found: {}:{}'.format(frame_name, value_name)) from e
 
         return signal
+
+    def cyclic_read_all(self):
+        self.cyclic_reader.start()
+
+    def cancel_cyclic_read_all(self):
+        self.cyclic_reader.cancel()
+
+
+@attr.s
+class CyclicReader:
+    nvs = attr.ib()
+    _deferred = attr.ib(init=False, default=None)
+
+    def start(self):
+        self._deferred = twisted.internet.defer.ensureDeferred(
+            self._cyclic_read_all(),
+        )
+        self._deferred.addErrback(epyqlib.utils.twisted.discard_cancelled)
+        self._deferred.addErrback(epyqlib.utils.twisted.errbackhook)
+
+    def cancel(self):
+        if self._deferred is not None:
+            self._deferred.cancel()
+            self._deferred = None
+
+    async def _cyclic_read_all(self):
+        x = collections.defaultdict(list)
+        for nv in self.nvs.all_nv():
+            x[nv.frame].append(nv)
+
+        while True:
+            for meta in MetaEnum:
+                for frame, nvs in x.items():
+                    await epyqlib.utils.twisted.sleep(0.02)
+                    try:
+                        d, _ = await self.nvs.read_all_from_device(
+                            only_these=nvs,
+                            background=True,
+                        )
+                    except (
+                            epyqlib.twisted.nvs.CanceledError,
+                            epyqlib.twisted.nvs.SendFailedError,
+                    ):
+                        continue
+
+                    # TODO: CAMPid 0347987975t427567139419439349
+                    for nv in nvs:
+                        if not nv.status_signal.write_only:
+                            value = d[nv.status_signal]
+                            nv.set_meta(value, meta=meta, check_range=False)
+                            nv.set_from_device(
+                                column=getattr(Columns.indexes, meta.name),
+                            )
 
 
 class Nv(epyqlib.canneo.Signal, TreeNode):

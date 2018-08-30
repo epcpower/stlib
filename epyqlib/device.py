@@ -208,6 +208,8 @@ class Device:
             self.nv_looping_set.stop()
         if self.nv_tab_looping_set is not None:
             self.nv_tab_looping_set.stop()
+        self.nvs.terminate()
+        self.widget_nvs.terminate()
         logging.debug('{} terminated'.format(object.__repr__(self)))
 
     def __del__(self):
@@ -1141,8 +1143,11 @@ class Device:
         self.ui.connection_monitor_overlay.label.setText(text)
         self.ui.connection_monitor_overlay.setVisible(len(text) > 0)
 
-        if not present:
+        if present:
+            self.nvs.cyclic_read_all()
+        else:
             self.nvs.set_stale()
+            self.nvs.cancel_cyclic_read_all()
 
 
 class FrameTimeout(epyqlib.canneo.QtCanListener):
