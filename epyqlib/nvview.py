@@ -891,6 +891,9 @@ class NvView(UiBase):
                 if not signal.status_signal.write_only:
                     value = d[signal.status_signal]
                     signal.set_meta(value, meta=meta, check_range=False)
+                    signal.set_from_device(
+                        column=getattr(epyqlib.nv.Columns.indexes, meta.name),
+                    )
 
         for signal in frame.set_frame.parameter_signals:
             QtWidgets.QApplication.instance().processEvents()

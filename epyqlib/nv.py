@@ -450,6 +450,10 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 ', '.join(missing_read_write_signals),
             ))
 
+    def set_stale(self):
+        for nv in self.all_nv():
+            nv.set_stale()
+
     def set_bus(self, bus):
         self.transport.set_bus(bus=bus)
         self.bus = bus
@@ -880,6 +884,7 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         meta=None,
         meta_value=None,
         base=True,
+        for_remote_data=True,
     ):
         epyqlib.canneo.Signal.__init__(self, signal=signal, frame=frame,
                                     parent=parent)
@@ -913,7 +918,10 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         else:
             self.meta = meta
 
-        if base:
+        self.base = base
+        self.for_remote_data = for_remote_data
+
+        if self.base:
             metas = (
                 MetaEnum.user_default,
                 MetaEnum.factory_default,
@@ -936,11 +944,25 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
                     getattr(self.meta, meta.name).full_string,
                 )
 
-            self.scratch = Nv(signal, frame=None, meta=self.meta, base=False)
+            self.scratch = Nv(
+                signal,
+                frame=None,
+                meta=self.meta,
+                base=False,
+                for_remote_data=False,
+            )
             self.scratch.set_value(None)
             self.fields.scratch = self.scratch.full_string
 
         self.write_only = False
+
+        self._stale = self.for_remote_data
+
+        self.stale_role = Qt.ForegroundRole
+        palette = QtGui.QPalette(QtWidgets.QWidget().palette())
+        color = QtGui.QColor(palette.windowText().color())
+        color.setAlphaF(0.3)
+        self.stale_value = color
 
     def _changed(self, column_start=None, column_end=None, roles=(
             Columns.indexes.value,)):
@@ -954,6 +976,51 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
             self, column_end,
             list(roles),
         )
+
+    def set_from_user(self):
+        pass
+
+    def set_from_device(self, column):
+        print('set_from_device', column)
+        self._set_stale(stale=False, column=column)
+
+    def stale(self, column):
+        subnode = self._get_signal_for_column(column)
+
+        if subnode is None:
+            return False
+
+        return subnode._stale
+
+    def _set_stale(self, stale, column):
+        subnode = self._get_signal_for_column(column)
+        was_stale = subnode._stale
+
+        subnode._stale = stale
+
+        if was_stale != subnode._stale:
+            self._changed(column, column, roles=[self.stale_role])
+
+    def set_stale(self):
+        for column in Columns.indexes:
+            subnode = self._get_signal_for_column(column)
+
+            if subnode is not None and subnode.for_remote_data:
+                self._set_stale(stale=True, column=column)
+
+    def _get_signal_for_column(self, column):
+        if not self.base:
+            raise Exception('This should only be called on the base signal')
+
+        if column == Columns.indexes.value:
+            return self
+
+        if column == Columns.indexes.scratch:
+            return self.scratch
+
+        column_name = Columns().index_from_attribute(column)
+
+        return getattr(self.meta, column_name, None)
 
     def get_meta_signal(self, meta):
         if meta == MetaEnum.value:
@@ -1345,6 +1412,15 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         return super_result
 
+    def data_foreground(self, index):
+        node = self.node_from_index(index)
+
+        if isinstance(node, Nv):
+            if node.stale(index.column()):
+                return node.stale_value
+
+        return None
+
     def data_tool_tip(self, index):
         if index.column() == Columns.indexes.saturate:
             node = self.node_from_index(index)
@@ -1510,6 +1586,9 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 if not signal.status_signal.write_only:
                     value = d[signal.status_signal]
                     signal.set_meta(value, meta=meta, check_range=False)
+                    signal.set_from_device(
+                        column=getattr(Columns.indexes, meta.name),
+                    )
 
         for signal in frame.set_frame.parameter_signals:
             QtWidgets.QApplication.instance().processEvents()

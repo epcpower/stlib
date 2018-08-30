@@ -50,6 +50,7 @@ class PyQAbstractItemModel(QAbstractItemModel):
             Qt.CheckStateRole: self.data_check_state,
             Qt.EditRole: self.data_edit,
             Qt.BackgroundRole: self.data_background,
+            Qt.ForegroundRole: self.data_foreground,
             Qt.DecorationRole: self.data_decoration,
             Qt.ToolTipRole: self.data_tool_tip,
             Qt.FontRole: self.data_font,
@@ -99,6 +100,9 @@ class PyQAbstractItemModel(QAbstractItemModel):
         return value
 
     def data_background(self, index):
+        return None
+
+    def data_foreground(self, index):
         return None
 
     def data_decoration(self, index):

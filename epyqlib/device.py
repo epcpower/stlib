@@ -1096,6 +1096,9 @@ class Device:
 
         self.read_nv_widget_min_max()
 
+        if not online:
+            self.nvs.set_stale()
+
     def read_nv_widget_min_max(self):
         if not self.auto_read_nv_widget_min_max:
             return
@@ -1137,6 +1140,9 @@ class Device:
 
         self.ui.connection_monitor_overlay.label.setText(text)
         self.ui.connection_monitor_overlay.setVisible(len(text) > 0)
+
+        if not present:
+            self.nvs.set_stale()
 
 
 class FrameTimeout(epyqlib.canneo.QtCanListener):
