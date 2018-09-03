@@ -1,3 +1,1 @@
-call activate.bat
-"venv\Scripts\designer.exe"
-deactivate
+"venv\Scripts\pyqt5designer.exe"
