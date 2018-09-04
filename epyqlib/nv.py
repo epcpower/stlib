@@ -884,17 +884,16 @@ class CyclicReader:
     _deferred = attr.ib(init=False, default=None)
 
     def start(self):
-        self._deferred = twisted.internet.defer.ensureDeferred(
-            self._cyclic_read_all(),
-        )
-        self._deferred.addErrback(epyqlib.utils.twisted.discard_cancelled)
-        self._deferred.addErrback(epyqlib.utils.twisted.errbackhook)
+        self._deferred = self._cyclic_read_all()
 
     def cancel(self):
         if self._deferred is not None:
             self._deferred.cancel()
             self._deferred = None
 
+    @epyqlib.utils.twisted.ensure_deferred
+    @epyqlib.utils.twisted.errback_dialog
+    @epyqlib.utils.twisted.ignore_cancelled
     async def _cyclic_read_all(self):
         x = collections.defaultdict(list)
         for nv in self.nvs.all_nv():

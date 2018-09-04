@@ -40,6 +40,35 @@ def wait_for(check, period=0.1, timeout=10, message=None):
         yield epyqlib.utils.twisted.sleep(period)
 
 
+def ignore_cancelled(f):
+    async def wrapper(*args, **kwargs):
+        try:
+            return await f(*args, **kwargs)
+        except twisted.internet.defer.CancelledError:
+            pass
+
+    return wrapper
+
+
+def ensure_deferred(f):
+    def wrapper(*args, **kwargs):
+        return twisted.internet.defer.ensureDeferred(f(*args, **kwargs))
+
+    return wrapper
+
+
+def errback_dialog(f):
+    async def wrapper(*args, **kwargs):
+        try:
+            return await f(*args, **kwargs)
+        except Exception as e:
+            epyqlib.utils.twisted.errbackhook(
+                twisted.python.failure.Failure(e),
+            )
+
+    return wrapper
+
+
 def errbackhook(error):
     epyqlib.utils.qt.custom_exception_message_box(
         brief='{}\n{}'.format(error.type.__name__, error.value),
