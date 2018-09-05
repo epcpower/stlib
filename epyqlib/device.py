@@ -208,8 +208,10 @@ class Device:
             self.nv_looping_set.stop()
         if self.nv_tab_looping_set is not None:
             self.nv_tab_looping_set.stop()
-        self.nvs.terminate()
-        self.widget_nvs.terminate()
+        if self.nvs is not None:
+            self.nvs.terminate()
+        if self.widget_nvs is not None:
+            self.widget_nvs.terminate()
         logging.debug('{} terminated'.format(object.__repr__(self)))
 
     def __del__(self):
@@ -474,6 +476,9 @@ class Device:
             can_configuration = 'original'
 
         can_configuration = can_configurations[can_configuration]
+
+        self.nvs = None
+        self.widget_nvs = None
 
         self.bus_online = False
         self.bus_tx = False
@@ -1098,8 +1103,9 @@ class Device:
 
         self.read_nv_widget_min_max()
 
-        if not online:
-            self.nvs.set_stale()
+        if self.nvs is not None:
+            if not online:
+                self.nvs.set_stale()
 
     def read_nv_widget_min_max(self):
         if not self.auto_read_nv_widget_min_max:
@@ -1143,11 +1149,12 @@ class Device:
         self.ui.connection_monitor_overlay.label.setText(text)
         self.ui.connection_monitor_overlay.setVisible(len(text) > 0)
 
-        if present:
-            self.nvs.cyclic_read_all()
-        else:
-            self.nvs.set_stale()
-            self.nvs.cancel_cyclic_read_all()
+        if self.nvs is not None:
+            if present:
+                self.nvs.cyclic_read_all()
+            else:
+                self.nvs.set_stale()
+                self.nvs.cancel_cyclic_read_all()
 
 
 class FrameTimeout(epyqlib.canneo.QtCanListener):
