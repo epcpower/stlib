@@ -1369,6 +1369,14 @@ class Icon:
     font = attr.ib(QtGui.QFont('fontawesome'))
 
 
+@attr.s
+class TransactionAction:
+    only_these = attr.ib()
+    values = attr.ib()
+    callback = attr.ib()
+    meta = attr.ib()
+
+
 class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
     activity_started = pyqtSignal(str)
     activity_ended = pyqtSignal(str)
@@ -1526,52 +1534,56 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         self.check_range = state == Qt.Checked
 
     def start_transaction(self):
-        self.transaction_actions = []
+        self.transaction_actions = collections.defaultdict(list)
 
     def submit_transaction(self):
-        callback = None
-        meta = None
-        nodes = set()
-
-        values = {}
-        for action in self.transaction_actions:
-            values.update(action['values'])
-
-            if action['callback'] is not None:
-                if callback is None:
-                    callback = action['callback']
-                elif action['callback'] != callback:
-                    raise Exception('transactions are not that fancy')
-
-            if action['meta'] is not None:
-                if meta is None:
-                    meta = action['meta']
-                elif action['meta'] != meta:
-                    raise Exception('transactions are not that fancy')
-
-            nodes = nodes.union(action['only_these'])
-
-        if callback is not None:
-            callback = functools.partial(
-                callback,
-                only_these=nodes,
-            )
-
-        print(callable(callback), callback)
-
-        d = self.root.write_all_to_device(
-            only_these=nodes,
-            values=values,
-            callback=callback,
-            meta=meta,
-        )
-
-        d.addBoth(
-            epyqlib.utils.twisted.detour_result,
-            self.transaction_done,
-        )
+        d = twisted.internet.defer.ensureDeferred(self._submit_transaction())
         d.addErrback(epyqlib.utils.twisted.catch_expected)
         d.addErrback(epyqlib.utils.twisted.errbackhook)
+
+        return d
+
+    async def _submit_transaction(self):
+        try:
+            for meta, actions in self.transaction_actions.items():
+                values = {}
+                callback = None
+                nodes = set()
+
+                for action in actions:
+                    values.update(action.values)
+
+                    if action.callback is not None:
+                        if callback is None:
+                            callback = action.callback
+                        elif action.callback != callback:
+                            raise Exception('ack')
+
+                    if action.meta is not None:
+                        if meta is None:
+                            meta = action.meta
+                        elif action.meta != meta:
+                            raise Exception('ack')
+
+                    nodes = nodes.union(action.only_these)
+
+                if callback is not None:
+                    callback = functools.partial(
+                        callback,
+                        only_these=nodes,
+                    )
+
+                await self.root.write_all_to_device(
+                    only_these=nodes,
+                    values=values,
+                    callback=callback,
+                    meta=(meta,),
+                    # TODO: maybe not really...
+                    background=True,
+                )
+        finally:
+            print('self.transaction_done()')
+            self.transaction_done()
 
     def transaction_done(self):
         self.transaction_actions = None
@@ -1619,12 +1631,14 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                         d.addErrback(epyqlib.utils.twisted.catch_expected)
                         d.addErrback(epyqlib.utils.twisted.errbackhook)
                     else:
-                        self.transaction_actions.append(dict(
-                            only_these=nodes,
-                            values={(node, meta): node.calc_human_value(data)},
-                            callback=self.update_signals,
-                            meta=(meta,),
-                        ))
+                        self.transaction_actions[meta].append(
+                            TransactionAction(
+                                only_these=nodes,
+                                values={(node, meta): node.calc_human_value(data)},
+                                callback=self.update_signals,
+                                meta=meta,
+                            ),
+                        )
 
         return False
 
@@ -1739,8 +1753,16 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                     'Loaded from "{}"'.format(filename)
                 )
 
-    @pyqtSlot()
     def read_from_value_set_file(self, parent=None):
+        d = twisted.internet.defer.ensureDeferred(
+            self._read_from_value_set_file(parent=parent),
+        )
+        d.addErrback(epyqlib.utils.twisted.catch_expected)
+        d.addErrback(epyqlib.utils.twisted.errbackhook)
+
+        return d
+
+    async def _read_from_value_set_file(self, parent=None):
         fields = attr.fields(epyqlib.pm.valuesetmodel.ValueSet)
         filters = fields.filters.default
         # filters = epyqlib.pm.valuesetmodel.ValueSet.filters.default
@@ -1751,7 +1773,79 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         value_set = epyqlib.pm.valuesetmodel.loadp(path)
 
-        self.root.from_value_set(value_set)
+        parameter_nodes = value_set.model.root.nodes_by_filter(
+            filter=lambda node: isinstance(
+                node,
+                epyqlib.pm.valuesetmodel.Parameter,
+            ),
+        )
+        only_in_file = {
+            parameter.name
+            for parameter in parameter_nodes
+        }
+        only_in_file = {
+            (name, meta)
+            for name, meta in itertools.product(
+                only_in_file,
+                epyqlib.nv.MetaEnum,
+            )
+        }
+
+        d = collections.defaultdict(list)
+        for parameter in parameter_nodes:
+            d[parameter.name].append(parameter)
+
+        self.activity_started.emit(
+            'Loading value set from "{}"'.format(path),
+        )
+
+        self.start_transaction()
+
+        for child in self.root.all_nv():
+            name = child.fields.name
+
+            parameters = d.get(name, [])
+
+            not_found_format = (
+                "Nv value named '{}' ({{}}) not found when loading "
+                "from value set".format(name)
+            )
+
+            if len(parameters) == 1:
+                parameter, = parameters
+
+                index = self.index_from_node(child)
+
+                for meta in MetaEnum:
+                    only_in_file.discard((name, meta))
+
+                    v = getattr(parameter, meta.name)
+                    if v is not None:
+                        self.setData(
+                            index.siblingAtColumn(
+                                getattr(Columns.indexes, meta.name),
+                            ),
+                            v,
+                            Qt.EditRole,
+                        )
+                    else:
+                        logger.info(not_found_format.format(meta.name))
+            elif len(parameters) > 1:
+                logger.info(
+                    "Nv value named '{}' occurred {} times when loading "
+                    "from value set".format(name, len(parameters)),
+                )
+            else:
+                logger.info(
+                    "Nv value named '{}' not found when loading from "
+                    "value set".format(name),
+                )
+
+        for name, meta in sorted(only_in_file):
+            logger.info("Unrecognized NV value named '{}' ({}) found when loading "
+                  "from value set".format(name, meta.name))
+
+        await self.submit_transaction()
 
         self.activity_ended.emit(
             'Loaded value set from "{}"'.format(path),
