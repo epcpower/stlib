@@ -134,7 +134,7 @@ def csv_load(f, devices):
     reader = csv.reader(
         line
         for line in lines
-        if line[0] not in special_leading_characters,
+        if line[0] not in special_leading_characters
     )
 
     last_event_time = 0
