@@ -521,7 +521,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             background=False,
     ):
         if meta is None:
-            meta = tuple(reversed(MetaEnum))
+            meta = meta_limits_first
 
         activity = ('Reading from device' if read
                     else 'Writing to device')
@@ -907,6 +907,7 @@ class CyclicReader:
                         d, _ = await self.nvs.read_all_from_device(
                             only_these=nvs,
                             background=True,
+                            meta=(meta,),
                         )
                     except (
                             epyqlib.twisted.nvs.CanceledError,
