@@ -165,7 +165,7 @@ class Parameter(epyqlib.treenode.TreeNode):
         human_name='Parameter UUID',
     )
 
-    uuid = epyqlib.attrsmodel.attr_uuid()
+    uuid = epyqlib.attrsmodel.attr_uuid(load_only=True)
 
     def __attrs_post_init__(self):
         super().__init__()
