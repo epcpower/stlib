@@ -1563,8 +1563,6 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         d.addErrback(epyqlib.utils.twisted.catch_expected)
         d.addErrback(epyqlib.utils.twisted.errbackhook)
 
-        return d
-
     async def _submit_transaction(self):
         try:
             for meta, actions in self.transaction_actions.items():
@@ -1607,8 +1605,22 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             print('self.transaction_done()')
             self.transaction_done()
 
+    def cancel_transaction(self):
+        self.transaction_actions = None
+
     def transaction_done(self):
         self.transaction_actions = None
+
+    @contextlib.asynccontextmanager
+    async def transaction_manager(self):
+        self.start_transaction()
+        try:
+            yield
+        except:
+            self.cancel_transaction()
+            raise
+
+        await self._submit_transaction()
 
     def setData(self, index, data, role=None):
         column = index.column()
@@ -1775,6 +1787,20 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                     'Loaded from "{}"'.format(filename)
                 )
 
+    @contextlib.contextmanager
+    def activity_manager(self, start, success, failure):
+        self.activity_started.emit(start)
+
+        try:
+            yield
+        except:
+            message = failure
+            raise
+        else:
+            message = success
+        finally:
+            self.activity_ended.emit(message)
+
     def read_from_value_set_file(self, parent=None):
         d = twisted.internet.defer.ensureDeferred(
             self._read_from_value_set_file(parent=parent),
@@ -1817,61 +1843,61 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         for parameter in parameter_nodes:
             d[parameter.name].append(parameter)
 
-        self.activity_started.emit(
-            'Loading value set from "{}"'.format(path),
-        )
+        @contextlib.asynccontextmanager
+        async def cm():
+            with self.activity_manager(
+                start='Loading value set from "{}"'.format(path),
+                success='Loaded value set from "{}"'.format(path),
+                failure='Failed to load value set from "{}"'.format(path),
+            ):
+                with self.root.cyclic_reader.pause_manager(self):
+                    async with self.transaction_manager():
+                        yield
 
-        self.start_transaction()
+        async with cm():
+            for child in self.root.all_nv():
+                name = child.fields.name
 
-        for child in self.root.all_nv():
-            name = child.fields.name
+                parameters = d.get(name, [])
 
-            parameters = d.get(name, [])
-
-            not_found_format = (
-                "Nv value named '{}' ({{}}) not found when loading "
-                "from value set".format(name)
-            )
-
-            if len(parameters) == 1:
-                parameter, = parameters
-
-                index = self.index_from_node(child)
-
-                for meta in MetaEnum:
-                    only_in_file.discard((name, meta))
-
-                    v = getattr(parameter, meta.name)
-                    if v is not None:
-                        self.setData(
-                            index.siblingAtColumn(
-                                getattr(Columns.indexes, meta.name),
-                            ),
-                            v,
-                            Qt.EditRole,
-                        )
-                    else:
-                        logger.info(not_found_format.format(meta.name))
-            elif len(parameters) > 1:
-                logger.info(
-                    "Nv value named '{}' occurred {} times when loading "
-                    "from value set".format(name, len(parameters)),
-                )
-            else:
-                logger.info(
-                    "Nv value named '{}' not found when loading from "
-                    "value set".format(name),
+                not_found_format = (
+                    "Nv value named '{}' ({{}}) not found when loading "
+                    "from value set".format(name)
                 )
 
-        for name, meta in sorted(only_in_file):
-            logger.info("Unrecognized NV value named '{}' ({}) found when loading "
-                  "from value set".format(name, meta.name))
+                if len(parameters) == 1:
+                    parameter, = parameters
 
-        await self.submit_transaction()
+                    index = self.index_from_node(child)
 
-        self.activity_ended.emit(
-            'Loaded value set from "{}"'.format(path),
-        )
+                    for meta in MetaEnum:
+                        only_in_file.discard((name, meta))
+
+                        v = getattr(parameter, meta.name)
+                        if v is not None:
+                            self.setData(
+                                index.siblingAtColumn(
+                                    getattr(Columns.indexes, meta.name),
+                                ),
+                                v,
+                                Qt.EditRole,
+                            )
+                        else:
+                            logger.info(not_found_format.format(meta.name))
+                elif len(parameters) > 1:
+                    logger.info(
+                        "Nv value named '{}' occurred {} times when loading "
+                        "from value set".format(name, len(parameters)),
+                    )
+                else:
+                    logger.info(
+                        "Nv value named '{}' not found when loading from "
+                        "value set".format(name),
+                    )
+
+            for name, meta in sorted(only_in_file):
+                logger.info("Unrecognized NV value named '{}' ({}) found when loading "
+                      "from value set".format(name, meta.name))
 
 
 if __name__ == '__main__':
