@@ -452,7 +452,10 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 ', '.join(missing_read_write_signals),
             ))
 
-        self.cyclic_reader = CyclicReader(nvs=self)
+        self.cyclic_reader = CyclicReader(
+            nvs=self.all_nv(),
+            read_call=self.read_all_from_device,
+        )
 
     def terminate(self):
         self.cancel_cyclic_read_all()
@@ -883,6 +886,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 @attr.s
 class CyclicReader:
     nvs = attr.ib()
+    read_call = attr.ib()
     pause_requests = attr.ib(factory=weakref.WeakSet)
     _deferred = attr.ib(init=False, default=None)
 
@@ -913,7 +917,7 @@ class CyclicReader:
     @epyqlib.utils.twisted.ignore_cancelled
     async def _cyclic_read_all(self):
         x = collections.defaultdict(list)
-        for nv in self.nvs.all_nv():
+        for nv in self.nvs:
             x[nv.frame].append(nv)
 
         while True:
@@ -925,7 +929,7 @@ class CyclicReader:
 
                         await epyqlib.utils.twisted.sleep(0.02)
 
-                        d, _ = await self.nvs.read_all_from_device(
+                        d, _ = await self.read_call(
                             only_these=nvs,
                             background=True,
                             meta=(meta,),
