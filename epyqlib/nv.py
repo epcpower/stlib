@@ -1606,7 +1606,6 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                     background=True,
                 )
         finally:
-            print('self.transaction_done()')
             self.transaction_done()
 
     def cancel_transaction(self):
