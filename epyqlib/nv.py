@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 import attr
 import collections
 import can
+import contextlib
 import enum
 from epyqlib.abstractcolumns import AbstractColumns
 import epyqlib.attrsmodel
@@ -29,6 +30,7 @@ import textwrap
 import time
 import twisted.internet.defer
 import twisted.internet.task
+import weakref
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -881,6 +883,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 @attr.s
 class CyclicReader:
     nvs = attr.ib()
+    pause_requests = attr.ib(factory=weakref.WeakSet)
     _deferred = attr.ib(init=False, default=None)
 
     def start(self):
@@ -890,6 +893,20 @@ class CyclicReader:
         if self._deferred is not None:
             self._deferred.cancel()
             self._deferred = None
+
+    @contextlib.contextmanager
+    def pause_manager(self, id):
+        self.pause(id)
+        try:
+            yield
+        finally:
+            self.unpause(id)
+
+    def pause(self, id):
+        self.pause_requests.add(id)
+
+    def unpause(self, id):
+        self.pause_requests.discard(id)
 
     @epyqlib.utils.twisted.ensure_deferred
     @epyqlib.utils.twisted.errback_dialog
@@ -902,8 +919,12 @@ class CyclicReader:
         while True:
             for meta in MetaEnum:
                 for frame, nvs in x.items():
-                    await epyqlib.utils.twisted.sleep(0.02)
                     try:
+                        while len(self.pause_requests) > 0:
+                            await epyqlib.utils.twisted.sleep(0.250)
+
+                        await epyqlib.utils.twisted.sleep(0.02)
+
                         d, _ = await self.nvs.read_all_from_device(
                             only_these=nvs,
                             background=True,
