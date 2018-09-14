@@ -833,12 +833,24 @@ def load_ui(filepath, base_instance):
 
 
 def search_view(view, text, column):
-    model = view.model()
-
     if text == '':
         return
 
-    index = model.search(
+    model = view.model()
+
+    models = []
+
+    while model is not None:
+        models.append(model)
+        search = getattr(model, 'search', None)
+        if search is not None:
+            break
+
+        model = model.sourceModel()
+    else:
+        raise Exception('ack')
+
+    index = search(
         text=text,
         column=column,
         search_from=view.currentIndex(),
@@ -851,6 +863,10 @@ def search_view(view, text, column):
         #       the display role data still works.
         parent = model.index(parent.row(), 0, parent.parent())
         index = model.index(index.row(), index.column(), parent)
+
+        for model in reversed(models[:-1]):
+            index = model.mapFromSource(index)
+
         view.setCurrentIndex(index)
         view.selectionModel().select(
             index,
