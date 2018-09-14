@@ -165,6 +165,19 @@ class Parameter(epyqlib.treenode.TreeNode):
         human_name='Parameter UUID',
     )
 
+    readable = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Boolean(allow_none=True),
+        ),
+    )
+    writable = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Boolean(allow_none=True),
+        ),
+    )
+
     uuid = epyqlib.attrsmodel.attr_uuid(load_only=True)
 
     def __attrs_post_init__(self):

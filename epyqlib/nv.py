@@ -665,6 +665,8 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     ),
                     minimum=child.meta.minimum.get_human_value(for_file=True),
                     maximum=child.meta.maximum.get_human_value(for_file=True),
+                    readable=not child.is_write_only(),
+                    writable=not child.is_read_only(),
                 )
             elif include_secrets:
                 def format_float(value):
@@ -1323,6 +1325,9 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
 
     def is_read_only(self):
         return self.frame.read_write.min > 0 or self.is_summary
+
+    def is_write_only(self):
+        return self.frame.read_write.max < 1
 
     def unique(self):
         # TODO: make it more unique
