@@ -1851,6 +1851,11 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         for parameter in parameter_nodes:
             d[parameter.name].append(parameter)
 
+        skip_nodes = (
+            self.root.access_level_node,
+            self.root.password_node,
+        )
+
         @contextlib.asynccontextmanager
         async def cm():
             with self.activity_manager(
@@ -1864,6 +1869,9 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         async with cm():
             for child in self.root.all_nv():
+                if child in skip_nodes:
+                    continue
+
                 name = child.fields.name
 
                 parameters = d.get(name, [])
