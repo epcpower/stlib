@@ -256,6 +256,8 @@ columns = epyqlib.attrsmodel.columns(
     merge('factory_default', Parameter),
     merge('minimum', Parameter),
     merge('maximum', Parameter),
+    merge('readable', Parameter),
+    merge('writable', Parameter),
     merge('parameter_uuid', Parameter),
     merge('uuid', *types.types.values()),
 )
