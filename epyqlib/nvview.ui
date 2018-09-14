@@ -179,6 +179,16 @@
         </widget>
        </item>
        <item>
+        <widget class="QCheckBox" name="auto_read">
+         <property name="text">
+          <string>Auto Read</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QCheckBox" name="enforce_range_limits_check_box">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">

@@ -40,6 +40,8 @@ class NvView(UiBase):
     read_from_value_set_file = pyqtSignal()
     write_to_file = pyqtSignal()
     write_to_value_set_file = pyqtSignal()
+    auto_read_checked = pyqtSignal()
+    auto_read_unchecked = pyqtSignal()
 
     def __init__(self, parent=None, in_designer=False):
         super().__init__(parent=parent)
@@ -130,6 +132,14 @@ class NvView(UiBase):
 
         self.ui.diff_reference_column.currentIndexChanged[int].connect(
             self.diff_reference_column_changed,
+        )
+
+        self.ui.auto_read.stateChanged.connect(
+            lambda state: (
+                self.auto_read_checked.emit()
+                if state == Qt.Checked
+                else self.auto_read_unchecked.emit()
+            )
         )
 
     def configure_diff_proxy(self, proxy):
@@ -544,7 +554,7 @@ class NvView(UiBase):
                 self.ui.tree_view.header().setSectionResizeMode(
                     i, QtWidgets.QHeaderView.ResizeToContents)
 
-        for column in model.meta_columns:
+        for column in (*model.meta_columns, epyqlib.nv.Columns.indexes.scratch):
             self.ui.tree_view.setItemDelegateForColumn(
                 column,
                 epyqlib.delegates.ByFunction(
@@ -575,6 +585,18 @@ class NvView(UiBase):
         model.force_action_decorations = False
 
         self.update_diff_reference_columns()
+
+        self.auto_read_unchecked.connect(
+            lambda: model.root.cyclic_reader.pause(self),
+        )
+        self.auto_read_checked.connect(
+            lambda: model.root.cyclic_reader.unpause(self),
+        )
+        if self.ui.auto_read.checkState() == Qt.Checked:
+            model.root.cyclic_reader.unpause(self)
+        else:
+            model.root.cyclic_reader.pause(self)
+
 
     def update_diff_reference_columns(self):
         model = self.nonproxy_model()
