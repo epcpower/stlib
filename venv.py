@@ -64,6 +64,8 @@ try:
 except ModuleNotFoundError:
     subprocess.run(
         [
+            sys.executable,
+            '-m',
             'pip',
             'install',
             '--user',
