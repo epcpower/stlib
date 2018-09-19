@@ -247,8 +247,8 @@ if 'PYTHON' not in os.environ:
     os.environ['PYTHON'] = os.path.join('c:/', 'Program Files (x86)', 'python35-32')
 with open(third_party_license, 'w', encoding='utf-8', newline='\n') as out:
     licenses = [
-        ('bitstruct', ('venv', 'src', 'bitstruct', 'LICENSE'), None, False),
-        ('canmatrix', ('venv', 'src', 'canmatrix', 'LICENSE'), None, False),
+        ('bitstruct', ('src', 'libs', 'bitstruct', 'LICENSE'), None, False),
+        ('canmatrix', ('src', 'libs', 'canmatrix', 'LICENSE'), None, False),
         ('python-can', (), 'https://raw.githubusercontent.com/hardbyte/python-can/develop/LICENSE.txt', False),
         ('Python', (os.environ['PYTHON'], 'LICENSE.txt'), None, False),
         ('PyQt5', (pyqt5_license_path,), None, False),
@@ -256,7 +256,7 @@ with open(third_party_license, 'w', encoding='utf-8', newline='\n') as out:
         ('PEAK-System', ('installer', 'peak-system.txt'), 'http://www.peak-system.com/produktcd/Develop/PC%20interfaces/Windows/API-ReadMe.txt', False),
         ('Microsoft Visual C++ Build Tools', ('installer', 'microsoft_visual_cpp_build_tools_eula.html'), 'https://www.visualstudio.com/en-us/support/legal/mt644918', False),
         ('Microsoft Visual C++ 2010 x86 Redistributable SP1', ('installer', 'microsoft_visual_cpp_2010_x86_redistributable_setup_sp1.rtf'), None, False),
-        ('Qt5Reactor', ('venv', 'src', 'qt5reactor', 'LICENSE'), None, False),
+        ('Qt5Reactor', ('src', 'libs', 'qt5reactor', 'LICENSE'), None, False),
         ('win32', ('venv', 'Lib', 'site-packages', 'win32', 'license.txt'), None, False),
         ('win32com', ('venv', 'Lib', 'site-packages', 'win32com', 'License.txt'), None, False),
         ('constantly', (), 'https://github.com/twisted/constantly/raw/master/LICENSE', False),
@@ -264,7 +264,7 @@ with open(third_party_license, 'w', encoding='utf-8', newline='\n') as out:
         ('twisted', (), 'https://github.com/twisted/twisted/raw/trunk/LICENSE', False),
         ('zope.interface', (), 'https://github.com/zopefoundation/zope.interface/raw/master/LICENSE.txt', False),
         ('ASI TICOFF', ('sub', 'epyqlib', 'epyqlib', 'ticoff.asi_license.txt'), 'https://gist.github.com/eliotb/1073231', False),
-        ('pyelftools', ('venv', 'src', 'pyelftools', 'LICENSE'), None, False),
+        ('pyelftools', ('src', 'libs', 'pyelftools', 'LICENSE'), None, False),
         ('attrs', ('installer', 'attrs.txt'), 'https://raw.githubusercontent.com/hynek/attrs/5516d5452c76416b3fea0c9d9f2b7505fae82c2b/LICENSE', False),
         ('FontAwesome', (), 'http://scripts.sil.org/OFL', False),
     ]
