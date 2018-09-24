@@ -1,6 +1,4 @@
 import logging
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
 import can
 import epyqlib.busproxy
 import epyqlib.twisted.busproxy

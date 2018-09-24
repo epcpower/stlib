@@ -11,9 +11,6 @@ import epyqlib.device
 import epyqlib.tests.common
 import epyqlib.twisted.busproxy
 
-logging.basicConfig(level=logging.WARNING,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-
 
 @pytest.mark.require_device
 def test_self_toggling(qtbot):

@@ -7,9 +7,6 @@ import epyqlib.device
 import epyqlib.twisted.busproxy
 import epyqlib.tests.common
 
-logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
-
 
 def test_range_override_hidden(qtbot):
     device = epyqlib.device.Device(
