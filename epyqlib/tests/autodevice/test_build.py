@@ -116,7 +116,7 @@ def version(request):
 
 
 @pytest.fixture(scope='session')
-def auto_device(version, parameter_type, access_password, tmpdir_factory):
+def auto_device(qapp, version, parameter_type, access_password, tmpdir_factory):
     target = tmpdir_factory.mktemp('auto_device').join('auto_device.epz')
 
     yield create_example_auto_device(
