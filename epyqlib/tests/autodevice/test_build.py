@@ -181,7 +181,7 @@ def test_from_zip(version, parameter_type, access_password, tmpdir):
 
 @pytest.mark.require_device
 @pytest_twisted.inlineCallbacks
-def test_general_load(auto_device, bus):
+def test_general_load(qapp, auto_device, bus):
     device = epyqlib.device.Device(
         file=auto_device.path,
         archive_code=example_archive_code,
@@ -196,7 +196,7 @@ def test_general_load(auto_device, bus):
 
 @pytest.mark.require_device
 @pytest_twisted.inlineCallbacks
-def test_invalid_serial(auto_device, bus, access_password):
+def test_invalid_serial(qapp, auto_device, bus, access_password):
     # string should never match a serial number
     create_example_auto_device(
         version=auto_device.version,
@@ -220,7 +220,7 @@ def test_invalid_serial(auto_device, bus, access_password):
 
 @pytest.mark.require_device
 @pytest_twisted.inlineCallbacks
-def test_valid_serial(auto_device, tmpdir, bus, access_password):
+def test_valid_serial(qapp, auto_device, tmpdir, bus, access_password):
     temporary_directory = pathlib.Path(tmpdir)
 
     device = epyqlib.device.Device(
