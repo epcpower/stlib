@@ -1044,10 +1044,6 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         self._stale = self.for_remote_data
 
         self.stale_role = Qt.ForegroundRole
-        palette = QtGui.QPalette(QtWidgets.QWidget().palette())
-        color = QtGui.QColor(palette.windowText().color())
-        color.setAlphaF(0.3)
-        self.stale_value = color
 
     def _changed(self, column_start=None, column_end=None, roles=(
             Columns.indexes.value,)):
@@ -1463,6 +1459,11 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         self.transaction_actions = None
 
+        palette = QtGui.QPalette(QtWidgets.QWidget().palette())
+        color = QtGui.QColor(palette.windowText().color())
+        color.setAlphaF(0.3)
+        self.stale_foreground = color
+
     def all_nv(self):
         return self.root.all_nv()
 
@@ -1512,7 +1513,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         if isinstance(node, Nv):
             if node.stale(index.column()):
-                return node.stale_value
+                return self.stale_foreground
 
         return None
 
