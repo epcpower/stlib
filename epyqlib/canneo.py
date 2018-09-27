@@ -507,7 +507,7 @@ class Signal:
 
 @functools.lru_cache(10000)
 def locale_format(format, value):
-    return locale.format(format, value, grouping=True)
+    return locale.format_string(format, value, grouping=True)
 
 
 class QtCanListener(can.Listener):
