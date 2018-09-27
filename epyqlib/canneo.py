@@ -545,7 +545,7 @@ class Frame(QtCanListener):
     def __init__(self, frame, multiplex_value=None,
                  signal_class=Signal, set_value_to_default=True,
                  mux_frame=None, strip_summary=True, parent=None):
-        QtCanListener.__init__(self, self.message_received, parent=parent)
+        super().__init__(self.message_received, parent=parent)
 
         self.mux_frame = mux_frame
 
@@ -776,7 +776,7 @@ class Neo(QtCanListener):
     def __init__(self, matrix, frame_class=Frame, signal_class=Signal,
                  rx_interval=0, bus=None, node_id_adjust=None,
                  strip_summary=True, parent=None):
-        QtCanListener.__init__(self, self.message_received, parent=parent)
+        super().__init__(self.message_received, parent=parent)
 
         self.bus = None
 

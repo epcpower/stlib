@@ -13,9 +13,7 @@ import epyqlib.canneo
 
 class BusProxy(epyqlib.canneo.QtCanListener):
     def __init__(self, protocol, reactor, bus=None, parent=None):
-        epyqlib.canneo.QtCanListener.__init__(self,
-                                              receiver=self.readEvent,
-                                              parent=parent)
+        super().__init__(receiver=self.readEvent, parent=parent)
 
         self._bus = bus
         self._reactor = reactor
