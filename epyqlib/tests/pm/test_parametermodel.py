@@ -21,7 +21,7 @@ class SampleModel:
             uuid='ce63b990-8061-4b9f-9ad7-d2b60fe8b4c9',
         ),
     )
-    model = attr.ib()
+    model = attr.ib(default=None)
     group_a = attr.ib(default=None)
     enumerations = attr.ib(default=None)
     letters_enumeration = attr.ib(default=None)
@@ -30,12 +30,15 @@ class SampleModel:
     numbers_enumerators = attr.ib(factory=dict)
     table = attr.ib(default=None)
 
-    @model.default
-    def _(self):
-        return epyqlib.attrsmodel.Model(
-            root=self.root,
+    @classmethod
+    def build(cls):
+        sample_model = cls()
+        sample_model.model = epyqlib.attrsmodel.Model(
+            root=sample_model.root,
             columns=epyqlib.pm.parametermodel.columns,
         )
+
+        return sample_model
 
     def fill(self):
         self.group_a = epyqlib.pm.parametermodel.Group(
@@ -124,11 +127,37 @@ class SampleModel:
             uuid='58b7bf0d-4dec-4707-a976-d49a856eb3ba',
         )
         self.group_a.append_child(self.table)
+        self.table.append_child(
+            epyqlib.pm.parametermodel.TableEnumerationReference(
+                name='Numbers',
+                uuid='3d98c907-0b81-4e29-be9b-2620ef44ce26',
+                enumeration_uuid=self.numbers_enumeration.uuid,
+            ),
+        )
+        self.table.append_child(
+            epyqlib.pm.parametermodel.TableEnumerationReference(
+                name='Letters',
+                uuid='d80162ea-bd8c-4936-bca1-732b11205423',
+                enumeration_uuid=self.letters_enumeration.uuid,
+            ),
+        )
+        self.table.append_child(
+            epyqlib.pm.parametermodel.Array(
+                name='Table Array A',
+                uuid='77ed47bb-fbea-4756-b1c4-2e2be02aebc7',
+            ),
+        )
+        self.table.append_child(
+            epyqlib.pm.parametermodel.Array(
+                name='Table Array B',
+                uuid='acda3b53-785c-4588-8b35-d58a9f2e10a8',
+            ),
+        )
 
 
 @pytest.fixture
 def sample():
-    sample_model = SampleModel()
+    sample_model = SampleModel.build()
     sample_model.fill()
 
     return sample_model
@@ -203,21 +232,20 @@ def test_sample_loads_consistently(sample):
 
 def test_table_addition(sample):
     table = epyqlib.pm.parametermodel.Table()
+    sample.group_a.append_child(table)
 
     seconds = epyqlib.pm.parametermodel.Array(name='seconds')
     table.append_child(seconds)
     hertz = epyqlib.pm.parametermodel.Array(name='hertz')
     table.append_child(hertz)
 
-    sample.group_a.append_child(table)
-
     letters_reference = epyqlib.pm.parametermodel.TableEnumerationReference()
-    table.append_child(letters_reference)
     letters_reference.link(sample.letters_enumeration)
+    table.append_child(letters_reference)
 
     numbers_reference = epyqlib.pm.parametermodel.TableEnumerationReference()
-    table.append_child(sample.numbers_enumeration)
-    numbers_reference.link(numbers_reference)
+    numbers_reference.link(sample.numbers_enumeration)
+    table.append_child(numbers_reference)
 
     # assert letters_reference.name == sample.letters_enumeration.name
 
@@ -239,6 +267,36 @@ def test_table_add_enumeration_with_uuid(sample):
     )
 
     sample.table.append_child(ref)
+
+
+def test_table_update(sample):
+    sample.table.update()
+
+    groups = [
+        child
+        for child in sample.table.children
+        if isinstance(child, epyqlib.pm.parametermodel.TableGroupElement)
+    ]
+
+    assert len(groups) == 1
+
+    group, = groups
+
+    enumeration_references = [
+        child
+        for child in sample.table.children
+        if isinstance(child, epyqlib.pm.parametermodel.TableEnumerationReference)
+    ]
+
+    enumerations = []
+    for enumeration_reference in enumeration_references:
+        enumeration, = sample.root.nodes_by_attribute(
+            attribute_name='uuid',
+            attribute_value=enumeration_reference.enumeration_uuid,
+        )
+        enumerations.append(enumeration)
+
+    assert len(group.children) == len(enumerations[0].children)
 
 
 def test_array_addable_types():

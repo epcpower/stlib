@@ -491,6 +491,13 @@ def create_delegate(parent=None):
     return delegate
 
 
+def get_connection_id(parent, child):
+    if parent is not None:
+        parent = parent.uuid
+
+    return (parent, child.uuid)
+
+
 class DelegateSelector:
     def __init__(self, parent=None):
         self.parent = parent
@@ -611,13 +618,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         check_uuids(self.root)
 
-        def connect(node, _):
-            self.pyqtify_connect(node.tree_parent, node)
-
-        self.root.traverse(
-            call_this=connect,
-            internal_nodes=True,
-        )
+        self.pyqtify_connect(None, self.root)
 
     def add_drop_sources(self, *sources):
         self.droppable_from.update(sources)
@@ -722,14 +723,30 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         return False
 
     def pyqtify_connect(self, parent, child):
+        def visit(node, nodes):
+            if node is child:
+                this_parent = parent
+            else:
+                this_parent = node.tree_parent
+
+            nodes.append({'parent': this_parent, 'child': node})
+
+        nodes = []
+        child.traverse(call_this=visit, payload=nodes, internal_nodes=True)
+
+        for kwargs in reversed(nodes):
+            self._pyqtify_connect(**kwargs)
+
+    def _pyqtify_connect(self, parent, child):
         def key_value(instance, name, slot):
             signal = inspect.getattr_static(obj=instance, attr=name)
             return ((signal, (instance, slot)),)
 
         connections = {}
-        if (parent, child) in self.connected_signals:
+        connection_id = get_connection_id(parent=parent, child=child)
+        if connection_id in self.connected_signals:
             raise ConsistencyError('already connected: {}'.format((parent, child)))
-        self.connected_signals[(parent, child)] = connections
+        self.connected_signals[connection_id] = connections
 
         for i, column in enumerate(self.columns):
             name = column.fields.get(type(child))
@@ -764,7 +781,24 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             signal.__get__(instance).connect(slot)
 
     def pyqtify_disconnect(self, parent, child):
-        connections = self.connected_signals.pop((parent, child))
+        def visit(node, nodes):
+            if node is child:
+                this_parent = parent
+            else:
+                this_parent = node.tree_parent
+
+            nodes.append({'parent': this_parent, 'child': node})
+
+        nodes = []
+        child.traverse(call_this=visit, payload=nodes, internal_nodes=True)
+
+        for kwargs in nodes:
+            self._pyqtify_disconnect(**kwargs)
+
+    def _pyqtify_disconnect(self, parent, child):
+        connections = self.connected_signals.pop(
+            get_connection_id(parent=parent, child=child),
+        )
 
         for signal, (instance, slot) in connections.items():
             signal.__get__(instance).disconnect(slot)

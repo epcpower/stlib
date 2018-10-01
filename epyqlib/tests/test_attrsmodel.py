@@ -130,19 +130,37 @@ def make_a_model(
     parameter_cls=Parameter,
     columns=columns,
 ):
-    root = root_cls()
+    root = root_cls(uuid='0f68fa9c-705d-4ba6-9ffa-406cb549a4dd')
 
     model = epyqlib.attrsmodel.Model(
         root=root,
         columns=columns,
     )
 
-    group_a = group_cls(name='Group A')
-    parameter_a_a = parameter_cls(name='Parameter A A')
-    group_a_b = group_cls(name='Group A B')
-    parameter_b = parameter_cls(name='Parameter B', value=42)
-    group_c = group_cls(name='Group C')
-    parameter_d = parameter_cls(name='Parameter D', value=42)
+    group_a = group_cls(
+        name='Group A',
+        uuid='f5b7569e-9d7e-4433-a034-29c3e04d1ad4',
+    )
+    parameter_a_a = parameter_cls(
+        name='Parameter A A',
+        uuid='df286eb3-67f0-42d6-b56a-8ee1ded49248',
+    )
+    group_a_b = group_cls(
+        name='Group A B',
+        uuid='aee15e15-c5df-4e73-ae1a-9a5d4eaa798a',
+    )
+    parameter_b = parameter_cls(
+        name='Parameter B',
+        value=42, uuid='a1fd7abb-4760-472e-bc94-1ef4d2cfad62',
+    )
+    group_c = group_cls(
+        name='Group C',
+        uuid='2777e016-a3e6-470d-b20c-7a44904df710',
+    )
+    parameter_d = parameter_cls(
+        name='Parameter D',
+        value=42, uuid='97f1f9e1-5601-4304-a583-561df79c47be',
+    )
 
     root.append_child(group_a)
     group_a.append_child(parameter_a_a)
@@ -449,6 +467,42 @@ def test_prepopulated_connections(qtbot):
         root=root,
         columns=columns,
     )
+
+    data_changed = DataChangedCollector(
+        model=model,
+        parameter=parameter,
+        column=1,
+        roles=(PyQt5.QtCore.Qt.DisplayRole,),
+    )
+
+    model.dataChanged.connect(data_changed.collect)
+    data_changed.collected.connect(values.collect)
+
+    for value in values.input:
+        parameter.value = value
+
+    assert tuple(values.expected) == tuple(values.collected)
+
+
+def test_postpopulated_connections(qtbot):
+    values = epyqlib.tests.common.Values(
+        initial=42,
+        input=[42, 37, 23],
+        expected=['37', '23'],
+    )
+
+    parameter = Parameter(
+        name='Parameter A',
+        value=values.initial,
+    )
+
+    root = Root()
+    model = epyqlib.attrsmodel.Model(
+        root=root,
+        columns=columns,
+    )
+
+    root.append_child(parameter)
 
     data_changed = DataChangedCollector(
         model=model,

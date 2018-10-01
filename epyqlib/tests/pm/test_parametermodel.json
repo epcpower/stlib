@@ -41,7 +41,34 @@
                 {
                     "_type": "table",
                     "name": "Table A",
-                    "children": [],
+                    "children": [
+                        {
+                            "_type": "table_enumeration_reference",
+                            "name": "Numbers",
+                            "uuid": "3d98c907-0b81-4e29-be9b-2620ef44ce26",
+                            "enumeration_uuid": "86111e99-624c-499e-a560-6a77db461e43"
+                        },
+                        {
+                            "_type": "table_enumeration_reference",
+                            "name": "Letters",
+                            "uuid": "d80162ea-bd8c-4936-bca1-732b11205423",
+                            "enumeration_uuid": "fd1b8036-8aef-4914-9165-ed3118bd8ecd"
+                        },
+                        {
+                            "_type": "array",
+                            "name": "Table Array A",
+                            "named_enumerators": true,
+                            "children": [],
+                            "uuid": "77ed47bb-fbea-4756-b1c4-2e2be02aebc7"
+                        },
+                        {
+                            "_type": "array",
+                            "name": "Table Array B",
+                            "named_enumerators": true,
+                            "children": [],
+                            "uuid": "acda3b53-785c-4588-8b35-d58a9f2e10a8"
+                        }
+                    ],
                     "uuid": "58b7bf0d-4dec-4707-a976-d49a856eb3ba"
                 }
             ],

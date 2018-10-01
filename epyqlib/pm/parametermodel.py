@@ -1,3 +1,6 @@
+import contextlib
+import itertools
+
 import attr
 import graham
 import marshmallow
@@ -493,6 +496,52 @@ class Array(epyqlib.treenode.TreeNode):
         return True
 
 
+@graham.schemify(tag='table_group_element', register=True)
+@epyqlib.attrsmodel.ify()
+@epyqlib.utils.qt.pyqtify()
+@attr.s(hash=False)
+class TableGroupElement(epyqlib.treenode.TreeNode):
+    name = attr.ib(
+        default='New Table Group Element',
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(),
+        ),
+    )
+
+    children = attr.ib(
+        default=attr.Factory(list),
+        cmp=False,
+        metadata=graham.create_metadata(
+            field=graham.fields.MixedList(fields=(
+                marshmallow.fields.Nested('TableGroupElement'),
+            )),
+        ),
+    )
+
+    uuid = epyqlib.attrsmodel.attr_uuid()
+
+    ref = attr.ib(factory=list)
+    graham.attrib(
+        attribute=ref,
+        field=marshmallow.fields.Nested(
+            'TableGroupElement',
+            allow_none=True,
+        ),
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=ref,
+        no_column=True,
+    )
+
+    def __attrs_post_init__(self):
+        super().__init__()
+
+    def can_drop_on(self, node):
+        return False
+
+    can_delete = epyqlib.attrsmodel.childless_can_delete
+
+
 @graham.schemify(tag='table_enumeration_reference')
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
@@ -548,13 +597,100 @@ class Table(epyqlib.treenode.TreeNode):
                 marshmallow.fields.Nested(graham.schema(
                     TableEnumerationReference,
                 )),
+                marshmallow.fields.Nested(graham.schema(TableGroupElement)),
             )),
         ),
     )
     uuid = epyqlib.attrsmodel.attr_uuid()
 
+    group = attr.ib(default=None)
+    epyqlib.attrsmodel.attrib(
+        attribute=group,
+        no_column=True,
+    )
+
     def __attrs_post_init__(self):
         super().__init__()
+
+        self._monitor_children = True
+
+    @contextlib.contextmanager
+    def _ignore_children(self):
+        self._monitor_children = False
+        yield
+        self._monitor_children = True
+
+    def update(self):
+        if not self._monitor_children:
+            return
+
+        old_groups = [
+            child
+            for child in self.children
+            if isinstance(child, TableGroupElement)
+        ]
+
+        root = self.find_root()
+
+        enumerations = []
+
+        for child in self.children:
+            if not isinstance(child, TableEnumerationReference):
+                continue
+
+            enumeration, = root.nodes_by_attribute(
+                attribute_value=child.enumeration_uuid,
+                attribute_name='uuid',
+            )
+
+            enumerations.append(enumeration.children)
+
+        arrays = [
+            child
+            for child in self.children
+            if isinstance(child, Array)
+        ]
+
+        with self._ignore_children():
+            for group in old_groups:
+                self.remove_child(child=group)
+            self.group = None
+
+            self.group = TableGroupElement(
+                name='Tree',
+            )
+            self.append_child(self.group)
+
+        product = list(itertools.product(*enumerations))
+
+        for combination in product:
+            present = self.group
+
+            for layer in combination:
+                upcoming = present.children_by_attribute(layer, 'ref')
+                if len(upcoming) == 1:
+                    present, = upcoming
+                else:
+                    new = TableGroupElement(ref=layer)
+                    present.append_child(new)
+                    present = new
+
+            for array in arrays:
+                present.append_child(array)
+
+    def addable_types(self):
+        return epyqlib.attrsmodel.create_addable_types((
+            TableEnumerationReference,
+            Array,
+        ))
+
+    @classmethod
+    def all_addable_types(cls):
+        return epyqlib.attrsmodel.create_addable_types((
+            TableEnumerationReference,
+            Array,
+            TableGroupElement,
+        ))
 
     def can_drop_on(self, node):
         return isinstance(node, tuple(self.addable_types().values()))
@@ -758,6 +894,7 @@ types = epyqlib.attrsmodel.Types(
         AccessLevels,
         Table,
         TableEnumerationReference,
+        TableGroupElement,
     ),
 )
 
