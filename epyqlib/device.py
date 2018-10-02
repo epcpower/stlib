@@ -173,6 +173,20 @@ def ignore_timeout(failure):
         failure)
 
 
+def load_matrix(path):
+    matrix = list(canmatrix.formats.loadp(path).values())[0]
+
+    if hasattr(matrix, 'load_errors'):
+        # https://github.com/ebroecker/canmatrix/pull/199
+        if len(matrix.load_errors) > 0:
+            first_error = matrix.load_errors[0]
+            raise Exception(
+                f'{type(first_error).__name__}: {first_error}',
+            ) from first_error
+
+    return matrix
+
+
 class Device:
     def __init__(self, *args, **kwargs):
         self.bus = None
@@ -543,7 +557,7 @@ class Device:
         if Elements.dash in self.elements:
             self.uis = self.dash_uis
 
-            matrix = list(canmatrix.formats.loadp(self.can_path).values())[0]
+            matrix = load_matrix(self.can_path)
             # TODO: this is icky
             if Elements.tx not in self.elements:
                 self.neo_frames = epyqlib.canneo.Neo(matrix=matrix,
@@ -554,7 +568,7 @@ class Device:
 
         if Elements.rx in self.elements:
             # TODO: the repetition here is not so pretty
-            matrix_rx = list(canmatrix.formats.loadp(self.can_path).values())[0]
+            matrix_rx = load_matrix(self.can_path)
             neo_rx = epyqlib.canneo.Neo(
                 matrix=matrix_rx,
                 frame_class=epyqlib.txrx.MessageNode,
@@ -573,7 +587,7 @@ class Device:
             rx.end_insert_rows.connect(rx_model.end_insert_rows)
 
         if Elements.tx in self.elements:
-            matrix_tx = list(canmatrix.formats.loadp(self.can_path).values())[0]
+            matrix_tx = load_matrix(self.can_path)
             message_node_tx_partial = functools.partial(epyqlib.txrx.MessageNode,
                                                         tx=True)
             signal_node_tx_partial = functools.partial(epyqlib.txrx.SignalNode,
@@ -619,7 +633,7 @@ class Device:
 
         self.widget_nvs = None
         if Elements.nv in self.elements:
-            matrix_nv = list(canmatrix.formats.loadp(self.can_path).values())[0]
+            matrix_nv = load_matrix(self.can_path)
             self.frames_nv = epyqlib.canneo.Neo(
                 matrix=matrix_nv,
                 frame_class=epyqlib.nv.Frame,
@@ -985,9 +999,7 @@ class Device:
                                           signal=widget.edit)
                                 break
 
-        monitor_matrix = list(
-            canmatrix.formats.loadp(self.can_path).values()
-        )[0]
+        monitor_matrix = load_matrix(self.can_path)
         monitor_frames = epyqlib.canneo.Neo(
             matrix=monitor_matrix,
             node_id_adjust=self.node_id_adjust,
