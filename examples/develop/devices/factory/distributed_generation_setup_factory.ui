@@ -74,10 +74,10 @@
            <string>UPS Mode</string>
           </property>
           <property name="command_signal_path" stdset="0">
-           <string>ParameterQuery;AfeConfig;EnableUPSMode</string>
+           <string>ParameterQuery;AfeConfigFlags;EnableUPSMode</string>
           </property>
           <property name="status_signal_path" stdset="0">
-           <string>ParameterQuery;AfeConfig;EnableUPSMode</string>
+           <string>ParameterQuery;AfeConfigFlags;EnableUPSMode</string>
           </property>
          </widget>
         </item>

@@ -71,10 +71,6 @@
                                 [
                                     "PpcCoeffsQSG",
                                     "Kq"
-                                ],
-                                [
-                                    "PpcDcCutoffFreq",
-                                    "fCutIg"
                                 ]
                             ]
                         }
@@ -83,6 +79,10 @@
                 {
                     "name": "2. Phase-Locked Loop",
                     "children": [
+                        [
+                            "PpcPllFilterCoeffs",
+                            "wTau"
+                        ],
                         {
                             "name": "1. Unlocked-State Parameters",
                             "children": [
@@ -172,16 +172,40 @@
                             "name": "1. Island Detection Parameters",
                             "children": [
                                 [
-                                    "PpcIslIslandDetect",
+                                    "PpcIslIslandDetectF",
                                     "fDevH"
                                 ],
                                 [
-                                    "PpcIslIslandDetect",
+                                    "PpcIslIslandDetectF",
                                     "fDevL"
                                 ],
                                 [
-                                    "PpcIslIslandDetect",
+                                    "PpcIslIslandDetectF",
                                     "tau"
+                                ],
+                                [
+                                    "PpcIslIslandDetectV",
+                                    "vDevH"
+                                ],
+                                [
+                                    "PpcIslIslandDetectV",
+                                    "vDevL"
+                                ],
+                                [
+                                    "PpcIslIslandDetectV",
+                                    "tau"
+                                ],
+                                [
+                                    "PpcIslTransFilter",
+                                    "vTau"
+                                ],
+                                [
+                                    "PpcIslTransFilter",
+                                    "fTau"
+                                ],
+                                [
+                                    "PpcIslGroupedDetect",
+                                    "groupedEnable"
                                 ]
                             ]
                         },
@@ -195,6 +219,10 @@
                                 [
                                     "PpcIslCoeffsF",
                                     "Ti"
+                                ],
+                                [
+                                    "PpcIslCoeffsF",
+                                    "Tb"
                                 ],
                                 [
                                     "PpcIslPhaseGains",
@@ -312,6 +340,88 @@
                                     "fCutF"
                                 ]
                             ]
+                        },
+                        {
+                            "name": "6. Voltage Destabilization Curve",
+                            "children": [
+                                [
+                                    "PpcIslDestabV_vBpt",
+                                    "v0"
+                                ],
+                                [
+                                    "PpcIslDestabV_vBpt",
+                                    "v1"
+                                ],
+                                [
+                                    "PpcIslDestabV_vBpt",
+                                    "v2"
+                                ],
+                                [
+                                    "PpcIslDestabV_dBpt",
+                                    "d0"
+                                ],
+                                [
+                                    "PpcIslDestabV_dBpt",
+                                    "d1"
+                                ],
+                                [
+                                    "PpcIslDestabV_dBpt",
+                                    "d2"
+                                ],
+                                [
+                                    "PpcIslDestabV_qBpt",
+                                    "q0"
+                                ],
+                                [
+                                    "PpcIslDestabV_qBpt",
+                                    "q1"
+                                ],
+                                [
+                                    "PpcIslDestabV_qBpt",
+                                    "q2"
+                                ]
+                            ]
+                        },
+                        {
+                            "name": "7. Frequency Destabilization Curve",
+                            "children": [
+                                [
+                                    "PpcIslDestabF_fBpt",
+                                    "f0"
+                                ],
+                                [
+                                    "PpcIslDestabF_fBpt",
+                                    "f1"
+                                ],
+                                [
+                                    "PpcIslDestabF_fBpt",
+                                    "f2"
+                                ],
+                                [
+                                    "PpcIslDestabF_dBpt",
+                                    "d0"
+                                ],
+                                [
+                                    "PpcIslDestabF_dBpt",
+                                    "d1"
+                                ],
+                                [
+                                    "PpcIslDestabF_dBpt",
+                                    "d2"
+                                ],
+                                [
+                                    "PpcIslDestabF_qBpt",
+                                    "q0"
+                                ],
+                                [
+                                    "PpcIslDestabF_qBpt",
+                                    "q1"
+                                ],
+                                [
+                                    "PpcIslDestabF_qBpt",
+                                    "q2"
+                                ]
+                            ]
                         }
                     ]
                 },
@@ -341,6 +451,10 @@
                                 [
                                     "PpcSpcCoeffsDC",
                                     "Ti"
+                                ],
+                                [
+                                    "PpcSpcCoeffsDC",
+                                    "Tb"
                                 ]
                             ]
                         },
@@ -376,6 +490,10 @@
                                 [
                                     "PpcAhcCoeffI",
                                     "tAdapt"
+                                ],
+                                [
+                                    "PpcDcCutoffFreq",
+                                    "fCutIg"
                                 ]
                             ]
                         },
@@ -389,6 +507,10 @@
                                 [
                                     "PpcAhcCoeffV",
                                     "tAdapt"
+                                ],
+                                [
+                                    "PpcPllFilterCoeffs",
+                                    "fCutVg"
                                 ]
                             ]
                         }
@@ -397,6 +519,10 @@
                 {
                     "name": "7. References",
                     "children": [
+                        [
+                            "PpcDisconnect",
+                            "tUnload"
+                        ],
                         {
                             "name": "1. System Nominal References",
                             "children": [
@@ -411,7 +537,7 @@
                             ]
                         },
                         {
-                            "name": "2. Voltage Reference Rate Limiter",
+                            "name": "2. Voltage Reference Characteristics",
                             "children": [
                                 [
                                     "PpcRateLimitVa",
@@ -428,7 +554,7 @@
                             ]
                         },
                         {
-                            "name": "3. Current Reference Rate Limiter",
+                            "name": "3. Current Reference Characteristics",
                             "children": [
                                 [
                                     "PpcRateLimitIg",
@@ -441,7 +567,7 @@
                             ]
                         },
                         {
-                            "name": "4. Power Reference Rate Limiter",
+                            "name": "4. Power Reference Characteristics",
                             "children": [
                                 [
                                     "PpcRateLimitPg",
@@ -450,6 +576,10 @@
                                 [
                                     "PpcRateLimitPg",
                                     "tDelta"
+                                ],
+                                [
+                                    "PpcPowerControl",
+                                    "xpVaTau"
                                 ]
                             ]
                         }
@@ -459,24 +589,32 @@
                     "name": "8. Flags",
                     "children": [
                         [
-                            "AfeConfig",
+                            "AfeConfigFlags",
                             "EnableFollowing"
                         ],
                         [
-                            "AfeConfig",
+                            "AfeConfigFlags",
                             "EnableForming"
                         ],
                         [
-                            "AfeConfig",
+                            "AfeConfigFlags",
                             "EnableUPSMode"
                         ],
                         [
-                            "AfeConfig",
+                            "AfeConfigFlags",
                             "EnableAC"
                         ],
                         [
-                            "AfeConfig",
+                            "AfeConfigFlags",
                             "EnableDC"
+                        ],
+                        [
+                            "AfeConfigParams",
+                            "enableDelayAc"
+                        ],
+                        [
+                            "AfeConfigParams",
+                            "enableDelayDc"
                         ]
                     ]
                 },
@@ -4989,6 +5127,31 @@
         {
             "name": "5. Status",
             "children": [
+                {
+                    "name": "Modulator",
+                    "children": [
+                        [
+                            "ModAc1_Status1",
+                            "syncActive"
+                        ],
+                        [
+                            "ModAc1_Status1",
+                            "pulseNrActual"
+                        ],
+                        [
+                            "ModAc1_Status2",
+                            "fSwActual"
+                        ],
+                        [
+                            "ModAc1_Status2",
+                            "modDepthXY"
+                        ],
+                        [
+                            "ModAc1_Status2",
+                            "modDepthZ"
+                        ]
+                    ]
+                },
                 {
                     "name": "Temperatures",
                     "children": [

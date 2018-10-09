@@ -898,10 +898,10 @@
         <string>Phase Sequence</string>
        </property>
        <property name="command_signal_path" stdset="0">
-        <string>ParameterQuery;AfeConfig;PhaseSequence</string>
+        <string>ParameterQuery;AfeConfigFlags;PhaseSequence</string>
        </property>
        <property name="status_signal_path" stdset="0">
-        <string>ParameterQuery;AfeConfig;PhaseSequence</string>
+        <string>ParameterQuery;AfeConfigFlags;PhaseSequence</string>
        </property>
       </widget>
      </item>
@@ -1027,10 +1027,10 @@
         <string>Phase Configuration</string>
        </property>
        <property name="command_signal_path" stdset="0">
-        <string>ParameterQuery;AfeConfig;PhaseDisplacement</string>
+        <string>ParameterQuery;AfeConfigFlags;PhaseDisplacement</string>
        </property>
        <property name="status_signal_path" stdset="0">
-        <string>ParameterQuery;AfeConfig;PhaseDisplacement</string>
+        <string>ParameterQuery;AfeConfigFlags;PhaseDisplacement</string>
        </property>
       </widget>
      </item>

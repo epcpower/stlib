@@ -9,6 +9,7 @@ enum RelayStatus(0="Open", 1="Closed", 2="Error", 3="N/A")
 enum PowerAvail(0="None", 1="Available", 2="Error", 3="N/A")
 enum WakeUpSignal(0="Not Active", 1="Active", 2="Error", 3="N/A")
 enum Enable(0="Disable", 1="Enable", 2="Error", 3="N/A")
+enum Active(0="Inactive", 1="Active", 2="Error", 3="N/A")
 enum MessageValid(0="Invalid", 1="Valid", 2="Error", 3="N/A")
 enum FaultClear(0="Normal", 1="Clear Faults", 2="Error", 3="N/A")
 enum WarningClear(0="Normal", 1="Clear Warnings", 2="Error", 3="N/A")
@@ -230,7 +231,7 @@ Var=InvertHwEnable unsigned 62,2 /max:1 /e:InvertHw /ln:"Invert hardware enable"
 
 [ParameterQuery]
 DLC=8
-Mux=Inductance 0,11 001Ch	// <HYDRA>
+Mux=Inductance 0,11 001Ch	// <HY>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=legInductance1 unsigned 16,16 /u:uH /f:0.1 /min:0.1 /max:2000 /d:150 /ln:"Leg 1 Inductance"
@@ -300,17 +301,29 @@ Var=tempSetpoint unsigned 16,16 /u:C /max:50 /d:35	// Temperature at which fan i
 
 [ParameterQuery]
 DLC=8
-Mux=AfeConfig 0,11 02Dh
+Mux=AfeConfigFlags 0,11 02Dh
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=EnableFollowing unsigned 16,2 /max:1 /e:Enable /d:1	// Grid-connect mode allowed  <nv::allAfeParams{}.cfgFlags.allowFollowing>
 Var=EnableForming unsigned 18,2 /max:1 /e:Enable	// Islanding mode allowed  <nv::allAfeParams{}.cfgFlags.allowForming>
-Var=PhaseSequence unsigned 24,2 /max:1 /e:PhaseSequence /ln:"Phase Sequence"	// Specify phase sequence for grid forming modes.
-Var=PhaseDisplacement unsigned 32,2 /max:1 /e:PhaseDisplacement /ln:"Displacement"	// Commands the inverter into split-phase mode.
-Var=EnableUPSMode unsigned 28,2 /max:1 /e:Enable /ln:"UPS Mode"	// Enables uninterruptible operation when transitioning from GRID FOLLOWING to GRID FORMING operation.  If operating in GRID FOLLOWING mode, and AC grid voltage is interrupted, the module will attempt to transition to GRID FORMING mode, with no interruption  <nv::allAfeParams{}.cfgFlags.enableUPSMode>
-Var=EnableAC unsigned 34,2 /max:1 /e:Enable	// Enable AC power stage  <nv::allAfeParams{}.cfgFlags.allowACStage>
-Var=EnableDC unsigned 36,2 /max:1 /e:Enable /d:1	// Enable DC power stage  <nv::allAfeParams{}.cfgFlags.allowDCStage>
-Var=EnableDcControl unsigned 38,2 /max:1 /e:Enable /d:1	// <factory>  <nv::allAfeParams{}.cfgFlags.allowDCControl>
+Var=PhaseSequence unsigned 20,2 /max:1 /e:PhaseSequence /ln:"Phase Sequence"	// Specify phase sequence for grid forming modes.
+Var=EnableUPSMode unsigned 22,2 /max:1 /e:Enable /ln:"UPS Mode"	// Enables uninterruptible operation when transitioning from GRID FOLLOWING to GRID FORMING operation.  If operating in GRID FOLLOWING mode, and AC grid voltage is interrupted, the module will attempt to transition to GRID FORMING mode, with no interruption  <nv::allAfeParams{}.cfgFlags.enableUPSMode>
+Var=PhaseDisplacement unsigned 24,2 /max:1 /e:PhaseDisplacement /ln:"Displacement"	// Commands the inverter into split-phase mode.
+Var=EnableAC unsigned 26,2 /max:1 /e:Enable	// Enable AC power stage  <nv::allAfeParams{}.cfgFlags.allowACStage>
+Var=EnableDC unsigned 28,2 /max:1 /e:Enable /d:1	// Enable DC power stage  <nv::allAfeParams{}.cfgFlags.allowDCStage>
+Var=EnableDcControl unsigned 30,2 /max:1 /e:Enable /d:1	// <factory>  <nv::allAfeParams{}.cfgFlags.allowDCControl>
+Var=acWaitEnableDcAtRef unsigned 32,2 /max:1 /e:Enable /d:0	// <factory>  <nv::allAfeParams{}.cfgFlags.acWaitEnableDcAtRef>
+Var=dcWaitEnableDcAtRef unsigned 34,2 /max:1 /e:Enable /d:0	// <factory>  <nv::allAfeParams{}.cfgFlags.dcWaitEnableDcAtRef>
+Var=acLossHotStandbyPC unsigned 36,2 /max:1 /e:Enable /d:0	// <factory>  <nv::allAfeParams{}.cfgFlags.acLossHotStandbyPC>
+Var=acLossHotStandbyDC unsigned 38,2 /max:1 /e:Enable /d:0	// <factory>  <nv::allAfeParams{}.cfgFlags.acLossHotStandbyDC>
+
+[ParameterQuery]
+DLC=8
+Mux=AfeConfigParams 0,11 02Eh
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=enableDelayAc unsigned 16,16 /u:ms /max:50000 /d:0	// Post-precharge, post-DC-at-reference delay prior to enabling AC Control Group <nv::allAfeParams{}.enableDelayAc_ms>
+Var=enableDelayDc unsigned 32,16 /u:ms /max:50000 /d:0	// Post-precharge, post-DC-at-reference delay prior to enabling DC Control Group <nv::allAfeParams{}.enableDelayDc_ms>
 
 [ParameterQuery]
 DLC=8
@@ -400,7 +413,7 @@ Var=max signed 32,16 /f:0.001 /p:3	// upper limit
 
 [ParameterQuery]
 DLC=8
-Mux=InputVoltageLimits 0,11 003Eh	// <HYDRA>
+Mux=InputVoltageLimits 0,11 003Eh	// <HY>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=min unsigned 16,16 /u:V /max:1000
@@ -408,7 +421,7 @@ Var=max unsigned 32,16 /u:V /max:1000 /d:1000
 
 [ParameterQuery]
 DLC=8
-Mux=InputCurrentLimits 0,11 003Fh	// <HYDRA>
+Mux=InputCurrentLimits 0,11 003Fh	// <HY>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=min signed 16,16 /u:A /min:-1400 /max:0 /d:-500
@@ -948,28 +961,28 @@ Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusR
 
 [ParameterQuery]
 DLC=8
-Mux=StatusDCLowside_txRate 0,11 012Dh	// <HYDRA>
+Mux=StatusDCLowside_txRate 0,11 012Dh	// <HY>
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusDCParameters message will be sent
 
 [ParameterQuery]
 DLC=8
-Mux=VRefRampRate 0,11 012Eh	// <HYDRA>
+Mux=VRefRampRate 0,11 012Eh	// <HY>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=VperS unsigned 16,16 /u:V/s /max:10000	// Voltage reference ramp rate <nv::fPU_Vdc:allDcdcParams{}.vRampRate>
 
 [ParameterQuery]
 DLC=8
-Mux=IRefRampRate 0,11 012Fh	// <HYDRA>
+Mux=IRefRampRate 0,11 012Fh	// <HY>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=AperS unsigned 16,16 /u:A/s /max:10000	// Current reference ramp rate <nv::fPU_Idc:allDcdcParams{}.iRampRate>
 
 [ParameterQuery]
 DLC=8
-Mux=DcDcLegControlSourceConfig 0,11 0130h	// <HYDRA> Configures control source for DC legs
+Mux=DcDcLegControlSourceConfig 0,11 0130h	// <HY> Configures control source for DC legs
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=leg1 unsigned 16,4 /max:3 /e:DcLegType <nv::allDcdcParams{}.legControlSource[0]>
@@ -978,7 +991,7 @@ Var=leg3 unsigned 24,4 /max:3 /e:DcLegType <nv::allDcdcParams{}.legControlSource
 
 [ParameterQuery]
 DLC=8
-Mux=DcDcVoltageDroop 0,11 0131h   // <HYDRA>
+Mux=DcDcVoltageDroop 0,11 0131h   // <HY>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=Resistance unsigned 16,16 /u:Ohm /f:2E-005 /p:3
@@ -1080,6 +1093,20 @@ Var=tDelta unsigned 32,16 /u:s /f:0.001 /p:3 /max:60 /d:0.500	// Grid power slew
 
 [ParameterQuery]
 DLC=8
+Mux=PpcPowerControl 0,11 0147h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=xpVaTau unsigned 16,16 /u:ms /f:0.1 /p:1 /max:5000 /d:1.0	// Grid voltage amplitude filter time constant used to set the time-dynamic of power control on a spectrum from instantaneous to average power control.
+
+[ParameterQuery]
+DLC=8
+Mux=PpcDisconnect 0,11 0148h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=tUnload unsigned 16,16 /u:ms /max:50000 /d:500	// Pre-disconnect current ramp-down duration.
+
+[ParameterQuery]
+DLC=8
 Mux=PpcIslLimitsI 0,11 0150h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
@@ -1091,7 +1118,7 @@ Mux=PpcIslCoeffsV 0,11 0151h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=Kp unsigned 16,16 /u:A/V /f:0.1 /p:1 /max:5000 /d:6.5	// Grid voltage controller proportional gain
-Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:500 /d:7.0	// Grid voltage controller integration time
+Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:500 /d:7.0	// Grid voltage controller integration time constant
 
 [ParameterQuery]
 DLC=8
@@ -1099,20 +1126,12 @@ Mux=PpcIslCoeffsF 0,11 0152h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=Kp unsigned 16,16 /u:A/Hz /f:0.1 /p:1 /max:5000 /d:325	// Grid frequency controller proportional gain
-Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:2500 /d:50	// Grid frequency controller integration time
+Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:2500 /d:50	// Grid frequency controller integration time constant
+Var=Tb unsigned 48,16 /u:s /f:0.01 /p:2 /max:500 /d:1.0	// Grid frequency controller integral backoff time constant
 
 [ParameterQuery]
 DLC=8
-Mux=PpcIslIslandDetect 0,11 0153h
-Var=ReadParam_command unsigned 14,2 /e:ReadNV
-Var=Meta unsigned 11,3 /e:Meta
-Var=fDevH unsigned 16,16 /u:Hz /f:0.01 /p:2 /max:20.0 /d:0.33	// Upper frequency deviation limit for island detection
-Var=fDevL signed 32,16 /u:Hz /f:0.01 /p:2 /min:-20.0 /max:0.0 /d:-0.33	// Lower frequency deviation limit for island detection
-Var=tau unsigned 48,16 /u:ms /f:0.1 /p:1 /max:2000 /d:10.0	// Filter time constant for island frequency deviation detection
-
-[ParameterQuery]
-DLC=8
-Mux=PpcIslDroopV_iBpt 0,11 0154h
+Mux=PpcIslDroopV_iBpt 0,11 0153h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=i0 unsigned 16,16 /u:A /f:0.1 /p:1 /max:1600 /d:0.0	// Voltage droop current breakpoint 0 (applies to both real and reactive current)
@@ -1121,7 +1140,7 @@ Var=i2 unsigned 48,16 /u:A /f:0.1 /p:1 /max:1600 /d:250	// Voltage droop current
 
 [ParameterQuery]
 DLC=8
-Mux=PpcIslDroopV_dBpt 0,11 0155h
+Mux=PpcIslDroopV_dBpt 0,11 0154h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=d0 signed 16,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:100.0 /d:0.00	// Percentual voltage droop at real current breakpoint 0
@@ -1130,7 +1149,7 @@ Var=d2 signed 48,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:100.0 /d:10.0	// Percentu
 
 [ParameterQuery]
 DLC=8
-Mux=PpcIslDroopV_qBpt 0,11 0156h
+Mux=PpcIslDroopV_qBpt 0,11 0155h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=q0 signed 16,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:100.0 /d:0.00	// Percentual voltage droop at reactive current breakpoint 0
@@ -1139,7 +1158,7 @@ Var=q2 signed 48,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:100.0 /d:-10.0	// Percent
 
 [ParameterQuery]
 DLC=8
-Mux=PpcIslDroopF_iBpt 0,11 0157h
+Mux=PpcIslDroopF_iBpt 0,11 0156h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=i0 unsigned 16,16 /u:A /f:0.1 /p:1 /max:1600 /d:0.0	// Frequency droop current breakpoint 0 (applies to both real and reactive current)
@@ -1148,7 +1167,7 @@ Var=i2 unsigned 48,16 /u:A /f:0.1 /p:1 /max:1600 /d:300	// Frequency droop curre
 
 [ParameterQuery]
 DLC=8
-Mux=PpcIslDroopF_dBpt 0,11 0158h
+Mux=PpcIslDroopF_dBpt 0,11 0157h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=d0 signed 16,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:100.0 /d:0.00	// Percentual frequency droop at real current breakpoint 0
@@ -1157,7 +1176,7 @@ Var=d2 signed 48,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:100.0 /d:1.20	// Percentu
 
 [ParameterQuery]
 DLC=8
-Mux=PpcIslDroopF_qBpt 0,11 0159h
+Mux=PpcIslDroopF_qBpt 0,11 0158h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=q0 signed 16,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:100.0 /d:0.00	// Percentual frequency droop at reactive current breakpoint 0
@@ -1166,7 +1185,7 @@ Var=q2 signed 48,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:100.0 /d:0.00	// Percentu
 
 [ParameterQuery]
 DLC=8
-Mux=PpcIslDroopFilter 0,11 015Ah
+Mux=PpcIslDroopFilter 0,11 0159h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=fCutV unsigned 16,16 /u:Hz /f:0.1 /p:1 /max:5000.0 /d:120.0	// Voltage droop term low-pass filter -3dB break frequency
@@ -1174,7 +1193,7 @@ Var=fCutF unsigned 32,16 /u:Hz /f:0.1 /p:1 /max:5000.0 /d:8.0	// Frequency droop
 
 [ParameterQuery]
 DLC=8
-Mux=PpcIslPhaseGains 0,11 015Bh
+Mux=PpcIslPhaseGains 0,11 015Ah
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=kVq unsigned 16,16 /u:Hz/V /f:0.001 /p:3 /max:10 /d:0.050	// Grid voltage zero-phasor control gain
@@ -1182,7 +1201,94 @@ Var=kPhi unsigned 32,16 /u:Hz/deg /f:0.001 /p:3 /max:10 /d:0.055	// Phase displa
 
 [ParameterQuery]
 DLC=8
-Mux=PpcAhcCoeffV 0,11 0160h
+Mux=PpcIslIslandDetectV 0,11 015Bh
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=vDevH unsigned 16,16 /u:% /f:0.01 /p:2 /max:100.0 /d:15.0	// Upper voltage deviation limit for island detection
+Var=vDevL signed 32,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:0.0 /d:-15.0	// Lower voltage deviation limit for island detection
+Var=tau unsigned 48,16 /u:ms /f:0.1 /p:1 /max:2000 /d:20.0	// Filter time constant for island voltage deviation detection and destabilization table input
+
+[ParameterQuery]
+DLC=8
+Mux=PpcIslIslandDetectF 0,11 015Ch
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=fDevH unsigned 16,16 /u:Hz /f:0.01 /p:2 /max:20.0 /d:0.50	// Upper frequency deviation limit for island detection
+Var=fDevL signed 32,16 /u:Hz /f:0.01 /p:2 /min:-20.0 /max:0.0 /d:-0.50	// Lower frequency deviation limit for island detection
+Var=tau unsigned 48,16 /u:ms /f:0.1 /p:1 /max:2000 /d:20.0	// Filter time constant for island frequency deviation detection and destabilization table input
+
+[ParameterQuery]
+DLC=8
+Mux=PpcIslDestabV_vBpt 0,11 015Dh
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=v0 signed 16,16 /u:% /f:0.01 /p:2 /min:-300.0 /max:300.0 /d:0.00	// Voltage destabilization voltage deviation breakpoint 0 (relative to setpoint)
+Var=v1 signed 32,16 /u:% /f:0.01 /p:2 /min:-300.0 /max:300.0 /d:5.00	// Voltage destabilization voltage deviation breakpoint 1 (relative to setpoint)
+Var=v2 signed 48,16 /u:% /f:0.01 /p:2 /min:-300.0 /max:300.0 /d:15.0	// Voltage destabilization voltage deviation breakpoint 2 (relative to setpoint)
+
+[ParameterQuery]
+DLC=8
+Mux=PpcIslDestabV_dBpt 0,11 015Eh
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=d0 signed 16,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Real current injection at voltage deviation breakpoint 0
+Var=d1 signed 32,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Real current injection at voltage deviation breakpoint 1
+Var=d2 signed 48,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:50.0	// Real current injection at voltage deviation breakpoint 2
+
+[ParameterQuery]
+DLC=8
+Mux=PpcIslDestabV_qBpt 0,11 015Fh
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=q0 signed 16,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Reactive current injection at voltage deviation breakpoint 0
+Var=q1 signed 32,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Reactive current injection at voltage deviation breakpoint 1
+Var=q2 signed 48,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Reactive current injection at voltage deviation breakpoint 2
+
+[ParameterQuery]
+DLC=8
+Mux=PpcIslDestabF_fBpt 0,11 0160h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=f0 signed 16,16 /u:Hz /f:0.001 /p:3 /min:-30.0 /max:30.0 /d:0.00	// Frequency destabilization frequency deviation breakpoint 0 (relative to setpoint)
+Var=f1 signed 32,16 /u:Hz /f:0.001 /p:3 /min:-30.0 /max:30.0 /d:0.05	// Frequency destabilization frequency deviation breakpoint 1 (relative to setpoint)
+Var=f2 signed 48,16 /u:Hz /f:0.001 /p:3 /min:-30.0 /max:30.0 /d:0.15	// Frequency destabilization frequency deviation breakpoint 2 (relative to setpoint)
+
+[ParameterQuery]
+DLC=8
+Mux=PpcIslDestabF_dBpt 0,11 0161h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=d0 signed 16,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Real current injection at frequency deviation breakpoint 0
+Var=d1 signed 32,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Real current injection at frequency deviation breakpoint 1
+Var=d2 signed 48,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Real current injection at frequency deviation breakpoint 2
+
+[ParameterQuery]
+DLC=8
+Mux=PpcIslDestabF_qBpt 0,11 0162h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=q0 signed 16,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Reactive current injection at frequency deviation breakpoint 0
+Var=q1 signed 32,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Reactive current injection at frequency deviation breakpoint 1
+Var=q2 signed 48,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:25.0	// Reactive current injection at frequency deviation breakpoint 2
+
+[ParameterQuery]
+DLC=8
+Mux=PpcIslTransFilter 0,11 0163h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=vTau unsigned 16,16 /u:ms /f:0.1 /p:1 /max:5000.0 /d:32.0	// Filter time constant for pre/post-disconnect voltage amplitude
+Var=fTau unsigned 32,16 /u:ms /f:0.1 /p:1 /max:5000.0 /d:32.0	// Filter time constant for pre/post-disconnect network frequency
+
+[ParameterQuery]
+DLC=8
+Mux=PpcIslGroupedDetect 0,11 0164h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=groupedEnable unsigned 16,2 /max:1 /e:Enable /d:0	// Enable grouped island detection: any single phase detecting an island propagates to Control Group. 
+
+[ParameterQuery]
+DLC=8
+Mux=PpcAhcCoeffV 0,11 016Eh
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=kApply unsigned 16,16 /u:V/V /f:0.01 /p:2 /max:8.0 /d:0.95	// Voltage harmonic compensation gain
@@ -1190,7 +1296,7 @@ Var=tAdapt unsigned 32,16 /u:s /f:0.01 /p:2 /max:8.0 /d:3.00	// Voltage harmonic
 
 [ParameterQuery]
 DLC=8
-Mux=PpcAhcCoeffI 0,11 0161h
+Mux=PpcAhcCoeffI 0,11 016Fh
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=kApply unsigned 16,16 /u:V/A /f:0.01 /p:2 /max:8.0 /d:4.00	// Current harmonic compensation gain
@@ -1202,7 +1308,7 @@ Mux=PpcSpcCoeffsDQ 0,11 0170h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=Kp unsigned 16,16 /u:mV/A /f:0.1 /p:1 /max:6500 /d:65.0	// Phase current control proportional gain.
-Var=Ti unsigned 32,16 /u:ms /f:0.01 /p:2 /max:650 /d:7.00	// Phase current control integration time.
+Var=Ti unsigned 32,16 /u:ms /f:0.01 /p:2 /max:650 /d:7.00	// Phase current control integration time constant.
 
 [ParameterQuery]
 DLC=8
@@ -1210,7 +1316,8 @@ Mux=PpcSpcCoeffsDC 0,11 0171h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=Kp unsigned 16,16 /u:mV/A /f:0.01 /p:2 /max:650 /d:1.35	// DC offset current control proportional gain.
-Var=Ti unsigned 32,16 /u:ms /f:0.01 /p:2 /max:650 /d:100.00	// DC offset current control integration time.
+Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:1750 /d:100.00	// DC offset current control integration time constant.
+Var=Tb unsigned 48,16 /u:s /f:0.01 /p:2 /max:500 /d:10.0	// DC offset current control integral backoff time constant.
 
 [ParameterQuery]
 DLC=8
@@ -1235,7 +1342,7 @@ Mux=PpcPllCoeffsLFL 0,11 0181h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=Kp unsigned 16,16 /u:Hz /f:0.01 /p:2 /max:650 /d:120	// Phase voltage PLL frequency loop filter (locked state) gain (Hz per normalized error)
-Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:5000 /d:15.0	// Phase voltage PLL frequency loop filter (locked state) integration time
+Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:5000 /d:15.0	// Phase voltage PLL frequency loop filter (locked state) integration time constant
 
 [ParameterQuery]
 DLC=8
@@ -1251,7 +1358,7 @@ Mux=PpcPllCoeffsLFU 0,11 0183h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=Kp unsigned 16,16 /u:Hz /f:0.01 /p:2 /max:650 /d:45.0	// Phase voltage PLL frequency loop filter (unlocked state) gain (Hz per normalized error)
-Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:5000 /d:100.0	// Phase voltage PLL frequency loop filter (unlocked state) integration time
+Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:5000 /d:100.0	// Phase voltage PLL frequency loop filter (unlocked state) integration time constant
 
 [ParameterQuery]
 DLC=8
@@ -1271,6 +1378,14 @@ Var=indThreshold unsigned 24,8 /u:mPU /f:5 /max:1250 /d:50.0	// Phase voltage PL
 Var=indIslStart unsigned 32,8 /u:mPU /f:5 /max:1250 /d:200	// Phase voltage PLL lock detector initial lock indicator signal value during island start
 Var=tau unsigned 40,8 /u:ms /f:5 /max:1250 /d:200.0	// Phase voltage PLL lock detector lock indicator signal filtering time constant
 Var=tSwitch unsigned 48,8 /u:ms /f:50 /max:12500 /d:500	// Phase voltage PLL loop filter locked/unlocked parameter set changeover time
+
+[ParameterQuery]
+DLC=8
+Mux=PpcPllFilterCoeffs 0,11 0186h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=fCutVg unsigned 16,16 /u:Hz /f:0.1 /p:1 /max:5000 /d:500.0	// DC/harmonic estimated grid voltage low-pass filter cutoff frequency
+Var=wTau unsigned 32,16 /u:ms /f:0.1 /p:1 /max:5000 /d:10.0	// Estimated network frequency low-pass filter time constant
 
 [ParameterQuery]
 DLC=8
@@ -2075,6 +2190,23 @@ Var=Meta unsigned 11,3 /e:Meta
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=minVectorTime unsigned 16,16 /u:us /f:0.001 /p:3 /max:10.0 /d:2.0
 Var=minPulseTime unsigned 32,16 /u:us /f:0.001 /p:3 /max:10.0 /d:4.0
+
+[ParameterQuery]
+DLC=8
+Mux=ModAc1_Status1 0,11 0410h
+Var=Meta unsigned 11,3 /e:Meta
+Var=ReadParam_command unsigned 14,2 /min:1 /e:ReadNV
+Var=syncActive unsigned 16,2 /e:Active
+Var=pulseNrActual unsigned 32,8
+
+[ParameterQuery]
+DLC=8
+Mux=ModAc1_Status2 0,11 0411h
+Var=Meta unsigned 11,3 /e:Meta
+Var=ReadParam_command unsigned 14,2 /min:1 /e:ReadNV
+Var=fSwActual unsigned 16,16 /u:Hz /f:0.1 /p:1 /max:30000
+Var=modDepthXY unsigned 32,16 /f:0.0001 /p:3 /max:2.0
+Var=modDepthZ signed 48,16 /f:0.0001 /p:3 /min:-2.0 /max:2.0
 
 [ParameterQuery]
 DLC=8
@@ -5338,7 +5470,7 @@ Var=ReactiveCurrent signed 32,16 /u:A /min:-600 /max:600 /ln:"Reactive Current"	
 [ProcessToInverter]
 DLC=8
 CycleTime=100
-Mux=CommandInputCurrent 0,8 4 	// Sets the input current command for the DC boost stage. <HYDRA>
+Mux=CommandInputCurrent 0,8 4 	// Sets the input current command for the DC boost stage. <HY>
 Var=current signed 16,16 /u:A /min:-800 /max:800 /ln:"Input Current Cmd"	// Sets the input current command for the DC boost stage.
 
 [ProcessToInverter]
@@ -5529,7 +5661,7 @@ Var=InvertHwEnable unsigned 62,2 /max:1 /e:InvertHw /ln:"Invert hardware enable"
 
 [ParameterResponse]
 DLC=8
-Mux=Inductance 0,11 001Ch	// <HYDRA>
+Mux=Inductance 0,11 001Ch	// <HY>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=legInductance1 unsigned 16,16 /u:uH /f:0.1 /min:0.1 /max:2000 /d:150 /ln:"Leg 1 Inductance"
@@ -5599,17 +5731,29 @@ Var=tempSetpoint unsigned 16,16 /u:C /max:50 /d:35	// Temperature at which fan i
 
 [ParameterResponse]
 DLC=8
-Mux=AfeConfig 0,11 02Dh
+Mux=AfeConfigFlags 0,11 02Dh
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=EnableFollowing unsigned 16,2 /max:1 /e:Enable /d:1	// Grid-connect mode allowed  <nv::allAfeParams{}.cfgFlags.allowFollowing>
 Var=EnableForming unsigned 18,2 /max:1 /e:Enable	// Islanding mode allowed  <nv::allAfeParams{}.cfgFlags.allowForming>
-Var=PhaseSequence unsigned 24,2 /max:1 /e:PhaseSequence /ln:"Phase Sequence"	// Specify phase sequence for grid forming modes.
-Var=PhaseDisplacement unsigned 32,2 /max:1 /e:PhaseDisplacement /ln:"Displacement"	// Commands the inverter into split-phase mode.
-Var=EnableUPSMode unsigned 28,2 /max:1 /e:Enable /ln:"UPS Mode"	// Enables uninterruptible operation when transitioning from GRID FOLLOWING to GRID FORMING operation.  If operating in GRID FOLLOWING mode, and AC grid voltage is interrupted, the module will attempt to transition to GRID FORMING mode, with no interruption  <nv::allAfeParams{}.cfgFlags.enableUPSMode>
-Var=EnableAC unsigned 34,2 /max:1 /e:Enable	// Enable AC power stage  <nv::allAfeParams{}.cfgFlags.allowACStage>
-Var=EnableDC unsigned 36,2 /max:1 /e:Enable /d:1	// Enable DC power stage  <nv::allAfeParams{}.cfgFlags.allowDCStage>
-Var=EnableDcControl unsigned 38,2 /max:1 /e:Enable /d:1	// <factory>  <nv::allAfeParams{}.cfgFlags.allowDCControl>
+Var=PhaseSequence unsigned 20,2 /max:1 /e:PhaseSequence /ln:"Phase Sequence"	// Specify phase sequence for grid forming modes.
+Var=EnableUPSMode unsigned 22,2 /max:1 /e:Enable /ln:"UPS Mode"	// Enables uninterruptible operation when transitioning from GRID FOLLOWING to GRID FORMING operation.  If operating in GRID FOLLOWING mode, and AC grid voltage is interrupted, the module will attempt to transition to GRID FORMING mode, with no interruption  <nv::allAfeParams{}.cfgFlags.enableUPSMode>
+Var=PhaseDisplacement unsigned 24,2 /max:1 /e:PhaseDisplacement /ln:"Displacement"	// Commands the inverter into split-phase mode.
+Var=EnableAC unsigned 26,2 /max:1 /e:Enable	// Enable AC power stage  <nv::allAfeParams{}.cfgFlags.allowACStage>
+Var=EnableDC unsigned 28,2 /max:1 /e:Enable /d:1	// Enable DC power stage  <nv::allAfeParams{}.cfgFlags.allowDCStage>
+Var=EnableDcControl unsigned 30,2 /max:1 /e:Enable /d:1	// <factory>  <nv::allAfeParams{}.cfgFlags.allowDCControl>
+Var=acWaitEnableDcAtRef unsigned 32,2 /max:1 /e:Enable /d:0	// <factory>  <nv::allAfeParams{}.cfgFlags.acWaitEnableDcAtRef>
+Var=dcWaitEnableDcAtRef unsigned 34,2 /max:1 /e:Enable /d:0	// <factory>  <nv::allAfeParams{}.cfgFlags.dcWaitEnableDcAtRef>
+Var=acLossHotStandbyPC unsigned 36,2 /max:1 /e:Enable /d:0	// <factory>  <nv::allAfeParams{}.cfgFlags.acLossHotStandbyPC>
+Var=acLossHotStandbyDC unsigned 38,2 /max:1 /e:Enable /d:0	// <factory>  <nv::allAfeParams{}.cfgFlags.acLossHotStandbyDC>
+
+[ParameterResponse]
+DLC=8
+Mux=AfeConfigParams 0,11 02Eh
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=enableDelayAc unsigned 16,16 /u:ms /max:50000 /d:0	// Post-precharge, post-DC-at-reference delay prior to enabling AC Control Group <nv::allAfeParams{}.enableDelayAc_ms>
+Var=enableDelayDc unsigned 32,16 /u:ms /max:50000 /d:0	// Post-precharge, post-DC-at-reference delay prior to enabling DC Control Group <nv::allAfeParams{}.enableDelayDc_ms>
 
 [ParameterResponse]
 DLC=8
@@ -5699,7 +5843,7 @@ Var=max signed 32,16 /f:0.001 /p:3	// upper limit
 
 [ParameterResponse]
 DLC=8
-Mux=InputVoltageLimits 0,11 003Eh	// <HYDRA>
+Mux=InputVoltageLimits 0,11 003Eh	// <HY>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=min unsigned 16,16 /u:V /max:1000
@@ -5707,7 +5851,7 @@ Var=max unsigned 32,16 /u:V /max:1000 /d:1000
 
 [ParameterResponse]
 DLC=8
-Mux=InputCurrentLimits 0,11 003Fh	// <HYDRA>
+Mux=InputCurrentLimits 0,11 003Fh	// <HY>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=min signed 16,16 /u:A /min:-1400 /max:0 /d:-500
@@ -6247,28 +6391,28 @@ Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusR
 
 [ParameterResponse]
 DLC=8
-Mux=StatusDCLowside_txRate 0,11 012Dh	// <HYDRA>
+Mux=StatusDCLowside_txRate 0,11 012Dh	// <HY>
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=rate unsigned 16,16 /u:s /f:0.01 /max:10 /d:0.1	// rate at which the StatusDCParameters message will be sent
 
 [ParameterResponse]
 DLC=8
-Mux=VRefRampRate 0,11 012Eh	// <HYDRA>
+Mux=VRefRampRate 0,11 012Eh	// <HY>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=VperS unsigned 16,16 /u:V/s /max:10000	// Voltage reference ramp rate <nv::fPU_Vdc:allDcdcParams{}.vRampRate>
 
 [ParameterResponse]
 DLC=8
-Mux=IRefRampRate 0,11 012Fh	// <HYDRA>
+Mux=IRefRampRate 0,11 012Fh	// <HY>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=AperS unsigned 16,16 /u:A/s /max:10000	// Current reference ramp rate <nv::fPU_Idc:allDcdcParams{}.iRampRate>
 
 [ParameterResponse]
 DLC=8
-Mux=DcDcLegControlSourceConfig 0,11 0130h	// <HYDRA> Configures control source for DC legs
+Mux=DcDcLegControlSourceConfig 0,11 0130h	// <HY> Configures control source for DC legs
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=leg1 unsigned 16,4 /max:3 /e:DcLegType <nv::allDcdcParams{}.legControlSource[0]>
@@ -6277,7 +6421,7 @@ Var=leg3 unsigned 24,4 /max:3 /e:DcLegType <nv::allDcdcParams{}.legControlSource
 
 [ParameterResponse]
 DLC=8
-Mux=DcDcVoltageDroop 0,11 0131h   // <HYDRA>
+Mux=DcDcVoltageDroop 0,11 0131h   // <HY>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=Resistance unsigned 16,16 /u:Ohm /f:2E-005 /p:3
@@ -6379,6 +6523,20 @@ Var=tDelta unsigned 32,16 /u:s /f:0.001 /p:3 /max:60 /d:0.500	// Grid power slew
 
 [ParameterResponse]
 DLC=8
+Mux=PpcPowerControl 0,11 0147h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=xpVaTau unsigned 16,16 /u:ms /f:0.1 /p:1 /max:5000 /d:1.0	// Grid voltage amplitude filter time constant used to set the time-dynamic of power control on a spectrum from instantaneous to average power control.
+
+[ParameterResponse]
+DLC=8
+Mux=PpcDisconnect 0,11 0148h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=tUnload unsigned 16,16 /u:ms /max:50000 /d:500	// Pre-disconnect current ramp-down duration.
+
+[ParameterResponse]
+DLC=8
 Mux=PpcIslLimitsI 0,11 0150h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
@@ -6390,7 +6548,7 @@ Mux=PpcIslCoeffsV 0,11 0151h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=Kp unsigned 16,16 /u:A/V /f:0.1 /p:1 /max:5000 /d:6.5	// Grid voltage controller proportional gain
-Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:500 /d:7.0	// Grid voltage controller integration time
+Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:500 /d:7.0	// Grid voltage controller integration time constant
 
 [ParameterResponse]
 DLC=8
@@ -6398,20 +6556,12 @@ Mux=PpcIslCoeffsF 0,11 0152h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=Kp unsigned 16,16 /u:A/Hz /f:0.1 /p:1 /max:5000 /d:325	// Grid frequency controller proportional gain
-Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:2500 /d:50	// Grid frequency controller integration time
+Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:2500 /d:50	// Grid frequency controller integration time constant
+Var=Tb unsigned 48,16 /u:s /f:0.01 /p:2 /max:500 /d:1.0	// Grid frequency controller integral backoff time constant
 
 [ParameterResponse]
 DLC=8
-Mux=PpcIslIslandDetect 0,11 0153h
-Var=ReadParam_status unsigned 14,2 /e:ReadNV
-Var=Meta unsigned 11,3 /e:Meta
-Var=fDevH unsigned 16,16 /u:Hz /f:0.01 /p:2 /max:20.0 /d:0.33	// Upper frequency deviation limit for island detection
-Var=fDevL signed 32,16 /u:Hz /f:0.01 /p:2 /min:-20.0 /max:0.0 /d:-0.33	// Lower frequency deviation limit for island detection
-Var=tau unsigned 48,16 /u:ms /f:0.1 /p:1 /max:2000 /d:10.0	// Filter time constant for island frequency deviation detection
-
-[ParameterResponse]
-DLC=8
-Mux=PpcIslDroopV_iBpt 0,11 0154h
+Mux=PpcIslDroopV_iBpt 0,11 0153h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=i0 unsigned 16,16 /u:A /f:0.1 /p:1 /max:1600 /d:0.0	// Voltage droop current breakpoint 0 (applies to both real and reactive current)
@@ -6420,7 +6570,7 @@ Var=i2 unsigned 48,16 /u:A /f:0.1 /p:1 /max:1600 /d:250	// Voltage droop current
 
 [ParameterResponse]
 DLC=8
-Mux=PpcIslDroopV_dBpt 0,11 0155h
+Mux=PpcIslDroopV_dBpt 0,11 0154h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=d0 signed 16,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:100.0 /d:0.00	// Percentual voltage droop at real current breakpoint 0
@@ -6429,7 +6579,7 @@ Var=d2 signed 48,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:100.0 /d:10.0	// Percentu
 
 [ParameterResponse]
 DLC=8
-Mux=PpcIslDroopV_qBpt 0,11 0156h
+Mux=PpcIslDroopV_qBpt 0,11 0155h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=q0 signed 16,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:100.0 /d:0.00	// Percentual voltage droop at reactive current breakpoint 0
@@ -6438,7 +6588,7 @@ Var=q2 signed 48,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:100.0 /d:-10.0	// Percent
 
 [ParameterResponse]
 DLC=8
-Mux=PpcIslDroopF_iBpt 0,11 0157h
+Mux=PpcIslDroopF_iBpt 0,11 0156h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=i0 unsigned 16,16 /u:A /f:0.1 /p:1 /max:1600 /d:0.0	// Frequency droop current breakpoint 0 (applies to both real and reactive current)
@@ -6447,7 +6597,7 @@ Var=i2 unsigned 48,16 /u:A /f:0.1 /p:1 /max:1600 /d:300	// Frequency droop curre
 
 [ParameterResponse]
 DLC=8
-Mux=PpcIslDroopF_dBpt 0,11 0158h
+Mux=PpcIslDroopF_dBpt 0,11 0157h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=d0 signed 16,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:100.0 /d:0.00	// Percentual frequency droop at real current breakpoint 0
@@ -6456,7 +6606,7 @@ Var=d2 signed 48,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:100.0 /d:1.20	// Percentu
 
 [ParameterResponse]
 DLC=8
-Mux=PpcIslDroopF_qBpt 0,11 0159h
+Mux=PpcIslDroopF_qBpt 0,11 0158h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=q0 signed 16,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:100.0 /d:0.00	// Percentual frequency droop at reactive current breakpoint 0
@@ -6465,7 +6615,7 @@ Var=q2 signed 48,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:100.0 /d:0.00	// Percentu
 
 [ParameterResponse]
 DLC=8
-Mux=PpcIslDroopFilter 0,11 015Ah
+Mux=PpcIslDroopFilter 0,11 0159h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=fCutV unsigned 16,16 /u:Hz /f:0.1 /p:1 /max:5000.0 /d:120.0	// Voltage droop term low-pass filter -3dB break frequency
@@ -6473,7 +6623,7 @@ Var=fCutF unsigned 32,16 /u:Hz /f:0.1 /p:1 /max:5000.0 /d:8.0	// Frequency droop
 
 [ParameterResponse]
 DLC=8
-Mux=PpcIslPhaseGains 0,11 015Bh
+Mux=PpcIslPhaseGains 0,11 015Ah
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=kVq unsigned 16,16 /u:Hz/V /f:0.001 /p:3 /max:10 /d:0.050	// Grid voltage zero-phasor control gain
@@ -6481,7 +6631,94 @@ Var=kPhi unsigned 32,16 /u:Hz/deg /f:0.001 /p:3 /max:10 /d:0.055	// Phase displa
 
 [ParameterResponse]
 DLC=8
-Mux=PpcAhcCoeffV 0,11 0160h
+Mux=PpcIslIslandDetectV 0,11 015Bh
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=vDevH unsigned 16,16 /u:% /f:0.01 /p:2 /max:100.0 /d:15.0	// Upper voltage deviation limit for island detection
+Var=vDevL signed 32,16 /u:% /f:0.01 /p:2 /min:-100.0 /max:0.0 /d:-15.0	// Lower voltage deviation limit for island detection
+Var=tau unsigned 48,16 /u:ms /f:0.1 /p:1 /max:2000 /d:20.0	// Filter time constant for island voltage deviation detection and destabilization table input
+
+[ParameterResponse]
+DLC=8
+Mux=PpcIslIslandDetectF 0,11 015Ch
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=fDevH unsigned 16,16 /u:Hz /f:0.01 /p:2 /max:20.0 /d:0.50	// Upper frequency deviation limit for island detection
+Var=fDevL signed 32,16 /u:Hz /f:0.01 /p:2 /min:-20.0 /max:0.0 /d:-0.50	// Lower frequency deviation limit for island detection
+Var=tau unsigned 48,16 /u:ms /f:0.1 /p:1 /max:2000 /d:20.0	// Filter time constant for island frequency deviation detection and destabilization table input
+
+[ParameterResponse]
+DLC=8
+Mux=PpcIslDestabV_vBpt 0,11 015Dh
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=v0 signed 16,16 /u:% /f:0.01 /p:2 /min:-300.0 /max:300.0 /d:0.00	// Voltage destabilization voltage deviation breakpoint 0 (relative to setpoint)
+Var=v1 signed 32,16 /u:% /f:0.01 /p:2 /min:-300.0 /max:300.0 /d:5.00	// Voltage destabilization voltage deviation breakpoint 1 (relative to setpoint)
+Var=v2 signed 48,16 /u:% /f:0.01 /p:2 /min:-300.0 /max:300.0 /d:15.0	// Voltage destabilization voltage deviation breakpoint 2 (relative to setpoint)
+
+[ParameterResponse]
+DLC=8
+Mux=PpcIslDestabV_dBpt 0,11 015Eh
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=d0 signed 16,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Real current injection at voltage deviation breakpoint 0
+Var=d1 signed 32,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Real current injection at voltage deviation breakpoint 1
+Var=d2 signed 48,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:50.0	// Real current injection at voltage deviation breakpoint 2
+
+[ParameterResponse]
+DLC=8
+Mux=PpcIslDestabV_qBpt 0,11 015Fh
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=q0 signed 16,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Reactive current injection at voltage deviation breakpoint 0
+Var=q1 signed 32,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Reactive current injection at voltage deviation breakpoint 1
+Var=q2 signed 48,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Reactive current injection at voltage deviation breakpoint 2
+
+[ParameterResponse]
+DLC=8
+Mux=PpcIslDestabF_fBpt 0,11 0160h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=f0 signed 16,16 /u:Hz /f:0.001 /p:3 /min:-30.0 /max:30.0 /d:0.00	// Frequency destabilization frequency deviation breakpoint 0 (relative to setpoint)
+Var=f1 signed 32,16 /u:Hz /f:0.001 /p:3 /min:-30.0 /max:30.0 /d:0.05	// Frequency destabilization frequency deviation breakpoint 1 (relative to setpoint)
+Var=f2 signed 48,16 /u:Hz /f:0.001 /p:3 /min:-30.0 /max:30.0 /d:0.15	// Frequency destabilization frequency deviation breakpoint 2 (relative to setpoint)
+
+[ParameterResponse]
+DLC=8
+Mux=PpcIslDestabF_dBpt 0,11 0161h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=d0 signed 16,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Real current injection at frequency deviation breakpoint 0
+Var=d1 signed 32,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Real current injection at frequency deviation breakpoint 1
+Var=d2 signed 48,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Real current injection at frequency deviation breakpoint 2
+
+[ParameterResponse]
+DLC=8
+Mux=PpcIslDestabF_qBpt 0,11 0162h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=q0 signed 16,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Reactive current injection at frequency deviation breakpoint 0
+Var=q1 signed 32,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:0.0	// Reactive current injection at frequency deviation breakpoint 1
+Var=q2 signed 48,16 /u:A /f:0.1 /p:1 /min:-3200.0 /max:3200.0 /d:25.0	// Reactive current injection at frequency deviation breakpoint 2
+
+[ParameterResponse]
+DLC=8
+Mux=PpcIslTransFilter 0,11 0163h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=vTau unsigned 16,16 /u:ms /f:0.1 /p:1 /max:5000.0 /d:32.0	// Filter time constant for pre/post-disconnect voltage amplitude
+Var=fTau unsigned 32,16 /u:ms /f:0.1 /p:1 /max:5000.0 /d:32.0	// Filter time constant for pre/post-disconnect network frequency
+
+[ParameterResponse]
+DLC=8
+Mux=PpcIslGroupedDetect 0,11 0164h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=groupedEnable unsigned 16,2 /max:1 /e:Enable /d:0	// Enable grouped island detection: any single phase detecting an island propagates to Control Group. 
+
+[ParameterResponse]
+DLC=8
+Mux=PpcAhcCoeffV 0,11 016Eh
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=kApply unsigned 16,16 /u:V/V /f:0.01 /p:2 /max:8.0 /d:0.95	// Voltage harmonic compensation gain
@@ -6489,7 +6726,7 @@ Var=tAdapt unsigned 32,16 /u:s /f:0.01 /p:2 /max:8.0 /d:3.00	// Voltage harmonic
 
 [ParameterResponse]
 DLC=8
-Mux=PpcAhcCoeffI 0,11 0161h
+Mux=PpcAhcCoeffI 0,11 016Fh
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=kApply unsigned 16,16 /u:V/A /f:0.01 /p:2 /max:8.0 /d:4.00	// Current harmonic compensation gain
@@ -6501,7 +6738,7 @@ Mux=PpcSpcCoeffsDQ 0,11 0170h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=Kp unsigned 16,16 /u:mV/A /f:0.1 /p:1 /max:6500 /d:65.0	// Phase current control proportional gain.
-Var=Ti unsigned 32,16 /u:ms /f:0.01 /p:2 /max:650 /d:7.00	// Phase current control integration time.
+Var=Ti unsigned 32,16 /u:ms /f:0.01 /p:2 /max:650 /d:7.00	// Phase current control integration time constant.
 
 [ParameterResponse]
 DLC=8
@@ -6509,7 +6746,8 @@ Mux=PpcSpcCoeffsDC 0,11 0171h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=Kp unsigned 16,16 /u:mV/A /f:0.01 /p:2 /max:650 /d:1.35	// DC offset current control proportional gain.
-Var=Ti unsigned 32,16 /u:ms /f:0.01 /p:2 /max:650 /d:100.00	// DC offset current control integration time.
+Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:1750 /d:100.00	// DC offset current control integration time constant.
+Var=Tb unsigned 48,16 /u:s /f:0.01 /p:2 /max:500 /d:10.0	// DC offset current control integral backoff time constant.
 
 [ParameterResponse]
 DLC=8
@@ -6534,7 +6772,7 @@ Mux=PpcPllCoeffsLFL 0,11 0181h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=Kp unsigned 16,16 /u:Hz /f:0.01 /p:2 /max:650 /d:120	// Phase voltage PLL frequency loop filter (locked state) gain (Hz per normalized error)
-Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:5000 /d:15.0	// Phase voltage PLL frequency loop filter (locked state) integration time
+Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:5000 /d:15.0	// Phase voltage PLL frequency loop filter (locked state) integration time constant
 
 [ParameterResponse]
 DLC=8
@@ -6550,7 +6788,7 @@ Mux=PpcPllCoeffsLFU 0,11 0183h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=Kp unsigned 16,16 /u:Hz /f:0.01 /p:2 /max:650 /d:45.0	// Phase voltage PLL frequency loop filter (unlocked state) gain (Hz per normalized error)
-Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:5000 /d:100.0	// Phase voltage PLL frequency loop filter (unlocked state) integration time
+Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:5000 /d:100.0	// Phase voltage PLL frequency loop filter (unlocked state) integration time constant
 
 [ParameterResponse]
 DLC=8
@@ -6570,6 +6808,14 @@ Var=indThreshold unsigned 24,8 /u:mPU /f:5 /max:1250 /d:50.0	// Phase voltage PL
 Var=indIslStart unsigned 32,8 /u:mPU /f:5 /max:1250 /d:200	// Phase voltage PLL lock detector initial lock indicator signal value during island start
 Var=tau unsigned 40,8 /u:ms /f:5 /max:1250 /d:200.0	// Phase voltage PLL lock detector lock indicator signal filtering time constant
 Var=tSwitch unsigned 48,8 /u:ms /f:50 /max:12500 /d:500	// Phase voltage PLL loop filter locked/unlocked parameter set changeover time
+
+[ParameterResponse]
+DLC=8
+Mux=PpcPllFilterCoeffs 0,11 0186h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=fCutVg unsigned 16,16 /u:Hz /f:0.1 /p:1 /max:5000 /d:500.0	// DC/harmonic estimated grid voltage low-pass filter cutoff frequency
+Var=wTau unsigned 32,16 /u:ms /f:0.1 /p:1 /max:5000 /d:10.0	// Estimated network frequency low-pass filter time constant
 
 [ParameterResponse]
 DLC=8
@@ -7374,6 +7620,23 @@ Var=Meta unsigned 11,3 /e:Meta
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=minVectorTime unsigned 16,16 /u:us /f:0.001 /p:3 /max:10.0 /d:2.0
 Var=minPulseTime unsigned 32,16 /u:us /f:0.001 /p:3 /max:10.0 /d:4.0
+
+[ParameterResponse]
+DLC=8
+Mux=ModAc1_Status1 0,11 0410h
+Var=Meta unsigned 11,3 /e:Meta
+Var=ReadParam_status unsigned 14,2 /min:1 /e:ReadNV
+Var=syncActive unsigned 16,2 /e:Active
+Var=pulseNrActual unsigned 32,8
+
+[ParameterResponse]
+DLC=8
+Mux=ModAc1_Status2 0,11 0411h
+Var=Meta unsigned 11,3 /e:Meta
+Var=ReadParam_status unsigned 14,2 /min:1 /e:ReadNV
+Var=fSwActual unsigned 16,16 /u:Hz /f:0.1 /p:1 /max:30000
+Var=modDepthXY unsigned 32,16 /f:0.0001 /p:3 /max:2.0
+Var=modDepthZ signed 48,16 /f:0.0001 /p:3 /min:-2.0 /max:2.0
 
 [ParameterResponse]
 DLC=8
@@ -10721,7 +10984,7 @@ ID=1CFFC7F7h	// Measured (boosted) DC Bus voltage, DC Current, and estimated DC 
 Type=Extended
 DLC=8
 CycleTime=100
-Var=VoltageDCInput_measured unsigned 0,16 /u:V /min:0 /max:900 /ln:"DC Input Voltage" // Estimated DC input voltage <microgrid>
+Var=VoltageDCInput_measured unsigned 0,16 /u:V /min:0 /max:900 /ln:"DC Input Voltage" // Estimated DC input voltage <MG4>
 Var=VoltageDCBus_measured signed 32,16 /u:V /min:0 /max:900 /ln:"DC Link Voltage"	// Measured DC bus voltage.
 Var=CurrentDC_measured signed 48,16 /u:A /min:-500 /max:500 /ln:"DC Link Current"	// Measured DC current.
 
@@ -10730,8 +10993,8 @@ ID=1CFFC8F7h	// battery/solar voltage/current.
 Type=Extended
 DLC=8
 CycleTime=100
-Var=SolarCurrent_measured signed 32,16 /u:A /ln:"Solar current"	// Estimated solar panel current <HYDRA>
-Var=SolarVoltage_measured signed 0,16 /u:V /ln:"Solar voltage"	// Measured solar panel voltage. <HYDRA>
+Var=SolarCurrent_measured signed 32,16 /u:A /ln:"Solar current"	// Estimated solar panel current <HY>
+Var=SolarVoltage_measured signed 0,16 /u:V /ln:"Solar voltage"	// Measured solar panel voltage. <HY>
 
 [StatusCommandedCurrent]
 ID=1CFFCCF7h	// Echoes the commanded current as received in CommandPower.
