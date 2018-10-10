@@ -455,6 +455,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         self.cyclic_reader = CyclicReader(
             nvs=self.all_nv(),
             read_call=self.read_all_from_device,
+            metas=metas,
         )
 
     def terminate(self):
@@ -889,6 +890,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 class CyclicReader:
     nvs = attr.ib()
     read_call = attr.ib()
+    metas = attr.ib()
     pause_requests = attr.ib(factory=weakref.WeakSet)
     _deferred = attr.ib(init=False, default=None)
 
@@ -923,7 +925,7 @@ class CyclicReader:
             x[nv.frame].append(nv)
 
         while True:
-            for meta in MetaEnum:
+            for meta in self.metas:
                 for frame, nvs in x.items():
                     try:
                         while len(self.pause_requests) > 0:
