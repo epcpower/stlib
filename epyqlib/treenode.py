@@ -11,11 +11,13 @@ class NotFoundError(Exception):
 
 class Signals(PyQt5.QtCore.QObject):
     child_added = PyQt5.QtCore.pyqtSignal('PyQt_PyObject', int)
+    child_added_complete = PyQt5.QtCore.pyqtSignal('PyQt_PyObject')
     child_removed = PyQt5.QtCore.pyqtSignal(
         'PyQt_PyObject',
         'PyQt_PyObject',
         int,
     )
+    child_removed_complete = PyQt5.QtCore.pyqtSignal('PyQt_PyObject')
 
 
 class TreeNode:
@@ -52,11 +54,13 @@ class TreeNode:
         self.children.insert(i, child)
         child.tree_parent = self
         self.pyqt_signals.child_added.emit(child, i)
+        self.pyqt_signals.child_added_complete.emit(child)
 
     def append_child(self, child):
         self.children.append(child)
         child.tree_parent = self
         self.pyqt_signals.child_added.emit(child, len(self.children) - 1)
+        self.pyqt_signals.child_added_complete.emit(child)
 
     def child_at_row(self, row):
         if row < len(self.children):
@@ -83,6 +87,7 @@ class TreeNode:
         self.children.remove(child)
 
         self.pyqt_signals.child_removed.emit(tree_parent, child, row)
+        self.pyqt_signals.child_removed_complete.emit(child)
 
         return True
 

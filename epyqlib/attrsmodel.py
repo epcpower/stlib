@@ -796,9 +796,14 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             self._pyqtify_disconnect(**kwargs)
 
     def _pyqtify_disconnect(self, parent, child):
-        connections = self.connected_signals.pop(
-            get_connection_id(parent=parent, child=child),
-        )
+        connection_id = get_connection_id(parent=parent, child=child)
+        try:
+            connections = self.connected_signals.pop(
+                connection_id,
+            )
+        except KeyError:
+            # TODO: why is this even happening?
+            return
 
         for signal, (instance, slot) in connections.items():
             signal.__get__(instance).disconnect(slot)

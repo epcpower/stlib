@@ -592,13 +592,16 @@ class Table(epyqlib.treenode.TreeNode):
         default=attr.Factory(list),
         cmp=False,
         metadata=graham.create_metadata(
-            field=graham.fields.MixedList(fields=(
-                marshmallow.fields.Nested(graham.schema(Array)),
-                marshmallow.fields.Nested(graham.schema(
-                    TableEnumerationReference,
-                )),
-                marshmallow.fields.Nested(graham.schema(TableGroupElement)),
-            )),
+            field=graham.fields.MixedList(
+                fields=(
+                    marshmallow.fields.Nested(graham.schema(Array)),
+                    marshmallow.fields.Nested(graham.schema(
+                        TableEnumerationReference,
+                    )),
+                    marshmallow.fields.Nested(graham.schema(TableGroupElement)),
+                ),
+                exclude=(TableGroupElement,),
+            ),
         ),
     )
     uuid = epyqlib.attrsmodel.attr_uuid()
@@ -613,6 +616,8 @@ class Table(epyqlib.treenode.TreeNode):
         super().__init__()
 
         self._monitor_children = True
+        self.pyqt_signals.child_added_complete.connect(self.update)
+        self.pyqt_signals.child_removed_complete.connect(self.update)
 
     @contextlib.contextmanager
     def _ignore_children(self):
@@ -620,7 +625,7 @@ class Table(epyqlib.treenode.TreeNode):
         yield
         self._monitor_children = True
 
-    def update(self):
+    def update(self, changed=None):
         if not self._monitor_children:
             return
 
@@ -636,6 +641,9 @@ class Table(epyqlib.treenode.TreeNode):
 
         for child in self.children:
             if not isinstance(child, TableEnumerationReference):
+                continue
+
+            if child.enumeration_uuid is None:
                 continue
 
             enumeration, = root.nodes_by_attribute(
@@ -654,7 +662,6 @@ class Table(epyqlib.treenode.TreeNode):
         with self._ignore_children():
             for group in old_groups:
                 self.remove_child(child=group)
-            self.group = None
 
             self.group = TableGroupElement(
                 name='Tree',
@@ -671,7 +678,7 @@ class Table(epyqlib.treenode.TreeNode):
                 if len(upcoming) == 1:
                     present, = upcoming
                 else:
-                    new = TableGroupElement(ref=layer)
+                    new = TableGroupElement(name=layer.name, ref=layer)
                     present.append_child(new)
                     present = new
 
@@ -704,10 +711,7 @@ class Table(epyqlib.treenode.TreeNode):
                 'Specified node not found in children'
             )
 
-        if len(self.children) > 1:
-            return False
-
-        return True
+        return not isinstance(node, TableGroupElement)
 
 
 @graham.schemify(tag='enumerator')
