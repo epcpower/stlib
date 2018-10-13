@@ -154,6 +154,8 @@ class SampleModel:
             ),
         )
 
+        self.model.update_nodes()
+
 
 @pytest.fixture
 def sample():

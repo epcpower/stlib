@@ -928,6 +928,15 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         return can_drop
 
+    def update_nodes(self):
+        def visit(node, _):
+            update = getattr(node, 'update', None)
+
+            if update is not None:
+                update()
+
+        self.root.traverse(call_this=visit, internal_nodes=True)
+
 
 class Reference(marshmallow.fields.UUID):
     def _serialize(self, value, attr, obj):
