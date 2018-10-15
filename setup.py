@@ -26,6 +26,7 @@ setup(
     install_requires=[
         'arrow',
         'bitstruct',
+        'canmatrix',
         'python-dotenv',
         'natsort',
         'pint',
@@ -46,6 +47,10 @@ setup(
         ],
         'dulwich': [
             'dulwich',
+        ],
+        'test': [
+            'pytest',
+            'pytest-qt',
         ],
     },
 )
