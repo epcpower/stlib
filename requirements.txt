@@ -7,7 +7,6 @@ canmatrix==0.6
 Click==7.0
 constantly==15.1.0
 decorator==4.3.0
--e git+https://github.com/altendky/stlib@d3b942f8b5766bece4742b611da233170007c6c0#egg=epyqlib
 future==0.16.0
 gitdb2==2.0.5
 GitPython==2.1.11
@@ -41,3 +40,5 @@ Twisted==18.9.0
 typing==3.6.6
 wrapt==1.10.11
 zope.interface==4.5.0
+
+-e .
