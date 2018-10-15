@@ -1,14 +1,18 @@
-from setuptools import setup, find_packages
+import setuptools
 
-setup(
+import versioneer
+
+
+setuptools.setup(
     name="epyqlib",
-    version="0.1",
     author="EPC Power Corp.",
     classifiers=[
         ("License :: OSI Approved :: "
          "GNU General Public License v2 or later (GPLv2+)")
     ],
-    packages=find_packages(),
+    packages=setuptools.find_packages(),
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     entry_points={
         'console_scripts': [
             'collectdevices = epyqlib.collectdevices:main',

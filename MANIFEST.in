@@ -1,0 +1,2 @@
+include versioneer.py
+include epyqlib/_version.py
