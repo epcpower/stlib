@@ -6,7 +6,7 @@ bitstruct==4.0.0
 Click==7.0
 constantly==15.1.0
 decorator==4.3.0
--e git+https://github.com/altendky/stlib@39cf5e042b583192f617316739ff5d3ff6c27e18#egg=epyqlib
+-e git+https://github.com/ebroecker/canmatrix@0beb8229555e743bb441181ff31cb37e82fff219#egg=canmatrix
 future==0.16.0
 gitdb2==2.0.5
 GitPython==2.1.11
@@ -28,12 +28,12 @@ PyQt5==5.11.3
 PyQt5-sip==4.19.13
 pytest==3.8.2
 pytest-qt==3.2.1
-pytest-twisted==1.8
-python-can==3.0.0
+git+https://github.com/altendky/pytest-twisted@6f04ba3ad806b3b40602999e71c28633c36d81f9#egg=pytest-twisted
+python-can==2.2.1
 python-dateutil==2.7.3
 python-docx==0.8.7
 python-dotenv==0.9.1
-qt5reactor==0.5
+-e git+https://github.com/altendky/qt5reactor@ce3ea2dad6d71adb10cde79b64bc0c7d27e9139c#egg=qt5reactor
 six==1.11.0
 smmap2==2.0.5
 Twisted==18.9.0
