@@ -11,7 +11,7 @@ init:
 build_script:
   - "%PYTHON%\\python -m venv venv"
   - venv\\Scripts\\pip install -r requirements.txt
-  - venv\\Scripts\\pip install -e .
+  - venv\\Scripts\\pip install -e .[test]
   - venv\\Scripts\\pip freeze
 
   - venv\\Scripts\\genbuildinfo "epyqlib\\_build.py"
