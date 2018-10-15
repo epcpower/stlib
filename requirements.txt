@@ -3,10 +3,10 @@ atomicwrites==1.2.1
 attrs==18.2.0
 Automat==0.7.0
 bitstruct==4.0.0
-canmatrix==0.6
 Click==7.0
 constantly==15.1.0
 decorator==4.3.0
+-e git+https://github.com/altendky/stlib@39cf5e042b583192f617316739ff5d3ff6c27e18#egg=epyqlib
 future==0.16.0
 gitdb2==2.0.5
 GitPython==2.1.11
