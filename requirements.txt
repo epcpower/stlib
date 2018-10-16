@@ -10,7 +10,7 @@ decorator==4.3.0
 future==0.16.0
 gitdb2==2.0.5
 GitPython==2.1.11
-graham==0.1.8
+git+https://github.com/altendky/graham@3ee37226bee8cb2fa5470d639d83a143f7f3cf86#egg=graham
 greenlet==0.4.15
 hyperlink==18.0.0
 idna==2.7
