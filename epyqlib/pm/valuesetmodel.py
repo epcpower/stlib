@@ -117,7 +117,7 @@ def copy_parameter_data(
 
 def name_attrib():
     attrib = attr.ib(
-        convert=str,
+        converter=str,
     )
     graham.attrib(
         attribute=attrib,
@@ -129,7 +129,7 @@ def name_attrib():
 
 def decimal_attrib(**kwargs):
     attrib = attr.ib(
-        convert=epyqlib.attrsmodel.to_decimal_or_none,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
         **kwargs,
     )
     graham.attrib(

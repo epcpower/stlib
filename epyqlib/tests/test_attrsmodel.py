@@ -27,7 +27,10 @@ __license__ = 'GPLv2+'
 @attr.s(hash=False)
 class Parameter(epyqlib.treenode.TreeNode):
     name = attr.ib(default='New Parameter')
-    value = attr.ib(default=None, convert=epyqlib.attrsmodel.to_decimal_or_none)
+    value = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
+    )
     uuid = epyqlib.attrsmodel.attr_uuid()
 
     def __attrs_post_init__(self):
@@ -530,8 +533,10 @@ def test_with_pyqtpropertys(qtbot):
     class PyQtPropertyParameter(epyqlib.treenode.TreeNode):
         type = attr.ib(default='test_parameter', init=False)
         name = attr.ib(default='New Parameter')
-        value = attr.ib(default=None,
-                        convert=epyqlib.attrsmodel.to_decimal_or_none)
+        value = attr.ib(
+            default=None,
+            converter=epyqlib.attrsmodel.to_decimal_or_none,
+        )
         uuid = epyqlib.attrsmodel.attr_uuid()
 
         def __attrs_post_init__(self):
@@ -783,7 +788,7 @@ def test_two_state_checkbox():
         name = attr.ib(default='New Parameter')
         value = attr.ib(
             default=None,
-            convert=epyqlib.attrsmodel.two_state_checkbox,
+            converter=epyqlib.attrsmodel.two_state_checkbox,
         )
         uuid = epyqlib.attrsmodel.attr_uuid()
 
@@ -829,7 +834,7 @@ def test_enumeration(qtbot):
         name = attr.ib(default='New Leaf')
         enumeration_uuid = attr.ib(
             default=None,
-            convert=epyqlib.attrsmodel.convert_uuid,
+            converter=epyqlib.attrsmodel.convert_uuid,
         )
         epyqlib.attrsmodel.attrib(
             attribute=enumeration_uuid,

@@ -31,7 +31,7 @@ def _post_load(fault_log, root=None):
 @attr.s(hash=False)
 class Event(epyqlib.treenode.TreeNode):
     time = attr.ib(
-        convert=arrow.get,
+        converter=arrow.get,
         default=attr.Factory(arrow.utcnow),
     )
     graham.attrib(
@@ -44,7 +44,7 @@ class Event(epyqlib.treenode.TreeNode):
     )
 
     value = attr.ib(
-        convert=epyqlib.attrsmodel.to_int_or_none,
+        converter=epyqlib.attrsmodel.to_int_or_none,
         default=None,
     )
     epyqlib.attrsmodel.attrib(
@@ -53,7 +53,7 @@ class Event(epyqlib.treenode.TreeNode):
     )
 
     description = attr.ib(
-        convert=str,
+        converter=str,
         default=None,
     )
     epyqlib.attrsmodel.attrib(

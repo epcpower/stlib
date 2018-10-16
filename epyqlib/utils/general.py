@@ -44,7 +44,7 @@ def multiparagraph_wrap(s, *args, **kwargs):
 
 @attr.s
 class AverageValueRate:
-    _seconds = attr.ib(convert=float)
+    _seconds = attr.ib(converter=float)
     _deque = attr.ib(default=attr.Factory(collections.deque))
 
     @attr.s

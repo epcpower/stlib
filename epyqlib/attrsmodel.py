@@ -226,7 +226,7 @@ def columns(*columns):
 @attr.s
 class Types:
     types = attr.ib(
-        convert=(
+        converter=(
             lambda types:
             collections.OrderedDict((t.__name__, t) for t in types)
         ),
@@ -368,7 +368,7 @@ def attr_uuid(
 
     attribute = attr.ib(
         default=default,
-        convert=convert_uuid,
+        converter=convert_uuid,
         metadata=metadata,
     )
     graham.attrib(

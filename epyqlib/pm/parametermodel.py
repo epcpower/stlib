@@ -29,7 +29,7 @@ class Parameter(epyqlib.treenode.TreeNode):
     )
     type_name = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_str_or_none,
+        converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
         ),
@@ -37,28 +37,28 @@ class Parameter(epyqlib.treenode.TreeNode):
     # TODO: CAMPid 1342975467516679768543165421
     default = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_decimal_or_none,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.Decimal(allow_none=True, as_string=True),
         ),
     )
     minimum = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_decimal_or_none,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.Decimal(allow_none=True, as_string=True),
         ),
     )
     maximum = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_decimal_or_none,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.Decimal(allow_none=True, as_string=True),
         ),
     )
     units = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_str_or_none,
+        converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
         ),
@@ -77,42 +77,42 @@ class Parameter(epyqlib.treenode.TreeNode):
 
     decimal_places = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_int_or_none,
+        converter=epyqlib.attrsmodel.to_int_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.Integer(allow_none=True),
         ),
     )
     display_hexadecimal = attr.ib(
         default=False,
-        convert=epyqlib.attrsmodel.two_state_checkbox,
+        converter=epyqlib.attrsmodel.two_state_checkbox,
         metadata=graham.create_metadata(
             field=marshmallow.fields.Boolean(),
         ),
     )
     nv_format = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_str_or_none,
+        converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True)
         ),
     )
     nv_factor = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_str_or_none,
+        converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True)
         ),
     )
     nv_cast = attr.ib(
         default=False,
-        convert=epyqlib.attrsmodel.two_state_checkbox,
+        converter=epyqlib.attrsmodel.two_state_checkbox,
         metadata=graham.create_metadata(
             field=marshmallow.fields.Boolean(),
         ),
     )
     read_only = attr.ib(
         default=False,
-        convert=epyqlib.attrsmodel.two_state_checkbox,
+        converter=epyqlib.attrsmodel.two_state_checkbox,
         metadata=graham.create_metadata(
             field=marshmallow.fields.Boolean(),
         ),
@@ -121,7 +121,7 @@ class Parameter(epyqlib.treenode.TreeNode):
     access_level_uuid = epyqlib.attrsmodel.attr_uuid(
         default=None,
         allow_none=True,
-        # convert=lambda x: x if x is None else AccessLevelsAccessLevel(x),
+        # converter=lambda x: x if x is None else AccessLevelsAccessLevel(x),
         human_name='Access Level',
         data_display=epyqlib.attrsmodel.name_from_uuid,
         list_selection_root='access level',
@@ -132,7 +132,7 @@ class Parameter(epyqlib.treenode.TreeNode):
     )
     comment = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_str_or_none,
+        converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
         ),
@@ -158,7 +158,7 @@ class Parameter(epyqlib.treenode.TreeNode):
     visibility = epyqlib.attrsmodel.attr_uuid(
         default=None,
         allow_none=True,
-        # convert=lambda x: x if x is None else AccessLevelsAccessLevel(x),
+        # converter=lambda x: x if x is None else AccessLevelsAccessLevel(x),
         human_name='Visibility',
         data_display=epyqlib.attrsmodel.name_from_uuid,
         list_selection_root='visibility',
@@ -210,7 +210,7 @@ class Group(epyqlib.treenode.TreeNode):
     )
     type_name = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_str_or_none,
+        converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
         ),
@@ -298,28 +298,28 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
     # TODO: CAMPid 1342975467516679768543165421
     default = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_decimal_or_none,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.Decimal(allow_none=True, as_string=True),
         ),
     )
     minimum = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_decimal_or_none,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.Decimal(allow_none=True, as_string=True),
         ),
     )
     maximum = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_decimal_or_none,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.Decimal(allow_none=True, as_string=True),
         ),
     )
     nv_format = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_str_or_none,
+        converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True)
         ),
@@ -394,11 +394,11 @@ class Array(epyqlib.treenode.TreeNode):
     )
     length = attr.ib(
         default=1,
-        convert=int,
+        converter=int,
     )
     named_enumerators = attr.ib(
         default=True,
-        convert=epyqlib.attrsmodel.two_state_checkbox,
+        converter=epyqlib.attrsmodel.two_state_checkbox,
         metadata=graham.create_metadata(
             field=marshmallow.fields.Boolean(),
         ),
@@ -727,7 +727,7 @@ class Enumerator(epyqlib.treenode.TreeNode):
     )
     value = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_decimal_or_none,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.Integer(allow_none=True),
         ),
@@ -807,7 +807,7 @@ class AccessLevel(epyqlib.treenode.TreeNode):
     )
     value = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_decimal_or_none,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.Integer(allow_none=True),
         ),

@@ -188,7 +188,7 @@ class SubroutineType:
     return_type = attr.ib(default=None)
     name = attr.ib(
         default=None,
-        convert=lambda v: str(v) if v is not None else '<subroutine>'
+        converter=lambda v: str(v) if v is not None else '<subroutine>'
     )
     parameters = members = attr.ib(default=attr.Factory(list))
 
