@@ -226,6 +226,13 @@ class Device:
             self.nvs.terminate()
         if self.widget_nvs is not None:
             self.widget_nvs.terminate()
+        for view in self.nv_views:
+            view.terminate()
+        terminate_extension = getattr(self.extension, 'terminate', None)
+        if terminate_extension is not None:
+            terminate_extension()
+        else:
+            self.extension.device = None
         logging.debug('{} terminated'.format(object.__repr__(self)))
 
     def __del__(self):
@@ -479,6 +486,30 @@ class Device:
             converted_directory.cleanup()
         shutil.rmtree(path)
 
+    def traverse(self, dict_node):
+        for key, value in dict_node.items():
+            if isinstance(value, dict):
+                self.traverse(value)
+            elif value.endswith('.ui'):
+                path = value
+                try:
+                    dict_node[key] = self.loaded_uis[path]
+                except KeyError:
+                    # TODO: CAMPid 9549757292917394095482739548437597676742
+                    if not QFileInfo(path).isAbsolute():
+                        ui_file = os.path.join(
+                            QFileInfo.absolutePath(QFileInfo(self.config_path)),
+                            path)
+                    else:
+                        ui_file = path
+                    ui_file = QFile(ui_file)
+                    ui_file.open(QFile.ReadOnly | QFile.Text)
+                    ts = QTextStream(ui_file)
+                    sio = io.StringIO(ts.readAll())
+                    dict_node[key] = uic.loadUi(sio)
+                    dict_node[key].file_name = path
+                    self.loaded_uis[path] = dict_node[key]
+
     def _init_from_parameters(self, uis, serial_number, name, bus=None,
                               tabs=None, rx_interval=0, edit_actions=None,
                               nv_configuration=None, can_configuration=None,
@@ -523,31 +554,7 @@ class Device:
         self.ui = uic.loadUi(sio)
         self.loaded_uis = {}
 
-        def traverse(dict_node):
-            for key, value in dict_node.items():
-                if isinstance(value, dict):
-                    traverse(value)
-                elif value.endswith('.ui'):
-                    path = value
-                    try:
-                        dict_node[key] = self.loaded_uis[path]
-                    except KeyError:
-                        # TODO: CAMPid 9549757292917394095482739548437597676742
-                        if not QFileInfo(path).isAbsolute():
-                            ui_file = os.path.join(
-                                QFileInfo.absolutePath(QFileInfo(self.config_path)),
-                                path)
-                        else:
-                            ui_file = path
-                        ui_file = QFile(ui_file)
-                        ui_file.open(QFile.ReadOnly | QFile.Text)
-                        ts = QTextStream(ui_file)
-                        sio = io.StringIO(ts.readAll())
-                        dict_node[key] = uic.loadUi(sio)
-                        dict_node[key].file_name = path
-                        self.loaded_uis[path] = dict_node[key]
-
-        traverse(uis)
+        self.traverse(uis)
 
         # TODO: yuck, actually tidy the code
         self.dash_uis = uis
@@ -720,15 +727,15 @@ class Device:
             )
             notifiees.append(self.widget_nvs)
 
-            nv_views = self.ui.findChildren(epyqlib.nvview.NvView)
-            if len(nv_views) > 0:
+            self.nv_views = self.ui.findChildren(epyqlib.nvview.NvView)
+            if len(self.nv_views) > 0:
                 nv_model = epyqlib.nv.NvModel(self.nvs)
                 self.nvs.changed.connect(nv_model.changed)
 
-                self.first_nv_view = nv_views[0]
+                self.first_nv_view = self.nv_views[0]
 
                 column = epyqlib.nv.Columns.indexes.name
-                for view in nv_views:
+                for view in self.nv_views:
                     view.set_device(self)
                     view.set_can_contents(
                         can_contents=self.can_contents,
@@ -838,19 +845,7 @@ class Device:
         if Tabs.nv not in tabs:
             self.ui.tabs.removeTab(self.ui.tabs.indexOf(self.ui.nv))
         else:
-            def tab_changed(index):
-                tabs = {
-                    self.ui.tabs.indexOf(x)
-                    for x in (self.ui.nv, self.ui.scripting)
-                }
-                if index in tabs:
-                    self.nv_looping_set.stop()
-                    self.nv_tab_looping_set.start()
-                else:
-                    self.nv_looping_set.start()
-                    self.nv_tab_looping_set.stop()
-
-            self.ui.tabs.currentChanged.connect(tab_changed)
+            self.ui.tabs.currentChanged.connect(self.tab_changed)
         if Tabs.scripting not in tabs:
             self.ui.tabs.removeTab(self.ui.tabs.indexOf(self.ui.scripting))
         if Tabs.fault_log not in tabs:
@@ -940,8 +935,11 @@ class Device:
                         )
 
                         if nv_signal.multiplex not in self.nv_looping_reads:
-                            def read(nv_signal=nv_signal):
-                                d = self.nvs.protocol.read(
+                            def read(
+                                    nv_signal=nv_signal, 
+                                    read=self.nvs.protocol.read,
+                            ):
+                                d = read(
                                     nv_signal=nv_signal,
                                     meta=epyqlib.nv.MetaEnum.value,
                                 )
@@ -1082,6 +1080,18 @@ class Device:
             self.bus.notifier.add(notifiee)
 
         self.extension.post()
+
+    def tab_changed(self, index):
+        tabs = {
+            self.ui.tabs.indexOf(x)
+            for x in (self.ui.nv, self.ui.scripting)
+        }
+        if index in tabs:
+            self.nv_looping_set.stop()
+            self.nv_tab_looping_set.start()
+        else:
+            self.nv_looping_set.start()
+            self.nv_tab_looping_set.stop()
 
     def absolute_path(self, path=''):
         # TODO: CAMPid 9549757292917394095482739548437597676742

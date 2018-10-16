@@ -28,6 +28,7 @@ def test_epc(customer_device_path, qtbot):
     )
 
     assert_device_ok(device)
+    device.terminate()
 
 
 def test_json(customer_device_path, qtbot):
@@ -40,6 +41,7 @@ def test_json(customer_device_path, qtbot):
     )
 
     assert_device_ok(device)
+    device.terminate()
 
 
 def test_epz(qtbot, zipped_customer_device_path, tmpdir):
@@ -56,6 +58,7 @@ def test_epz(qtbot, zipped_customer_device_path, tmpdir):
     )
 
     assert_device_ok(device)
+    device.terminate()
 
 
 def test_zip(qtbot, zipped_customer_device_path, tmpdir):
@@ -72,3 +75,4 @@ def test_zip(qtbot, zipped_customer_device_path, tmpdir):
     )
 
     assert_device_ok(device)
+    device.terminate()

@@ -20,6 +20,9 @@ class DeviceExtension:
     def post(self):
         pass
 
+    def terminate(self):
+        self.device = None
+
 
 if __name__ == '__main__':
     import sys

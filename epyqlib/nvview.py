@@ -142,6 +142,9 @@ class NvView(UiBase):
             )
         )
 
+    def terminate(self):
+        self.device = None
+
     def configure_diff_proxy(self, proxy):
         self.diff_proxy = proxy
         self.diff_reference_column_changed(
