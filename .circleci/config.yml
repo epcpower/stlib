@@ -1,0 +1,43 @@
+version: 2
+
+jobs:
+  linux:
+    docker:
+      - image: circleci/python:3.7
+    environment:
+      PYTHON: python3
+    steps:
+      - checkout
+
+      - run:
+          name: Prepare
+          command: |
+            bash .circleci/prepare.sh
+      - run:
+          name: Test
+          command: |
+            bash .circleci/test.sh
+
+  osx:
+    macos:
+      xcode: "10.0.0"
+    environment:
+      PYTHON: python3
+    steps:
+      - checkout
+
+      - run:
+          name: Prepare
+          command: |
+            bash .circleci/prepare.sh
+      - run:
+          name: Test
+          command: |
+            bash .circleci/test.sh
+
+workflows:
+  version: 2
+  all:
+    jobs:
+      - linux
+      - osx
