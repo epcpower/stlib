@@ -67,7 +67,7 @@ class Metadata:
     data_display = attr.ib(default=None)
     editable = attr.ib(default=True)
     human_name = attr.ib(default=None)
-    convert = attr.ib(default=None)
+    converter = attr.ib(default=None)
     no_column = attr.ib(default=False)
     list_selection_root = attr.ib(default=None)
 
@@ -107,8 +107,8 @@ def ify():
             else:
                 metadata = attr.evolve(metadata, name=field.name, **extras)
 
-            if metadata.convert is None:
-                metadata.convert = field.convert
+            if metadata.converter is None:
+                metadata.converter = field.converter
 
             field_metadata[field.name] = metadata
 
@@ -632,7 +632,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         if field is not None:
             node = self.node_from_index(index)
 
-            if field.convert is two_state_checkbox:
+            if field.converter is two_state_checkbox:
                 flags |= QtCore.Qt.ItemIsUserCheckable
             elif getattr(fields(node), field.name).editable:
                 flags |= QtCore.Qt.ItemIsEditable
@@ -662,7 +662,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         if field is None:
             return ''
 
-        if field.convert is two_state_checkbox:
+        if field.converter is two_state_checkbox:
             return ''
 
         node = self.node_from_index(index)
@@ -689,7 +689,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         attribute = self.get_field(index)
         if attribute is not None:
-            if attribute.convert is two_state_checkbox:
+            if attribute.converter is two_state_checkbox:
                 if getattr(node, attribute.name):
                     return QtCore.Qt.Checked
                 else:
@@ -702,10 +702,10 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         attribute = self.get_field(index)
 
         if role == QtCore.Qt.EditRole:
-            convert = attribute.convert
-            if convert is not None:
+            converter = attribute.converter
+            if converter is not None:
                 try:
-                    converted = convert(data)
+                    converted = converter(data)
                 except ValueError:
                     return False
             else:
@@ -716,7 +716,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             self.dataChanged.emit(index, index)
             return True
         elif role == QtCore.Qt.CheckStateRole:
-            setattr(node, attribute.name, attribute.convert(data))
+            setattr(node, attribute.name, attribute.converter(data))
 
             return True
 
