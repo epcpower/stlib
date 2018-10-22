@@ -17,6 +17,7 @@ import epyqlib.pm.valuesetmodel
 import epyqlib.twisted.busproxy
 import epyqlib.twisted.nvs
 import epyqlib.utils.general
+import epyqlib.utils.qt
 import epyqlib.utils.twisted
 import functools
 import itertools
@@ -1455,7 +1456,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         self.force_action_decorations = False
 
-        self.role_functions[epyqlib.pyqabstractitemmodel.UserRoles.sort] = (
+        self.role_functions[epyqlib.utils.qt.UserRoles.sort] = (
             self.data_sort
         )
 

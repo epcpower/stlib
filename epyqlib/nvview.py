@@ -155,7 +155,7 @@ class NvView(UiBase):
         if self.diff_proxy is not None:
             column = self.ui.diff_reference_column.itemData(
                 index,
-                epyqlib.pyqabstractitemmodel.UserRoles.raw,
+                epyqlib.utils.qt.UserRoles.raw,
             )
             self.diff_proxy.reference_column = column
 
@@ -448,7 +448,7 @@ class NvView(UiBase):
         self.can_suffix = suffix
 
     def configure_sort_proxy(self, proxy):
-        proxy.setSortRole(epyqlib.pyqabstractitemmodel.UserRoles.sort)
+        proxy.setSortRole(epyqlib.utils.qt.UserRoles.sort)
 
     def setModel(self, model):
         self.ui.tree_view.setModel(model)
@@ -635,7 +635,7 @@ class NvView(UiBase):
             self.ui.diff_reference_column.setItemData(
                 i,
                 value,
-                epyqlib.pyqabstractitemmodel.UserRoles.raw,
+                epyqlib.utils.qt.UserRoles.raw,
             )
             if value == default_reference:
                 self.ui.diff_reference_column.setCurrentIndex(i)

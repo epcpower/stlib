@@ -360,7 +360,7 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         # TODO: consider using locale?  but maybe not since it's C code not
         #       raw strings
         self.sort_key = natsort.natsort_keygen(alg=natsort.ns.IGNORECASE)
-        self.role_functions[epyqlib.pyqabstractitemmodel.UserRoles.sort] = (
+        self.role_functions[epyqlib.utils.qt.UserRoles.sort] = (
             self.data_sort
         )
 

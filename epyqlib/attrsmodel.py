@@ -573,7 +573,7 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
 
         target_uuid = model.data(
             model_index,
-            epyqlib.pyqabstractitemmodel.UserRoles.raw,
+            epyqlib.utils.qt.UserRoles.raw,
         )
         if target_uuid is not None:
             target_node = model.node_from_uuid(target_uuid)
@@ -601,7 +601,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
     def __init__(self, root, columns, parent=None):
         super().__init__(root=root, parent=parent)
 
-        self.role_functions[epyqlib.pyqabstractitemmodel.UserRoles.raw] = (
+        self.role_functions[epyqlib.utils.qt.UserRoles.raw] = (
             self.data_raw
         )
 

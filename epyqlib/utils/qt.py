@@ -1,3 +1,4 @@
+import enum
 import functools
 import io
 import os
@@ -1225,3 +1226,10 @@ def set_expanded_tree(view, index, expanded):
 
     if expanded:
         view.setExpanded(index, expanded)
+
+
+@enum.unique
+class UserRoles(epyqlib.utils.general.AutoNumberIntEnum):
+    unique = QtCore.Qt.UserRole
+    sort = None
+    raw = None
