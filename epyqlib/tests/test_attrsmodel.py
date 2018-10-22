@@ -181,7 +181,7 @@ def make_a_model(
 def test_model(qtmodeltester):
     model = make_a_model()
 
-    qtmodeltester.check(model)
+    qtmodeltester.check(model.model)
 
 
 def test_search_column_0(qtbot):
@@ -196,7 +196,7 @@ def search_in_column(column, target):
     model = make_a_model()
 
     proxy = PyQt5.QtCore.QSortFilterProxyModel()
-    proxy.setSourceModel(model)
+    proxy.setSourceModel(model.model)
 
     view = PyQt5.QtWidgets.QTreeView()
     view.setModel(proxy)
@@ -226,7 +226,7 @@ def proxy_search_in_column(column, target):
     model = make_a_model()
 
     proxy = epyqlib.utils.qt.PySortFilterProxyModel(filter_column=0)
-    proxy.setSourceModel(model)
+    proxy.setSourceModel(model.model)
 
     view = PyQt5.QtWidgets.QTreeView()
     view.setModel(proxy)
@@ -239,30 +239,32 @@ def proxy_search_in_column(column, target):
         PyQt5.QtCore.Qt.MatchRecursive,
     )
 
-    match_node = model.node_from_index(proxy.mapToSource(index))
+    match_node = model.model.itemFromIndex(proxy.mapToSource(index))
     assert match_node is not None
 
     index = proxy.search(
         text=target,
-        search_from=model.index_from_node(model.root),
+        search_from=PyQt5.QtCore.QModelIndex(),#item.index(),
         column=column,
     )
 
-    search_node = model.node_from_index(proxy.mapToSource(index))
+    search_node = model.model.itemFromIndex(proxy.mapToSource(index))
 
     assert match_node is search_node
 
 
 def node_from_name(model, name):
-    index, = model.match(
-        model.index(0, 0),
+    index, = model.model.match(
+        model.model.index(0, 0),
         PyQt5.QtCore.Qt.DisplayRole,
         name,
         1,
         PyQt5.QtCore.Qt.MatchRecursive,
     )
 
-    return model.node_from_index(index)
+    return model.model.itemFromIndex(index).data(
+        epyqlib.utils.qt.UserRoles.node,
+    )
 
 
 @attr.s
@@ -323,7 +325,7 @@ def test_data_changed(qtbot):
         roles=(PyQt5.QtCore.Qt.DisplayRole,),
     )
 
-    model.dataChanged.connect(data_changed.collect)
+    model.model.dataChanged.connect(data_changed.collect)
     data_changed.collected.connect(values.collect)
 
     for value in values.input:

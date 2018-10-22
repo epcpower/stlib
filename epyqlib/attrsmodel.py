@@ -19,7 +19,6 @@ import PyQt5.QtCore
 
 import epyqlib.abstractcolumns
 import epyqlib.delegates
-import epyqlib.pyqabstractitemmodel
 import epyqlib.treenode
 import epyqlib.utils.general
 import epyqlib.utils.qt
@@ -166,6 +165,9 @@ class Columns:
 
     def __iter__(self):
         return iter(self.columns)
+
+    # def __len__(self):
+    #     return len(self.columns)
 
     def __getitem__(self, item):
         if isinstance(item, str):
@@ -597,13 +599,11 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
         model.setData(index, node.uuid, role=QtCore.Qt.EditRole)
 
 
-class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
+class Model:
     def __init__(self, root, columns, parent=None):
-        super().__init__(root=root, parent=parent)
+        self.root = root
 
-        self.role_functions[epyqlib.utils.qt.UserRoles.raw] = (
-            self.data_raw
-        )
+        self.model = QtGui.QStandardItemModel()
 
         self.mime_type = 'application/com.epcpower.pm.attrsmodel'
 
@@ -734,8 +734,18 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         nodes = []
         child.traverse(call_this=visit, payload=nodes, internal_nodes=True)
 
-        for kwargs in reversed(nodes):
+        for kwargs in nodes:
             self._pyqtify_connect(**kwargs)
+
+    def item_from_node(self, node):
+        items = self._all_items(role=None)
+        item, = [
+            item
+            for item in items
+            if item.data(epyqlib.utils.qt.UserRoles.node) is node
+        ]
+
+        return item
 
     def _pyqtify_connect(self, parent, child):
         def key_value(instance, name, slot):
@@ -748,23 +758,30 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             raise ConsistencyError('already connected: {}'.format((parent, child)))
         self.connected_signals[connection_id] = connections
 
-        for i, column in enumerate(self.columns):
-            name = column.fields.get(type(child))
-            if name is None:
-                continue
+        if child is self.root:
+            root_item = self.model.invisibleRootItem()
+            root_item.setData(child, epyqlib.utils.qt.UserRoles.node)
+            root_item.setText('root')
+        else:
+            if parent is self.root:
+                parent_item = self.model.invisibleRootItem()
+            else:
+                parent_item = self.item_from_node(parent)
+            row = parent.row_of_child(child)
 
-            def slot(_, i=i):
-                self.changed(
-                    child, i,
-                    child, i,
-                    (PyQt5.QtCore.Qt.DisplayRole,),
-                )
+            items = []
 
-            connections.update(key_value(
-                instance=child.__pyqtify_instance__.changed,
-                name='_pyqtify_signal_' + name,
-                slot=slot,
-            ))
+            for column in self.columns:
+                item = QtGui.QStandardItem()
+                item.setData(child, epyqlib.utils.qt.UserRoles.node)
+
+                name = column.fields.get(type(child))
+                if name is not None:
+                    item.setText(str(getattr(child, name)))
+
+                items.append(item)
+
+            parent_item.insertRow(row, items)
 
         connections.update(key_value(
             instance=child.pyqt_signals,
@@ -779,6 +796,44 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         for signal, (instance, slot) in connections.items():
             signal.__get__(instance).connect(slot)
+
+    def _all_items(
+            self,
+            model=None,
+            parent=None,
+            role=QtCore.Qt.DisplayRole,
+            include_root=True,
+    ):
+        if model is None:
+            model = self.model
+
+        if parent is None:
+            parent = QtCore.QModelIndex()
+
+        data = []
+        if include_root:
+            datum = self.model.invisibleRootItem()
+            if role is not None:
+                datum = datum.data(role)
+            data.append(datum)
+
+        for row in range(model.rowCount(parent)):
+            index = model.index(row, 0, parent)
+            if role is not None:
+                datum = model.data(index, role)
+            else:
+                datum = model.itemFromIndex(index)
+            data.append(datum)
+
+            if model.hasChildren(index):
+                data.extend(self._all_items(
+                    model=model,
+                    parent=index,
+                    role=role,
+                    include_root=False,
+                ))
+
+        return data
 
     def pyqtify_disconnect(self, parent, child):
         def visit(node, nodes):
@@ -811,43 +866,14 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
     def child_added(self, child, row):
         parent = child.tree_parent
 
-        from_index = None
-        if len(parent.children) == 1:
-            from_index = self.index_from_node(parent)
-            persistent_index = PyQt5.QtCore.QPersistentModelIndex(from_index)
-            self.layoutAboutToBeChanged.emit([persistent_index])
-
-        self.begin_insert_rows(parent, row, row)
-
         self.pyqtify_connect(parent, child)
 
         if child.uuid is None:
             check_uuids(self.root)
 
-        self.end_insert_rows()
-
-        if from_index is not None:
-            to_index = self.index_from_node(parent)
-            self.changePersistentIndex(from_index, to_index)
-            self.layoutChanged.emit([persistent_index])
-
     def deleted(self, parent, node, row):
-        from_index = None
-        if len(parent.children) == 1:
-            from_index = self.index_from_node(parent)
-            persistent_index = PyQt5.QtCore.QPersistentModelIndex(from_index)
-            self.layoutAboutToBeChanged.emit([persistent_index])
-
-        self.begin_remove_rows(parent, row, row)
-
-        self.pyqtify_disconnect(parent, node)
-
-        self.end_remove_rows()
-
-        if from_index is not None:
-            to_index = self.index_from_node(parent)
-            self.changePersistentIndex(from_index, to_index)
-            self.layoutChanged.emit([persistent_index])
+        item = self.item_from_node(parent)
+        item.takeRow(row)
 
     def supportedDropActions(self):
         return QtCore.Qt.MoveAction

@@ -1233,3 +1233,4 @@ class UserRoles(epyqlib.utils.general.AutoNumberIntEnum):
     unique = QtCore.Qt.UserRole
     sort = None
     raw = None
+    node = None
