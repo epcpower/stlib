@@ -476,7 +476,7 @@ def childless_can_delete(self, node=None):
 
 def to_source_model(index):
     model = index.model()
-    while not isinstance(model, Model):
+    while not isinstance(model, QtGui.QStandardItemModel):
         index = model.mapToSource(index)
         model = index.model()
 
@@ -519,10 +519,17 @@ class DelegateSelector:
     def select(self, index):
         index = to_source_model(index)
         model = index.model()
-        node = model.node_from_index(index)
+        if isinstance(model, QtGui.QStandardItemModel):
+            item = model.itemFromIndex(index)
+            node = item.data(epyqlib.utils.qt.UserRoles.node)
+            field_name = item.data(epyqlib.utils.qt.UserRoles.field_name)
+            model = item.data(epyqlib.utils.qt.UserRoles.attrs_model)
+        else:
+            # continue supporting PyQAbstractItemModel
+            node = model.node_from_index(index)
 
-        column = model.columns[index.column()]
-        field_name = column.fields[type(node)]
+            column = model.columns[index.column()]
+            field_name = column.fields[type(node)]
 
         list_selection_root = getattr(fields(type(node)), field_name)
         list_selection_root = list_selection_root.list_selection_root
@@ -569,34 +576,145 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
         model_index = to_source_model(index)
         model = model_index.model()
 
-        editor.setModel(model)
-        editor.setModelColumn(model.columns.index_of(self.text_column_name))
-        editor.setRootModelIndex(model.index_from_node(self.root))
+        if isinstance(model, QtGui.QStandardItemModel):
+            item = model.itemFromIndex(model_index)
+            attrs_model = item.data(epyqlib.utils.qt.UserRoles.attrs_model)
+            column = attrs_model.columns.index_of(self.text_column_name)
+            root_index = attrs_model.index_from_node(self.root)
+        else:
+            # continue supporting PyQAbstractItemModel
+            column = model.columns.index_of(self.text_column_name)
+            root_index = model.index_from_node(self.root)
 
-        target_uuid = model.data(
-            model_index,
-            epyqlib.utils.qt.UserRoles.raw,
-        )
+        editor.setModel(model)
+        editor.setModelColumn(column)
+        editor.setRootModelIndex(root_index)
+
+        # target_uuid = model.data(
+        #     model_index,
+        #     epyqlib.utils.qt.UserRoles.raw,
+        # )
+
+        node = attrs_model.node_from_index(model_index)
+        target_uuid = node.uuid
+
         if target_uuid is not None:
-            target_node = model.node_from_uuid(target_uuid)
-            target_index = model.index_from_node(target_node)
+            if isinstance(model, QtGui.QStandardItemModel):
+                target_node = attrs_model.node_from_uuid(target_uuid)
+                target_index = attrs_model.index_from_node(target_node)
+
+            else:
+                # continue supporting PyQAbstractItemModel
+                target_node = model.node_from_uuid(target_uuid)
+                target_index = model.index_from_node(target_node)
+
             editor.setCurrentIndex(target_index.row())
 
         editor.showPopup()
 
     def setModelData(self, editor, model, index):
-        index = to_source_model(index)
-        model = index.model()
+        editor_index = editor.currentIndex()
+
+        item = model.itemFromIndex(index)
+        attrs_model = item.data(epyqlib.utils.qt.UserRoles.attrs_model)
+        parent_index = attrs_model.index_from_node(self.root)
 
         selected_index = model.index(
-            editor.currentIndex(),
+            editor_index,
             0,
-            model.index_from_node(self.root),
+            parent_index,
+        )
+        selected_node = attrs_model.node_from_index(selected_index)
+
+        node = attrs_model.node_from_index(index)
+
+        # datum = model.data(selected_index)
+        datum = str(selected_node.uuid)
+        print('setting -- - -- -', repr(datum))
+        print('                 ', node)
+        model.setData(index, datum)
+        print('                 ', node)
+
+        return
+
+        index = to_source_model(index)
+
+        if isinstance(model, QtGui.QStandardItemModel):
+            item = model.itemFromIndex(index)
+            attrs_model = item.data(epyqlib.utils.qt.UserRoles.attrs_model)
+            parent_index = attrs_model.index_from_node(self.root)
+            model = attrs_model.model
+        else:
+            # continue supporting PyQAbstractItemModel
+            model = index.model()
+            parent_index = model.index_from_node(self.root)
+
+        editor_index = editor.currentIndex()
+
+        selected_index = model.index(
+            editor_index,
+            0,
+            parent_index,
         )
 
-        node = model.node_from_index(selected_index)
+        if not selected_index.isValid():
+            raise Exception('editor_index {}'.format(editor_index))
 
-        model.setData(index, node.uuid, role=QtCore.Qt.EditRole)
+        if isinstance(model, QtGui.QStandardItemModel):
+            node = attrs_model.node_from_index(selected_index)
+            print('combo selected', node)
+        else:
+            # continue supporting PyQAbstractItemModel
+            node = model.node_from_index(selected_index)
+
+        print('column', index.column())
+        datum = str(node.uuid)
+        print('repr(datum)', repr(datum))
+        print('model.itemFromIndex(index).text()', model.itemFromIndex(index).text())
+        print('repr(model.itemFromIndex(index).data(epyqlib.utils.qt.UserRoles.raw))', repr(model.itemFromIndex(index).data(epyqlib.utils.qt.UserRoles.raw)))
+        success = model.setData(selected_index, datum, role=QtCore.Qt.EditRole)
+        if not success:
+            raise Exception('failed to set')
+
+    def _setModelData(self, editor, model, index):
+        index = to_source_model(index)
+
+        if isinstance(model, QtGui.QStandardItemModel):
+            item = model.itemFromIndex(index)
+            attrs_model = item.data(epyqlib.utils.qt.UserRoles.attrs_model)
+            parent_index = attrs_model.index_from_node(self.root)
+            model = attrs_model.model
+        else:
+            # continue supporting PyQAbstractItemModel
+            model = index.model()
+            parent_index = model.index_from_node(self.root)
+
+        editor_index = editor.currentIndex()
+
+        selected_index = model.index(
+            editor_index,
+            0,
+            parent_index,
+        )
+
+        if not selected_index.isValid():
+            raise Exception('editor_index {}'.format(editor_index))
+
+        if isinstance(model, QtGui.QStandardItemModel):
+            node = attrs_model.node_from_index(selected_index)
+            print('combo selected', node)
+        else:
+            # continue supporting PyQAbstractItemModel
+            node = model.node_from_index(selected_index)
+
+        print('column', index.column())
+        datum = str(node.uuid)
+        print('repr(datum)', repr(datum))
+        print('model.itemFromIndex(index).text()', model.itemFromIndex(index).text())
+        print('repr(model.itemFromIndex(index).data(epyqlib.utils.qt.UserRoles.raw))', repr(model.itemFromIndex(index).data(epyqlib.utils.qt.UserRoles.raw)))
+        success = model.setData(selected_index, datum, role=QtCore.Qt.EditRole)
+        if not success:
+            raise Exception('failed to set')
 
 
 class Model:
@@ -619,27 +737,28 @@ class Model:
         check_uuids(self.root)
 
         self.pyqtify_connect(None, self.root)
+        self.model.itemChanged.connect(self.item_changed)
 
     def add_drop_sources(self, *sources):
         self.droppable_from.update(sources)
         check_uuids(self.root, *self.droppable_from)
 
-    def flags(self, index):
-        flags = super().flags(index)
-
-        field = self.get_field(index)
-
-        if field is not None:
-            node = self.node_from_index(index)
-
-            if field.converter is two_state_checkbox:
-                flags |= QtCore.Qt.ItemIsUserCheckable
-            elif getattr(fields(node), field.name).editable:
-                flags |= QtCore.Qt.ItemIsEditable
-
-            flags |= QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled
-
-        return flags
+    # def flags(self, index):
+    #     flags = super().flags(index)
+    #
+    #     field = self.get_field(index)
+    #
+    #     if field is not None:
+    #         node = self.node_from_index(index)
+    #
+    #         if field.converter is two_state_checkbox:
+    #             flags |= QtCore.Qt.ItemIsUserCheckable
+    #         elif getattr(fields(node), field.name).editable:
+    #             flags |= QtCore.Qt.ItemIsEditable
+    #
+    #         flags |= QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled
+    #
+    #     return flags
 
     def get_field(self, index):
         c = index.column()
@@ -651,76 +770,130 @@ class Model:
 
         return getattr(attributes(t).fields, name)
 
-    def data_raw(self, index):
-        field = self.get_field(index)
-        node = self.node_from_index(index)
-        return getattr(node, field.name)
+    # def data_raw(self, index):
+    #     field = self.get_field(index)
+    #     node = self.node_from_index(index)
+    #     return getattr(node, field.name)
+    #
+    # def data_display(self, index, replace_none='-'):
+    #     field = self.get_field(index)
+    #
+    #     if field is None:
+    #         return ''
+    #
+    #     if field.converter is two_state_checkbox:
+    #         return ''
+    #
+    #     node = self.node_from_index(index)
+    #
+    #     data = getattr(node, field.name)
+    #     processor = data_processor(
+    #         cls=type(node),
+    #         data_field=field,
+    #         attribute_field=attr.fields(Metadata).data_display,
+    #     )
+    #     if processor is not None:
+    #         return processor(node, model=self, value=data)
+    #
+    #     if data is None:
+    #         return replace_none
+    #
+    #     return str(data)
+    #
+    # def data_edit(self, index):
+    #     return self.data_display(index, replace_none='')
+    #
+    # def data_check_state(self, index):
+    #     node = self.node_from_index(index)
+    #
+    #     attribute = self.get_field(index)
+    #     if attribute is not None:
+    #         if attribute.converter is two_state_checkbox:
+    #             if getattr(node, attribute.name):
+    #                 return QtCore.Qt.Checked
+    #             else:
+    #                 return QtCore.Qt.Unchecked
+    #
+    #     return None
 
-    def data_display(self, index, replace_none='-'):
+    def item_changed(self, item):
+        node = self.node_from_item(item)
+
+        index = self.index_from_node(node)
+        index = index.siblingAtColumn(
+            item.data(epyqlib.utils.qt.UserRoles.column_index),
+        )
+
+
+
+        # field = self.get_field(index)
+        #
+        # c = index.column()
+        # t = type(self.node_from_index(index))
+        # name = self.columns[c].fields.get(t)
+        #
+        # if name is None:
+        #     return None
+        #
+        # field = getattr(attributes(t).fields, name)
+
+
+
+        field_name = item.data(epyqlib.utils.qt.UserRoles.field_name)
+        field = getattr(attributes(type(node)).fields, field_name)
+        if field_name is None:
+            # TODO: why is it getting changed if there's nothing there?
+            print('field name is none')
+            return
+        print('field', field)
+        datum = item.data(QtCore.Qt.DisplayRole)
+        if field.converter is not None:
+            datum = field.converter(datum)
+
+        print('  setattr', node, field_name, repr(datum))
+        setattr(node, field_name, datum)
+        # print('  setattr', node, field_name, repr(datum))
+
+        return
+
+        index = self.index_from_node(node)
         field = self.get_field(index)
 
         if field is None:
-            return ''
+            # TODO: why is it getting changed if there's nothing there?
+            return
 
-        if field.converter is two_state_checkbox:
-            return ''
+        datum = item.data(QtCore.Qt.DisplayRole)
+        if field.converter is not None:
+            datum = field.converter(datum)
 
-        node = self.node_from_index(index)
+        print('setting', field.name, 'on', node, 'to', repr(datum))
+        setattr(node, field.name, datum)
 
-        data = getattr(node, field.name)
-        processor = data_processor(
-            cls=type(node),
-            data_field=field,
-            attribute_field=attr.fields(Metadata).data_display,
-        )
-        if processor is not None:
-            return processor(node, model=self, value=data)
-
-        if data is None:
-            return replace_none
-
-        return str(data)
-
-    def data_edit(self, index):
-        return self.data_display(index, replace_none='')
-
-    def data_check_state(self, index):
-        node = self.node_from_index(index)
-
-        attribute = self.get_field(index)
-        if attribute is not None:
-            if attribute.converter is two_state_checkbox:
-                if getattr(node, attribute.name):
-                    return QtCore.Qt.Checked
-                else:
-                    return QtCore.Qt.Unchecked
-
-        return None
-
-    def setData(self, index, data, role=None):
-        node = self.node_from_index(index)
-        attribute = self.get_field(index)
-
-        if role == QtCore.Qt.EditRole:
-            converter = attribute.converter
-            if converter is not None:
-                try:
-                    converted = converter(data)
-                except ValueError:
-                    return False
-            else:
-                converted = data
-
-            setattr(node, attribute.name, converted)
-
-            self.dataChanged.emit(index, index)
-            return True
-        elif role == QtCore.Qt.CheckStateRole:
-            setattr(node, attribute.name, attribute.converter(data))
-
-            return True
-
-        return False
+    # def setData(self, index, data, role=None):
+    #     node = self.node_from_index(index)
+    #     attribute = self.get_field(index)
+    #
+    #     if role == QtCore.Qt.EditRole:
+    #         converter = attribute.converter
+    #         if converter is not None:
+    #             try:
+    #                 converted = converter(data)
+    #             except ValueError:
+    #                 return False
+    #         else:
+    #             converted = data
+    #
+    #         setattr(node, attribute.name, converted)
+    #
+    #         self.dataChanged.emit(index, index)
+    #         return True
+    #     elif role == QtCore.Qt.CheckStateRole:
+    #         setattr(node, attribute.name, attribute.converter(data))
+    #
+    #         return True
+    #
+    #     return False
 
     def pyqtify_connect(self, parent, child):
         def visit(node, nodes):
@@ -747,6 +920,9 @@ class Model:
 
         return item
 
+    def node_from_item(self, item):
+        return item.data(epyqlib.utils.qt.UserRoles.node)
+
     def _pyqtify_connect(self, parent, child):
         def key_value(instance, name, slot):
             signal = inspect.getattr_static(obj=instance, attr=name)
@@ -771,17 +947,59 @@ class Model:
 
             items = []
 
-            for column in self.columns:
+            changed_signals = epyqlib.utils.qt.pyqtified(child).changed
+
+            for i, column in enumerate(self.columns):
+                field_name = column.fields.get(type(child))
+
                 item = QtGui.QStandardItem()
                 item.setData(child, epyqlib.utils.qt.UserRoles.node)
+                item.setData(i, epyqlib.utils.qt.UserRoles.column_index)
+                item.setData(
+                    field_name,
+                    epyqlib.utils.qt.UserRoles.field_name,
+                )
+                item.setData(
+                    self,
+                    epyqlib.utils.qt.UserRoles.attrs_model,
+                )
 
-                name = column.fields.get(type(child))
-                if name is not None:
-                    item.setText(str(getattr(child, name)))
+                if field_name is not None:
+                    fields = attributes(type(child)).fields
+                    checkable = (
+                            getattr(fields, field_name).converter
+                            == two_state_checkbox
+                    )
+                    item.setCheckable(checkable)
+
+                    # item.setText(str(getattr(child, field_name)))
+
+                    def slot(datum):
+                        # print('   |', field_name)
+                        # print('   |', child)
+                        #
+                        # print('   |', child, field_name)
+                        # print('   /', repr(datum))
+                        # print('   \\', repr(str(datum)))
+                        item.setText(str(datum))
+                        item.setData(datum, epyqlib.utils.qt.UserRoles.raw)
+
+                    # changed_signals[name].connect(slot)
+                    connections.update(key_value(
+                        instance=changed_signals,
+                        name='_pyqtify_signal_' + field_name,
+                        slot=slot,
+                    ))
+                    print('initializing item for', child, field_name)
+                    slot(getattr(child, field_name))
+                    # connections.update((
+                    #     (inspect.getattr_static(obj=changed_signals)
+                    # ))
 
                 items.append(item)
 
             parent_item.insertRow(row, items)
+
 
         connections.update(key_value(
             instance=child.pyqt_signals,
@@ -881,6 +1099,16 @@ class Model:
     def mimeTypes(self):
         return (self.mime_type,)
 
+    def node_from_index(self, index):
+        item = self.model.itemFromIndex(index)
+        node = item.data(epyqlib.utils.qt.UserRoles.node)
+        return node
+
+    def index_from_node(self, node):
+        item = self.item_from_node(node)
+        index = self.model.indexFromItem(item)
+        return index
+
     def mimeData(self, indexes):
         [node] = {self.node_from_index(i) for i in indexes}
         m = QtCore.QMimeData()
@@ -926,8 +1154,15 @@ class Model:
 
     def node_from_uuid(self, u):
         def uuid_matches(node, matches):
+            print('checking -', node.name, repr(node.uuid))
             if node.uuid == u:
+                print('matched')
                 matches.add(node)
+
+        print(self._all_items())
+        print('looking for', repr(u))
+        if isinstance(u, str):
+            print('ack it is a string --------')
 
         nodes = set()
         for root in self.droppable_from:

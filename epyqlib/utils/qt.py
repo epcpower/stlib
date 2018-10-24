@@ -879,6 +879,10 @@ class NotAPyQtifyInstance(Exception):
     pass
 
 
+def pyqtified(instance):
+    return instance.__pyqtify_instance__
+
+
 @attr.s
 class PyQtifyInstance:
     display_name = attr.ib()
@@ -986,6 +990,7 @@ def pyqtify_get(instance, name):
 
 
 def pyqtify_set(instance, name, value):
+    print('pyqtify_set', repr(value), repr(instance.__pyqtify_instance__.values[name]))
     if value != instance.__pyqtify_instance__.values[name]:
         instance.__pyqtify_instance__.values[name] = value
         try:
@@ -1234,3 +1239,6 @@ class UserRoles(epyqlib.utils.general.AutoNumberIntEnum):
     sort = None
     raw = None
     node = None
+    field_name = None
+    attrs_model = None
+    column_index = None

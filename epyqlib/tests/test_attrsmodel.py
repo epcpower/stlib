@@ -284,23 +284,25 @@ class DataChangedCollector(PyQt5.QtCore.QObject):
         #       must be changing rather than just being included in the
         #       range.
 
+        top_left_node = self.model.model.itemFromIndex(top_left)
+        top_left_node = top_left_node.data(epyqlib.utils.qt.UserRoles.node)
+
+        bottom_right_node = self.model.model.itemFromIndex(bottom_right)
+        bottom_right_node = bottom_right_node.data(
+            epyqlib.utils.qt.UserRoles.node,
+        )
+
         right_one = all((
-            self.parameter is self.model.node_from_index(top_left),
-            self.parameter is self.model.node_from_index(bottom_right),
+            self.parameter is top_left_node,
+            self.parameter is bottom_right_node,
             self.column == top_left.column() == bottom_right.column(),
-            tuple(roles) == self.roles,
+            set(self.roles).issubset(roles),
         ))
 
         if right_one:
-            parameter_index = self.model.index_from_node(self.parameter)
-            parameter_name_index = self.model.index(
-                parameter_index.row(),
-                self.column,
-                parameter_index.parent(),
-            )
+            parameter_name_index = top_left.siblingAtColumn(self.column)
 
-            self.collected.emit(self.model.data(
-                parameter_name_index,
+            self.collected.emit(parameter_name_index.data(
                 PyQt5.QtCore.Qt.DisplayRole,
             ))
 
@@ -335,7 +337,7 @@ def test_data_changed(qtbot):
 
     parameter.value += 1
 
-    assert tuple(values.expected) == tuple(values.collected)
+    assert tuple(values.collected) == tuple(values.expected)
 
 
 def test_other_data_did_not_change(qtbot):
@@ -375,10 +377,10 @@ def test_other_data_did_not_change(qtbot):
         roles=(PyQt5.QtCore.Qt.DisplayRole,),
     )
 
-    model.dataChanged.connect(data_changed.collect)
+    model.model.dataChanged.connect(data_changed.collect)
     data_changed.collected.connect(values.collect)
 
-    model.dataChanged.connect(other_data_changed.collect)
+    model.model.dataChanged.connect(other_data_changed.collect)
     other_data_changed.collected.connect(other_values.collect)
 
     for value in values.input:
@@ -420,7 +422,7 @@ def test_local_drag_n_drop(qtbot):
         roles=(PyQt5.QtCore.Qt.DisplayRole,),
     )
 
-    model.dataChanged.connect(data_changed.collect)
+    model.model.dataChanged.connect(data_changed.collect)
     data_changed.collected.connect(values.collect)
 
     for value in values.input:
@@ -428,7 +430,7 @@ def test_local_drag_n_drop(qtbot):
 
     assert tuple(values.expected) == tuple(values.collected)
 
-    mime_data = model.mimeData((model.index_from_node(parameter),))
+    mime_data = model.mimeData((model.model.indexFromItem(model.item_from_node(parameter)),))
 
     model.dropMimeData(
         data=mime_data,
@@ -480,7 +482,7 @@ def test_prepopulated_connections(qtbot):
         roles=(PyQt5.QtCore.Qt.DisplayRole,),
     )
 
-    model.dataChanged.connect(data_changed.collect)
+    model.model.dataChanged.connect(data_changed.collect)
     data_changed.collected.connect(values.collect)
 
     for value in values.input:
@@ -516,7 +518,7 @@ def test_postpopulated_connections(qtbot):
         roles=(PyQt5.QtCore.Qt.DisplayRole,),
     )
 
-    model.dataChanged.connect(data_changed.collect)
+    model.model.dataChanged.connect(data_changed.collect)
     data_changed.collected.connect(values.collect)
 
     for value in values.input:
@@ -577,7 +579,7 @@ def test_with_pyqtpropertys(qtbot):
         roles=(PyQt5.QtCore.Qt.DisplayRole,),
     )
 
-    model.dataChanged.connect(data_changed.collect)
+    model.model.dataChanged.connect(data_changed.collect)
     data_changed.collected.connect(values.collect)
 
     for value in values.input:
@@ -664,7 +666,10 @@ class PassThrough(epyqlib.treenode.TreeNode):
             field=epyqlib.attrsmodel.Reference(),
         ),
     )
-    value = attr.ib(default=None)
+    value = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
+    )
     uuid = epyqlib.attrsmodel.attr_uuid()
 
     def __attrs_post_init__(self):
@@ -743,7 +748,7 @@ def test_original_signals(qtbot):
     }
 
     for name in values:
-        model.dataChanged.connect(collectors[name].collect)
+        model.model.dataChanged.connect(collectors[name].collect)
         collectors[name].collected.connect(values[name].collect)
 
     passthrough_a.original = original
@@ -821,9 +826,9 @@ def test_two_state_checkbox():
 
     index = model.index_from_node(parameter)
     column_index = columns.index_of('Value')
-    index = model.index(index.row(), column_index, index.parent())
+    index = index.siblingAtColumn(column_index)
 
-    flags = model.flags(index)
+    flags = model.model.flags(index)
     assert flags & PyQt5.QtCore.Qt.ItemIsUserCheckable
 
 
@@ -841,6 +846,7 @@ def test_enumeration(qtbot):
         epyqlib.attrsmodel.attrib(
             attribute=enumeration_uuid,
             list_selection_root='test list_selection_root',
+            converter=epyqlib.attrsmodel.convert_uuid,
         )
         uuid = epyqlib.attrsmodel.attr_uuid()
 
@@ -880,41 +886,59 @@ def test_enumeration(qtbot):
         ((TestEnumerationLeaf, 'enumeration_uuid'),),
     )
 
-    root = Root()
+    root = Root(uuid='b05c413f-215c-4376-a107-5bce992ed7a3')
     model = epyqlib.attrsmodel.Model(
         root=root,
         columns=columns,
     )
     model.add_drop_sources(root)
 
-    item = TestEnumerationLeaf()
+    item = TestEnumerationLeaf(
+        name='Outside',
+        uuid='cdedbbd2-c596-42cc-be45-7eb7953cc5ad',
+    )
     root.append_child(item)
 
-    group = TestEnumerationGroup()
+    group = TestEnumerationGroup(
+        name='Enumerations',
+        uuid='06c2a6ad-00b2-49ac-a836-057daa1ddc2f',
+    )
     root.append_child(group)
     model.list_selection_roots['test list_selection_root'] = group
 
-    enumerator_a = TestEnumerationLeaf()
+    enumerator_a = TestEnumerationLeaf(
+        name='Inside A',
+        uuid='1900f7e3-7230-40c1-9f5f-b838e2c33710',
+    )
     group.append_child(enumerator_a)
-    enumerator_b = TestEnumerationLeaf()
+    enumerator_b = TestEnumerationLeaf(
+        name='Inside B',
+        uuid='b9aeea0a-94ea-4fe6-a627-50caa942fbb5',
+    )
     group.append_child(enumerator_b)
-    enumerator_c = TestEnumerationLeaf()
+    enumerator_c = TestEnumerationLeaf(
+        name='Inside C',
+        uuid='a6a4e027-e128-4860-9f64-8be93708916e',
+    )
     group.append_child(enumerator_c)
+
+    print('-- model built --')
 
     view = PyQt5.QtWidgets.QTreeView()
     view.setItemDelegate(epyqlib.attrsmodel.create_delegate())
-    view.setModel(model)
+    view.setModel(model.model)
 
     target_index = model.index_from_node(item)
-    target_index = model.index(
-        target_index.row(),
+    target_index = target_index.siblingAtColumn(
         columns.index_of('Enumeration Uuid'),
-        target_index.parent(),
     )
 
+    print('a', repr(enumerator_a.uuid))
     item.enumeration_uuid = enumerator_a.uuid
-
+    print('b')
     application = qt_api.QApplication.instance()
+
+    print('about to start testing')
 
     for row, enumerator in enumerate(group.children):
         assert view.edit(
@@ -925,6 +949,11 @@ def test_enumeration(qtbot):
         editor, = view.findChildren(PyQt5.QtWidgets.QComboBox)
 
         editor.setCurrentIndex(row)
+        print('\nrow', row)
+        print('editor.currentText()', editor.currentText())
+        print('editor.count()', editor.count())
+        import sys
+        sys.stdout.flush()
 
         PyQt5.QtCore.QCoreApplication.postEvent(
             editor,
@@ -939,6 +968,7 @@ def test_enumeration(qtbot):
         for _ in range(3):
             application.processEvents()
 
+        print('\n + + + + + + ', repr(enumerator.uuid), repr(item.enumeration_uuid), '\n')
         assert enumerator.uuid == item.enumeration_uuid
 
 
