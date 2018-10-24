@@ -496,15 +496,54 @@ class Array(epyqlib.treenode.TreeNode):
         return True
 
 
+@graham.schemify(tag='table_array_element', register=True)
+@epyqlib.attrsmodel.ify()
+@epyqlib.utils.qt.pyqtify()
+@epyqlib.utils.qt.pyqtify_passthrough_properties(
+    original='original',
+    field_names=('name',),
+)
+@attr.s(hash=False)
+class TableArrayElement(epyqlib.treenode.TreeNode):
+    name = attr.ib(
+        default=None,
+        convert=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True)
+        ),
+    )
+
+    uuid = epyqlib.attrsmodel.attr_uuid()
+
+    original = attr.ib(default=None)
+    epyqlib.attrsmodel.attrib(
+        attribute=original,
+        no_column=True,
+    )
+
+    def __attrs_post_init__(self):
+        super().__init__()
+
+    def can_drop_on(self, node):
+        return False
+
+    can_delete = epyqlib.attrsmodel.childless_can_delete
+
+
 @graham.schemify(tag='table_group_element', register=True)
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
+@epyqlib.utils.qt.pyqtify_passthrough_properties(
+    original='original',
+    field_names=('name',),
+)
 @attr.s(hash=False)
 class TableGroupElement(epyqlib.treenode.TreeNode):
     name = attr.ib(
-        default='New Table Group Element',
+        default=None,
+        convert=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
-            field=marshmallow.fields.String(),
+            field=marshmallow.fields.String(allow_none=True)
         ),
     )
 
@@ -514,22 +553,16 @@ class TableGroupElement(epyqlib.treenode.TreeNode):
         metadata=graham.create_metadata(
             field=graham.fields.MixedList(fields=(
                 marshmallow.fields.Nested('TableGroupElement'),
+                marshmallow.fields.Nested(TableArrayElement),
             )),
         ),
     )
 
     uuid = epyqlib.attrsmodel.attr_uuid()
 
-    ref = attr.ib(factory=list)
-    graham.attrib(
-        attribute=ref,
-        field=marshmallow.fields.Nested(
-            'TableGroupElement',
-            allow_none=True,
-        ),
-    )
+    original = attr.ib(default=None)
     epyqlib.attrsmodel.attrib(
-        attribute=ref,
+        attribute=original,
         no_column=True,
     )
 
@@ -674,16 +707,22 @@ class Table(epyqlib.treenode.TreeNode):
             present = self.group
 
             for layer in combination:
-                upcoming = present.children_by_attribute(layer, 'ref')
+                upcoming = present.children_by_attribute(layer, 'original')
                 if len(upcoming) == 1:
                     present, = upcoming
                 else:
-                    new = TableGroupElement(name=layer.name, ref=layer)
+                    new = TableGroupElement(original=layer)
                     present.append_child(new)
                     present = new
 
             for array in arrays:
-                present.append_child(array)
+                new = TableGroupElement(original=array)
+                for element in array.children:
+                    new.append_child(TableArrayElement(
+                        original=element,
+                    ))
+                
+                present.append_child(new)
 
     def addable_types(self):
         return epyqlib.attrsmodel.create_addable_types((
@@ -898,6 +937,7 @@ types = epyqlib.attrsmodel.Types(
         AccessLevels,
         Table,
         TableEnumerationReference,
+        TableArrayElement,
         TableGroupElement,
     ),
 )

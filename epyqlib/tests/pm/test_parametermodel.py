@@ -1,4 +1,5 @@
 import collections
+import itertools
 import json
 import pathlib
 
@@ -141,18 +142,34 @@ class SampleModel:
                 enumeration_uuid=self.letters_enumeration.uuid,
             ),
         )
-        self.table.append_child(
-            epyqlib.pm.parametermodel.Array(
-                name='Table Array A',
-                uuid='77ed47bb-fbea-4756-b1c4-2e2be02aebc7',
-            ),
+
+        array_a = epyqlib.pm.parametermodel.Array(
+            name='Table Array A',
+            uuid='77ed47bb-fbea-4756-b1c4-2e2be02aebc7',
         )
-        self.table.append_child(
-            epyqlib.pm.parametermodel.Array(
-                name='Table Array B',
-                uuid='acda3b53-785c-4588-8b35-d58a9f2e10a8',
-            ),
+        array_a.append_child(
+            epyqlib.pm.parametermodel.Parameter(
+                name='A0',
+                uuid='a32ea0c1-0838-430f-8d3c-192b5bff3047',
+            )
         )
+        array_a.length = 2
+        array_a.children[1].name = 'A1'
+        self.table.append_child(array_a)
+
+        array_b = epyqlib.pm.parametermodel.Array(
+            name='Table Array B',
+            uuid='acda3b53-785c-4588-8b35-d58a9f2e10a8',
+        )
+        array_b.append_child(
+            epyqlib.pm.parametermodel.Parameter(
+                name='B0',
+                uuid='1c7d0fac-aaa6-415b-b7c1-08d1f5d07097',
+            )
+        )
+        array_b.length = 2
+        array_b.children[1].name = 'B1'
+        self.table.append_child(array_b)
 
         self.model.update_nodes()
 
@@ -271,9 +288,7 @@ def test_table_add_enumeration_with_uuid(sample):
     sample.table.append_child(ref)
 
 
-def test_table_update(sample):
-    sample.table.update()
-
+def verify_table_automatic_groups(sample):
     groups = [
         child
         for child in sample.table.children
@@ -298,7 +313,62 @@ def test_table_update(sample):
         )
         enumerations.append(enumeration)
 
-    assert len(group.children) == len(enumerations[0].children)
+    arrays = [
+        child
+        for child in sample.table.children
+        if isinstance(child, epyqlib.pm.parametermodel.Array)
+    ]
+
+    zipped = itertools.zip_longest(
+        group.children,
+        enumerations[0].children,
+    )
+    for child, enumerator in zipped:
+        print('checking: {}'.format((
+            enumerator.name)))
+        assert child.name == enumerator.name
+
+        zipped = itertools.zip_longest(
+            child.children,
+            enumerations[1].children,
+        )
+        for subchild, subenumerator in zipped:
+            print('checking: {}'.format((
+                enumerator.name, subenumerator.name)))
+            assert subchild.name == subenumerator.name
+
+            zipped = itertools.zip_longest(
+                subchild.children,
+                arrays,
+            )
+            for subsubchild, array in zipped:
+                print('checking: {}'.format((
+                                            enumerator.name, subenumerator.name,
+                                            array.name)))
+                assert subsubchild.name == array.name
+
+                zipped = itertools.zip_longest(
+                    subsubchild.children,
+                    array.children,
+                )
+                for subsubsubchild, element in zipped:
+                    print('checking: {}'.format((enumerator.name, subenumerator.name, array.name, element.name)))
+                    assert subsubsubchild.name == element.name
+
+
+def test_table_automatic_groups(sample):
+    verify_table_automatic_groups(sample)
+
+
+def test_table_automatic_groups_add_another(sample):
+    array_c = epyqlib.pm.parametermodel.Array(
+        name='Table Array A',
+        uuid='eb812b66-f98b-4e8f-a7e8-4f76c853e437',
+    )
+
+    sample.table.append_child(array_c)
+
+    verify_table_automatic_groups(sample)
 
 
 def test_array_addable_types():
