@@ -354,6 +354,10 @@ def convert_uuid(x):
     if x is None or isinstance(x, uuid.UUID):
         return x
 
+    print('convert_uuid()', repr(x))
+    import traceback
+    traceback.print_stack()
+
     return uuid.UUID(x)
 
 
@@ -845,7 +849,7 @@ class Model:
             # TODO: why is it getting changed if there's nothing there?
             print('field name is none')
             return
-        print('field', field)
+        print('field', field_name, field)
         datum = item.data(QtCore.Qt.DisplayRole)
         if field.converter is not None:
             datum = field.converter(datum)
@@ -974,7 +978,7 @@ class Model:
 
                     # item.setText(str(getattr(child, field_name)))
 
-                    def slot(datum):
+                    def slot(datum, item=item):
                         # print('   |', field_name)
                         # print('   |', child)
                         #
