@@ -137,20 +137,16 @@ class Builder:
 
     def get_or_create_parameter(self, name):
         try:
-            print('a')
             nodes = self._value_set.model.root.nodes_by_attribute(
                 attribute_value=name,
                 attribute_name='name',
             )
         except epyqlib.treenode.NotFoundError:
-            print('b')
-            print(' ', name)
             node = epyqlib.pm.valuesetmodel.Parameter(
                 name=name,
             )
             self._value_set.model.root.append_child(node)
         else:
-            print('c')
             try:
                 node, = nodes
             except ValueError as e:
@@ -174,11 +170,8 @@ class Builder:
             directory_path.mkdir()
 
             for access_input in self.access_parameters:
-                print('self.access_parameters', self.access_parameters)
                 node = self.get_or_create_parameter(name=access_input.node)
 
-                print('build create stuff', node)
-                print('                 ', repr(access_input.value))
                 node.value = access_input.value
 
             self._value_set.path = directory_path / self._template.raw_dict[

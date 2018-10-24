@@ -239,16 +239,16 @@ def proxy_search_in_column(column, target):
         PyQt5.QtCore.Qt.MatchRecursive,
     )
 
-    match_node = model.model.itemFromIndex(proxy.mapToSource(index))
+    match_node = model.node_from_index(proxy.mapToSource(index))
     assert match_node is not None
 
     index = proxy.search(
         text=target,
-        search_from=PyQt5.QtCore.QModelIndex(),#item.index(),
+        search_from=PyQt5.QtCore.QModelIndex(),
         column=column,
     )
 
-    search_node = model.model.itemFromIndex(proxy.mapToSource(index))
+    search_node = model.node_from_index(proxy.mapToSource(index))
 
     assert match_node is search_node
 
@@ -262,9 +262,7 @@ def node_from_name(model, name):
         PyQt5.QtCore.Qt.MatchRecursive,
     )
 
-    return model.model.itemFromIndex(index).data(
-        epyqlib.utils.qt.UserRoles.node,
-    )
+    return model.node_from_index(index)
 
 
 @attr.s
@@ -284,17 +282,9 @@ class DataChangedCollector(PyQt5.QtCore.QObject):
         #       must be changing rather than just being included in the
         #       range.
 
-        top_left_node = self.model.model.itemFromIndex(top_left)
-        top_left_node = top_left_node.data(epyqlib.utils.qt.UserRoles.node)
-
-        bottom_right_node = self.model.model.itemFromIndex(bottom_right)
-        bottom_right_node = bottom_right_node.data(
-            epyqlib.utils.qt.UserRoles.node,
-        )
-
         right_one = all((
-            self.parameter is top_left_node,
-            self.parameter is bottom_right_node,
+            self.parameter is self.model.node_from_index(top_left),
+            self.parameter is self.model.node_from_index(bottom_right),
             self.column == top_left.column() == bottom_right.column(),
             set(self.roles).issubset(roles),
         ))
@@ -430,7 +420,7 @@ def test_local_drag_n_drop(qtbot):
 
     assert tuple(values.expected) == tuple(values.collected)
 
-    mime_data = model.mimeData((model.model.indexFromItem(model.item_from_node(parameter)),))
+    mime_data = model.mimeData((model.index_from_node(parameter),))
 
     model.dropMimeData(
         data=mime_data,
@@ -922,8 +912,6 @@ def test_enumeration(qtbot):
     )
     group.append_child(enumerator_c)
 
-    print('-- model built --')
-
     view = PyQt5.QtWidgets.QTreeView()
     view.setItemDelegate(epyqlib.attrsmodel.create_delegate())
     view.setModel(model.model)
@@ -933,12 +921,9 @@ def test_enumeration(qtbot):
         columns.index_of('Enumeration Uuid'),
     )
 
-    print('a', repr(enumerator_a.uuid))
     item.enumeration_uuid = enumerator_a.uuid
-    print('b')
-    application = qt_api.QApplication.instance()
 
-    print('about to start testing')
+    application = qt_api.QApplication.instance()
 
     for row, enumerator in enumerate(group.children):
         assert view.edit(
@@ -949,11 +934,6 @@ def test_enumeration(qtbot):
         editor, = view.findChildren(PyQt5.QtWidgets.QComboBox)
 
         editor.setCurrentIndex(row)
-        print('\nrow', row)
-        print('editor.currentText()', editor.currentText())
-        print('editor.count()', editor.count())
-        import sys
-        sys.stdout.flush()
 
         PyQt5.QtCore.QCoreApplication.postEvent(
             editor,
@@ -968,7 +948,6 @@ def test_enumeration(qtbot):
         for _ in range(3):
             application.processEvents()
 
-        print('\n + + + + + + ', repr(enumerator.uuid), repr(item.enumeration_uuid), '\n')
         assert enumerator.uuid == item.enumeration_uuid
 
 

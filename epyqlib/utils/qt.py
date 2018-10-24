@@ -990,7 +990,6 @@ def pyqtify_get(instance, name):
 
 
 def pyqtify_set(instance, name, value):
-    print('pyqtify_set', repr(value), repr(instance.__pyqtify_instance__.values[name]))
     if value != instance.__pyqtify_instance__.values[name]:
         instance.__pyqtify_instance__.values[name] = value
         try:
