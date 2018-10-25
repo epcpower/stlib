@@ -35,6 +35,10 @@ class NotFoundError(Exception):
     pass
 
 
+class MultipleFoundError(Exception):
+    pass
+
+
 def name_from_uuid(node, value, model):
     if value is None:
         return None
@@ -687,11 +691,20 @@ class Model:
         for model in {self} | self.droppable_from:
             items.extend(model._all_items(role=None))
 
-        item, = [
+        items = [
             item
             for item in items
             if item.data(epyqlib.utils.qt.UserRoles.node) is node
         ]
+
+        if len(items) < 1:
+            raise NotFoundError('Item not found for node {}'.format(node))
+        elif len(items) > 1:
+            raise MultipleFoundError(
+                '{} items found for node {}'.format(len(items), node),
+            )
+
+        item, = items
 
         return item
 
