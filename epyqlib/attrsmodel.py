@@ -630,7 +630,12 @@ class Model:
 
     def add_drop_sources(self, *sources):
         self.droppable_from.update(sources)
-        check_uuids(self.root, *self.droppable_from)
+        roots = [
+            model.root
+            for model in {self} | self.droppable_from
+        ]
+
+        check_uuids(*roots)
 
     def get_field(self, index):
         c = index.column()
@@ -677,7 +682,11 @@ class Model:
             self._pyqtify_connect(**kwargs)
 
     def item_from_node(self, node):
-        items = self._all_items(role=None)
+        items = []
+
+        for model in {self} | self.droppable_from:
+            items.extend(model._all_items(role=None))
+
         item, = [
             item
             for item in items
@@ -912,8 +921,8 @@ class Model:
                 matches.add(node)
 
         nodes = set()
-        for root in self.droppable_from:
-            root.traverse(
+        for model in self.droppable_from:
+            model.root.traverse(
                 call_this=uuid_matches,
                 payload=nodes,
                 internal_nodes=True

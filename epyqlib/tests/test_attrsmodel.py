@@ -386,7 +386,7 @@ def test_other_data_did_not_change(qtbot):
 
 def test_local_drag_n_drop(qtbot):
     model = make_a_model()
-    model.add_drop_sources(model.root)
+    model.add_drop_sources(model)
 
     parameter = node_from_name(model, 'Parameter B')
     group = node_from_name(model, 'Group C')
@@ -881,7 +881,7 @@ def test_enumeration(qtbot):
         root=root,
         columns=columns,
     )
-    model.add_drop_sources(root)
+    model.add_drop_sources(model)
 
     item = TestEnumerationLeaf(
         name='Outside',
