@@ -619,7 +619,13 @@ class Model:
         self.mime_type = 'application/com.epcpower.pm.attrsmodel'
 
         self.columns = columns
-        self.headers = tuple(c.name for c in self.columns)
+        self.header_items = [
+            QtGui.QStandardItem(column.name)
+            for column in self.columns
+        ]
+
+        for i, item in enumerate(self.header_items):
+            self.model.setHorizontalHeaderItem(i, item)
 
         self.droppable_from = set()
 

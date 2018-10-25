@@ -178,6 +178,13 @@ def make_a_model(
     return model
 
 
+def test_column_header_text(qtbot):
+    model = make_a_model()
+
+    assert model.model.horizontalHeaderItem(0).text() == 'Name'
+    assert model.model.horizontalHeaderItem(1).text() == 'Value'
+
+
 def test_model(qtmodeltester):
     model = make_a_model()
 
