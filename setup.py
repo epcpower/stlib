@@ -58,6 +58,7 @@ setuptools.setup(
         'test': [
             'pytest',
             'pytest-qt',
+            'pytest-rerunfailures',
         ],
     },
 )

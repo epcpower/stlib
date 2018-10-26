@@ -48,7 +48,14 @@ class ActionLogger:
             assert expected.data == result.data
 
 
-@pytest.fixture
+@pytest.fixture(
+    params=[
+        pytest.param(
+            'flaky',
+            marks=pytest.mark.flaky(reruns=5),
+        ),
+    ],
+)
 def action_logger():
     logger = ActionLogger()
     yield logger
