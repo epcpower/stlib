@@ -9,7 +9,7 @@ import click
 
 
 @click.command()
-@click.option('--dist', '--distribution', '-d', required=True)
+@click.option('--dist', '--distribution', '-d', 'distribution', required=True)
 @click.option('--root', '-r', default=None)
 @click.option('--out', '-o', type=click.File('w'), default=sys.stdout)
 def cli(distribution, root, out):
