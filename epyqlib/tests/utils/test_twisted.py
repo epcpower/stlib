@@ -44,7 +44,7 @@ class ActionLogger:
     def check(self):
         assert len(self.expected) == len(self.log)
         for result, expected in zip(self.log, self.expected):
-            assert abs(result.time - expected.time) < 0.125
+            assert abs(result.time - expected.time) < 0.050
             assert expected.data == result.data
 
 
