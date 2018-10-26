@@ -60,7 +60,6 @@ class QScale(QtWidgets.QWidget):
 
         self.breakpoints = []
         self.colors = []
-        self.setMinimumSize()
 
         self.isBlue = False
 
@@ -98,7 +97,7 @@ class QScale(QtWidgets.QWidget):
         if vertical:
             height, width = width, height
 
-        QtWidgets.QWidget.setMinimumSize(self, width, height)
+        super().setMinimumSize(width, height)
 
     def setMinimum(self, max):
         if not isinf(max):
@@ -207,7 +206,7 @@ class QScale(QtWidgets.QWidget):
 
         painter.setRenderHint(QtGui.QPainter.Antialiasing,True)
 
-        self.setMinimumSize(painter = painter)
+        self.setMinimumSize(painter=painter)
 
         # TODO: CAMPid 07899789654211527951677432169
 
