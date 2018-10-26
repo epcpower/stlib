@@ -55,6 +55,7 @@ def action_logger():
     logger.check()
 
 
+# https://github.com/pytest-dev/pytest-twisted/issues/4#issuecomment-360888462
 class Observer:
     def __init__(self):
         self.failures = []
