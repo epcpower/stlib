@@ -226,8 +226,9 @@ class Device:
             self.nvs.terminate()
         if self.widget_nvs is not None:
             self.widget_nvs.terminate()
-        for view in self.nv_views:
-            view.terminate()
+        if self.nv_views is not None:
+            for view in self.nv_views:
+                view.terminate()
         terminate_extension = getattr(self.extension, 'terminate', None)
         if terminate_extension is not None:
             terminate_extension()
@@ -539,6 +540,8 @@ class Device:
                                           id=self.node_id)
         self.nickname = ''
         self.auto_read_nv_widget_min_max = True
+
+        self.nv_views = None
 
         device_ui = 'device.ui'
         # TODO: CAMPid 9549757292917394095482739548437597676742
