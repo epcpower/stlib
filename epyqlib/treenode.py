@@ -93,11 +93,12 @@ class TreeNode:
 
     def traverse(self, call_this, payload=None, internal_nodes=False):
         child = None
-        for child in self.children:
-            child.traverse(call_this, payload, internal_nodes=internal_nodes)
 
         if internal_nodes or child is None:
             call_this(self, payload)
+
+        for child in self.children:
+            child.traverse(call_this, payload, internal_nodes=internal_nodes)
 
     def leaves(self):
         leaves = []

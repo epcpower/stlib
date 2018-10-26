@@ -195,7 +195,7 @@ default_column_index, = (
 ))
 def test_search_in_column(sample, column, target):
     proxy = QtCore.QSortFilterProxyModel()
-    proxy.setSourceModel(sample.model)
+    proxy.setSourceModel(sample.model.model)
 
     index, = proxy.match(
         proxy.index(0, column),
@@ -210,7 +210,7 @@ def test_search_in_column(sample, column, target):
 ))
 def test_proxy_search_in_column(sample, column, target):
     proxy = epyqlib.utils.qt.PySortFilterProxyModel(filter_column=0)
-    proxy.setSourceModel(sample.model)
+    proxy.setSourceModel(sample.model.model)
 
     index, = proxy.match(
         proxy.index(0, column),

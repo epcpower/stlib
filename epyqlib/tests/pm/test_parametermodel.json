@@ -58,14 +58,84 @@
                             "_type": "array",
                             "name": "Table Array A",
                             "named_enumerators": true,
-                            "children": [],
+                            "children": [
+                                {
+                                    "_type": "parameter",
+                                    "name": "A0",
+                                    "type_name": null,
+                                    "default": null,
+                                    "minimum": null,
+                                    "maximum": null,
+                                    "units": null,
+                                    "enumeration_uuid": null,
+                                    "decimal_places": null,
+                                    "display_hexadecimal": false,
+                                    "nv_format": null,
+                                    "nv_factor": null,
+                                    "nv_cast": false,
+                                    "read_only": false,
+                                    "access_level_uuid": null,
+                                    "parameter_uuid": null,
+                                    "comment": null,
+                                    "original_frame_name": null,
+                                    "original_multiplexer_name": null,
+                                    "original_signal_name": null,
+                                    "visibility": null,
+                                    "uuid": "a32ea0c1-0838-430f-8d3c-192b5bff3047"
+                                },
+                                {
+                                    "_type": "array_parameter_element",
+                                    "name": "A1",
+                                    "default": null,
+                                    "minimum": null,
+                                    "maximum": null,
+                                    "nv_format": null,
+                                    "uuid": "3c95b75b-4623-4a94-a274-c837f1f973d5",
+                                    "original": "a32ea0c1-0838-430f-8d3c-192b5bff3047"
+                                }
+                            ],
                             "uuid": "77ed47bb-fbea-4756-b1c4-2e2be02aebc7"
                         },
                         {
                             "_type": "array",
                             "name": "Table Array B",
                             "named_enumerators": true,
-                            "children": [],
+                            "children": [
+                                {
+                                    "_type": "parameter",
+                                    "name": "B0",
+                                    "type_name": null,
+                                    "default": null,
+                                    "minimum": null,
+                                    "maximum": null,
+                                    "units": null,
+                                    "enumeration_uuid": null,
+                                    "decimal_places": null,
+                                    "display_hexadecimal": false,
+                                    "nv_format": null,
+                                    "nv_factor": null,
+                                    "nv_cast": false,
+                                    "read_only": false,
+                                    "access_level_uuid": null,
+                                    "parameter_uuid": null,
+                                    "comment": null,
+                                    "original_frame_name": null,
+                                    "original_multiplexer_name": null,
+                                    "original_signal_name": null,
+                                    "visibility": null,
+                                    "uuid": "1c7d0fac-aaa6-415b-b7c1-08d1f5d07097"
+                                },
+                                {
+                                    "_type": "array_parameter_element",
+                                    "name": "B1",
+                                    "default": null,
+                                    "minimum": null,
+                                    "maximum": null,
+                                    "nv_format": null,
+                                    "uuid": "a981a921-0f74-4d9e-8a52-56959badab4b",
+                                    "original": "1c7d0fac-aaa6-415b-b7c1-08d1f5d07097"
+                                }
+                            ],
                             "uuid": "acda3b53-785c-4588-8b35-d58a9f2e10a8"
                         }
                     ],

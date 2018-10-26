@@ -879,6 +879,10 @@ class NotAPyQtifyInstance(Exception):
     pass
 
 
+def pyqtified(instance):
+    return instance.__pyqtify_instance__
+
+
 @attr.s
 class PyQtifyInstance:
     display_name = attr.ib()
@@ -1233,3 +1237,7 @@ class UserRoles(epyqlib.utils.general.AutoNumberIntEnum):
     unique = QtCore.Qt.UserRole
     sort = None
     raw = None
+    node = None
+    field_name = None
+    attrs_model = None
+    column_index = None

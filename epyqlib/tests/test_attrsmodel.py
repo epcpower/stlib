@@ -178,10 +178,17 @@ def make_a_model(
     return model
 
 
+def test_column_header_text(qtbot):
+    model = make_a_model()
+
+    assert model.model.horizontalHeaderItem(0).text() == 'Name'
+    assert model.model.horizontalHeaderItem(1).text() == 'Value'
+
+
 def test_model(qtmodeltester):
     model = make_a_model()
 
-    qtmodeltester.check(model)
+    qtmodeltester.check(model.model)
 
 
 def test_search_column_0(qtbot):
@@ -196,7 +203,7 @@ def search_in_column(column, target):
     model = make_a_model()
 
     proxy = PyQt5.QtCore.QSortFilterProxyModel()
-    proxy.setSourceModel(model)
+    proxy.setSourceModel(model.model)
 
     view = PyQt5.QtWidgets.QTreeView()
     view.setModel(proxy)
@@ -226,7 +233,7 @@ def proxy_search_in_column(column, target):
     model = make_a_model()
 
     proxy = epyqlib.utils.qt.PySortFilterProxyModel(filter_column=0)
-    proxy.setSourceModel(model)
+    proxy.setSourceModel(model.model)
 
     view = PyQt5.QtWidgets.QTreeView()
     view.setModel(proxy)
@@ -244,7 +251,7 @@ def proxy_search_in_column(column, target):
 
     index = proxy.search(
         text=target,
-        search_from=model.index_from_node(model.root),
+        search_from=PyQt5.QtCore.QModelIndex(),
         column=column,
     )
 
@@ -254,8 +261,8 @@ def proxy_search_in_column(column, target):
 
 
 def node_from_name(model, name):
-    index, = model.match(
-        model.index(0, 0),
+    index, = model.model.match(
+        model.model.index(0, 0),
         PyQt5.QtCore.Qt.DisplayRole,
         name,
         1,
@@ -286,19 +293,13 @@ class DataChangedCollector(PyQt5.QtCore.QObject):
             self.parameter is self.model.node_from_index(top_left),
             self.parameter is self.model.node_from_index(bottom_right),
             self.column == top_left.column() == bottom_right.column(),
-            tuple(roles) == self.roles,
+            set(self.roles).issubset(roles),
         ))
 
         if right_one:
-            parameter_index = self.model.index_from_node(self.parameter)
-            parameter_name_index = self.model.index(
-                parameter_index.row(),
-                self.column,
-                parameter_index.parent(),
-            )
+            parameter_name_index = top_left.siblingAtColumn(self.column)
 
-            self.collected.emit(self.model.data(
-                parameter_name_index,
+            self.collected.emit(parameter_name_index.data(
                 PyQt5.QtCore.Qt.DisplayRole,
             ))
 
@@ -323,7 +324,7 @@ def test_data_changed(qtbot):
         roles=(PyQt5.QtCore.Qt.DisplayRole,),
     )
 
-    model.dataChanged.connect(data_changed.collect)
+    model.model.dataChanged.connect(data_changed.collect)
     data_changed.collected.connect(values.collect)
 
     for value in values.input:
@@ -333,7 +334,7 @@ def test_data_changed(qtbot):
 
     parameter.value += 1
 
-    assert tuple(values.expected) == tuple(values.collected)
+    assert tuple(values.collected) == tuple(values.expected)
 
 
 def test_other_data_did_not_change(qtbot):
@@ -373,10 +374,10 @@ def test_other_data_did_not_change(qtbot):
         roles=(PyQt5.QtCore.Qt.DisplayRole,),
     )
 
-    model.dataChanged.connect(data_changed.collect)
+    model.model.dataChanged.connect(data_changed.collect)
     data_changed.collected.connect(values.collect)
 
-    model.dataChanged.connect(other_data_changed.collect)
+    model.model.dataChanged.connect(other_data_changed.collect)
     other_data_changed.collected.connect(other_values.collect)
 
     for value in values.input:
@@ -392,7 +393,7 @@ def test_other_data_did_not_change(qtbot):
 
 def test_local_drag_n_drop(qtbot):
     model = make_a_model()
-    model.add_drop_sources(model.root)
+    model.add_drop_sources(model)
 
     parameter = node_from_name(model, 'Parameter B')
     group = node_from_name(model, 'Group C')
@@ -418,7 +419,7 @@ def test_local_drag_n_drop(qtbot):
         roles=(PyQt5.QtCore.Qt.DisplayRole,),
     )
 
-    model.dataChanged.connect(data_changed.collect)
+    model.model.dataChanged.connect(data_changed.collect)
     data_changed.collected.connect(values.collect)
 
     for value in values.input:
@@ -478,7 +479,7 @@ def test_prepopulated_connections(qtbot):
         roles=(PyQt5.QtCore.Qt.DisplayRole,),
     )
 
-    model.dataChanged.connect(data_changed.collect)
+    model.model.dataChanged.connect(data_changed.collect)
     data_changed.collected.connect(values.collect)
 
     for value in values.input:
@@ -514,7 +515,7 @@ def test_postpopulated_connections(qtbot):
         roles=(PyQt5.QtCore.Qt.DisplayRole,),
     )
 
-    model.dataChanged.connect(data_changed.collect)
+    model.model.dataChanged.connect(data_changed.collect)
     data_changed.collected.connect(values.collect)
 
     for value in values.input:
@@ -575,7 +576,7 @@ def test_with_pyqtpropertys(qtbot):
         roles=(PyQt5.QtCore.Qt.DisplayRole,),
     )
 
-    model.dataChanged.connect(data_changed.collect)
+    model.model.dataChanged.connect(data_changed.collect)
     data_changed.collected.connect(values.collect)
 
     for value in values.input:
@@ -662,7 +663,10 @@ class PassThrough(epyqlib.treenode.TreeNode):
             field=epyqlib.attrsmodel.Reference(),
         ),
     )
-    value = attr.ib(default=None)
+    value = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
+    )
     uuid = epyqlib.attrsmodel.attr_uuid()
 
     def __attrs_post_init__(self):
@@ -741,7 +745,7 @@ def test_original_signals(qtbot):
     }
 
     for name in values:
-        model.dataChanged.connect(collectors[name].collect)
+        model.model.dataChanged.connect(collectors[name].collect)
         collectors[name].collected.connect(values[name].collect)
 
     passthrough_a.original = original
@@ -819,9 +823,9 @@ def test_two_state_checkbox():
 
     index = model.index_from_node(parameter)
     column_index = columns.index_of('Value')
-    index = model.index(index.row(), column_index, index.parent())
+    index = index.siblingAtColumn(column_index)
 
-    flags = model.flags(index)
+    flags = model.model.flags(index)
     assert flags & PyQt5.QtCore.Qt.ItemIsUserCheckable
 
 
@@ -839,6 +843,7 @@ def test_enumeration(qtbot):
         epyqlib.attrsmodel.attrib(
             attribute=enumeration_uuid,
             list_selection_root='test list_selection_root',
+            converter=epyqlib.attrsmodel.convert_uuid,
         )
         uuid = epyqlib.attrsmodel.attr_uuid()
 
@@ -878,36 +883,49 @@ def test_enumeration(qtbot):
         ((TestEnumerationLeaf, 'enumeration_uuid'),),
     )
 
-    root = Root()
+    root = Root(uuid='b05c413f-215c-4376-a107-5bce992ed7a3')
     model = epyqlib.attrsmodel.Model(
         root=root,
         columns=columns,
     )
-    model.add_drop_sources(root)
+    model.add_drop_sources(model)
 
-    item = TestEnumerationLeaf()
+    item = TestEnumerationLeaf(
+        name='Outside',
+        uuid='cdedbbd2-c596-42cc-be45-7eb7953cc5ad',
+    )
     root.append_child(item)
 
-    group = TestEnumerationGroup()
+    group = TestEnumerationGroup(
+        name='Enumerations',
+        uuid='06c2a6ad-00b2-49ac-a836-057daa1ddc2f',
+    )
     root.append_child(group)
     model.list_selection_roots['test list_selection_root'] = group
 
-    enumerator_a = TestEnumerationLeaf()
+    enumerator_a = TestEnumerationLeaf(
+        name='Inside A',
+        uuid='1900f7e3-7230-40c1-9f5f-b838e2c33710',
+    )
     group.append_child(enumerator_a)
-    enumerator_b = TestEnumerationLeaf()
+    enumerator_b = TestEnumerationLeaf(
+        name='Inside B',
+        uuid='b9aeea0a-94ea-4fe6-a627-50caa942fbb5',
+    )
     group.append_child(enumerator_b)
-    enumerator_c = TestEnumerationLeaf()
+    enumerator_c = TestEnumerationLeaf(
+        name='Inside C',
+        uuid='a6a4e027-e128-4860-9f64-8be93708916e',
+    )
     group.append_child(enumerator_c)
 
     view = PyQt5.QtWidgets.QTreeView()
     view.setItemDelegate(epyqlib.attrsmodel.create_delegate())
-    view.setModel(model)
+    view.setModel(model.model)
 
     target_index = model.index_from_node(item)
-    target_index = model.index(
-        target_index.row(),
+    target_index = target_index.siblingAtColumn(
         columns.index_of('Enumeration Uuid'),
-        target_index.parent(),
     )
 
     item.enumeration_uuid = enumerator_a.uuid
