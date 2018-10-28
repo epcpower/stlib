@@ -9,6 +9,7 @@ import pytest
 from PyQt5 import QtCore
 
 import epyqlib.pm.parametermodel
+import epyqlib.tests.test_attrsmodel
 
 
 with open(pathlib.Path(__file__).with_suffix('.json')) as f:
