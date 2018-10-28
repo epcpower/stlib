@@ -229,11 +229,25 @@ class Device:
         if self.nv_views is not None:
             for view in self.nv_views:
                 view.terminate()
+
         terminate_extension = getattr(self.extension, 'terminate', None)
         if terminate_extension is not None:
             terminate_extension()
-        else:
-            self.extension.device = None
+        self.extension.device = None
+
+        self.connection_monitor.terminate()
+        self.connection_monitor = None
+
+        self.dash_uis = None
+        self.loaded_uis = None
+        self.neo_frames = None
+        self.ui = None
+        # TODO: why does this contain something other than paths :[
+        self.ui_paths = None
+        self.uis = None
+        self.widget_nv_frames = None
+        self.widget_nvs = None
+
         logging.debug('{} terminated'.format(object.__repr__(self)))
 
     def __del__(self):
@@ -1219,6 +1233,9 @@ class FrameTimeout(epyqlib.canneo.QtCanListener):
         if not self.present:
             self.present = True
             self.found.emit()
+
+    def terminate(self):
+        self.timer.stop()
 
 
 if __name__ == '__main__':
