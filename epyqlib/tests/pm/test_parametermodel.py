@@ -2,6 +2,7 @@ import collections
 import itertools
 import json
 import pathlib
+import uuid
 
 import attr
 import graham
@@ -92,11 +93,6 @@ class SampleModel:
             for letter, uuid in (
                 ('a', 'a2cf0c0c-c55a-4a0c-b830-571b5abe089b'),
                 ('b', 'effdff81-7da1-4cd8-863f-44f33c75813e'),
-                ('c', '2902368d-352e-441b-99e0-45998bad0d6d'),
-                ('d', '37ffb8b2-668a-46e1-a0d9-6a561ad5db7c'),
-                ('e', '519d3d04-239b-4423-9693-c961ca955c34'),
-                ('f', 'c23a395a-dbd0-46f2-ae10-ee057ea098d5'),
-                ('g', '23195ab8-b62e-4cb0-a521-5b774ae7c3e5'),
             )
         }
         for letter, enumerator in sorted(self.letters_enumerators.items()):
@@ -115,10 +111,6 @@ class SampleModel:
             for number, uuid in (
                 ('1', '165ccc7b-7ffc-4546-add2-11f0855f86d1'),
                 ('2', '64e3e07c-dd4f-439a-850c-69508bfd545c'),
-                ('3', '98f4f322-06ee-44bd-8063-4b174af22b2c'),
-                ('4', 'd152135a-991c-464e-bee0-81115f9159b6'),
-                ('5', '371a8511-a6d4-4c9c-be5c-5cc6cba6e190'),
-                ('6', '6f448d09-1b42-432d-ac07-5e1470e70e3e'),
             )
         }
         for number, enumerator in sorted(self.numbers_enumerators.items()):
@@ -131,16 +123,16 @@ class SampleModel:
         self.group_a.append_child(self.table)
         self.table.append_child(
             epyqlib.pm.parametermodel.TableEnumerationReference(
-                name='Numbers',
-                uuid='3d98c907-0b81-4e29-be9b-2620ef44ce26',
-                enumeration_uuid=self.numbers_enumeration.uuid,
+                name='Letters',
+                uuid='d80162ea-bd8c-4936-bca1-732b11205423',
+                enumeration_uuid=self.letters_enumeration.uuid,
             ),
         )
         self.table.append_child(
             epyqlib.pm.parametermodel.TableEnumerationReference(
-                name='Letters',
-                uuid='d80162ea-bd8c-4936-bca1-732b11205423',
-                enumeration_uuid=self.letters_enumeration.uuid,
+                name='Numbers',
+                uuid='3d98c907-0b81-4e29-be9b-2620ef44ce26',
+                enumeration_uuid=self.numbers_enumeration.uuid,
             ),
         )
 
@@ -156,6 +148,9 @@ class SampleModel:
         )
         array_a.length = 2
         array_a.children[1].name = 'A1'
+        array_a.children[1].uuid = uuid.UUID(
+            '9d642888-b7f0-4d04-8ebf-10887249b179',
+        )
         self.table.append_child(array_a)
 
         array_b = epyqlib.pm.parametermodel.Array(
@@ -170,9 +165,190 @@ class SampleModel:
         )
         array_b.length = 2
         array_b.children[1].name = 'B1'
+        array_b.children[1].uuid = uuid.UUID(
+            '32666885-2934-481f-88fd-7e3157f702b1',
+        )
         self.table.append_child(array_b)
 
+        table_group_root = epyqlib.pm.parametermodel.TableGroupElement(
+            name='Tree',
+            uuid='428124a2-6fe3-4b40-9e23-f78e19c7aa7a',
+        )
+
+        table_group_root_a = epyqlib.pm.parametermodel.TableGroupElement(
+            original=self.letters_enumerators['a'],
+            uuid='904d287d-2cdd-487e-ada9-ed0f8a552078',
+            path=(self.letters_enumerators['a'].uuid,),
+        )
+        table_group_root_a_1 = epyqlib.pm.parametermodel.TableGroupElement(
+            original=self.numbers_enumerators['1'],
+            uuid='9d37bb7f-2618-4ce8-b9f9-214c19851361',
+            path=table_group_root_a.path + (self.numbers_enumerators['1'].uuid,),
+        )
+        table_group_root_a_1_a = epyqlib.pm.parametermodel.TableGroupElement(
+            original=array_a,
+            uuid='993ededd-6083-4c1e-aa72-bf08ee3ea61c',
+            path=table_group_root_a_1.path + (array_a.uuid,),
+        )
+        self.add_array_elements(
+            array=array_a,
+            group=table_group_root_a_1_a,
+            uuids=[
+                '403b3a2c-f94a-490c-b112-87cdd3551e55',
+                '3fd1f0e6-09e7-413e-b169-3fafff126bbc',
+            ],
+        )
+        table_group_root_a_1.append_child(table_group_root_a_1_a)
+
+        table_group_root_a_1_b = epyqlib.pm.parametermodel.TableGroupElement(
+            original=array_b,
+            uuid='72ce1cf9-0c90-48e9-a37c-aee1b36fca80',
+            path=table_group_root_a_1.path + (array_b.uuid,),
+        )
+        self.add_array_elements(
+            array=array_b,
+            group=table_group_root_a_1_b,
+            uuids=[
+                '106cc983-0321-4ced-9e72-ab56d6bf1e7f',
+                '80fd2eb7-6c89-4b65-ad35-05d63522f991',
+            ],
+        )
+        table_group_root_a_1.append_child(table_group_root_a_1_b)
+        table_group_root_a.append_child(table_group_root_a_1)
+        table_group_root_a_2 = epyqlib.pm.parametermodel.TableGroupElement(
+            original=self.numbers_enumerators['2'],
+            uuid='b748bc78-0267-477e-95ec-e64a6686e010',
+            path=table_group_root_a.path + (self.numbers_enumerators['2'].uuid,),
+        )
+        table_group_root_a_2_a = epyqlib.pm.parametermodel.TableGroupElement(
+            original=array_a,
+            uuid='712cda8a-4744-4da2-a1d1-1573625bbf14',
+            path=table_group_root_a_2.path + (array_a.uuid,),
+        )
+        self.add_array_elements(
+            array=array_a,
+            group=table_group_root_a_2_a,
+            uuids=[
+                '290b2762-61c7-4666-8f99-af3c0113d4a3',
+                'aee3a1de-b35a-4e7b-b274-1ef6766d5889',
+            ],
+        )
+        table_group_root_a_2.append_child(table_group_root_a_2_a)
+        table_group_root_a_2_b = epyqlib.pm.parametermodel.TableGroupElement(
+            original=array_b,
+            uuid='e74d9047-1635-43f3-825b-6844fab96a00',
+            path=table_group_root_a_2.path + (array_b.uuid,),
+        )
+        self.add_array_elements(
+            array=array_b,
+            group=table_group_root_a_2_b,
+            uuids=[
+                '99a1be09-c4e0-41f1-bda4-d0f139038cbf',
+                'fa79e1aa-647d-4783-8b16-fe752ac8e8c4',
+            ],
+        )
+        table_group_root_a_2.append_child(table_group_root_a_2_b)
+        table_group_root_a.append_child(table_group_root_a_2)
+        table_group_root.append_child(table_group_root_a)
+
+        table_group_root_b = epyqlib.pm.parametermodel.TableGroupElement(
+            original=self.letters_enumerators['b'],
+            uuid='104d1901-524e-412b-84e7-98707dce362d',
+            path=(self.letters_enumerators['b'].uuid,),
+        )
+        table_group_root_b_1 = epyqlib.pm.parametermodel.TableGroupElement(
+            original=self.numbers_enumerators['1'],
+            uuid='9dc75463-f6a9-411f-b0a7-5c311086ff69',
+            path=table_group_root_b.path + (self.numbers_enumerators['1'].uuid,),
+        )
+        table_group_root_b_1_a = epyqlib.pm.parametermodel.TableGroupElement(
+            original=array_a,
+            uuid='f0989f09-4066-4047-8d61-c134c6e1e55c',
+            path=table_group_root_b_1.path + (array_a.uuid,),
+        )
+        self.add_array_elements(
+            array=array_a,
+            group=table_group_root_b_1_a,
+            uuids=[
+                'c076b3e1-a287-468c-80e4-43523a021feb',
+                '937be4d7-b578-4daa-aef0-4065198a613d',
+            ],
+        )
+        table_group_root_b_1.append_child(table_group_root_b_1_a)
+        table_group_root_b_1_b = epyqlib.pm.parametermodel.TableGroupElement(
+            original=array_b,
+            uuid='18e84e98-e8ad-4d4a-9180-951350f6590c',
+            path=table_group_root_b_1.path + (array_b.uuid,),
+        )
+        self.add_array_elements(
+            array=array_b,
+            group=table_group_root_b_1_b,
+            uuids=[
+                '286079b0-6028-4959-8396-78c626cdab46',
+                'de30995a-ba26-49cf-abd0-84d3dc62b3eb',
+            ],
+        )
+        table_group_root_b_1.append_child(table_group_root_b_1_b)
+        table_group_root_b.append_child(table_group_root_b_1)
+        table_group_root_b_2 = epyqlib.pm.parametermodel.TableGroupElement(
+            original=self.numbers_enumerators['2'],
+            uuid='1178e67b-ddda-43f3-a26a-30d0e10a2bd3',
+            path=table_group_root_b.path + (self.numbers_enumerators['2'].uuid,),
+        )
+        table_group_root_b_2_a = epyqlib.pm.parametermodel.TableGroupElement(
+            original=array_a,
+            uuid='1134bc2e-93d9-4b33-8164-dca0520f3910',
+            path=table_group_root_b_2.path + (array_a.uuid,),
+        )
+        self.add_array_elements(
+            array=array_a,
+            group=table_group_root_b_2_a,
+            uuids=[
+                '6a151510-c6e5-4673-9198-d3d9fb0dfcdc',
+                'dd3887db-df84-4f5f-ae6f-98201403c1d2',
+            ],
+        )
+        table_group_root_b_2.append_child(table_group_root_b_2_a)
+        table_group_root_b_2_b = epyqlib.pm.parametermodel.TableGroupElement(
+            original=array_b,
+            uuid='d84963e3-164e-4df8-9f5e-cf6717e20b0d',
+            path=table_group_root_b_2.path + (array_b.uuid,),
+        )
+        self.add_array_elements(
+            array=array_b,
+            group=table_group_root_b_2_b,
+            uuids=[
+                'd01008cc-cef0-4c95-b642-71e974690416',
+                '2b16a382-2fa2-41b4-a0dc-161c7496d13a',
+            ],
+        )
+        table_group_root_b_2.append_child(table_group_root_b_2_b)
+        table_group_root_b.append_child(table_group_root_b_2)
+        table_group_root.append_child(table_group_root_b)
+
+        automatic_table_root, = [
+            child
+            for child in self.table.children
+            if isinstance(child, epyqlib.pm.parametermodel.TableGroupElement)
+        ]
+
+        with self.table._ignore_children():
+            self.table.remove_child(child=automatic_table_root)
+
+            self.table.append_child(table_group_root)
+
         self.model.update_nodes()
+
+    def add_array_elements(self, array, group, uuids):
+        assert len(array.children) == len(uuids)
+
+        for child, a_uuid in zip(array.children, uuids):
+            element = epyqlib.pm.parametermodel.TableArrayElement(
+                original=child,
+                uuid=a_uuid,
+                path=group.path + (child.uuid,),
+            )
+            group.append_child(element)
 
 
 @pytest.fixture

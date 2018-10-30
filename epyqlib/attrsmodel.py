@@ -725,7 +725,7 @@ class Model:
         connections = {}
         connection_id = get_connection_id(parent=parent, child=child)
         if connection_id in self.connected_signals:
-            raise ConsistencyError('already connected: {}'.format((parent, child)))
+            raise ConsistencyError('already connected: {}'.format((parent.uuid, child.uuid)))
         self.connected_signals[connection_id] = connections
 
         if child is self.root:
@@ -874,6 +874,7 @@ class Model:
     def deleted(self, parent, node, row):
         item = self.item_from_node(parent)
         item.takeRow(row)
+        self.pyqtify_disconnect(parent, node)
 
     def supportedDropActions(self):
         return QtCore.Qt.MoveAction

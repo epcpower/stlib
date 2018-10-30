@@ -218,6 +218,7 @@ class Group(epyqlib.treenode.TreeNode):
     children = attr.ib(
         default=attr.Factory(list),
         cmp=False,
+        repr=False,
         metadata=graham.create_metadata(
             field=graham.fields.MixedList(fields=(
                 # TODO: would be nice to self reference without a name
@@ -257,6 +258,7 @@ class Enumerations(epyqlib.treenode.TreeNode):
     children = attr.ib(
         default=attr.Factory(list),
         cmp=False,
+        repr=False,
         metadata=graham.create_metadata(
             field=graham.fields.MixedList(fields=(
                 # TODO: would be nice to self reference without a name
@@ -406,6 +408,7 @@ class Array(epyqlib.treenode.TreeNode):
     children = attr.ib(
         default=attr.Factory(list),
         cmp=False,
+        repr=False,
         metadata=graham.create_metadata(
             field=graham.fields.MixedList(fields=(
                 marshmallow.fields.Nested(graham.schema(Parameter)),
@@ -513,6 +516,14 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
         ),
     )
 
+    path = attr.ib(
+        factory=tuple,
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=path,
+        no_column=True,
+    )
+
     uuid = epyqlib.attrsmodel.attr_uuid()
 
     original = attr.ib(default=None)
@@ -550,12 +561,21 @@ class TableGroupElement(epyqlib.treenode.TreeNode):
     children = attr.ib(
         default=attr.Factory(list),
         cmp=False,
+        repr=False,
         metadata=graham.create_metadata(
             field=graham.fields.MixedList(fields=(
                 marshmallow.fields.Nested('TableGroupElement'),
                 marshmallow.fields.Nested(TableArrayElement),
             )),
         ),
+    )
+
+    path = attr.ib(
+        factory=tuple,
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=path,
+        no_column=True,
     )
 
     uuid = epyqlib.attrsmodel.attr_uuid()
@@ -624,6 +644,7 @@ class Table(epyqlib.treenode.TreeNode):
     children = attr.ib(
         default=attr.Factory(list),
         cmp=False,
+        repr=False,
         metadata=graham.create_metadata(
             field=graham.fields.MixedList(
                 fields=(
@@ -633,7 +654,6 @@ class Table(epyqlib.treenode.TreeNode):
                     )),
                     marshmallow.fields.Nested(graham.schema(TableGroupElement)),
                 ),
-                exclude=(TableGroupElement,),
             ),
         ),
     )
@@ -668,6 +688,13 @@ class Table(epyqlib.treenode.TreeNode):
             if isinstance(child, TableGroupElement)
         ]
 
+        if len(old_groups) == 1:
+            old_group, = old_groups
+        elif len(old_groups) < 1:
+            old_group = None
+        else:
+            raise Exception('Too many old groups found while updating ')
+
         root = self.find_root()
 
         enumerations = []
@@ -693,37 +720,88 @@ class Table(epyqlib.treenode.TreeNode):
         ]
 
         with self._ignore_children():
-            for group in old_groups:
-                self.remove_child(child=group)
+            if old_group is None:
+                old_group = TableGroupElement(
+                    name='Tree',
+                )
+                self.append_child(old_group)
 
-            self.group = TableGroupElement(
-                name='Tree',
+            nodes = []
+            old_group.traverse(
+                call_this=lambda node, payload: payload.append(node),
+                payload=nodes,
+                internal_nodes=True,
             )
-            self.append_child(self.group)
+
+            nodes = [
+                node
+                for node in nodes
+                if node != old_group
+            ]
+
+            for node in sorted(nodes, key=lambda node: (node.tree_parent.uuid, node.uuid)):
+                node.tree_parent.remove_child(child=node)
+
+            old_by_path = {
+                node.path: node
+                for node in nodes
+            }
 
         product = list(itertools.product(*enumerations))
 
         for combination in product:
-            present = self.group
+            present = old_group
+
+            path = ()
 
             for layer in combination:
-                upcoming = present.children_by_attribute(layer, 'original')
-                if len(upcoming) == 1:
-                    present, = upcoming
+                path += (layer.uuid,)
+
+                previous = old_by_path.get(path)
+                if previous is None:
+                    current = TableGroupElement(
+                        original=layer,
+                        path=path,
+                    )
+                    old_by_path[path] = current
                 else:
-                    new = TableGroupElement(original=layer)
-                    present.append_child(new)
-                    present = new
+                    current = previous
+
+                if current.tree_parent is None:
+                    present.append_child(current)
+
+                present = current
 
             for array in arrays:
-                new = TableGroupElement(original=array)
-                for element in array.children:
-                    new.append_child(TableArrayElement(
-                        original=element,
-                    ))
-                
-                present.append_child(new)
+                array_path = path + (array.uuid,)
+                previous = old_by_path.get(array_path)
+                if previous is None:
+                    current = TableGroupElement(
+                        original=array,
+                        path=array_path,
+                    )
+                    old_by_path[array_path] = current
+                else:
+                    current = previous
 
+                if current.tree_parent is None:
+                    present.append_child(current)
+
+                for element in array.children:
+                    element_path = array_path + (element.uuid,)
+                    previous_element = old_by_path.get(element_path)
+                    if previous_element is None:
+                        current_element = TableArrayElement(
+                            original=element,
+                            path=element_path,
+                        )
+                        old_by_path[element_path] = current_element
+                    else:
+                        current_element = previous_element
+
+                    if current_element.tree_parent is None:
+                        current.append_child(current_element)
+                
     def addable_types(self):
         return epyqlib.attrsmodel.create_addable_types((
             TableEnumerationReference,

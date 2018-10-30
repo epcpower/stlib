@@ -44,15 +44,15 @@
                     "children": [
                         {
                             "_type": "table_enumeration_reference",
-                            "name": "Numbers",
-                            "uuid": "3d98c907-0b81-4e29-be9b-2620ef44ce26",
-                            "enumeration_uuid": "86111e99-624c-499e-a560-6a77db461e43"
-                        },
-                        {
-                            "_type": "table_enumeration_reference",
                             "name": "Letters",
                             "uuid": "d80162ea-bd8c-4936-bca1-732b11205423",
                             "enumeration_uuid": "fd1b8036-8aef-4914-9165-ed3118bd8ecd"
+                        },
+                        {
+                            "_type": "table_enumeration_reference",
+                            "name": "Numbers",
+                            "uuid": "3d98c907-0b81-4e29-be9b-2620ef44ce26",
+                            "enumeration_uuid": "86111e99-624c-499e-a560-6a77db461e43"
                         },
                         {
                             "_type": "array",
@@ -90,7 +90,7 @@
                                     "minimum": null,
                                     "maximum": null,
                                     "nv_format": null,
-                                    "uuid": "3c95b75b-4623-4a94-a274-c837f1f973d5",
+                                    "uuid": "9d642888-b7f0-4d04-8ebf-10887249b179",
                                     "original": "a32ea0c1-0838-430f-8d3c-192b5bff3047"
                                 }
                             ],
@@ -132,11 +132,196 @@
                                     "minimum": null,
                                     "maximum": null,
                                     "nv_format": null,
-                                    "uuid": "a981a921-0f74-4d9e-8a52-56959badab4b",
+                                    "uuid": "32666885-2934-481f-88fd-7e3157f702b1",
                                     "original": "1c7d0fac-aaa6-415b-b7c1-08d1f5d07097"
                                 }
                             ],
                             "uuid": "acda3b53-785c-4588-8b35-d58a9f2e10a8"
+                        },
+                        {
+                            "_type": "table_group_element",
+                            "name": null,
+                            "children": [
+                                {
+                                    "_type": "table_group_element",
+                                    "name": "a",
+                                    "children": [
+                                        {
+                                            "_type": "table_group_element",
+                                            "name": "1",
+                                            "children": [
+                                                {
+                                                    "_type": "table_group_element",
+                                                    "name": "Table Array A",
+                                                    "children": [
+                                                        {
+                                                            "_type": "table_array_element",
+                                                            "name": "A0",
+                                                            "uuid": "403b3a2c-f94a-490c-b112-87cdd3551e55"
+                                                        },
+                                                        {
+                                                            "_type": "table_array_element",
+                                                            "name": "A1",
+                                                            "uuid": "3fd1f0e6-09e7-413e-b169-3fafff126bbc"
+                                                        }
+                                                    ],
+                                                    "uuid": "993ededd-6083-4c1e-aa72-bf08ee3ea61c"
+                                                },
+                                                {
+                                                    "_type": "table_group_element",
+                                                    "name": "Table Array B",
+                                                    "children": [
+                                                        {
+                                                            "_type": "table_array_element",
+                                                            "name": "B0",
+                                                            "uuid": "106cc983-0321-4ced-9e72-ab56d6bf1e7f"
+                                                        },
+                                                        {
+                                                            "_type": "table_array_element",
+                                                            "name": "B1",
+                                                            "uuid": "80fd2eb7-6c89-4b65-ad35-05d63522f991"
+                                                        }
+                                                    ],
+                                                    "uuid": "72ce1cf9-0c90-48e9-a37c-aee1b36fca80"
+                                                }
+                                            ],
+                                            "uuid": "9d37bb7f-2618-4ce8-b9f9-214c19851361"
+                                        },
+                                        {
+                                            "_type": "table_group_element",
+                                            "name": "2",
+                                            "children": [
+                                                {
+                                                    "_type": "table_group_element",
+                                                    "name": "Table Array A",
+                                                    "children": [
+                                                        {
+                                                            "_type": "table_array_element",
+                                                            "name": "A0",
+                                                            "uuid": "290b2762-61c7-4666-8f99-af3c0113d4a3"
+                                                        },
+                                                        {
+                                                            "_type": "table_array_element",
+                                                            "name": "A1",
+                                                            "uuid": "aee3a1de-b35a-4e7b-b274-1ef6766d5889"
+                                                        }
+                                                    ],
+                                                    "uuid": "712cda8a-4744-4da2-a1d1-1573625bbf14"
+                                                },
+                                                {
+                                                    "_type": "table_group_element",
+                                                    "name": "Table Array B",
+                                                    "children": [
+                                                        {
+                                                            "_type": "table_array_element",
+                                                            "name": "B0",
+                                                            "uuid": "99a1be09-c4e0-41f1-bda4-d0f139038cbf"
+                                                        },
+                                                        {
+                                                            "_type": "table_array_element",
+                                                            "name": "B1",
+                                                            "uuid": "fa79e1aa-647d-4783-8b16-fe752ac8e8c4"
+                                                        }
+                                                    ],
+                                                    "uuid": "e74d9047-1635-43f3-825b-6844fab96a00"
+                                                }
+                                            ],
+                                            "uuid": "b748bc78-0267-477e-95ec-e64a6686e010"
+                                        }
+                                    ],
+                                    "uuid": "904d287d-2cdd-487e-ada9-ed0f8a552078"
+                                },
+                                {
+                                    "_type": "table_group_element",
+                                    "name": "b",
+                                    "children": [
+                                        {
+                                            "_type": "table_group_element",
+                                            "name": "1",
+                                            "children": [
+                                                {
+                                                    "_type": "table_group_element",
+                                                    "name": "Table Array A",
+                                                    "children": [
+                                                        {
+                                                            "_type": "table_array_element",
+                                                            "name": "A0",
+                                                            "uuid": "c076b3e1-a287-468c-80e4-43523a021feb"
+                                                        },
+                                                        {
+                                                            "_type": "table_array_element",
+                                                            "name": "A1",
+                                                            "uuid": "937be4d7-b578-4daa-aef0-4065198a613d"
+                                                        }
+                                                    ],
+                                                    "uuid": "f0989f09-4066-4047-8d61-c134c6e1e55c"
+                                                },
+                                                {
+                                                    "_type": "table_group_element",
+                                                    "name": "Table Array B",
+                                                    "children": [
+                                                        {
+                                                            "_type": "table_array_element",
+                                                            "name": "B0",
+                                                            "uuid": "286079b0-6028-4959-8396-78c626cdab46"
+                                                        },
+                                                        {
+                                                            "_type": "table_array_element",
+                                                            "name": "B1",
+                                                            "uuid": "de30995a-ba26-49cf-abd0-84d3dc62b3eb"
+                                                        }
+                                                    ],
+                                                    "uuid": "18e84e98-e8ad-4d4a-9180-951350f6590c"
+                                                }
+                                            ],
+                                            "uuid": "9dc75463-f6a9-411f-b0a7-5c311086ff69"
+                                        },
+                                        {
+                                            "_type": "table_group_element",
+                                            "name": "2",
+                                            "children": [
+                                                {
+                                                    "_type": "table_group_element",
+                                                    "name": "Table Array A",
+                                                    "children": [
+                                                        {
+                                                            "_type": "table_array_element",
+                                                            "name": "A0",
+                                                            "uuid": "6a151510-c6e5-4673-9198-d3d9fb0dfcdc"
+                                                        },
+                                                        {
+                                                            "_type": "table_array_element",
+                                                            "name": "A1",
+                                                            "uuid": "dd3887db-df84-4f5f-ae6f-98201403c1d2"
+                                                        }
+                                                    ],
+                                                    "uuid": "1134bc2e-93d9-4b33-8164-dca0520f3910"
+                                                },
+                                                {
+                                                    "_type": "table_group_element",
+                                                    "name": "Table Array B",
+                                                    "children": [
+                                                        {
+                                                            "_type": "table_array_element",
+                                                            "name": "B0",
+                                                            "uuid": "d01008cc-cef0-4c95-b642-71e974690416"
+                                                        },
+                                                        {
+                                                            "_type": "table_array_element",
+                                                            "name": "B1",
+                                                            "uuid": "2b16a382-2fa2-41b4-a0dc-161c7496d13a"
+                                                        }
+                                                    ],
+                                                    "uuid": "d84963e3-164e-4df8-9f5e-cf6717e20b0d"
+                                                }
+                                            ],
+                                            "uuid": "1178e67b-ddda-43f3-a26a-30d0e10a2bd3"
+                                        }
+                                    ],
+                                    "uuid": "104d1901-524e-412b-84e7-98707dce362d"
+                                }
+                            ],
+                            "uuid": "428124a2-6fe3-4b40-9e23-f78e19c7aa7a"
                         }
                     ],
                     "uuid": "58b7bf0d-4dec-4707-a976-d49a856eb3ba"
@@ -194,36 +379,6 @@
                             "name": "b",
                             "value": null,
                             "uuid": "effdff81-7da1-4cd8-863f-44f33c75813e"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "c",
-                            "value": null,
-                            "uuid": "2902368d-352e-441b-99e0-45998bad0d6d"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "d",
-                            "value": null,
-                            "uuid": "37ffb8b2-668a-46e1-a0d9-6a561ad5db7c"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "e",
-                            "value": null,
-                            "uuid": "519d3d04-239b-4423-9693-c961ca955c34"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "f",
-                            "value": null,
-                            "uuid": "c23a395a-dbd0-46f2-ae10-ee057ea098d5"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "g",
-                            "value": null,
-                            "uuid": "23195ab8-b62e-4cb0-a521-5b774ae7c3e5"
                         }
                     ],
                     "uuid": "fd1b8036-8aef-4914-9165-ed3118bd8ecd"
@@ -243,30 +398,6 @@
                             "name": "2",
                             "value": null,
                             "uuid": "64e3e07c-dd4f-439a-850c-69508bfd545c"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "3",
-                            "value": null,
-                            "uuid": "98f4f322-06ee-44bd-8063-4b174af22b2c"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "4",
-                            "value": null,
-                            "uuid": "d152135a-991c-464e-bee0-81115f9159b6"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "5",
-                            "value": null,
-                            "uuid": "371a8511-a6d4-4c9c-be5c-5cc6cba6e190"
-                        },
-                        {
-                            "_type": "enumerator",
-                            "name": "6",
-                            "value": null,
-                            "uuid": "6f448d09-1b42-432d-ac07-5e1470e70e3e"
                         }
                     ],
                     "uuid": "86111e99-624c-499e-a560-6a77db461e43"
