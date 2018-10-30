@@ -613,6 +613,8 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
 class Model:
     def __init__(self, root, columns, parent=None):
         self.root = root
+        self._all_items_list = []
+        self.node_to_item = {}
 
         self.model = QtGui.QStandardItemModel()
 
@@ -692,27 +694,10 @@ class Model:
             self._pyqtify_connect(**kwargs)
 
     def item_from_node(self, node):
-        items = []
+        if node is self.root:
+            return self.model.invisibleRootItem()
 
-        for model in {self} | self.droppable_from:
-            items.extend(model._all_items(role=None))
-
-        items = [
-            item
-            for item in items
-            if item.data(epyqlib.utils.qt.UserRoles.node) is node
-        ]
-
-        if len(items) < 1:
-            raise NotFoundError('Item not found for node {}'.format(node))
-        elif len(items) > 1:
-            raise MultipleFoundError(
-                '{} items found for node {}'.format(len(items), node),
-            )
-
-        item, = items
-
-        return item
+        return self.node_to_item[node]
 
     def node_from_item(self, item):
         return item.data(epyqlib.utils.qt.UserRoles.node)
@@ -747,6 +732,9 @@ class Model:
                 field_name = column.fields.get(type(child))
 
                 item = QtGui.QStandardItem()
+                if i == 0:
+                    self._all_items_list.append(item)
+                    self.node_to_item[child] = item
                 item.setData(child, epyqlib.utils.qt.UserRoles.node)
                 item.setData(i, epyqlib.utils.qt.UserRoles.column_index)
                 item.setData(
@@ -797,44 +785,6 @@ class Model:
         for signal, (instance, slot) in connections.items():
             signal.__get__(instance).connect(slot)
 
-    def _all_items(
-            self,
-            model=None,
-            parent=None,
-            role=QtCore.Qt.DisplayRole,
-            include_root=True,
-    ):
-        if model is None:
-            model = self.model
-
-        if parent is None:
-            parent = QtCore.QModelIndex()
-
-        data = []
-        if include_root:
-            datum = self.model.invisibleRootItem()
-            if role is not None:
-                datum = datum.data(role)
-            data.append(datum)
-
-        for row in range(model.rowCount(parent)):
-            index = model.index(row, 0, parent)
-            if role is not None:
-                datum = model.data(index, role)
-            else:
-                datum = model.itemFromIndex(index)
-            data.append(datum)
-
-            if model.hasChildren(index):
-                data.extend(self._all_items(
-                    model=model,
-                    parent=index,
-                    role=role,
-                    include_root=False,
-                ))
-
-        return data
-
     def pyqtify_disconnect(self, parent, child):
         def visit(node, nodes):
             if node is child:
@@ -873,7 +823,13 @@ class Model:
 
     def deleted(self, parent, node, row):
         item = self.item_from_node(parent)
-        item.takeRow(row)
+        taken_items = item.takeRow(row)
+        self.node_to_item.pop(node)
+        for taken_item in taken_items:
+            try:
+                self._all_items_list.remove(taken_item)
+            except ValueError:
+                pass
         self.pyqtify_disconnect(parent, node)
 
     def supportedDropActions(self):
