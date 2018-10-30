@@ -672,15 +672,52 @@ class Table(epyqlib.treenode.TreeNode):
         self.pyqt_signals.child_added_complete.connect(self.update)
         self.pyqt_signals.child_removed_complete.connect(self.update)
 
+        self.pyqt_signals.child_added_complete.connect(self.array_added)
+        self.pyqt_signals.child_removed_complete.connect(self.array_removed)
+
+        self.array_connections = {}
+
     @contextlib.contextmanager
     def _ignore_children(self):
         self._monitor_children = False
         yield
         self._monitor_children = True
 
+    def array_added(self, array):
+        if not isinstance(array, Array):
+            return
+
+        self.array_connections[array] = epyqlib.utils.qt.Connections(
+            signal=epyqlib.utils.qt.pyqtify_signals(array).length,
+            slot=self.update,
+        )
+
+
+    def array_removed(self, tree_parent, array, row):
+        if not isinstance(array, Array):
+            return
+
+        connections = self.array_connections.pop(array)
+        connections.disconnect()
+
+    def update_array_connections(self):
+        for array in list(self.array_connections.keys()):
+            self.array_removed(None, array, None)
+
+        arrays = [
+            child
+            for child in self.children
+            if isinstance(child, Array)
+        ]
+
+        for array in arrays:
+            self.array_added(array)
+
     def update(self, changed=None):
         if not self._monitor_children:
             return
+
+        self.update_array_connections()
 
         old_groups = [
             child
