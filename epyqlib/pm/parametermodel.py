@@ -565,7 +565,7 @@ class TableGroupElement(epyqlib.treenode.TreeNode):
         metadata=graham.create_metadata(
             field=graham.fields.MixedList(fields=(
                 marshmallow.fields.Nested('TableGroupElement'),
-                marshmallow.fields.Nested(TableArrayElement),
+                marshmallow.fields.Nested(graham.schema(TableArrayElement)),
             )),
         ),
     )
