@@ -518,7 +518,7 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
         self.state = state
 
         logger.debug('Message to be sent: {}'.format(packet))
-        self._transport.write(packet)
+        self._transport.write(packet.message)
 
         if count_towards_total:
             self._messages_sent += 1
@@ -751,7 +751,7 @@ class WindowSlice:
         return str(self._original[self._offsetit(slice(None))])
 
 
-class Packet(can.Message):
+class Packet:
     def __init__(self, counter_index, payload_start, extended_id=True,
                  arbitration_id=bootloader_can_id, dlc=8, *args, **kwargs):
         # TODO: avoid repetition of required values
@@ -765,12 +765,16 @@ class Packet(can.Message):
 
         kwargs.setdefault('data', [0] * dlc)
 
-        super().__init__(extended_id=extended_id,
-                         arbitration_id=arbitration_id, dlc=dlc,
-                         *args, **kwargs)
+        self.message = can.Message(
+            extended_id=extended_id,
+            arbitration_id=arbitration_id,
+            dlc=dlc,
+            *args,
+            **kwargs,
+        )
 
         self._counter_index = counter_index
-        self._payload = WindowSlice(self.data, payload_start)
+        self._payload = WindowSlice(self.message.data, payload_start)
 
     @property
     def payload(self):
@@ -796,12 +800,12 @@ class Packet(can.Message):
 
     @property
     def command_counter(self):
-        return self.data[self._counter_index]
+        return self.message.data[self._counter_index]
 
 
     @command_counter.setter
     def command_counter(self, counter):
-        self.data[self._counter_index] = int(counter)
+        self.message.data[self._counter_index] = int(counter)
 
 
 class HostCommand(Packet):
@@ -813,11 +817,11 @@ class HostCommand(Packet):
 
     @property
     def command_code(self):
-        return CommandCode(self.data[0])
+        return CommandCode(self.message.data[0])
 
     @command_code.setter
     def command_code(self, code):
-        self.data[0] = int(code)
+        self.message.data[0] = int(code)
 
 
 class BootloaderReply(Packet):
@@ -829,11 +833,11 @@ class BootloaderReply(Packet):
 
     @property
     def command_return_code(self):
-        return CommandStatus(self.data[1])
+        return CommandStatus(self.message.data[1])
 
     @command_return_code.setter
     def command_return_code(self, code):
-        self.data[1] = int(code)
+        self.message.data[1] = int(code)
 
 
 @enum.unique
