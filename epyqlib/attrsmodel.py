@@ -615,6 +615,7 @@ class Model:
         self.root = root
         self._all_items_list = []
         self.node_to_item = {}
+        self.uuid_to_node = {}
 
         self.model = QtGui.QStandardItemModel()
 
@@ -703,6 +704,11 @@ class Model:
         return item.data(epyqlib.utils.qt.UserRoles.node)
 
     def _pyqtify_connect(self, parent, child):
+        if child.uuid in self.uuid_to_node:
+            raise ConsistencyError('UUID {} already known'.format(child.uuid))
+
+        self.uuid_to_node[child.uuid] = child
+
         def key_value(instance, name, slot):
             signal = inspect.getattr_static(obj=instance, attr=name)
             return ((signal, (instance, slot)),)
@@ -813,6 +819,8 @@ class Model:
         for signal, (instance, slot) in connections.items():
             signal.__get__(instance).disconnect(slot)
 
+        self.uuid_to_node.pop(child.uuid)
+
     def child_added(self, child, row):
         parent = child.tree_parent
 
@@ -892,24 +900,12 @@ class Model:
         return source, new_parent, row
 
     def node_from_uuid(self, u):
-        def uuid_matches(node, matches):
-            if node.uuid == u:
-                matches.add(node)
+        for model in {self} | self.droppable_from:
+            node = model.uuid_to_node.get(u)
+            if node is not None:
+                return node
 
-        nodes = set()
-        for model in self.droppable_from:
-            model.root.traverse(
-                call_this=uuid_matches,
-                payload=nodes,
-                internal_nodes=True
-            )
-
-        if len(nodes) == 0:
-            raise NotFoundError('''UUID '{}' not found'''.format(u))
-
-        [node] = nodes
-
-        return node
+        raise NotFoundError('''UUID '{}' not found'''.format(u))
 
     def canDropMimeData(self, mime, action, row, column, parent):
         node, new_parent, _ = self.source_target_for_drop(
