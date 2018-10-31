@@ -693,7 +693,7 @@ class Table(epyqlib.treenode.TreeNode):
         )
 
 
-    def array_removed(self, tree_parent, array, row):
+    def array_removed(self, array):
         if not isinstance(array, Array):
             return
 
@@ -702,7 +702,7 @@ class Table(epyqlib.treenode.TreeNode):
 
     def update_array_connections(self):
         for array in list(self.array_connections.keys()):
-            self.array_removed(None, array, None)
+            self.array_removed(array)
 
         arrays = [
             child
