@@ -332,6 +332,8 @@ def Root(default_name, valid_types):
             )),
         )
 
+        model = attr.ib(default=None)
+
         uuid = attr_uuid()
 
         def __attrs_post_init__(self):
@@ -613,6 +615,7 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
 class Model:
     def __init__(self, root, columns, parent=None):
         self.root = root
+        self.root.model = self
         self._all_items_list = []
         self.node_to_item = {}
         self.uuid_to_node = {}
