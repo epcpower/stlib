@@ -92,9 +92,7 @@ class TreeNode:
         return True
 
     def traverse(self, call_this, payload=None, internal_nodes=False):
-        child = None
-
-        if internal_nodes or child is None:
+        if internal_nodes or len(self.children) == 0:
             call_this(self, payload)
 
         for child in self.children:
