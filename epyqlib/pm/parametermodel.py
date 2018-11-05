@@ -526,7 +526,10 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
 
     uuid = epyqlib.attrsmodel.attr_uuid()
 
-    original = attr.ib(default=None)
+    original = attr.ib(
+        default=None,
+        repr=False,
+    )
     epyqlib.attrsmodel.attrib(
         attribute=original,
         no_column=True,
@@ -622,7 +625,7 @@ class TableEnumerationReference(epyqlib.treenode.TreeNode):
 
     def can_drop_on(self, node):
         return False
-    
+
     can_delete = epyqlib.attrsmodel.childless_can_delete
 
     def link(self, enumeration):
@@ -763,6 +766,8 @@ class Table(epyqlib.treenode.TreeNode):
                 )
                 self.append_child(old_group)
 
+            self.group = old_group
+
             nodes = []
             old_group.traverse(
                 call_this=lambda node, payload: payload.append(node),
@@ -838,7 +843,7 @@ class Table(epyqlib.treenode.TreeNode):
 
                     if current_element.tree_parent is None:
                         current.append_child(current_element)
-                
+
     def addable_types(self):
         return epyqlib.attrsmodel.create_addable_types((
             TableEnumerationReference,
@@ -910,6 +915,7 @@ class Enumeration(epyqlib.treenode.TreeNode):
     )
     children = attr.ib(
         default=attr.Factory(list),
+        repr=False,
         metadata=graham.create_metadata(
             field=graham.fields.MixedList(fields=(
                 marshmallow.fields.Nested(graham.schema(Enumerator)),
@@ -990,6 +996,7 @@ class AccessLevels(epyqlib.treenode.TreeNode):
     )
     children = attr.ib(
         default=attr.Factory(list),
+        repr=False,
         metadata=graham.create_metadata(
             field=graham.fields.MixedList(fields=(
                 marshmallow.fields.Nested(graham.schema(AccessLevel)),
