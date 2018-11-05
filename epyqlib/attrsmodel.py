@@ -612,6 +612,46 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
         model.setData(index, datum)
 
 
+class PyQStandardItemModel(QtGui.QStandardItemModel):
+    # maybe events instead?
+    # http://doc.qt.io/qt-5/dnd.html
+
+    def canDropMimeData(self, *args, **kwargs):
+        return self.can_drop_mime_data(*args, **kwargs)
+
+    def mimeTypes(self, *args, **kwargs):
+        return self.mime_types(*args, **kwargs)
+
+    def mimeData(self, *args, **kwargs):
+        return self.mime_data(*args, **kwargs)
+
+    def dropMimeData(self, *args, **kwargs):
+        return self.drop_mime_data(*args, **kwargs)
+
+    def supportedDropActions(self, *args, **kwargs):
+        return self.supported_drop_actions(*args, **kwargs)
+
+    @classmethod
+    def build(
+            cls,
+            *args,
+            can_drop_mime_data,
+            mime_types,
+            mime_data,
+            drop_mime_data,
+            supported_drop_actions,
+            **kwargs,
+    ):
+        model = cls(*args, **kwargs)
+        model.can_drop_mime_data = can_drop_mime_data
+        model.mime_types = mime_types
+        model.mime_data = mime_data
+        model.drop_mime_data = drop_mime_data
+        model.supported_drop_actions = supported_drop_actions
+
+        return model
+
+
 class Model:
     def __init__(self, root, columns, parent=None):
         self.root = root
@@ -620,7 +660,13 @@ class Model:
         self.node_to_item = {}
         self.uuid_to_node = {}
 
-        self.model = QtGui.QStandardItemModel()
+        self.model = PyQStandardItemModel.build(
+            can_drop_mime_data=self.canDropMimeData,
+            mime_types=self.mimeTypes,
+            mime_data=self.mimeData,
+            drop_mime_data=self.dropMimeData,
+            supported_drop_actions=self.supportedDropActions,
+        )
 
         self.mime_type = 'application/com.epcpower.pm.attrsmodel'
 
@@ -851,7 +897,10 @@ class Model:
 
     def node_from_index(self, index):
         item = self.model.itemFromIndex(index)
-        node = item.data(epyqlib.utils.qt.UserRoles.node)
+        if item is None:
+            node = self.root
+        else:
+            node = item.data(epyqlib.utils.qt.UserRoles.node)
         return node
 
     def index_from_node(self, node):
