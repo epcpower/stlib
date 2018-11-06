@@ -435,7 +435,7 @@ class NvView(UiBase):
                 epyqlib.utils.qt.dialog(
                     parent=self,
                     message=(
-                        f'Unable to parse input {text!r}, must be an integer',
+                        f'Unable to parse input {text!r}, must be an integer'
                     ),
                 )
             else:
