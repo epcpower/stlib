@@ -422,8 +422,9 @@ def test_sample_dumps_consistently(sample):
 
 def test_sample_loads_consistently(sample):
     loaded = graham.schema(type(sample.root)).loads(serialized_sample)
+    sample.root.model = None
 
-    assert sample.root == loaded.data
+    assert loaded.data == sample.root
 
 
 def test_table_addition(sample):
