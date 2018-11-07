@@ -790,6 +790,7 @@ class Model:
                 field_name = column.fields.get(type(child))
 
                 item = QtGui.QStandardItem()
+                item.setEditable(type(child) in column.fields)
                 if i == 0:
                     self._all_items_list.append(item)
                     self.node_to_item[child] = item

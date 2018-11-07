@@ -1041,3 +1041,29 @@ def test_types_list_selection_roots():
     }
 
     assert set(types.list_selection_roots()) == expected
+
+
+def test_noneditable_columns():
+    model = make_a_model()
+
+    group = model.root.children[0]
+    assert isinstance(group, Group)
+
+    base_index = model.index_from_node(group)
+
+    index = base_index.siblingAtColumn(columns.index_of('Value'))
+    item = model.model.itemFromIndex(index)
+    assert not item.isEditable()
+
+
+def test_editable_columns():
+    model = make_a_model()
+
+    group = model.root.children[0]
+    assert isinstance(group, Group)
+
+    base_index = model.index_from_node(group)
+
+    index = base_index.siblingAtColumn(columns.index_of('Name'))
+    item = model.model.itemFromIndex(index)
+    assert item.isEditable()
