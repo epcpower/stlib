@@ -1067,3 +1067,30 @@ def test_editable_columns():
     index = base_index.siblingAtColumn(columns.index_of('Name'))
     item = model.model.itemFromIndex(index)
     assert item.isEditable()
+
+
+def test_none_values_show_dash():
+    model = make_a_model()
+
+    group = model.root.children[0]
+    assert isinstance(group, Group)
+
+    base_index = model.index_from_node(group)
+    index = base_index.siblingAtColumn(columns.index_of('Name'))
+    item = model.model.itemFromIndex(index)
+
+    group.name = "The Name"
+    assert group.name == item.data(PyQt5.QtCore.Qt.DisplayRole)
+    assert group.name == item.data(PyQt5.QtCore.Qt.EditRole)
+
+
+    group.name = None
+    # TODO: CAMPid 0794305784527546542452654254679680
+    # The display role is supposed to be '-' for None but they can't be
+    # different
+    #
+    # http://doc.qt.io/qt-5/qstandarditem.html#data
+    #   The default implementation treats Qt::EditRole and Qt::DisplayRole
+    #   as referring to the same data
+    assert '' == item.data(PyQt5.QtCore.Qt.DisplayRole)
+    assert '' == item.data(PyQt5.QtCore.Qt.EditRole)

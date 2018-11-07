@@ -815,10 +815,22 @@ class Model:
 
                     def slot(datum, item=item):
                         if datum is None:
-                            text = ''
+                            # TODO: CAMPid 0794305784527546542452654254679680
+                            # The display role is supposed to be '-' for None
+                            # but they can't be different
+                            #
+                            # http://doc.qt.io/qt-5/qstandarditem.html#data
+                            #   The default implementation treats Qt::EditRole
+                            #   and Qt::DisplayRole as referring to the same
+                            #   data
+                            display_text = ''
+                            edit_text = ''
                         else:
-                            text = str(datum)
-                        item.setText(text)
+                            display_text = str(datum)
+                            edit_text = display_text
+
+                        item.setData(display_text, PyQt5.QtCore.Qt.DisplayRole)
+                        item.setData(edit_text, PyQt5.QtCore.Qt.EditRole)
                         item.setData(datum, epyqlib.utils.qt.UserRoles.raw)
 
                     connections.update(key_value(
