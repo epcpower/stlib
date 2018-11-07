@@ -354,6 +354,9 @@ def Root(default_name, valid_types):
 
 
 def convert_uuid(x):
+    if x == '':
+        return None
+
     if x is None or isinstance(x, uuid.UUID):
         return x
 
@@ -810,7 +813,11 @@ class Model:
                     item.setCheckable(checkable)
 
                     def slot(datum, item=item):
-                        item.setText(str(datum))
+                        if datum is None:
+                            text = ''
+                        else:
+                            text = str(datum)
+                        item.setText(text)
                         item.setData(datum, epyqlib.utils.qt.UserRoles.raw)
 
                     connections.update(key_value(
