@@ -129,6 +129,25 @@ def grouper(iterable, n, fillvalue=None):
     return itertools.zip_longest(*args, fillvalue=fillvalue)
 
 
+def chunker(iterable, n, factory=tuple):
+    """Collect data into fixed-length chunks or blocks except last due to
+    lack of fill.
+    """
+    # chunker('ABCDEFG', 3) --> ABC DEF G"
+
+    i = iter(iterable)
+    r = range(n)
+
+    while True:
+        # t = factory(next(i) for _ in r)
+        t = factory(v for _, v in zip(r, i))
+
+        if len(t) > 0:
+            yield t
+        else:
+            break
+
+
 def generate_ranges(ids):
     try:
         start = ids[0]
