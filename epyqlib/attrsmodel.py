@@ -926,7 +926,7 @@ class Model:
         logger.debug('entering dropMimeData()')
         logger.debug((data, action, row, column, parent))
 
-        node, new_parent, row = self.source_target_for_drop(
+        node, new_parent, source_row = self.source_target_for_drop(
             column, data, parent, row)
 
         if action == QtCore.Qt.MoveAction:
@@ -938,12 +938,16 @@ class Model:
 
             if local:
                 node.tree_parent.remove_child(child=node)
-                new_parent.insert_child(row, node)
-
-                return True
+                new_child = node
             else:
                 new_child = new_parent.child_from(node)
+
+            if row == -1:
                 new_parent.append_child(new_child)
+            else:
+                new_parent.insert_child(row, new_child)
+
+            return local
 
         return False
 
