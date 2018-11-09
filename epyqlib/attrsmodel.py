@@ -339,7 +339,6 @@ def Root(default_name, valid_types):
         def __attrs_post_init__(self):
             super().__init__()
 
-
         def can_drop_on(self, node):
             return isinstance(node, tuple(self.addable_types().values()))
 
@@ -596,6 +595,9 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
         editor.showPopup()
 
     def setModelData(self, editor, model, index):
+        index = epyqlib.utils.qt.resolve_index_to_model(index)
+        model = index.model()
+
         editor_index = editor.currentIndex()
 
         item = model.itemFromIndex(index)

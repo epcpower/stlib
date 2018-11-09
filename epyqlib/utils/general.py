@@ -1,9 +1,11 @@
 import collections
 import enum
+import inspect
 import itertools
 import logging
 import math
 import os
+import pathlib
 import shutil
 import stat
 import traceback
@@ -391,3 +393,10 @@ def contiguous_groups(s):
             group = []
 
     return groups
+
+
+def path_and_line(o):
+    return '{}:{}'.format(
+        inspect.getsourcefile(o),
+        inspect.getsourcelines(o)[1],
+    )

@@ -896,7 +896,7 @@ class Enumerator(epyqlib.treenode.TreeNode):
     def __attrs_post_init__(self):
         super().__init__()
 
-    def can_drop_on(self):
+    def can_drop_on(self, node):
         return False
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
@@ -944,7 +944,7 @@ class Enumeration(epyqlib.treenode.TreeNode):
         for child in self.children:
             yield child.value
 
-    def can_drop_on(self):
+    def can_drop_on(self, node):
         return False
 
     def can_delete(self, node=None):
@@ -977,7 +977,7 @@ class AccessLevel(epyqlib.treenode.TreeNode):
     def __attrs_post_init__(self):
         super().__init__()
 
-    def can_drop_on(self):
+    def can_drop_on(self, node):
         return False
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
@@ -1017,7 +1017,7 @@ class AccessLevels(epyqlib.treenode.TreeNode):
         for child in self.children:
             yield child.value
 
-    def can_drop_on(self):
+    def can_drop_on(self, node):
         return False
 
     def can_delete(self, node=None):

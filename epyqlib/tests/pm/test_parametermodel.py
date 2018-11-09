@@ -1,4 +1,5 @@
 import collections
+import inspect
 import itertools
 import json
 import pathlib
@@ -600,20 +601,16 @@ def test_all_addable_also_in_types():
             epyqlib.pm.parametermodel.types) == set()
 
 
-def assert_incomplete_types(name):
-    assert [] == [
-        cls
-        for cls in epyqlib.pm.parametermodel.types.types.values()
-        if not hasattr(cls, name)
-    ]
-
-
 def test_all_have_can_drop_on():
-    assert_incomplete_types('can_drop_on')
+    epyqlib.tests.test_attrsmodel.all_have_can_drop_on(
+        types=epyqlib.pm.parametermodel.types,
+    )
 
 
 def test_all_have_can_delete():
-    assert_incomplete_types('can_delete')
+    epyqlib.tests.test_attrsmodel.all_have_can_delete(
+        types=epyqlib.pm.parametermodel.types,
+    )
 
 
 def test_all_fields_in_columns():

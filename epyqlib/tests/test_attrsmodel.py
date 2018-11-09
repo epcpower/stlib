@@ -1,6 +1,7 @@
 import collections
 import inspect
 import itertools
+import sys
 
 import attr
 import graham
@@ -125,6 +126,56 @@ def all_fields_in_columns(types, root_type, columns):
 
     assert extra == set()
     assert missing == set(), columns_to_code(missing)
+
+
+def assert_incomplete_types(types, name, signature=None):
+    bad = []
+    signature = list(signature)
+
+    for cls in types.types.values():
+        if isinstance(cls.__dict__[name], staticmethod):
+            tweaked_signature = signature
+        elif isinstance(cls.__dict__[name], classmethod):
+            tweaked_signature = ['cls', *signature]
+        else:
+            tweaked_signature = ['self', *signature]
+
+        attribute = getattr(cls, name)
+        if attribute is None:
+            bad.append(cls)
+        elif signature is not None:
+            actual_signature = inspect.signature(attribute)
+            actual_signature = actual_signature.parameters.keys()
+            actual_signature = list(actual_signature)
+            if tweaked_signature != actual_signature:
+                bad.append(cls)
+                continue
+
+    sys.stderr.write('\n')
+    for cls in bad:
+        sys.stderr.write(
+            '{path}  {name}\n'.format(
+                path=epyqlib.utils.general.path_and_line(getattr(cls, name)),
+                name=cls,
+            ),
+        )
+    assert [] == bad
+
+
+def all_have_can_drop_on(types):
+    assert_incomplete_types(
+        types=types,
+        name='can_drop_on',
+        signature=['node'],
+    )
+
+
+def all_have_can_delete(types):
+    assert_incomplete_types(
+        types=types,
+        name='can_delete',
+        signature=['node'],
+    )
 
 
 def make_a_model(
