@@ -159,6 +159,30 @@ class TreeNode:
 
         return nodes
 
+    def recursively_remove_children(self):
+        nodes = []
+        self.traverse(
+            call_this = lambda node, payload: payload.append(node),
+            payload=nodes,
+            internal_nodes=True,
+        )
+
+        nodes = [
+            node
+            for node in nodes
+            if node != self
+        ]
+
+        bottom_up = sorted(
+            nodes,
+            key=lambda node: (node.tree_parent.uuid, node.uuid),
+        )
+
+        for node in bottom_up:
+            node.tree_parent.remove_child(child=node)
+
+        return nodes
+
 
 if __name__ == '__main__':
     import sys

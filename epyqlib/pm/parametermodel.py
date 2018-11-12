@@ -828,21 +828,7 @@ class Table(epyqlib.treenode.TreeNode):
 
             self.group = old_group
 
-            nodes = []
-            old_group.traverse(
-                call_this=lambda node, payload: payload.append(node),
-                payload=nodes,
-                internal_nodes=True,
-            )
-
-            nodes = [
-                node
-                for node in nodes
-                if node != old_group
-            ]
-
-            for node in sorted(nodes, key=lambda node: (node.tree_parent.uuid, node.uuid)):
-                node.tree_parent.remove_child(child=node)
+            nodes = old_group.recursively_remove_children()
 
             old_by_path = {
                 node.path: node
