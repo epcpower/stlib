@@ -582,6 +582,7 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
         human_name='Access Level',
         data_display=epyqlib.attrsmodel.name_from_uuid,
         list_selection_root='access level',
+        no_graham=True,
     )
 
     uuid = epyqlib.attrsmodel.attr_uuid()

@@ -169,13 +169,11 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A0",
-                                                            "access_level_uuid": null,
                                                             "uuid": "403b3a2c-f94a-490c-b112-87cdd3551e55"
                                                         },
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
-                                                            "access_level_uuid": null,
                                                             "uuid": "3fd1f0e6-09e7-413e-b169-3fafff126bbc"
                                                         }
                                                     ],
@@ -188,13 +186,11 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B0",
-                                                            "access_level_uuid": null,
                                                             "uuid": "106cc983-0321-4ced-9e72-ab56d6bf1e7f"
                                                         },
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
-                                                            "access_level_uuid": null,
                                                             "uuid": "80fd2eb7-6c89-4b65-ad35-05d63522f991"
                                                         }
                                                     ],
@@ -214,13 +210,11 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A0",
-                                                            "access_level_uuid": null,
                                                             "uuid": "290b2762-61c7-4666-8f99-af3c0113d4a3"
                                                         },
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
-                                                            "access_level_uuid": null,
                                                             "uuid": "aee3a1de-b35a-4e7b-b274-1ef6766d5889"
                                                         }
                                                     ],
@@ -233,13 +227,11 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B0",
-                                                            "access_level_uuid": null,
                                                             "uuid": "99a1be09-c4e0-41f1-bda4-d0f139038cbf"
                                                         },
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
-                                                            "access_level_uuid": null,
                                                             "uuid": "fa79e1aa-647d-4783-8b16-fe752ac8e8c4"
                                                         }
                                                     ],
@@ -266,13 +258,11 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A0",
-                                                            "access_level_uuid": null,
                                                             "uuid": "c076b3e1-a287-468c-80e4-43523a021feb"
                                                         },
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
-                                                            "access_level_uuid": null,
                                                             "uuid": "937be4d7-b578-4daa-aef0-4065198a613d"
                                                         }
                                                     ],
@@ -285,13 +275,11 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B0",
-                                                            "access_level_uuid": null,
                                                             "uuid": "286079b0-6028-4959-8396-78c626cdab46"
                                                         },
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
-                                                            "access_level_uuid": null,
                                                             "uuid": "de30995a-ba26-49cf-abd0-84d3dc62b3eb"
                                                         }
                                                     ],
@@ -311,13 +299,11 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A0",
-                                                            "access_level_uuid": null,
                                                             "uuid": "6a151510-c6e5-4673-9198-d3d9fb0dfcdc"
                                                         },
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
-                                                            "access_level_uuid": null,
                                                             "uuid": "dd3887db-df84-4f5f-ae6f-98201403c1d2"
                                                         }
                                                     ],
@@ -330,13 +316,11 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B0",
-                                                            "access_level_uuid": null,
                                                             "uuid": "d01008cc-cef0-4c95-b642-71e974690416"
                                                         },
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
-                                                            "access_level_uuid": null,
                                                             "uuid": "2b16a382-2fa2-41b4-a0dc-161c7496d13a"
                                                         }
                                                     ],

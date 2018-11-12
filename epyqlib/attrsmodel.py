@@ -367,6 +367,7 @@ def attr_uuid(
         human_name='UUID',
         data_display=None,
         list_selection_root=None,
+        no_graham=False,
         default=attr.Factory(uuid.uuid4),
         **field_options,
 ):
@@ -378,10 +379,11 @@ def attr_uuid(
         converter=convert_uuid,
         metadata=metadata,
     )
-    graham.attrib(
-        attribute=attribute,
-        field=marshmallow.fields.UUID(**field_options),
-    )
+    if not no_graham:
+        graham.attrib(
+            attribute=attribute,
+            field=marshmallow.fields.UUID(**field_options),
+        )
     attrib(
         attribute=attribute,
         human_name=human_name,
