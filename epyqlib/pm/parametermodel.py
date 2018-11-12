@@ -287,7 +287,15 @@ class Enumerations(epyqlib.treenode.TreeNode):
 @epyqlib.utils.qt.pyqtify()
 @epyqlib.utils.qt.pyqtify_passthrough_properties(
     original='original',
-    field_names=('nv_format',),
+    field_names=(
+        'nv_format',
+        'access_level_uuid',
+        'comment',
+        'decimal_places',
+        'display_hexadecimal',
+        'enumeration_uuid',
+        'units',
+    ),
 )
 @attr.s(hash=False)
 class ArrayParameterElement(epyqlib.treenode.TreeNode):
@@ -327,6 +335,46 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
         ),
     )
     uuid = epyqlib.attrsmodel.attr_uuid()
+    access_level_uuid = epyqlib.attrsmodel.attr_uuid(
+        default=None,
+        allow_none=True,
+        # converter=lambda x: x if x is None else AccessLevelsAccessLevel(x),
+        human_name='Access Level',
+        data_display=epyqlib.attrsmodel.name_from_uuid,
+        list_selection_root='access level',
+    )
+    enumeration_uuid = epyqlib.attrsmodel.attr_uuid(
+        default=None,
+        allow_none=True,
+    )
+    comment = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+    decimal_places = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_int_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Integer(allow_none=True),
+        ),
+    )
+    display_hexadecimal = attr.ib(
+        default=False,
+        converter=epyqlib.attrsmodel.two_state_checkbox,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Boolean(),
+        ),
+    )
+    units = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
     original = attr.ib(
         default=None,
         metadata=graham.create_metadata(
@@ -504,7 +552,10 @@ class Array(epyqlib.treenode.TreeNode):
 @epyqlib.utils.qt.pyqtify()
 @epyqlib.utils.qt.pyqtify_passthrough_properties(
     original='original',
-    field_names=('name',),
+    field_names=(
+        'name',
+        'access_level_uuid',
+    ),
 )
 @attr.s(hash=False)
 class TableArrayElement(epyqlib.treenode.TreeNode):
@@ -522,6 +573,15 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
     epyqlib.attrsmodel.attrib(
         attribute=path,
         no_column=True,
+    )
+
+    access_level_uuid = epyqlib.attrsmodel.attr_uuid(
+        default=None,
+        allow_none=True,
+        # converter=lambda x: x if x is None else AccessLevelsAccessLevel(x),
+        human_name='Access Level',
+        data_display=epyqlib.attrsmodel.name_from_uuid,
+        list_selection_root='access level',
     )
 
     uuid = epyqlib.attrsmodel.attr_uuid()
@@ -1075,8 +1135,13 @@ columns = epyqlib.attrsmodel.columns(
     merge('type_name', Parameter, Group),
     merge('length', Array),
     merge('named_enumerators', Array),
-    merge('units', Parameter),
-    merge('enumeration_uuid', Parameter, TableEnumerationReference),
+    merge('units', Parameter, ArrayParameterElement),
+    merge(
+        'enumeration_uuid',
+        Parameter,
+        TableEnumerationReference,
+        ArrayParameterElement,
+    ),
 
     merge('value', Enumerator, AccessLevel),
     merge('default', Parameter, ArrayParameterElement),
@@ -1087,13 +1152,18 @@ columns = epyqlib.attrsmodel.columns(
     merge('nv_factor', Parameter),
     merge('nv_cast', Parameter),
     merge('read_only', Parameter),
-    merge('access_level_uuid', Parameter),
+    merge(
+        'access_level_uuid',
+        Parameter,
+        TableArrayElement,
+        ArrayParameterElement,
+    ),
     merge('visibility', Parameter),
 
-    merge('display_hexadecimal', Parameter),
-    merge('decimal_places', Parameter),
+    merge('display_hexadecimal', Parameter, ArrayParameterElement),
+    merge('decimal_places', Parameter, ArrayParameterElement),
 
-    merge('comment', Parameter),
+    merge('comment', Parameter, ArrayParameterElement),
 
     merge('original_frame_name', Parameter),
     merge('original_multiplexer_name', Parameter),
