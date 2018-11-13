@@ -10,6 +10,7 @@ import graham
 import pytest
 from PyQt5 import QtCore
 
+import epyqlib.attrsmodel
 import epyqlib.pm.parametermodel
 import epyqlib.tests.test_attrsmodel
 
@@ -548,6 +549,47 @@ def test_table_automatic_groups_add_another(sample):
     sample.table.append_child(array_c)
 
     verify_table_automatic_groups(sample)
+
+
+def test_table_update_same_uuid(qapp):
+    root = graham.schema(epyqlib.pm.parametermodel.Root).loads(
+        serialized_sample,
+    ).data
+    model = epyqlib.attrsmodel.Model(
+        root=root,
+        columns=epyqlib.pm.parametermodel.columns,
+    )
+    root.model = model
+
+    table_a, = root.nodes_by_attribute(
+        attribute_value='Table A',
+        attribute_name='name',
+    )
+
+    # TODO: CAMPid 9784566547216435136479765479163496731
+    def collect(node):
+        def collect(node, payload):
+            payload[node.uuid] = node.name
+
+        results = {}
+
+        node.traverse(
+            call_this=collect,
+            internal_nodes=True,
+            payload=results,
+        )
+
+        return results
+
+    table_a.update()
+
+    original = collect(table_a)
+
+    table_a.update()
+
+    after_update = collect(table_a)
+
+    assert after_update == original
 
 
 def test_array_addable_types():

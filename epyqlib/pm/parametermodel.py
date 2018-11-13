@@ -1,5 +1,6 @@
 import contextlib
 import itertools
+import uuid
 
 import attr
 import graham
@@ -574,6 +575,10 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
         attribute=path,
         no_column=True,
     )
+    graham.attrib(
+        attribute=path,
+        field=graham.fields.Tuple(marshmallow.fields.UUID()),
+    )
 
     access_level_uuid = epyqlib.attrsmodel.attr_uuid(
         default=None,
@@ -622,6 +627,18 @@ class TableGroupElement(epyqlib.treenode.TreeNode):
         ),
     )
 
+    path = attr.ib(
+        factory=tuple,
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=path,
+        no_column=True,
+    )
+    graham.attrib(
+        attribute=path,
+        field=graham.fields.Tuple(marshmallow.fields.UUID()),
+    )
+
     children = attr.ib(
         default=attr.Factory(list),
         cmp=False,
@@ -632,14 +649,6 @@ class TableGroupElement(epyqlib.treenode.TreeNode):
                 marshmallow.fields.Nested(graham.schema(TableArrayElement)),
             )),
         ),
-    )
-
-    path = attr.ib(
-        factory=tuple,
-    )
-    epyqlib.attrsmodel.attrib(
-        attribute=path,
-        no_column=True,
     )
 
     uuid = epyqlib.attrsmodel.attr_uuid()
@@ -838,6 +847,8 @@ class Table(epyqlib.treenode.TreeNode):
 
         product = list(itertools.product(*enumerations))
 
+        model = self.find_root().model
+
         for combination in product:
             present = old_group
 
@@ -855,6 +866,10 @@ class Table(epyqlib.treenode.TreeNode):
                     old_by_path[path] = current
                 else:
                     current = previous
+                    if current.original is None:
+                        current.original = current.path[-1]
+                    if isinstance(current.original, uuid.UUID):
+                        current.original = model.node_from_uuid(current.original)
 
                 if current.tree_parent is None:
                     present.append_child(current)
@@ -872,6 +887,12 @@ class Table(epyqlib.treenode.TreeNode):
                     old_by_path[array_path] = current
                 else:
                     current = previous
+                    if current.original is None:
+                        current.original = current.path[-1]
+                    if isinstance(current.original, uuid.UUID):
+                        current.original = model.node_from_uuid(
+                            current.original
+                        )
 
                 if current.tree_parent is None:
                     present.append_child(current)
@@ -887,6 +908,12 @@ class Table(epyqlib.treenode.TreeNode):
                         old_by_path[element_path] = current_element
                     else:
                         current_element = previous_element
+                        if current_element.original is None:
+                            current_element.original = current_element.path[-1]
+                        if isinstance(current_element.original, uuid.UUID):
+                            current_element.original = model.node_from_uuid(
+                                current_element.original
+                            )
 
                     if current_element.tree_parent is None:
                         current.append_child(current_element)
