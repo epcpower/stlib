@@ -183,6 +183,22 @@ class TreeNode:
 
         return nodes
 
+    def child_by_name(self, name):
+        child, = (
+            child
+            for child in self.children
+            if child.name == name
+        )
+
+        return child
+
+    def descendent(self, *names):
+        node = self
+        for name in names:
+            node = node.child_by_name(name)
+
+        return node
+
 
 if __name__ == '__main__':
     import sys
