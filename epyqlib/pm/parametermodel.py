@@ -665,7 +665,8 @@ class TableGroupElement(epyqlib.treenode.TreeNode):
     def can_drop_on(self, node):
         return False
 
-    can_delete = epyqlib.attrsmodel.childless_can_delete
+    def can_delete(self, node=None):
+        return False
 
 
 @graham.schemify(tag='table_enumeration_reference')
