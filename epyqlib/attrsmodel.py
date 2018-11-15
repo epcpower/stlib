@@ -614,8 +614,6 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
         )
         selected_node = attrs_model.node_from_index(selected_index)
 
-        node = attrs_model.node_from_index(index)
-
         datum = str(selected_node.uuid)
         model.setData(index, datum)
 
@@ -730,10 +728,6 @@ class Model:
         if field_metadata.updating:
             return
 
-        index = self.index_from_node(node)
-        index = index.siblingAtColumn(
-            item.data(epyqlib.utils.qt.UserRoles.column_index),
-        )
 
         field_name = item.data(epyqlib.utils.qt.UserRoles.field_name)
         field = getattr(attributes(type(node)).fields, field_name)
