@@ -73,6 +73,7 @@ class Metadata:
     converter = attr.ib(default=None)
     no_column = attr.ib(default=False)
     list_selection_root = attr.ib(default=None)
+    updating = attr.ib(default=False)
 
 
 metadata_key = object()
@@ -719,6 +720,16 @@ class Model:
     def item_changed(self, item):
         node = self.node_from_item(item)
 
+        field_name = item.data(
+            epyqlib.utils.qt.UserRoles.field_name,
+        )
+        field_metadata = getattr(
+            attributes(node).fields,
+            field_name,
+        )
+        if field_metadata.updating:
+            return
+
         index = self.index_from_node(node)
         index = index.siblingAtColumn(
             item.data(epyqlib.utils.qt.UserRoles.column_index),
@@ -747,6 +758,14 @@ class Model:
         nodes = []
         child.traverse(call_this=visit, payload=nodes, internal_nodes=True)
 
+        self.uuid_to_node.update({
+            child.uuid: child
+            for child in (
+                d['child']
+                for d in nodes
+            )
+        })
+
         for kwargs in nodes:
             self._pyqtify_connect(**kwargs)
 
@@ -760,11 +779,6 @@ class Model:
         return item.data(epyqlib.utils.qt.UserRoles.node)
 
     def _pyqtify_connect(self, parent, child):
-        if child.uuid in self.uuid_to_node:
-            raise ConsistencyError('UUID {} already known'.format(child.uuid))
-
-        self.uuid_to_node[child.uuid] = child
-
         def key_value(instance, name, slot):
             signal = inspect.getattr_static(obj=instance, attr=name)
             return ((signal, (instance, slot)),)
@@ -818,7 +832,30 @@ class Model:
                     item.setCheckable(checkable)
 
                     def slot(datum, item=item):
-                        if datum is None:
+                        node = item.data(epyqlib.utils.qt.UserRoles.node)
+                        model = item.data(
+                            epyqlib.utils.qt.UserRoles.attrs_model,
+                        )
+                        field_name = item.data(
+                            epyqlib.utils.qt.UserRoles.field_name,
+                        )
+                        field_metadata = getattr(
+                            attributes(node).fields,
+                            field_name,
+                        )
+                        data_display = field_metadata.data_display
+
+                        field_metadata.updating = True
+
+                        display_datum = datum
+                        if data_display is not None:
+                            display_datum = data_display(
+                                node,
+                                value=display_datum,
+                                model=model,
+                            )
+
+                        if display_datum is None:
                             # TODO: CAMPid 0794305784527546542452654254679680
                             # The display role is supposed to be '-' for None
                             # but they can't be different
@@ -830,12 +867,14 @@ class Model:
                             display_text = ''
                             edit_text = ''
                         else:
-                            display_text = str(datum)
+                            display_text = str(display_datum)
                             edit_text = display_text
 
                         item.setData(display_text, PyQt5.QtCore.Qt.DisplayRole)
                         item.setData(edit_text, PyQt5.QtCore.Qt.EditRole)
                         item.setData(datum, epyqlib.utils.qt.UserRoles.raw)
+
+                        field_metadata.updating = False
 
                     connections.update(key_value(
                         instance=changed_signals,
