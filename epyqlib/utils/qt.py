@@ -1041,14 +1041,16 @@ def pyqtify_passthrough_properties(original, field_names):
             def property_(self, name=name):
                 original_ = getattr(self, original)
                 if original_ is None:
-                    return None
+                    return pyqtify_get(self, name)
 
                 return getattr(original_, name)
 
             @property_.setter
             def property_(self, value, name=name):
                 original_ = getattr(self, original)
-                if original_ is not None:
+                if original_ is None:
+                    pyqtify_set(self, name, value)
+                else:
                     setattr(original_, name, value)
 
             setattr(cls, 'pyqtify_' + name, property_)

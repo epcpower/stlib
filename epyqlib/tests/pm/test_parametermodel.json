@@ -152,7 +152,7 @@
                         },
                         {
                             "_type": "table_group_element",
-                            "name": null,
+                            "name": "Tree",
                             "path": [],
                             "children": [
                                 {
