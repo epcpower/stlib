@@ -296,6 +296,7 @@ class Enumerations(epyqlib.treenode.TreeNode):
         'display_hexadecimal',
         'enumeration_uuid',
         'units',
+        'visibility',
     ),
 )
 @attr.s(hash=False)
@@ -375,6 +376,14 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
         ),
+    )
+    visibility = epyqlib.attrsmodel.attr_uuid(
+        default=None,
+        allow_none=True,
+        # converter=lambda x: x if x is None else AccessLevelsAccessLevel(x),
+        human_name='Visibility',
+        data_display=epyqlib.attrsmodel.name_from_uuid,
+        list_selection_root='visibility',
     )
     original = attr.ib(
         default=None,
@@ -1173,7 +1182,7 @@ columns = epyqlib.attrsmodel.columns(
         TableArrayElement,
         ArrayParameterElement,
     ),
-    merge('visibility', Parameter),
+    merge('visibility', Parameter, ArrayParameterElement),
 
     merge('display_hexadecimal', Parameter, ArrayParameterElement),
     merge('decimal_places', Parameter, ArrayParameterElement),

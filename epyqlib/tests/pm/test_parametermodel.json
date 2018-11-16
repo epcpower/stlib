@@ -97,6 +97,7 @@
                                     "decimal_places": null,
                                     "display_hexadecimal": false,
                                     "units": null,
+                                    "visibility": null,
                                     "original": "a32ea0c1-0838-430f-8d3c-192b5bff3047"
                                 }
                             ],
@@ -145,6 +146,7 @@
                                     "decimal_places": null,
                                     "display_hexadecimal": false,
                                     "units": null,
+                                    "visibility": null,
                                     "original": "1c7d0fac-aaa6-415b-b7c1-08d1f5d07097"
                                 }
                             ],
