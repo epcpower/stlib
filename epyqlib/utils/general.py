@@ -400,3 +400,8 @@ def path_and_line(o):
         inspect.getsourcefile(o),
         inspect.getsourcelines(o)[1],
     )
+
+
+def intersect_dicts(a, b):
+    common_keys = set(a).intersection(b)
+    return {k: a[k] for k in common_keys}
