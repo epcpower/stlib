@@ -290,6 +290,8 @@ class Enumerations(epyqlib.treenode.TreeNode):
     original='original',
     field_names=(
         'nv_format',
+        'nv_factor',
+        'nv_cast',
         'access_level_uuid',
         'comment',
         'decimal_places',
@@ -334,6 +336,20 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
         converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True)
+        ),
+    )
+    nv_factor = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True)
+        ),
+    )
+    nv_cast = attr.ib(
+        default=False,
+        converter=epyqlib.attrsmodel.two_state_checkbox,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Boolean(),
         ),
     )
     uuid = epyqlib.attrsmodel.attr_uuid()
@@ -565,6 +581,18 @@ class Array(epyqlib.treenode.TreeNode):
     field_names=(
         'name',
         'access_level_uuid',
+        'enumeration_uuid',
+        'minimum',
+        'maximum',
+        'nv_format',
+        'nv_factor',
+        'nv_cast',
+        'comment',
+        'units',
+        'visibility',
+        'display_hexadecimal',
+        'default',
+        'decimal_places',
     ),
 )
 @attr.s(hash=False)
@@ -597,6 +625,90 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
         data_display=epyqlib.attrsmodel.name_from_uuid,
         list_selection_root='access level',
         no_graham=True,
+    )
+
+    minimum = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Decimal(allow_none=True, as_string=True),
+        ),
+    )
+    maximum = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Decimal(allow_none=True, as_string=True),
+        ),
+    )
+    nv_format = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True)
+        ),
+    )
+    nv_factor = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True)
+        ),
+    )
+    nv_cast = attr.ib(
+        default=False,
+        converter=epyqlib.attrsmodel.two_state_checkbox,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Boolean(),
+        ),
+    )
+    comment = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+    enumeration_uuid = epyqlib.attrsmodel.attr_uuid(
+        default=None,
+        allow_none=True,
+    )
+    units = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+    visibility = epyqlib.attrsmodel.attr_uuid(
+        default=None,
+        allow_none=True,
+        # converter=lambda x: x if x is None else AccessLevelsAccessLevel(x),
+        human_name='Visibility',
+        data_display=epyqlib.attrsmodel.name_from_uuid,
+        list_selection_root='visibility',
+    )
+    display_hexadecimal = attr.ib(
+        default=False,
+        converter=epyqlib.attrsmodel.two_state_checkbox,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Boolean(),
+        ),
+    )
+    # TODO: CAMPid 1342975467516679768543165421
+    default = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Decimal(allow_none=True, as_string=True),
+        ),
+    )
+    decimal_places = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_int_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Integer(allow_none=True),
+        ),
     )
 
     uuid = epyqlib.attrsmodel.attr_uuid()
