@@ -1271,22 +1271,58 @@ columns = epyqlib.attrsmodel.columns(
     merge('type_name', Parameter, Group),
     merge('length', Array),
     merge('named_enumerators', Array),
-    merge('units', Parameter, ArrayParameterElement),
+    merge(
+        'units',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
     merge(
         'enumeration_uuid',
         Parameter,
         TableEnumerationReference,
         ArrayParameterElement,
+        TableArrayElement,
     ),
 
     merge('value', Enumerator, AccessLevel),
-    merge('default', Parameter, ArrayParameterElement),
-    merge('minimum', Parameter, ArrayParameterElement),
-    merge('maximum', Parameter, ArrayParameterElement),
+    merge(
+        'default',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
+    merge(
+        'minimum',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
+    merge(
+        'maximum',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
 
-    merge('nv_format', Parameter, ArrayParameterElement),
-    merge('nv_factor', Parameter),
-    merge('nv_cast', Parameter),
+    merge(
+        'nv_format',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
+    merge(
+        'nv_factor',
+        Parameter,
+        TableArrayElement,
+        ArrayParameterElement,
+    ),
+    merge(
+        'nv_cast',
+        Parameter,
+        TableArrayElement,
+        ArrayParameterElement,
+    ),
     merge('read_only', Parameter),
     merge(
         'access_level_uuid',
@@ -1294,12 +1330,32 @@ columns = epyqlib.attrsmodel.columns(
         TableArrayElement,
         ArrayParameterElement,
     ),
-    merge('visibility', Parameter, ArrayParameterElement),
+    merge(
+        'visibility',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
 
-    merge('display_hexadecimal', Parameter, ArrayParameterElement),
-    merge('decimal_places', Parameter, ArrayParameterElement),
+    merge(
+        'display_hexadecimal',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
+    merge(
+        'decimal_places',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
 
-    merge('comment', Parameter, ArrayParameterElement),
+    merge(
+        'comment',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
 
     merge('original_frame_name', Parameter),
     merge('original_multiplexer_name', Parameter),
