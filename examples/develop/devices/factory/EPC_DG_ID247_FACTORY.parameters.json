@@ -9,69 +9,33 @@
                         {
                             "name": "1. LCL Filter Parameters",
                             "children": [
-                                [
-                                    "PpcHfoConvInductor",
-                                    "cLs"
-                                ],
-                                [
-                                    "PpcHfoConvInductor",
-                                    "cRs"
-                                ],
-                                [
-                                    "PpcHfoGridInductor",
-                                    "gLs"
-                                ],
-                                [
-                                    "PpcHfoGridInductor",
-                                    "gRs"
-                                ],
-                                [
-                                    "PpcHfoShuntCapacitor",
-                                    "sCs"
-                                ],
-                                [
-                                    "PpcHfoShuntCapacitor",
-                                    "sRs"
-                                ]
+                                [ "PpcHfoConvInductor",         "cLs" ],
+                                [ "PpcHfoConvInductor",         "cRs" ],
+                                [ "PpcHfoGridInductor",         "gLs" ],
+                                [ "PpcHfoGridInductor",         "gRs" ],
+                                [ "PpcHfoShuntCapacitor",       "sCs" ],
+                                [ "PpcHfoShuntCapacitor",       "sRs" ]
                             ]
                         },
                         {
                             "name": "2. Current Offsets",
                             "children": [
-                                [
-                                    "PpcGridCurrentOffset",
-                                    "dIg"
-                                ],
-                                [
-                                    "PpcGridCurrentOffset",
-                                    "qIg"
-                                ]
+                                [ "PpcGridCurrentOffset",       "dIg" ],
+                                [ "PpcGridCurrentOffset",       "qIg" ]
                             ]
                         },
                         {
                             "name": "3. Active Damping",
                             "children": [
-                                [
-                                    "PpcHfoActiveDamping",
-                                    "kAlpha"
-                                ],
-                                [
-                                    "PpcHfoActiveDamping",
-                                    "sRv"
-                                ]
+                                [ "PpcHfoActiveDamping",        "kAlpha" ],
+                                [ "PpcHfoActiveDamping",        "sRv" ]
                             ]
                         },
                         {
                             "name": "4. Quadrature Signal Generator",
                             "children": [
-                                [
-                                    "PpcCoeffsQSG",
-                                    "Kd"
-                                ],
-                                [
-                                    "PpcCoeffsQSG",
-                                    "Kq"
-                                ]
+                                [ "PpcCoeffsQSG",               "Kd" ],
+                                [ "PpcCoeffsQSG",               "Kq" ]
                             ]
                         }
                     ]
@@ -79,88 +43,47 @@
                 {
                     "name": "2. Phase-Locked Loop",
                     "children": [
-                        [
-                            "PpcPllFilterCoeffs",
-                            "wTau"
-                        ],
+                        [ "PpcPllFilterCoeffs",         "wTau" ],
                         {
                             "name": "1. Unlocked-State Parameters",
                             "children": [
-                                [
-                                    "PpcPllCoeffsLFU",
-                                    "Kp"
-                                ],
-                                [
-                                    "PpcPllCoeffsLFU",
-                                    "Ti"
-                                ],
-                                [
-                                    "PpcPllLimitsLFU",
-                                    "fMax"
-                                ],
-                                [
-                                    "PpcPllLimitsLFU",
-                                    "fMin"
-                                ]
+                                [ "PpcPllCoeffsLFU",            "Kp" ],
+                                [ "PpcPllCoeffsLFU",            "Ti" ],
+                                [ "PpcPllLimitsLFU",            "fMax" ],
+                                [ "PpcPllLimitsLFU",            "fMin" ]
                             ]
                         },
                         {
                             "name": "2. Locked-State Parameters",
                             "children": [
-                                [
-                                    "PpcPllCoeffsLFL",
-                                    "Kp"
-                                ],
-                                [
-                                    "PpcPllCoeffsLFL",
-                                    "Ti"
-                                ],
-                                [
-                                    "PpcPllLimitsLFL",
-                                    "fMax"
-                                ],
-                                [
-                                    "PpcPllLimitsLFL",
-                                    "fMin"
-                                ]
+                                [ "PpcPllCoeffsLFL",            "Kp" ],
+                                [ "PpcPllCoeffsLFL",            "Ti" ],
+                                [ "PpcPllLimitsLFL",            "fMax" ],
+                                [ "PpcPllLimitsLFL",            "fMin" ]
                             ]
                         },
                         {
                             "name": "3. Lock Criteria Parameters",
                             "children": [
-                                [
-                                    "PpcPllLockDetect",
-                                    "minVolt"
-                                ],
-                                [
-                                    "PpcPllLockDetect",
-                                    "indThreshold"
-                                ],
-                                [
-                                    "PpcPllLockDetect",
-                                    "indIslStart"
-                                ],
-                                [
-                                    "PpcPllLockDetect",
-                                    "tau"
-                                ],
-                                [
-                                    "PpcPllLockDetect",
-                                    "tSwitch"
-                                ]
+                                [ "PpcPllLockDetect",           "minVolt" ],
+                                [ "PpcPllLockDetect",           "indThreshold" ],
+                                [ "PpcPllLockDetect",           "indIslStart" ],
+                                [ "PpcPllLockDetect",           "tau" ],
+                                [ "PpcPllLockDetect",           "tSwitch" ]
                             ]
                         },
                         {
                             "name": "4. Quadrature Signal Generator",
                             "children": [
-                                [
-                                    "PpcPllCoeffsQSG",
-                                    "Kd"
-                                ],
-                                [
-                                    "PpcPllCoeffsQSG",
-                                    "Kq"
-                                ]
+                                [ "PpcPllCoeffsQSG",            "Kd" ],
+                                [ "PpcPllCoeffsQSG",            "Kq" ]
+                            ]
+                        },
+                        {
+                            "name": "5. Measurement Adjustment",
+                            "children": [
+                                [ "PpcPllMeasAdjust",           "argAdjust" ],
+                                [ "PpcPllMeasAdjust",           "magAdjust" ]
                             ]
                         }
                     ]
@@ -171,115 +94,92 @@
                         {
                             "name": "1. Island Detection Parameters",
                             "children": [
-                                [ "PpcIslIslandDetectF",    "fDevH" ],
-                                [ "PpcIslIslandDetectF",    "fDevL" ],
-                                [ "PpcIslIslandDetectF",    "tau" ],
-                                [ "PpcIslIslandDetectV",    "vDevH" ],
-                                [ "PpcIslIslandDetectV",    "vDevL" ],
-                                [ "PpcIslIslandDetectV",    "tau" ],
-                                [ "PpcIslTransFilter",      "vTau" ],
-                                [ "PpcIslTransFilter",      "fTau" ],
-                                [ "PpcIslGroupedDetect",    "groupedEnable" ]
+                                [ "PpcIslIslandDetectF",        "fDevH" ],
+                                [ "PpcIslIslandDetectF",        "fDevL" ],
+                                [ "PpcIslIslandDetectF",        "tau" ],
+                                [ "PpcIslIslandDetectV",        "vDevH" ],
+                                [ "PpcIslIslandDetectV",        "vDevL" ],
+                                [ "PpcIslIslandDetectV",        "tau" ],
+                                [ "PpcIslTransFilter",          "vTau" ],
+                                [ "PpcIslTransFilter",          "fTau" ],
+                                [ "PpcIslGroupedDetect",        "groupedEnable" ],
+                                [ "PpcIslTimeouts",             "tIslLatch" ]
                             ]
                         },
                         {
                             "name": "2. Frequency Regulator",
                             "children": [
-                                [
-                                    "PpcIslCoeffsF",
-                                    "Kp"
-                                ],
-                                [
-                                    "PpcIslCoeffsF",
-                                    "Ti"
-                                ],
-                                [
-                                    "PpcIslCoeffsF",
-                                    "Tb"
-                                ],
-                                [
-                                    "PpcIslPhaseGains",
-                                    "kVq"
-                                ],
-                                [
-                                    "PpcIslPhaseGains",
-                                    "kPhi"
-                                ]
+                                [ "PpcIslCoeffsF",              "Kp" ],
+                                [ "PpcIslCoeffsF",              "Ti" ],
+                                [ "PpcIslCoeffsF",              "Tb" ],
+                                [ "PpcIslPhaseGains",           "kVq" ],
+                                [ "PpcIslPhaseGains",           "kPhi" ]
                             ]
                         },
                         {
                             "name": "3. Voltage Regulator",
                             "children": [
-                                [
-                                    "PpcIslCoeffsV",
-                                    "Kp"
-                                ],
-                                [
-                                    "PpcIslCoeffsV",
-                                    "Ti"
-                                ],
-                                [
-                                    "PpcIslLimitsI",
-                                    "Ig_max"
-                                ]
+                                [ "PpcIslCoeffsV",              "Kp" ],
+                                [ "PpcIslCoeffsV",              "Ti" ],
+                                [ "PpcIslLimitsI",              "Ig_max" ]
                             ]
                         },
                         {
                             "name": "4. Voltage Droop Curve",
                             "children": [
-                                [ "PpcIslDroopV_iBpt", "i0" ],
-                                [ "PpcIslDroopV_iBpt", "i1" ],
-                                [ "PpcIslDroopV_iBpt", "i2" ],
-                                [ "PpcIslDroopV_dBpt", "d0" ],
-                                [ "PpcIslDroopV_dBpt", "d1" ],
-                                [ "PpcIslDroopV_dBpt", "d2" ],
-                                [ "PpcIslDroopV_qBpt", "q0" ],
-                                [ "PpcIslDroopV_qBpt", "q1" ],
-                                [ "PpcIslDroopV_qBpt", "q2" ],
-                                [ "PpcIslDroopFilter", "fCutV" ]
+                                [ "PpcIslDroopV_iBpt",          "i0" ],
+                                [ "PpcIslDroopV_iBpt",          "i1" ],
+                                [ "PpcIslDroopV_iBpt",          "i2" ],
+                                [ "PpcIslDroopV_dBpt",          "d0" ],
+                                [ "PpcIslDroopV_dBpt",          "d1" ],
+                                [ "PpcIslDroopV_dBpt",          "d2" ],
+                                [ "PpcIslDroopV_qBpt",          "q0" ],
+                                [ "PpcIslDroopV_qBpt",          "q1" ],
+                                [ "PpcIslDroopV_qBpt",          "q2" ],
+                                [ "PpcIslDroopFilter",          "fCutV" ]
                             ]
                         },
                         {
                             "name": "5. Frequency Droop Curve",
                             "children": [
-                                [ "PpcIslDroopF_iBpt", "i0" ],
-                                [ "PpcIslDroopF_iBpt", "i1" ],
-                                [ "PpcIslDroopF_iBpt", "i2" ],
-                                [ "PpcIslDroopF_dBpt", "d0" ],
-                                [ "PpcIslDroopF_dBpt", "d1" ],
-                                [ "PpcIslDroopF_dBpt", "d2" ],
-                                [ "PpcIslDroopF_qBpt", "q0" ],
-                                [ "PpcIslDroopF_qBpt", "q1" ],
-                                [ "PpcIslDroopF_qBpt", "q2" ],
-                                [ "PpcIslDroopFilter", "fCutF" ]
+                                [ "PpcIslDroopF_iBpt",          "i0" ],
+                                [ "PpcIslDroopF_iBpt",          "i1" ],
+                                [ "PpcIslDroopF_iBpt",          "i2" ],
+                                [ "PpcIslDroopF_dBpt",          "d0" ],
+                                [ "PpcIslDroopF_dBpt",          "d1" ],
+                                [ "PpcIslDroopF_dBpt",          "d2" ],
+                                [ "PpcIslDroopF_qBpt",          "q0" ],
+                                [ "PpcIslDroopF_qBpt",          "q1" ],
+                                [ "PpcIslDroopF_qBpt",          "q2" ],
+                                [ "PpcIslDroopFilter",          "fCutF" ]
                             ]
                         },
                         {
                             "name": "6. Voltage Destabilization Curve",
                             "children": [
-                                [ "PpcIslDestabV_vBpt", "v0" ],
-                                [ "PpcIslDestabV_vBpt", "v1" ],
-                                [ "PpcIslDestabV_vBpt", "v2" ],
-                                [ "PpcIslDestabV_dBpt", "d0" ],
-                                [ "PpcIslDestabV_dBpt", "d1" ],
-                                [ "PpcIslDestabV_dBpt", "d2" ],
-                                [ "PpcIslDestabV_qBpt", "q0" ],
-                                [ "PpcIslDestabV_qBpt", "q1" ],
-                                [ "PpcIslDestabV_qBpt", "q2" ]
+                                [ "PpcIslDestabV_vBpt",         "v0" ],
+                                [ "PpcIslDestabV_vBpt",         "v1" ],
+                                [ "PpcIslDestabV_vBpt",         "v2" ],
+                                [ "PpcIslDestabV_dBpt",         "d0" ],
+                                [ "PpcIslDestabV_dBpt",         "d1" ],
+                                [ "PpcIslDestabV_dBpt",         "d2" ],
+                                [ "PpcIslDestabV_qBpt",         "q0" ],
+                                [ "PpcIslDestabV_qBpt",         "q1" ],
+                                [ "PpcIslDestabV_qBpt",         "q2" ]
                             ]
                         },
                         {
                             "name": "7. Frequency Destabilization Curve",
                             "children": [
-                                [ "PpcIslDestabF_fBpt", "f0" ],
-                                [ "PpcIslDestabF_fBpt", "f1" ],
-                                [ "PpcIslDestabF_fBpt", "f2" ],
-                                [ "PpcIslDestabF_dBpt", "d0" ],
-                                [ "PpcIslDestabF_dBpt", "d1" ],
-                                [ "PpcIslDestabF_dBpt", "d2" ],
-                                [ "PpcIslDestabF_qBpt", "q0" ],
-                                [ "PpcIslDestabF_qBpt", "q1" ],
-                                [ "PpcIslDestabF_qBpt", "q2" ]
+                                [ "PpcIslDestabF_fBpt",         "f0" ],
+                                [ "PpcIslDestabF_fBpt",         "f1" ],
+                                [ "PpcIslDestabF_fBpt",         "f2" ],
+                                [ "PpcIslDestabF_dBpt",         "d0" ],
+                                [ "PpcIslDestabF_dBpt",         "d1" ],
+                                [ "PpcIslDestabF_dBpt",         "d2" ],
+                                [ "PpcIslDestabF_qBpt",         "q0" ],
+                                [ "PpcIslDestabF_qBpt",         "q1" ],
+                                [ "PpcIslDestabF_qBpt",         "q2" ]
                             ]
                         }
                     ]
@@ -290,33 +190,24 @@
                         {
                             "name": "1. Fundamental Current Regulator",
                             "children": [
-                                [ "PpcSpcCoeffsDQ", "Kp" ],
-                                [ "PpcSpcCoeffsDQ", "Ti" ]
+                                [ "PpcSpcCoeffsDQ",             "Kp" ],
+                                [ "PpcSpcCoeffsDQ",             "Ti" ]
                             ]
                         },
                         {
                             "name": "2. DC Offset Current Regulator",
                             "children": [
-                                [ "PpcSpcCoeffsDC", "Kp" ],
-                                [ "PpcSpcCoeffsDC", "Ti" ],
-                                [ "PpcSpcCoeffsDC", "Tb" ]
+                                [ "PpcSpcCoeffsDC",             "Kp" ],
+                                [ "PpcSpcCoeffsDC",             "Ti" ],
+                                [ "PpcSpcCoeffsDC",             "Tb" ]
                             ]
                         },
                         {
                             "name": "3. Synchronous Component Decoupling",
                             "children": [
-                                [
-                                    "PpcSpcDecoupling",
-                                    "Lg"
-                                ],
-                                [
-                                    "PpcSpcDecoupling",
-                                    "La"
-                                ],
-                                [
-                                    "PpcSpcDecoupling",
-                                    "Ls"
-                                ]
+                                [ "PpcSpcDecoupling",           "Lg" ],
+                                [ "PpcSpcDecoupling",           "La" ],
+                                [ "PpcSpcDecoupling",           "Ls" ]
                             ]
                         }
                     ]
@@ -327,35 +218,17 @@
                         {
                             "name": "1. Current Harmonic Control",
                             "children": [
-                                [
-                                    "PpcAhcCoeffI",
-                                    "kApply"
-                                ],
-                                [
-                                    "PpcAhcCoeffI",
-                                    "tAdapt"
-                                ],
-                                [
-                                    "PpcDcCutoffFreq",
-                                    "fCutIg"
-                                ]
+                                [ "PpcAhcCoeffI",               "kApply" ],
+                                [ "PpcAhcCoeffI",               "tAdapt" ],
+                                [ "PpcDcCutoffFreq",            "fCutIg" ]
                             ]
                         },
                         {
                             "name": "2. Voltage Harmonic Control",
                             "children": [
-                                [
-                                    "PpcAhcCoeffV",
-                                    "kApply"
-                                ],
-                                [
-                                    "PpcAhcCoeffV",
-                                    "tAdapt"
-                                ],
-                                [
-                                    "PpcPllFilterCoeffs",
-                                    "fCutVg"
-                                ]
+                                [ "PpcAhcCoeffV",               "kApply" ],
+                                [ "PpcAhcCoeffV",               "tAdapt" ],
+                                [ "PpcPllFilterCoeffs",         "fCutVg" ]
                             ]
                         }
                     ]
@@ -366,11 +239,11 @@
                         {
                             "name": "1. Basic Configuration",
                             "children": [
-                                [ "ModAc1_BasicConfig", "fourWireEnable" ],
-                                [ "ModAc1_BasicConfig", "zeroVectorStrategy" ],
-                                [ "ModAc1_BasicConfig", "dpwmStrategy" ],
-                                [ "ModAc1_BasicConfig", "loadPhiTau" ],
-                                [ "ModAc1_SwitchingFrequency", "fSwRequest" ]
+                                [ "ModAc1_BasicConfig",         "fourWireEnable" ],
+                                [ "ModAc1_BasicConfig",         "zeroVectorStrategy" ],
+                                [ "ModAc1_BasicConfig",         "dpwmStrategy" ],
+                                [ "ModAc1_BasicConfig",         "loadPhiTau" ],
+                                [ "ModAc1_SwitchingFrequency",  "fSwRequest" ]
                             ]
                         },
                         {
@@ -382,24 +255,29 @@
                                         {
                                             "name": "1. Synchronous Modulation",
                                             "children": [
-                                                [ "ModAc1_SynchronousModulation_1", "syncModEnable"],
-                                                [ "ModAc1_SynchronousModulation_1", "syncModStrategy"],
-                                                [ "ModAc1_SynchronousModulation_1", "entryPulseNr"],
-                                                [ "ModAc1_SwitchingFrequency", "fSwHysteresis" ],
-                                                [ "ModAc1_SwitchingFrequency", "fSwMinimum" ],
-                                                [ "ModAc1_SynchronousModulation_1", "vectAlignCtrl_StepSat" ],
-                                                [ "ModAc1_SynchronousModulation_2", "vectAlignCtrl_Kp" ],
-                                                [ "ModAc1_SynchronousModulation_2", "vectAlignCtrl_Kd" ],
-                                                [ "ModAc1_SynchronousModulation_2", "vectAlignCtrl_Ti" ]
+                                                [ "ModAc1_SwitchingFrequency",          "fSwHysteresis" ],
+                                                [ "ModAc1_SwitchingFrequency",          "fSwMinimum" ],
+                                                [ "ModAc1_SynchronousModulation_1",     "syncModEnable"],
+                                                [ "ModAc1_SynchronousModulation_1",     "syncModStrategy"],
+                                                [ "ModAc1_SynchronousModulation_1",     "syncVector0Top"],
+                                                [ "ModAc1_SynchronousModulation_1",     "syncToOutput"],
+                                                [ "ModAc1_SynchronousModulation_1",     "entryPulseNr"],
+                                                [ "ModAc1_SynchronousModulation_1",     "fixedPulseNr"],
+                                                [ "ModAc1_SynchronousModulation_1",     "syncInterleave"],
+                                                [ "ModAc1_SynchronousModulation_1",     "syncOutputArgTau"],
+                                                [ "ModAc1_SynchronousModulation_1",     "vectAlignCtrl_StepSat" ],
+                                                [ "ModAc1_SynchronousModulation_2",     "vectAlignCtrl_Kp" ],
+                                                [ "ModAc1_SynchronousModulation_2",     "vectAlignCtrl_Kd" ],
+                                                [ "ModAc1_SynchronousModulation_2",     "vectAlignCtrl_Ti" ]
                                             ]
                                         },
                                         {
                                             "name": "2. Spread-Spectrum Modulation",
                                             "children": [
-                                                [ "ModAc1_SpreadSpectrum", "spreadSpectEnable" ],
-                                                [ "ModAc1_SpreadSpectrum", "spreadSpectInject" ],
-                                                [ "ModAc1_SpreadSpectrum", "standardDeviation" ],
-                                                [ "ModAc1_SpreadSpectrum", "spectrumAdjustTau" ]
+                                                [ "ModAc1_SpreadSpectrum",              "spreadSpectEnable" ],
+                                                [ "ModAc1_SpreadSpectrum",              "spreadSpectInject" ],
+                                                [ "ModAc1_SpreadSpectrum",              "standardDeviation" ],
+                                                [ "ModAc1_SpreadSpectrum",              "spectrumAdjustTau" ]
                                             ]
                                         }
                                     ]
@@ -410,26 +288,26 @@
                                         {
                                             "name": "1. Volt-Second Compensation",
                                             "children": [
-                                                [ "ModAc1_VoltSecondComp_1", "vsCompEnable" ],
-                                                [ "ModAc1_VoltSecondComp_1", "vsCompTau" ],
-                                                [ "ModAc1_VoltSecondComp_2", "modDepthLimitBeg" ],
-                                                [ "ModAc1_VoltSecondComp_2", "modDepthLimitEnd" ]
+                                                [ "ModAc1_VoltSecondComp_1",            "vsCompEnable" ],
+                                                [ "ModAc1_VoltSecondComp_1",            "vsCompTau" ],
+                                                [ "ModAc1_VoltSecondComp_2",            "modDepthLimitBeg" ],
+                                                [ "ModAc1_VoltSecondComp_2",            "modDepthLimitEnd" ]
                                             ]
                                         },
                                         {
                                             "name": "2. Saturation Voltage Compensation",
                                             "children": [
-                                                [ "ModAc1_SaturationVoltageComp", "satCompEnable" ],
-                                                [ "ModAc1_SaturationVoltageComp", "satVoltage" ],
-                                                [ "ModAc1_SaturationVoltageComp", "minCurrent" ]
+                                                [ "ModAc1_SaturationVoltageComp",       "satCompEnable" ],
+                                                [ "ModAc1_SaturationVoltageComp",       "satVoltage" ],
+                                                [ "ModAc1_SaturationVoltageComp",       "minCurrent" ]
                                             ]
                                         },
                                         {
                                             "name": "1. Deadtime Compensation",
                                             "children": [
-                                                [ "ModAc1_DeadtimeCompensation", "dtCompEnable" ],
-                                                [ "ModAc1_DeadtimeCompensation", "tDeadband" ],
-                                                [ "ModAc1_DeadtimeCompensation", "minCurrent" ]
+                                                [ "ModAc1_DeadtimeCompensation",        "dtCompEnable" ],
+                                                [ "ModAc1_DeadtimeCompensation",        "tDeadband" ],
+                                                [ "ModAc1_DeadtimeCompensation",        "minCurrent" ]
                                             ]
                                         }
                                     ]
@@ -437,10 +315,10 @@
                                 {
                                     "name": "3. Constraints",
                                     "children": [
-                                        [ "ModAc1_ModulationDepthLimit", "limitXY" ],
-                                        [ "ModAc1_ModulationDepthLimit", "limitZ" ],
-                                        [ "ModAc1_ModulationConstraints", "minVectorTime" ],
-                                        [ "ModAc1_ModulationConstraints", "minPulseTime" ]
+                                        [ "ModAc1_ModulationDepthLimit",            "limitXY" ],
+                                        [ "ModAc1_ModulationDepthLimit",            "limitZ" ],
+                                        [ "ModAc1_ModulationConstraints",           "minVectorTime" ],
+                                        [ "ModAc1_ModulationConstraints",           "minPulseTime" ]
                                     ]
                                 }
                             ]
@@ -450,68 +328,35 @@
                 {
                     "name": "7. References",
                     "children": [
-                        [
-                            "PpcDisconnect",
-                            "tUnload"
-                        ],
+                        [ "PpcDisconnect",              "tUnload" ],
                         {
                             "name": "1. System Nominal References",
                             "children": [
-                                [
-                                    "PpcNominalFrequency",
-                                    "fNom"
-                                ],
-                                [
-                                    "VoltageRef",
-                                    "Voltage"
-                                ]
+                                [ "PpcNominalFrequency",        "fNom" ],
+                                [ "VoltageRef",                 "Voltage" ]
                             ]
                         },
                         {
                             "name": "2. Voltage Reference Characteristics",
                             "children": [
-                                [
-                                    "PpcRateLimitVa",
-                                    "vMin"
-                                ],
-                                [
-                                    "PpcRateLimitVa",
-                                    "vDelta"
-                                ],
-                                [
-                                    "PpcRateLimitVa",
-                                    "tDelta"
-                                ]
+                                [ "PpcRateLimitVa",             "vMin" ],
+                                [ "PpcRateLimitVa",             "vDelta" ],
+                                [ "PpcRateLimitVa",             "tDelta" ]
                             ]
                         },
                         {
                             "name": "3. Current Reference Characteristics",
                             "children": [
-                                [
-                                    "PpcRateLimitIg",
-                                    "iDelta"
-                                ],
-                                [
-                                    "PpcRateLimitIg",
-                                    "tDelta"
-                                ]
+                                [ "PpcRateLimitIg",             "iDelta" ],
+                                [ "PpcRateLimitIg",             "tDelta" ]
                             ]
                         },
                         {
                             "name": "4. Power Reference Characteristics",
                             "children": [
-                                [
-                                    "PpcRateLimitPg",
-                                    "pDelta"
-                                ],
-                                [
-                                    "PpcRateLimitPg",
-                                    "tDelta"
-                                ],
-                                [
-                                    "PpcPowerControl",
-                                    "xpVaTau"
-                                ]
+                                [ "PpcRateLimitPg",             "pDelta" ],
+                                [ "PpcRateLimitPg",             "tDelta" ],
+                                [ "PpcPowerControl",            "xpVaTau" ]
                             ]
                         }
                     ]
@@ -519,63 +364,113 @@
                 {
                     "name": "8. Flags",
                     "children": [
-                        [ "AfeConfigFlags", "EnableFollowing" ],
-                        [ "AfeConfigFlags", "EnableForming" ],
-                        [ "AfeConfigFlags", "EnableUPSMode" ],
-                        [ "AfeConfigFlags", "EnableAC" ],
-                        [ "AfeConfigFlags", "EnableDC" ],
-                        [ "AfeConfigFlags", "EnableDcControl" ],
-                        [ "AfeConfigFlags", "acWaitEnableDcAtRef" ],
-                        [ "AfeConfigFlags", "dcWaitEnableDcAtRef" ],
-                        [ "AfeConfigFlags", "acLossHotStandbyPC" ],
-                        [ "AfeConfigFlags", "acLossHotStandbyDC" ],
-                        [ "AfeConfigParams", "enableDelayAc" ],
-                        [ "AfeConfigParams", "enableDelayDc" ]
+                        [ "AfeConfigFlags",             "EnableFollowing" ],
+                        [ "AfeConfigFlags",             "EnableForming" ],
+                        [ "AfeConfigFlags",             "EnableUPSMode" ],
+                        [ "AfeConfigFlags",             "EnableAC" ],
+                        [ "AfeConfigFlags",             "EnableDC" ],
+                        [ "AfeConfigFlags",             "EnableDcControl" ],
+                        [ "AfeConfigFlags",             "acWaitEnableDcAtRef" ],
+                        [ "AfeConfigFlags",             "dcWaitEnableDcAtRef" ],
+                        [ "AfeConfigFlags",             "acLossHotStandbyPC" ],
+                        [ "AfeConfigFlags",             "acLossHotStandbyDC" ],
+                        [ "AfeConfigParams",            "enableDelayAc" ],
+                        [ "AfeConfigParams",            "enableDelayDc" ],
+                        [ "PpcConfigFlags",             "RegulatedNetwork" ],
+                        [ "PpcConfigFlags",             "MeanControlledP" ]
                     ]
                 },
                 {
-                    "name": "9. Line Monitoring",
+                    "name": "9. Remote Network",
                     "children": [
-                        [
-                            "LineMonitor",
-                            "ReconnectDelay"
-                        ],
-                        [
-                            "LineMonitor",
-                            "MaxFreqChange"
-                        ],
-                        [
-                            "LineMonitor",
-                            "FreqChangeTime"
-                        ],
-                        [
-                            "GridRefConfig",
-                            "OutPFSet"
-                        ],
-                        [
-                            "GridRefConfig",
-                            "VarMode"
-                        ],
-                        [
-                            "GridRefConfig",
-                            "WattMode"
-                        ],
-                        [
-                            "GridMonitor",
-                            "VoltageMeasurement"
-                        ],
-                        [
-                            "GridMonitor",
-                            "InterpolateVoltage"
-                        ],
-                        [
-                            "GridMonitor",
-                            "InterpolateFreq"
-                        ],
-                        [
-                            "GridMonitor",
-                            "BidirWattSupport"
-                        ],
+                        {
+                            "name": "1. Auxiliary Phase-Locked Loop",
+                            "children": [
+                                {
+                                    "name": "1. Loop Filter",
+                                    "children": [
+                                        [ "PpcAplCoeffsLFL",            "Kp" ],
+                                        [ "PpcAplCoeffsLFL",            "Ti" ],
+                                        [ "PpcAplLimitsLFL",            "fMax" ],
+                                        [ "PpcAplLimitsLFL",            "fMin" ]
+                                    ]
+                                },
+                                {
+                                    "name": "2. Lock Criteria Parameters",
+                                    "children": [
+                                        [ "PpcAplLockDetect",           "minVolt" ],
+                                        [ "PpcAplLockDetect",           "indThreshold" ],
+                                        [ "PpcAplLockDetect",           "tau" ]
+                                    ]
+                                },
+                                {
+                                    "name": "3. Quadrature Signal Generator",
+                                    "children": [
+                                        [ "PpcAplCoeffsQSG",            "Kd" ],
+                                        [ "PpcAplCoeffsQSG",            "Kq" ]
+                                    ]
+                                },
+                                {
+                                    "name": "4. Measurement Adjustment",
+                                    "children": [
+                                        [ "PpcAplMeasAdjust",           "argAdjust" ],
+                                        [ "PpcAplMeasAdjust",           "magAdjust" ]
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "name": "2. Protected Bus Control",
+                            "children": [
+                                {
+                                    "name": "1. Behaviour Flags",
+                                    "children": [
+                                        [ "PpcPbcBehaviourFlags",       "autoDisconnectOnGridLoss" ],
+                                        [ "PpcPbcBehaviourFlags",       "autoReconnectOnGridAvail" ],
+                                        [ "PpcPbcBehaviourFlags",       "autoFollowingPostConnect" ],
+                                        [ "PpcPbcBehaviourFlags",       "autoVoltTrackDuringSynch" ],
+                                        [ "PpcPbcBehaviourFlags",       "autoSequenceWhenDisabled" ]
+                                    ]
+                                },
+                                {
+                                    "name": "2. Timings and Timeouts",
+                                    "children": [
+                                        [ "PpcPbcTimeouts",             "connTimeout" ],
+                                        [ "PpcPbcTimeouts",             "discTimeout" ],
+                                        [ "PpcPbcTimeouts",             "syncTimeout" ],
+                                        [ "PpcPbcHoldTimes",            "syncHoldTime" ]
+                                    ]
+                                },
+                                {
+                                    "name": "3. Synchronization Control Settings",
+                                    "children": [
+                                        [ "PpcPbcSyncLimits",           "argErrMax" ],
+                                        [ "PpcPbcSyncLimits",           "magErrMax" ],
+                                        [ "PpcPbcSyncLimits",           "argErrSat" ],
+                                        [ "PpcPbcErrorFilters",         "argErrTau" ],
+                                        [ "PpcPbcErrorFilters",         "magErrTau" ]
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "name": "10. Line Monitoring",
+                    "children": [
+                        [ "AfeConfigFlags",             "PhaseDisplacement" ],
+                        [ "AfeConfigFlags",             "PhaseSequence" ],
+                        [ "LineMonitor",                "ReconnectDelay" ],
+                        [ "LineMonitor",                "MaxFreqChange" ],
+                        [ "LineMonitor",                "FreqChangeTime" ],
+                        [ "GridRefConfig",              "OutPFSet" ],
+                        [ "GridRefConfig",              "VarMode" ],
+                        [ "GridRefConfig",              "WattMode" ],
+                        [ "GridMonitor",                "InterpolateVoltage" ],
+                        [ "GridMonitor",                "InterpolateFreq" ],
+                        [ "GridMonitor",                "BidirWattSupport" ],
+                        [ "GridMonitor",                "MonitorRemoteNet" ],
+                        [ "GridMonitor",                "SupportedNetwork" ],
                         {
                             "name": "Tables",
                             "children": [
@@ -4770,54 +4665,26 @@
         {
             "name": "3. Hardware",
             "children": [
+                [ "CmmVariantSelect", "controlsVariant" ],
+                [ "CmmVariantSelect", "hardwareVariant" ],
                 {
                     "name": "1. User Limits",
                     "children": [
-                        [
-                            "ReactiveCurrentLimits",
-                            "max"
-                        ],
-                        [
-                            "ReactiveCurrentLimits",
-                            "min"
-                        ],
-                        [
-                            "ReactivePowerLimits",
-                            "max"
-                        ],
-                        [
-                            "ReactivePowerLimits",
-                            "min"
-                        ],
-                        [
-                            "RealCurrentLimits",
-                            "max"
-                        ],
-                        [
-                            "RealCurrentLimits",
-                            "min"
-                        ],
-                        [
-                            "RealPowerLimits",
-                            "max"
-                        ],
-                        [
-                            "RealPowerLimits",
-                            "min"
-                        ]
+                        [ "ReactiveCurrentLimits", "max" ],
+                        [ "ReactiveCurrentLimits", "min" ],
+                        [ "ReactivePowerLimits", "max" ],
+                        [ "ReactivePowerLimits", "min" ],
+                        [ "RealCurrentLimits", "max" ],
+                        [ "RealCurrentLimits", "min" ],
+                        [ "RealPowerLimits", "max" ],
+                        [ "RealPowerLimits", "min" ]
                     ]
                 },
                 {
                     "name": "2. Rated Power",
                     "children": [
-                        [
-                            "PowerRating",
-                            "Current"
-                        ],
-                        [
-                            "PowerRating",
-                            "Power"
-                        ]
+                        [ "PowerRating", "Current" ],
+                        [ "PowerRating", "Power" ]
                     ]
                 },
                 {
@@ -5379,42 +5246,15 @@
                 {
                     "name": "6. Precharge",
                     "children": [
-                        [
-                            "PrechargeConfig",
-                            "PrechargeType"
-                        ],
-                        [
-                            "PrechargeConfig",
-                            "PrechargeTime"
-                        ],
-                        [
-                            "PrechargeConfig",
-                            "PrechargeRelay"
-                        ],
-                        [
-                            "PrechargeVoltage",
-                            "VoltageDeltaMin"
-                        ],
-                        [
-                            "PrechargeVoltage",
-                            "VoltageMin"
-                        ],
-                        [
-                            "PrechargeAbort",
-                            "AbortTime"
-                        ],
-                        [
-                            "PrechargeAbort",
-                            "AbortVoltage"
-                        ],
-                        [
-                            "PrechargeAbort",
-                            "AbortVoltageRise"
-                        ],
-                        [
-                            "BusStabilizationDelay",
-                            "Delay"
-                        ]
+                        [ "PrechargeConfig", "PrechargeType" ],
+                        [ "PrechargeConfig", "PrechargeTime" ],
+                        [ "PrechargeConfig", "PrechargeRelay" ],
+                        [ "PrechargeVoltage", "VoltageDeltaMin" ],
+                        [ "PrechargeVoltage", "VoltageMin" ],
+                        [ "PrechargeAbort", "AbortTime" ],
+                        [ "PrechargeAbort", "AbortVoltage" ],
+                        [ "PrechargeAbort", "AbortVoltageRise" ],
+                        [ "BusStabilizationDelay", "Delay" ]
                     ]
                 },
                 {
@@ -5423,274 +5263,82 @@
                         {
                             "name": "Contactor Delays",
                             "children": [
-                                [
-                                    "ContactorDelays1",
-                                    "MX1Close"
-                                ],
-                                [
-                                    "ContactorDelays1",
-                                    "MX1Open"
-                                ],
-                                [
-                                    "ContactorDelays1",
-                                    "MX2Open"
-                                ],
-                                [
-                                    "ContactorDelays2",
-                                    "K1Close"
-                                ],
-                                [
-                                    "ContactorDelays2",
-                                    "K1Open"
-                                ],
-                                [
-                                    "ContactorDelays2",
-                                    "MX2Close"
-                                ],
-                                [
-                                    "ContactorDelays3",
-                                    "K2Close"
-                                ],
-                                [
-                                    "ContactorDelays3",
-                                    "K2Open"
-                                ]
+                                [ "ContactorDelays1", "MX1Close" ],
+                                [ "ContactorDelays1", "MX1Open" ],
+                                [ "ContactorDelays1", "MX2Open" ],
+                                [ "ContactorDelays2", "K1Close" ],
+                                [ "ContactorDelays2", "K1Open" ],
+                                [ "ContactorDelays2", "MX2Close" ],
+                                [ "ContactorDelays3", "K2Close" ],
+                                [ "ContactorDelays3", "K2Open" ]
                             ]
                         },
-                        [
-                            "ManageDIO",
-                            "DO1Command"
-                        ],
-                        [
-                            "ManageDIO",
-                            "DO1Controller"
-                        ],
-                        [
-                            "ManageDIO",
-                            "DO2Command"
-                        ],
-                        [
-                            "ManageDIO",
-                            "DO2Controller"
-                        ],
-                        [
-                            "ManageDIO",
-                            "DO3Command"
-                        ],
-                        [
-                            "ManageDIO",
-                            "DO3Controller"
-                        ],
-                        [
-                            "ManageDIO",
-                            "DO4Command"
-                        ],
-                        [
-                            "ManageDIO",
-                            "DO4Controller"
-                        ],
-                        [
-                            "ManageDIO",
-                            "ForceFanOn"
-                        ],
-                        [
-                            "ManageDIO",
-                            "ForceRelayK1_Precharge"
-                        ],
-                        [
-                            "ManageDIO",
-                            "ForceRelayMX1"
-                        ],
-                        [
-                            "ManageDIO",
-                            "ForceRelayMX2"
-                        ],
-                        [
-                            "ManageDIO",
-                            "ForceRelayRelayK2_DCRun"
-                        ],
-                        [
-                            "ManageDIO",
-                            "InvertDI1"
-                        ],
-                        [
-                            "ManageDIO",
-                            "InvertDI2"
-                        ],
-                        [
-                            "ManageDIO",
-                            "InvertDI3"
-                        ],
-                        [
-                            "ManageDIO",
-                            "InvertDI4"
-                        ],
-                        [
-                            "ManageDIO",
-                            "InvertDO1"
-                        ],
-                        [
-                            "ManageDIO",
-                            "InvertDO2"
-                        ],
-                        [
-                            "ManageDIO",
-                            "InvertDO3"
-                        ],
-                        [
-                            "ManageDIO",
-                            "InvertDO4"
-                        ],
-                        [
-                            "ManageDIO",
-                            "InvertHwEnable"
-                        ]
+                        [ "ManageDIO", "DO1Command" ],
+                        [ "ManageDIO", "DO1Controller" ],
+                        [ "ManageDIO", "DO2Command" ],
+                        [ "ManageDIO", "DO2Controller" ],
+                        [ "ManageDIO", "DO3Command" ],
+                        [ "ManageDIO", "DO3Controller" ],
+                        [ "ManageDIO", "DO4Command" ],
+                        [ "ManageDIO", "DO4Controller" ],
+                        [ "ManageDIO", "ForceFanOn" ],
+                        [ "ManageDIO", "ForceRelayK1_Precharge" ],
+                        [ "ManageDIO", "ForceRelayMX1" ],
+                        [ "ManageDIO", "ForceRelayMX2" ],
+                        [ "ManageDIO", "ForceRelayRelayK2_DCRun" ],
+                        [ "ManageDIO", "InvertDI1" ],
+                        [ "ManageDIO", "InvertDI2" ],
+                        [ "ManageDIO", "InvertDI3" ],
+                        [ "ManageDIO", "InvertDI4" ],
+                        [ "ManageDIO", "InvertDO1" ],
+                        [ "ManageDIO", "InvertDO2" ],
+                        [ "ManageDIO", "InvertDO3" ],
+                        [ "ManageDIO", "InvertDO4" ],
+                        [ "ManageDIO", "InvertHwEnable" ]
                     ]
                 },
                 {
                     "name": "8. Cooling",
                     "children": [
-                        [
-                            "FanType",
-                            "CabinetFan"
-                        ],
-                        [
-                            "FanType",
-                            "CoolantFan"
-                        ],
-                        [
-                            "FanType",
-                            "InternalFan"
-                        ],
-                        [
-                            "Fan_Cabinet",
-                            "tempSetpoint"
-                        ],
-                        [
-                            "Fan_Coolant",
-                            "tempSetpoint"
-                        ],
-                        [
-                            "Fan_PowerModule_MaxSpeed",
-                            "current"
-                        ],
-                        [
-                            "Fan_PowerModule_MinSpeed",
-                            "current"
-                        ],
-                        [
-                            "HardwareDef1",
-                            "EnablePumpControl"
-                        ],
-                        [
-                            "MaxInvRatedCurrent",
-                            "current"
-                        ],
-                        [
-                            "MaxInvRatedCurrent",
-                            "currentLCL"
-                        ],
-                        [
-                            "TempDerateRate",
-                            "rate"
-                        ],
-                        [
-                            "TempDerateStart",
-                            "temperature"
-                        ],
-                        [
-                            "DeviceTempMeasure",
-                            "Method"
-                        ],
-                        [
-                            "DigitalPump",
-                            "RunningTimeout"
-                        ],
-                        [
-                            "DigitalPump",
-                            "StartTimeout"
-                        ],
-                        [
-                            "DigitalPump",
-                            "CooldownTime"
-                        ]
+                        [ "FanType", "CabinetFan" ],
+                        [ "FanType", "CoolantFan" ],
+                        [ "FanType", "InternalFan" ],
+                        [ "Fan_Cabinet", "tempSetpoint" ],
+                        [ "Fan_Coolant", "tempSetpoint" ],
+                        [ "Fan_PowerModule_MaxSpeed", "current" ],
+                        [ "Fan_PowerModule_MinSpeed", "current" ],
+                        [ "HardwareDef1", "EnablePumpControl" ],
+                        [ "MaxInvRatedCurrent", "current" ],
+                        [ "MaxInvRatedCurrent", "currentLCL" ],
+                        [ "TempDerateRate", "rate" ],
+                        [ "TempDerateStart", "temperature" ],
+                        [ "DeviceTempMeasure", "Method" ],
+                        [ "DigitalPump", "RunningTimeout" ],
+                        [ "DigitalPump", "StartTimeout" ],
+                        [ "DigitalPump", "CooldownTime" ]
                     ]
                 },
                 {
                     "name": "9. IGBT",
                     "children": [
-                        [
-                            "Diode_r0",
-                            "r"
-                        ],
-                        [
-                            "Diode_r1",
-                            "r"
-                        ],
-                        [
-                            "Diode_r2",
-                            "r"
-                        ],
-                        [
-                            "Diode_r3",
-                            "r"
-                        ],
-                        [
-                            "Diode_tc0",
-                            "tc"
-                        ],
-                        [
-                            "Diode_tc1",
-                            "tc"
-                        ],
-                        [
-                            "Diode_tc2",
-                            "tc"
-                        ],
-                        [
-                            "Diode_tc3",
-                            "tc"
-                        ],
-                        [
-                            "IGBT_r0",
-                            "r"
-                        ],
-                        [
-                            "IGBT_r1",
-                            "r"
-                        ],
-                        [
-                            "IGBT_r2",
-                            "r"
-                        ],
-                        [
-                            "IGBT_r3",
-                            "r"
-                        ],
-                        [
-                            "IGBT_tc0",
-                            "tc"
-                        ],
-                        [
-                            "IGBT_tc1",
-                            "tc"
-                        ],
-                        [
-                            "IGBT_tc2",
-                            "tc"
-                        ],
-                        [
-                            "IGBT_tc3",
-                            "tc"
-                        ],
-                        [
-                            "rdi",
-                            "r"
-                        ],
-                        [
-                            "rii",
-                            "r"
-                        ]
+                        [ "Diode_r0", "r" ],
+                        [ "Diode_r1", "r" ],
+                        [ "Diode_r2", "r" ],
+                        [ "Diode_r3", "r" ],
+                        [ "Diode_tc0", "tc" ],
+                        [ "Diode_tc1", "tc" ],
+                        [ "Diode_tc2", "tc" ],
+                        [ "Diode_tc3", "tc" ],
+                        [ "IGBT_r0", "r" ],
+                        [ "IGBT_r1", "r" ],
+                        [ "IGBT_r2", "r" ],
+                        [ "IGBT_r3", "r" ],
+                        [ "IGBT_tc0", "tc" ],
+                        [ "IGBT_tc1", "tc" ],
+                        [ "IGBT_tc2", "tc" ],
+                        [ "IGBT_tc3", "tc" ],
+                        [ "rdi", "r" ],
+                        [ "rii", "r" ]
                     ]
                 }
             ]

@@ -13,8 +13,8 @@
         "scripting": 1
     },
     "ui_paths": {
-        "Control": "distributed_generation_control.ui",
-        "Setup and Status": "distributed_generation_setup_factory.ui"
+        "Control": "distributed_generation_control2.ui",
+        "Setup and Status": "distributed_generation_setup_factory2.ui"
     },
     "module": "distributed_generation.py",
     "parameter_hierarchy": "EPC_DG_ID247_FACTORY.parameters.json",
