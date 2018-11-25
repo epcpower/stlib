@@ -9,6 +9,7 @@ enum RelayStatus(0="Open", 1="Closed", 2="Error", 3="N/A")
 enum PowerAvail(0="None", 1="Available", 2="Error", 3="N/A")
 enum WakeUpSignal(0="Not Active", 1="Active", 2="Error", 3="N/A")
 enum Enable(0="Disable", 1="Enable", 2="Error", 3="N/A")
+enum YesNo(0="No", 1="Yes", 2="Error", 3="N/A")
 enum Active(0="Inactive", 1="Active", 2="Error", 3="N/A")
 enum MessageValid(0="Invalid", 1="Valid", 2="Error", 3="N/A")
 enum FaultClear(0="Normal", 1="Clear Faults", 2="Error", 3="N/A")
@@ -18,20 +19,18 @@ enum BridgeFlt(0="Normal", 1="FLT_A", 2="N/A", 3="FLT_C", 4="OverVoltage", 5="FL
 enum CcpAddressExtensions(0="Raw", 1="DataLogger")
 enum ControlSource(0="CAN", 1="Modbus")
 enum DIOInverted(0="Normal", 1="Inverted", 2="Error", 3="N/A")
-// Control digital outputs from CAN interface
 enum DOController(0="Application", 1="CAN")
 enum PhaseDisplacement(0="Three-Phase [120 deg]", 1="Split-Phase [180 deg]", 2="Error", 3="N/A")
 enum FANTYPE(0="variable speed", 1="on/off")
 enum Fault(0="Normal", 1="Fault Active", 2="Error", 3="N/A")
 enum FaultConfig(0="Warning", 1="Fault", 2="Disabled", 3="N/A")
-enum InvertHw(0="No invert", 1="Invert", 2="Error", 3="N/A")
-enum LVMTYPE(0="Line", 1="Phase", 2="Error", 3="N/A")
+enum InvertHw(0="Not Inverted", 1="Inverted", 2="Error", 3="N/A")
 enum LineVoltagePresent(0="No_Voltage", 1="Voltage_Detected", 2="Error", 3="N/A")
 enum OnOff(0="off", 1="on", 2="Error", 3="N/A")
 enum PhaseSequence(0="Negative", 1="Positive", 2="Invalid", 3="N/A")
 enum ReadNV(0="Write", 1="Read", 2="Error", 3="N/A")
 enum RelayCommand(0="Normal", 1="Force On", 2="Error", 3="N/A")
-enum RemoteVoltageSense(0="Use Local Sense", 1="Use Remote Sense", 2="Error", 3="N/A")
+enum AcNetworkSupport(0="Local", 1="Remote", 2="None", 3="N/A")
 enum SerialBaud(0="115200", 1="57600", 2="38400", 3="19200", 4="9600", 5="4800", 6="2400")
 enum SerialProtocol(0="N81", 1="N82", 2="E81", 3="O81")
 enum Status(0="Not Active", 1="Active", 2="Error", 3="N/A")
@@ -49,6 +48,8 @@ enum WattRef(0="Normal", 1="HzWatts", 2="VoltWatt", 3="HzWatt+VoltWatt")
 enum QSign(0="LaggingIsPos", 1="LeadingIsPos")
 enum AccessLevel(0="User", 1="Engineering", 2="Factory")
 enum IslandReconnect(0="Normal", 1="Reconnect", 2="Error", 3="N/A")
+enum ProtBusSequenceReq(0="N/A", 1="Disconnected", 2="N/A", 3="Synchronized", 4="N/A", 5="Connected", 6="N/A")
+enum ProtBusSequenceAct(0="Disconnecting", 1="Disconnected", 2="Synchronizing", 3="Synchronized", 4="Connecting", 5="Connected", 6="N/A")
 enum MesdCalPermit(0="Disabled", 1="Triggered", 2="Persistent")
 enum ModZeroVectorStrategy(0="None", 1="Third Harmonic", 2="Space-Vector", 3="Discontinuous")
 enum ModDpwmStrategy(0="DPWM1", 1="DPWM2", 2="DPWM3", 3="ADPWM")
@@ -64,7 +65,7 @@ ID=1DEFF741h	// Provides access to configure non-volatile parameters.
 Type=Extended
 DLC=8
 Mux=Param0 0,11 0 
-Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 
 [ParameterQuery]
@@ -81,10 +82,11 @@ DLC=8
 Mux=GridMonitor 0,11 2  // UL1741 grid power reference configuration
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=VoltageMeasurement unsigned 16,2 /max:1 /e:LVMTYPE  // Select line voltage measurement type for line voltage monitor
-Var=InterpolateVoltage unsigned 18,2 /max:1 /e:Enable  // interpolate between voltage table points
-Var=InterpolateFreq unsigned 20,2 /max:1 /e:Enable  // interpolate between frequency table points
-Var=BidirWattSupport unsigned 22,2 /max:1 /e:Enable /d:0 // Allow Hz-Watt and/or Volt-Watt to drive power in the opposite direction of the commanded reference
+Var=InterpolateVoltage unsigned 16,2 /max:1 /e:Enable               // Interpolate between voltage table points... for what purpose???
+Var=InterpolateFreq unsigned 18,2 /max:1 /e:Enable                  // Interpolate between frequency table points... for what purpose???
+Var=BidirWattSupport unsigned 20,2 /max:1 /e:Enable /d:0            // Allow Hz-Watt and/or Volt-Watt to drive power in the opposite direction of the commanded reference
+Var=SupportedNetwork unsigned 22,2 /max:3 /e:AcNetworkSupport /d:0  // Apply grid/network support functionality based upon this selected network monitor.
+Var=MonitorRemoteNet unsigned 24,2 /max:1 /e:YesNo /d:0             // Select whether network monitoring is enabled for a remote network.
 
 [ParameterQuery]
 DLC=8
@@ -298,9 +300,9 @@ DLC=8
 Mux=LineMonitor 0,11 073h
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=MaxFreqChange unsigned 16,16 /u:Hz/sec /f:0.0001 /p:4 /d:0.01 // maximum rate of frequency change, above which a grid disconnect will be triggered  <nv::fMAX_FREQUENCY_CHANGE_SCALE:allLineMonitorParams{}.fDeltaMax>
-Var=ReconnectDelay unsigned 32,16 /u:s /f:0.1 /max:600 /d:10	// Delay time after abnormal grid conditions end until reconnect.  <nv::fRECONNECT_DELAY_SCALE:allLineMonitorParams{}.reconnect.reconnectDelay>
-Var=FreqChangeTime unsigned 48,16 /u:s /f:0.01 /max:1.00 /d:0.02 // Time over which a high frequency delta must be active to trigger a disconnect  <nv::allLineMonitorParams{}.fDeltaTripTime>
+Var=MaxFreqChange unsigned 16,16 /u:Hz/sec /f:0.0001 /max:5.0 /p:4 /d:0.01	// Maximal time rate of frequency change, above which disconnect will be asserted.
+Var=FreqChangeTime unsigned 32,16 /u:s /f:0.01 /max:600.00 /d:0.02	// Time over which a high frequency delta must be active to trigger a disconnect
+Var=ReconnectDelay unsigned 48,16 /u:s /f:0.1 /max:600.0 /d:10.0	// Delay time after abnormal grid conditions end until reconnect.
 
 [ParameterQuery]
 DLC=8
@@ -542,6 +544,8 @@ Var=CANErrorPassive unsigned 18,2 /e:WARNING /ln:"CAN Error Passive"	// CAN Bus 
 Var=FilterOvertemp unsigned 20,2 /e:WARNING /ln:"Filter Overtemperature"	// Filter overtemperature digital input is active.
 Var=FanCircuit unsigned 22,2 /e:WARNING /ln:"Fan Circuit"	// There is a problem with the module internal fan.
 Var=eeSaveInProgress unsigned 24,2 /e:WARNING /ln:"NV Save In Progress"	// Store to EEPROM is currently in progress.
+Var=localNetworkMismatch unsigned 26,2 /e:WARNING /ln:"Local Network Config"	// Detected local network does not match the configuration.
+Var=remoteNetworkMismatch unsigned 28,2 /e:WARNING /ln:"Remote Network Config"	// Detected remote network does not match the configuration.
 
 [ParameterQuery]
 DLC=8
@@ -576,14 +580,14 @@ DLC=8
 Mux=VRefRampRate 0,11 012Eh	// <HY>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=VperS unsigned 16,16 /u:V/s /max:10000	// Voltage reference ramp rate <nv::fPU_Vdc:allDcdcParams{}.vRampRate>
+Var=VperS unsigned 16,16 /u:V/s /max:10000	// Voltage reference ramp rate <nv::fPU_VDC_FSR:allDcdcParams{}.vRampRate>
 
 [ParameterQuery]
 DLC=8
 Mux=IRefRampRate 0,11 012Fh	// <HY>
 Var=ReadParam_command unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=AperS unsigned 16,16 /u:A/s /max:10000	// Current reference ramp rate <nv::fPU_Idc:allDcdcParams{}.iRampRate>
+Var=AperS unsigned 16,16 /u:A/s /max:10000	// Current reference ramp rate <nv::fPU_IDC_FSR:allDcdcParams{}.iRampRate>
 
 [ParameterQuery]
 DLC=8
@@ -702,6 +706,15 @@ Mux=PpcDisconnect 0,11 0148h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=tUnload unsigned 16,16 /u:ms /max:50000 /d:500	// Pre-disconnect current ramp-down duration.
+
+[ParameterQuery]
+DLC=8
+Mux=PpcConfigFlags 0,11 0149h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=RegulatedNetwork unsigned 16,2 /e:AcNetworkSupport /max:3 /d:0  // AC network against which voltage should be regulated.
+Var=MeanControlledP unsigned 18,2 /e:Enable /max:1 /d:0             // Control mean phase power among all controlled phases.
+
 
 [ParameterQuery]
 DLC=8
@@ -886,6 +899,14 @@ Var=groupedEnable unsigned 16,2 /max:1 /e:Enable /d:0	// Enable grouped island d
 
 [ParameterQuery]
 DLC=8
+Mux=PpcIslTimeouts 0,11 0165h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=tIslLatch unsigned 16,16 /u:s /f:0.01 /p:2 /max:600.0 /d:5.0	// Minimum duration to latch island state indicator.
+
+
+[ParameterQuery]
+DLC=8
 Mux=PpcAhcCoeffV 0,11 016Eh
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
@@ -987,6 +1008,15 @@ Var=wTau unsigned 32,16 /u:ms /f:0.1 /p:1 /max:5000 /d:10.0	// Estimated network
 
 [ParameterQuery]
 DLC=8
+Mux=PpcPllMeasAdjust 0,11 0187h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=argAdjust signed 16,16 /u:deg /f:0.01 /p:2 /min:-180.0 /max:180.0 /d:0.0	// Offset angle to account for transformer phase shift, line vs phase voltage measurement, etc.
+Var=magAdjust signed 32,16 /f:0.001 /p:3 /min:-25.0 /max:25.0 /d:1.00	// Magnitude adjustment to account for transformer ratio, line vs phase voltage measurement, etc.
+
+
+[ParameterQuery]
+DLC=8
 Mux=PpcHfoGridInductor 0,11 0190h
 Var=ReadParam_command unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
@@ -1043,6 +1073,94 @@ Var=fSwActual unsigned 16,16 /u:Hz /f:0.1 /p:1 /max:30000
 Var=modDepthXY unsigned 32,16 /f:0.0001 /p:3 /max:2.0
 Var=modDepthZ signed 48,16 /f:0.0001 /p:3 /min:-2.0 /max:2.0
 
+
+
+
+[ParameterQuery]
+DLC=8
+Mux=PpcAplCoeffsQSG 0,11 0450h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=Kd unsigned 16,16 /f:0.001 /p:3 /max:10 /d:0.800	// Auxiliary PLL SOGI-QSG damping coefficient
+Var=Kq unsigned 32,16 /f:0.001 /p:3 /max:10 /d:0.000	// Auxiliary PLL SOGI-QSG quadrature feed-forward coefficient
+
+[ParameterQuery]
+DLC=8
+Mux=PpcAplCoeffsLFL 0,11 0451h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=Kp unsigned 16,16 /u:Hz /f:0.01 /p:2 /max:650 /d:45.0	// Auxiliary PLL frequency loop filter gain (Hz per normalized error)
+Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:5000 /d:160.0	// Auxiliary PLL frequency loop filter integration time constant
+
+[ParameterQuery]
+DLC=8
+Mux=PpcAplLimitsLFL 0,11 0452h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=fMax unsigned 16,16 /u:% /f:0.1 /p:1 /max:800 /d:110.0	// Auxiliary PLL frequency loop filter upper control saturation limit, percent of nominal frequency
+Var=fMin unsigned 32,16 /u:% /f:0.1 /p:1 /max:800 /d:90.0	// Auxiliary PLL frequency loop filter lower control saturation limit, percent of nominal frequency
+
+[ParameterQuery]
+DLC=8
+Mux=PpcAplLockDetect 0,11 0455h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=minVolt unsigned 16,8 /u:V /max:250 /d:35.0	// Auxiliary PLL lock detector minimum RMS voltage for assessing lock condition
+Var=indThreshold unsigned 24,8 /u:mPU /f:5 /max:1250 /d:50.0	// Auxiliary PLL lock detector lock indicator signal threshold
+Var=tau unsigned 32,8 /u:ms /f:5 /max:1250 /d:200.0	// Auxiliary PLL lock detector lock indicator signal filtering time constant
+
+[ParameterQuery]
+DLC=8
+Mux=PpcAplMeasAdjust 0,11 0456h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=argAdjust signed 16,16 /u:deg /f:0.01 /p:2 /min:-180.0 /max:180.0 /d:30.0	// Offset angle to account for transformer phase shift, line vs phase voltage measurement, etc.
+Var=magAdjust signed 32,16 /f:0.001 /p:3 /min:-25.0 /max:25.0 /d:0.577	// Magnitude adjustment to account for transformer ratio, line vs phase voltage measurement, etc.
+
+
+[ParameterQuery]
+DLC=8
+Mux=PpcPbcBehaviourFlags 0,11 0460h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=autoDisconnectOnGridLoss unsigned 16,2 /max:1 /e:Enable /d:0	// Automatically disconnect (open MX2) upon grid loss, transition to forming (UPS behaviour).
+Var=autoReconnectOnGridAvail unsigned 18,2 /max:1 /e:Enable /d:0	// Automatically synchronize and reconnect (close MX2) upon grid return to nominal (UPS behaviour).
+Var=autoFollowingPostConnect unsigned 20,2 /max:1 /e:Enable /d:1	// Automatically transition to following after reconnect.
+Var=autoVoltTrackDuringSynch unsigned 22,2 /max:1 /e:Enable /d:1	// Temporarily track the remote voltage magnitude during synchronization, returning to setpoint upon connection.
+Var=autoSequenceWhenDisabled unsigned 24,2 /max:1 /e:Enable /d:1	// Allow automatic bus contactor activation also while converter is disabled.
+
+[ParameterQuery]
+DLC=8
+Mux=PpcPbcSyncLimits 0,11 0461h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=argErrMax unsigned 16,16 /u:deg /f:0.01 /p:2 /max:30.0 /d:1.25	// Maximal angular error to be considered for Connection Sequence Status SYNCHRONIZED.
+Var=magErrMax unsigned 32,16 /u:% /f:0.01 /p:2 /max:25.0 /d:5.00	// Maximal voltage error to be considered for Connection Sequence Status SYNCHRONIZED.
+Var=argErrSat unsigned 48,16 /u:deg /f:0.01 /p:2 /max:180.0 /d:1.50	// Maximal synchronization error reported for alignment control.
+
+[ParameterQuery]
+DLC=8
+Mux=PpcPbcTimeouts 0,11 0462h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=connTimeout unsigned 16,16 /u:s /f:0.01 /p:2 /max:600.0 /d:1.00	// Maximal time to allow for achieving Connection Sequence Status CONNECTED.
+Var=discTimeout unsigned 32,16 /u:s /f:0.01 /p:2 /max:600.0 /d:0.50	// Maximal time to allow for achieving Connection Sequence Status DISCONNECTED.
+Var=syncTimeout unsigned 48,16 /u:s /f:0.01 /p:2 /max:600.0 /d:5.00	// Maximal time to allow for achieving Connection Sequence Status SYNCHRONIZED.
+
+[ParameterQuery]
+DLC=8
+Mux=PpcPbcHoldTimes 0,11 0463h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=syncHoldTime unsigned 16,16 /u:s /f:0.01 /p:2 /max:600.0 /d:0.10	// Duration to settle in SYNCHRONIZED sequence.
+
+[ParameterQuery]
+DLC=8
+Mux=PpcPbcErrorFilters 0,11 0464h
+Var=ReadParam_command unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=argErrTau unsigned 16,16 /u:ms /f:0.1 /p:1 /max:4000.0 /d:5.0	// Filtered angular error low-pass filter time constant.
+Var=magErrTau unsigned 32,16 /u:ms /f:0.1 /p:1 /max:4000.0 /d:250.0	// Filtered angular error low-pass filter time constant.
 
 
 [ParameterQuery]
@@ -4198,6 +4316,7 @@ Var=Enable unsigned 8,2 /max:1 /e:Enable /ln:"Enable"	// Run command.  When set 
 Var=FaultClear unsigned 10,2 /max:1 /e:FaultClear /ln:"Clear Faults"	// Clears the latched fault message.
 Var=WarningClear unsigned 12,2 /max:1 /e:WarningClear /ln:"Clear Warnings"	// Clears the latched warning message.
 Var=IslandReconnect unsigned 14,2 /max:1 /e:IslandReconnect /ln:"Island Reconnect"	// Inform control that island condition is cleared.
+Var=ProtBusSequence unsigned 16,4 /max:5 /e:ProtBusSequenceReq /ln:"Protected Bus Request"	// Protected bus connect sequence request.
 
 [ProcessToInverter]
 DLC=8
@@ -4240,7 +4359,7 @@ ID=1DEF41F7h	// Echos back parameter values.
 Type=Extended
 DLC=8
 Mux=Param0 0,11 0 
-Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 
 [ParameterResponse]
@@ -4257,10 +4376,11 @@ DLC=8
 Mux=GridMonitor 0,11 2  // UL1741 grid power reference configuration
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=VoltageMeasurement unsigned 16,2 /max:1 /e:LVMTYPE  // Select line voltage measurement type for line voltage monitor
-Var=InterpolateVoltage unsigned 18,2 /max:1 /e:Enable  // interpolate between voltage table points
-Var=InterpolateFreq unsigned 20,2 /max:1 /e:Enable  // interpolate between frequency table points
-Var=BidirWattSupport unsigned 22,2 /max:1 /e:Enable /d:0 // Allow Hz-Watt and/or Volt-Watt to drive power in the opposite direction of the commanded reference
+Var=InterpolateVoltage unsigned 16,2 /max:1 /e:Enable               // Interpolate between voltage table points... for what purpose???
+Var=InterpolateFreq unsigned 18,2 /max:1 /e:Enable                  // Interpolate between frequency table points... for what purpose???
+Var=BidirWattSupport unsigned 20,2 /max:1 /e:Enable /d:0            // Allow Hz-Watt and/or Volt-Watt to drive power in the opposite direction of the commanded reference
+Var=SupportedNetwork unsigned 22,2 /max:3 /e:AcNetworkSupport /d:0  // Apply grid/network support functionality based upon this selected network monitor.
+Var=MonitorRemoteNet unsigned 24,2 /max:1 /e:YesNo /d:0             // Select whether network monitoring is enabled for a remote network.
 
 [ParameterResponse]
 DLC=8
@@ -4474,9 +4594,9 @@ DLC=8
 Mux=LineMonitor 0,11 073h
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=MaxFreqChange unsigned 16,16 /u:Hz/sec /f:0.0001 /p:4 /d:0.01 // maximum rate of frequency change, above which a grid disconnect will be triggered  <nv::fMAX_FREQUENCY_CHANGE_SCALE:allLineMonitorParams{}.fDeltaMax>
-Var=ReconnectDelay unsigned 32,16 /u:s /f:0.1 /max:600 /d:10	// Delay time after abnormal grid conditions end until reconnect.  <nv::fRECONNECT_DELAY_SCALE:allLineMonitorParams{}.reconnect.reconnectDelay>
-Var=FreqChangeTime unsigned 48,16 /u:s /f:0.01 /max:1.00 /d:0.02 // Time over which a high frequency delta must be active to trigger a disconnect  <nv::allLineMonitorParams{}.fDeltaTripTime>
+Var=MaxFreqChange unsigned 16,16 /u:Hz/sec /f:0.0001 /max:5.0 /p:4 /d:0.01	// Maximal time rate of frequency change, above which disconnect will be asserted.
+Var=FreqChangeTime unsigned 32,16 /u:s /f:0.01 /max:600.00 /d:0.02	// Time over which a high frequency delta must be active to trigger a disconnect
+Var=ReconnectDelay unsigned 48,16 /u:s /f:0.1 /max:600.0 /d:10.0	// Delay time after abnormal grid conditions end until reconnect.
 
 [ParameterResponse]
 DLC=8
@@ -4718,6 +4838,8 @@ Var=CANErrorPassive unsigned 18,2 /e:WARNING /ln:"CAN Error Passive"	// CAN Bus 
 Var=FilterOvertemp unsigned 20,2 /e:WARNING /ln:"Filter Overtemperature"	// Filter overtemperature digital input is active.
 Var=FanCircuit unsigned 22,2 /e:WARNING /ln:"Fan Circuit"	// There is a problem with the module internal fan.
 Var=eeSaveInProgress unsigned 24,2 /e:WARNING /ln:"NV Save In Progress"	// Store to EEPROM is currently in progress.
+Var=localNetworkMismatch unsigned 26,2 /e:WARNING /ln:"Local Network Config"	// Detected local network does not match the configuration.
+Var=remoteNetworkMismatch unsigned 28,2 /e:WARNING /ln:"Remote Network Config"	// Detected remote network does not match the configuration.
 
 [ParameterResponse]
 DLC=8
@@ -4752,14 +4874,14 @@ DLC=8
 Mux=VRefRampRate 0,11 012Eh	// <HY>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=VperS unsigned 16,16 /u:V/s /max:10000	// Voltage reference ramp rate <nv::fPU_Vdc:allDcdcParams{}.vRampRate>
+Var=VperS unsigned 16,16 /u:V/s /max:10000	// Voltage reference ramp rate <nv::fPU_VDC_FSR:allDcdcParams{}.vRampRate>
 
 [ParameterResponse]
 DLC=8
 Mux=IRefRampRate 0,11 012Fh	// <HY>
 Var=ReadParam_status unsigned 14,2 /max:1 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
-Var=AperS unsigned 16,16 /u:A/s /max:10000	// Current reference ramp rate <nv::fPU_Idc:allDcdcParams{}.iRampRate>
+Var=AperS unsigned 16,16 /u:A/s /max:10000	// Current reference ramp rate <nv::fPU_IDC_FSR:allDcdcParams{}.iRampRate>
 
 [ParameterResponse]
 DLC=8
@@ -4878,6 +5000,15 @@ Mux=PpcDisconnect 0,11 0148h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
 Var=tUnload unsigned 16,16 /u:ms /max:50000 /d:500	// Pre-disconnect current ramp-down duration.
+
+[ParameterResponse]
+DLC=8
+Mux=PpcConfigFlags 0,11 0149h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=RegulatedNetwork unsigned 16,2 /e:AcNetworkSupport /max:3 /d:0  // AC network against which voltage should be regulated.
+Var=MeanControlledP unsigned 18,2 /e:Enable /max:1 /d:0             // Control mean phase power among all controlled phases.
+
 
 [ParameterResponse]
 DLC=8
@@ -5062,6 +5193,14 @@ Var=groupedEnable unsigned 16,2 /max:1 /e:Enable /d:0	// Enable grouped island d
 
 [ParameterResponse]
 DLC=8
+Mux=PpcIslTimeouts 0,11 0165h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=tIslLatch unsigned 16,16 /u:s /f:0.01 /p:2 /max:600.0 /d:5.0	// Minimum duration to latch island state indicator.
+
+
+[ParameterResponse]
+DLC=8
 Mux=PpcAhcCoeffV 0,11 016Eh
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
@@ -5163,6 +5302,15 @@ Var=wTau unsigned 32,16 /u:ms /f:0.1 /p:1 /max:5000 /d:10.0	// Estimated network
 
 [ParameterResponse]
 DLC=8
+Mux=PpcPllMeasAdjust 0,11 0187h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=argAdjust signed 16,16 /u:deg /f:0.01 /p:2 /min:-180.0 /max:180.0 /d:0.0	// Offset angle to account for transformer phase shift, line vs phase voltage measurement, etc.
+Var=magAdjust signed 32,16 /f:0.001 /p:3 /min:-25.0 /max:25.0 /d:1.00	// Magnitude adjustment to account for transformer ratio, line vs phase voltage measurement, etc.
+
+
+[ParameterResponse]
+DLC=8
 Mux=PpcHfoGridInductor 0,11 0190h
 Var=ReadParam_status unsigned 14,2 /e:ReadNV
 Var=Meta unsigned 11,3 /e:Meta
@@ -5219,6 +5367,93 @@ Var=fSwActual unsigned 16,16 /u:Hz /f:0.1 /p:1 /max:30000
 Var=modDepthXY unsigned 32,16 /f:0.0001 /p:3 /max:2.0
 Var=modDepthZ signed 48,16 /f:0.0001 /p:3 /min:-2.0 /max:2.0
 
+
+
+[ParameterResponse]
+DLC=8
+Mux=PpcAplCoeffsQSG 0,11 0450h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=Kd unsigned 16,16 /f:0.001 /p:3 /max:10 /d:0.800	// Auxiliary PLL SOGI-QSG damping coefficient
+Var=Kq unsigned 32,16 /f:0.001 /p:3 /max:10 /d:0.000	// Auxiliary PLL SOGI-QSG quadrature feed-forward coefficient
+
+[ParameterResponse]
+DLC=8
+Mux=PpcAplCoeffsLFL 0,11 0451h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=Kp unsigned 16,16 /u:Hz /f:0.01 /p:2 /max:650 /d:45.0	// Auxiliary PLL frequency loop filter gain (Hz per normalized error)
+Var=Ti unsigned 32,16 /u:ms /f:0.1 /p:1 /max:5000 /d:160.0	// Auxiliary PLL frequency loop filter integration time constant
+
+[ParameterResponse]
+DLC=8
+Mux=PpcAplLimitsLFL 0,11 0452h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=fMax unsigned 16,16 /u:% /f:0.1 /p:1 /max:800 /d:110.0	// Auxiliary PLL frequency loop filter upper control saturation limit, percent of nominal frequency
+Var=fMin unsigned 32,16 /u:% /f:0.1 /p:1 /max:800 /d:90.0	// Auxiliary PLL frequency loop filter lower control saturation limit, percent of nominal frequency
+
+[ParameterResponse]
+DLC=8
+Mux=PpcAplLockDetect 0,11 0455h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=minVolt unsigned 16,8 /u:V /max:250 /d:35.0	// Auxiliary PLL lock detector minimum RMS voltage for assessing lock condition
+Var=indThreshold unsigned 24,8 /u:mPU /f:5 /max:1250 /d:50.0	// Auxiliary PLL lock detector lock indicator signal threshold
+Var=tau unsigned 32,8 /u:ms /f:5 /max:1250 /d:200.0	// Auxiliary PLL lock detector lock indicator signal filtering time constant
+
+[ParameterResponse]
+DLC=8
+Mux=PpcAplMeasAdjust 0,11 0456h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=argAdjust signed 16,16 /u:deg /f:0.01 /p:2 /min:-180.0 /max:180.0 /d:30.0	// Offset angle to account for transformer phase shift, line vs phase voltage measurement, etc.
+Var=magAdjust signed 32,16 /f:0.001 /p:3 /min:-25.0 /max:25.0 /d:0.577	// Magnitude adjustment to account for transformer ratio, line vs phase voltage measurement, etc.
+
+
+[ParameterResponse]
+DLC=8
+Mux=PpcPbcBehaviourFlags 0,11 0460h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=autoDisconnectOnGridLoss unsigned 16,2 /max:1 /e:Enable /d:0	// Automatically disconnect (open MX2) upon grid loss, transition to forming (UPS behaviour).
+Var=autoReconnectOnGridAvail unsigned 18,2 /max:1 /e:Enable /d:0	// Automatically synchronize and reconnect (close MX2) upon grid return to nominal (UPS behaviour).
+Var=autoFollowingPostConnect unsigned 20,2 /max:1 /e:Enable /d:1	// Automatically transition to following after reconnect.
+Var=autoVoltTrackDuringSynch unsigned 22,2 /max:1 /e:Enable /d:1	// Temporarily track the remote voltage magnitude during synchronization, returning to setpoint upon connection.
+Var=autoSequenceWhenDisabled unsigned 24,2 /max:1 /e:Enable /d:1	// Allow automatic bus contactor activation also while converter is disabled.
+
+[ParameterResponse]
+DLC=8
+Mux=PpcPbcSyncLimits 0,11 0461h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=argErrMax unsigned 16,16 /u:deg /f:0.01 /p:2 /max:30.0 /d:1.25	// Maximal angular error to be considered for Connection Sequence Status SYNCHRONIZED.
+Var=magErrMax unsigned 32,16 /u:% /f:0.01 /p:2 /max:25.0 /d:5.00	// Maximal voltage error to be considered for Connection Sequence Status SYNCHRONIZED.
+Var=argErrSat unsigned 48,16 /u:deg /f:0.01 /p:2 /max:180.0 /d:1.50	// Maximal synchronization error reported for alignment control.
+
+[ParameterResponse]
+DLC=8
+Mux=PpcPbcTimeouts 0,11 0462h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=connTimeout unsigned 16,16 /u:s /f:0.01 /p:2 /max:600.0 /d:1.00	// Maximal time to allow for achieving Connection Sequence Status CONNECTED.
+Var=discTimeout unsigned 32,16 /u:s /f:0.01 /p:2 /max:600.0 /d:0.50	// Maximal time to allow for achieving Connection Sequence Status DISCONNECTED.
+Var=syncTimeout unsigned 48,16 /u:s /f:0.01 /p:2 /max:600.0 /d:5.00	// Maximal time to allow for achieving Connection Sequence Status SYNCHRONIZED.
+
+[ParameterResponse]
+DLC=8
+Mux=PpcPbcHoldTimes 0,11 0463h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=syncHoldTime unsigned 16,16 /u:s /f:0.01 /p:2 /max:600.0 /d:0.10	// Duration to settle in SYNCHRONIZED sequence.
+
+[ParameterResponse]
+DLC=8
+Mux=PpcPbcErrorFilters 0,11 0464h
+Var=ReadParam_status unsigned 14,2 /e:ReadNV
+Var=Meta unsigned 11,3 /e:Meta
+Var=argErrTau unsigned 16,16 /u:ms /f:0.1 /p:1 /max:4000.0 /d:5.0	// Filtered angular error low-pass filter time constant.
+Var=magErrTau unsigned 32,16 /u:ms /f:0.1 /p:1 /max:4000.0 /d:250.0	// Filtered angular error low-pass filter time constant.
 
 
 [ParameterResponse]
@@ -8425,12 +8660,13 @@ DLC=8
 CycleTime=10
 Var=WarningClr_echo unsigned 0,2 /e:WarningClear /ln:"Warning Clear"	// Echos the state of the WarningClear command within the CommandModeControl message.
 Var=IslandReconnect_echo unsigned 2,2 /e:IslandReconnect /ln:"Island Reconnect"	// Echo IslandReconnect of CommandModeControl.
+Var=ProtBusSequence unsigned 4,4 /e:ProtBusSequenceAct /ln:"Protected Bus Status"	// Actual protected bus connection sequence (state).
 Var=FaultClr_echo unsigned 8,2 /e:FaultClear /ln:"Fault Clear"	// Echos the state of the FaultClear command within the CommandModeControl message.
 Var=Enable_echo unsigned 10,2 /e:Enable /ln:"Enable"	// Echos the state of the Enable command within the CommandModeControl message.
 Var=State unsigned 12,4 /max:7 /e:State /ln:"State"	// Active control mode.
-Var=PowerCircuitEnabled unsigned 16,2 /e:Enable /ln:"Power Circuit Enabled"	// Indicates whether the switching devices are active.
-Var=PowerAvailDC unsigned 18,2 /e:PowerAvail /ln:"DC Available"	// Indicates that DC bus voltage is within operating range.
-Var=PowerAvailAC unsigned 20,2 /e:PowerAvail /ln:"AC Available"	// Indicates that AC power is connected and that voltage and frequency are within nominal ranges.
+Var=PowerCircuitEnabled unsigned 16,2 /e:Enable /ln:"Power Circuit Enabled"	// Indicates operational status of the power stage.
+Var=PowerAvailDC unsigned 18,2 /e:PowerAvail /ln:"DC Nominal"	// Indicates that DC bus voltage is within operating range.
+Var=PowerAvailAC unsigned 20,2 /e:PowerAvail /ln:"Voltage Nominal"	// Indicates whether AC supply voltage and frequency are within nominal ranges.
 Var=HardwareEnable unsigned 22,2 /e:WakeUpSignal /ln:"Hardware Enable"	// Status of the hardware enable.
 Var=K2DCRunPermissive unsigned 24,2 /e:RelayStatus /ln:"K2 Permissive"	// K2 DC Run relay status.
 Var=K1PrechargePermissive unsigned 26,2 /e:RelayStatus /ln:"K1 Permissive"	// K1 precharge relay status.
@@ -8440,13 +8676,13 @@ Var=DI4 unsigned 32,2 /max:1 /e:OnOff
 Var=DI3 unsigned 34,2 /max:1 /e:OnOff
 Var=DI2 unsigned 36,2 /max:1 /e:OnOff
 Var=DI1 unsigned 38,2 /max:1 /e:OnOff
-Var=LineVoltageDetected unsigned 40,2 /max:1 /e:LineVoltagePresent /ln:"Line Voltage Detected"	// Flag indicating if voltage is detected on L1, L2 or L3.
-Var=PhaseSequence unsigned 42,2 /max:1 /e:PhaseSequence /ln:"Phase Sequence"	// Phase sequence.  When L1 phase angle leads L2 phase angle, rotation is considered positive.
+Var=LineVoltageDetected unsigned 40,2 /max:1 /e:LineVoltagePresent /ln:"Voltage Detected"	// Flag indicating if voltage is detected on L1, L2 or L3.
+Var=PhaseSequence unsigned 42,2 /max:1 /e:PhaseSequence /ln:"Local Sequence"	// Phase sequence.  When L1 phase angle leads L2 phase angle, rotation is considered positive.
 Var=MessageValidPowerCMD unsigned 44,2 /e:MessageValid /ln:"Power Message Valid"	// Indicates the validity of the CommandPower message.
 Var=MessageValidModeControl unsigned 46,2 /e:MessageValid /ln:"Mode Message Valid"	// Indicates the validity of the CommandModeControl message.  Message must be received at least once per second and parameter data within range to be considered valid.
-Var=LineVoltageDetectedRemote unsigned 48,2 /e:LineVoltagePresent /ln:"Remote Line Voltage Detected"	// Flag indicating if voltage is detected on remote L1, L2 or L3.
-Var=PhaseSequenceRemote unsigned 50,2 /e:PhaseSequence /ln:"Remote Phase Sequence"	// Remote phase sequence.  When L1 phase angle leads L2 phase angle, rotation is considered positive.
-Var=PowerAvailAcRemote unsigned 52,2 /e:PowerAvail /ln:"Remote AC Avail."	// Indicates that remote AC power is connected and that voltage and frequency are within nominal ranges.
+Var=LineVoltageDetectedRemote unsigned 48,2 /e:LineVoltagePresent /ln:"Remote Voltage Detected"	// Flag indicating if voltage is detected on remote L1, L2 or L3.
+Var=PhaseSequenceRemote unsigned 50,2 /e:PhaseSequence /ln:"Remote Sequence"	// Remote phase sequence.  When L1 phase angle leads L2 phase angle, rotation is considered positive.
+Var=PowerAvailAcRemote unsigned 52,2 /e:PowerAvail /ln:"Remote Voltage Nominal"	// Indicates whether remote AC supply voltage and frequency are within nominal ranges.
 Var=Warning unsigned 54,2 /e:WARNING /ln:"Warning Active"	// Indicates that one or more warnings are active
 Var=MessageValidDcControl unsigned 56,2 /e:MessageValid /ln:"DC Control Message Valid"	// Indicates the validity of the CommandDcControl message.
 Var=MessageValidCurrentCMD unsigned 58,2 /e:MessageValid /ln:"I Cmd Message Valid"	// Indicates the validity of the CommandCurrent message.
