@@ -9,6 +9,10 @@ class NotFoundError(Exception):
     pass
 
 
+class MultipleFoundError(Exception):
+    pass
+
+
 class Signals(PyQt5.QtCore.QObject):
     child_added = PyQt5.QtCore.pyqtSignal('PyQt_PyObject', int)
     child_added_complete = PyQt5.QtCore.pyqtSignal('PyQt_PyObject')
@@ -184,11 +188,21 @@ class TreeNode:
         return nodes
 
     def child_by_name(self, name):
-        child, = (
+        children = [
             child
             for child in self.children
             if child.name == name
-        )
+        ]
+
+        if len(children) == 0:
+            raise NotFoundError(f'Child with name {name!r} not found')
+
+        if len(children) > 1:
+            raise MultipleFoundError(
+                f'Multiple children found with name {name!r}',
+            )
+
+        child, = children
 
         return child
 
