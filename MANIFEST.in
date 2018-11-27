@@ -1,2 +1,3 @@
 include versioneer.py
 include epyqlib/_version.py
+recursive-include epyqlib *.ui
