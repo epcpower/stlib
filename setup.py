@@ -11,6 +11,7 @@ setuptools.setup(
          "GNU General Public License v2 or later (GPLv2+)")
     ],
     packages=setuptools.find_packages(),
+    include_package_data=True,
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     entry_points={
