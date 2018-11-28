@@ -952,12 +952,6 @@ class Table(epyqlib.treenode.TreeNode):
             if isinstance(child, (Array, Group))
         ]
 
-        # groups = [
-        #     child
-        #     for child in self.children
-        #     if isinstance(child, Group)
-        # ]
-
         with self._ignore_children():
             if old_group is None:
                 old_group = TableGroupElement(
@@ -1047,37 +1041,6 @@ class Table(epyqlib.treenode.TreeNode):
 
                     if current_element.tree_parent is None:
                         current.append_child(current_element)
-
-                    print()
-
-            # for group in groups:
-            #     group_path = path + (group.uuid,)
-            #     previous = old_by_path.get(group_path)
-            #     if previous is None:
-            #         current = TableGroupElement(
-            #             original=group,
-            #             path=group_path,
-            #         )
-            #         old_by_path[group_path] = current
-            #     else:
-            #         current = previous
-            #
-            #     present.apprend_child(current)
-            #
-            #     for element in group.children:
-            #         element_path = group_path + (element.uuid,)
-            #         previous_element = old_by_path.get(element_path)
-            #         if previous_element is None:
-            #             current_element = TableArrayElement(
-            #                 original=element,
-            #                 path=element_path,
-            #             )
-            #             old_by_path[element_path] = current_element
-            #         else:
-            #             current_element = previous_element
-            #
-            #         if current_element.tree_
-
 
     def addable_types(self):
         return epyqlib.attrsmodel.create_addable_types((
