@@ -1035,8 +1035,6 @@ class Table(epyqlib.treenode.TreeNode):
                             original=element,
                             path=element_path,
                         )
-                        with open('/epc/g/36/pm/debug_out', 'a') as debug_out:
-                            debug_out.write(str((current_element.path, current_element)) + '\n')
                         old_by_path[element_path] = current_element
                     else:
                         current_element = previous_element
