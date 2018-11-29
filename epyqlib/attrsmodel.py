@@ -2,9 +2,11 @@ import collections
 import contextlib
 import decimal
 import inspect
+import itertools
 import json
 import locale
 import logging
+import sys
 import uuid
 import weakref
 
@@ -1043,3 +1045,127 @@ class Model:
 class Reference(marshmallow.fields.UUID):
     def _serialize(self, value, attr, obj):
         return super()._serialize(value.uuid, attr, obj)
+
+
+def columns_to_code(c):
+    columns = collections.defaultdict(list)
+
+    for x in c:
+        columns[x[1]].append(x[0])
+
+    code = []
+
+    for name, types in columns.items():
+        if len(types) == 0:
+            pass
+        elif len(types) == 1:
+            code.append(f"(({types[0].__name__}, '{name}'),),")
+        else:
+            type_code = ', '.join(sorted(cls.__name__ for cls in types))
+            type_code = f'({type_code})'
+            code.append(f"tuple((x, '{name}') for x in {type_code}),")
+
+    # with this you can copy/paste to fill in the missing columns
+    return '\n' + '\n'.join(code)
+
+
+class Tests:
+    def test_all_fields_in_columns(self):
+        fields = set()
+
+        for cls in self.types:
+            if cls is self.root_type:
+                continue
+
+            for field in epyqlib.attrsmodel.fields(cls):
+                if field.no_column:
+                    continue
+
+                fields.add((cls, field.name))
+
+        columns_list = [
+            tuple(x)
+            for x in itertools.chain(*(
+                column.items()
+                for column in self.columns
+            ))
+            if x[0] is not self.root_type
+        ]
+
+        columns = set(columns_list)
+
+        assert len(columns_list) == len(columns)
+
+        extra = columns - fields
+        missing = fields - columns
+
+        assert extra == set()
+        assert missing == set(), columns_to_code(missing)
+
+    def test_all_have_can_drop_on(self):
+        self.assert_incomplete_types(
+            name='can_drop_on',
+            signature=['node'],
+        )
+
+    def test_all_have_can_delete(self):
+        self.assert_incomplete_types(
+            name='can_delete',
+            signature=['node'],
+        )
+
+    def test_all_addable_also_in_types(self):
+        # Since addable types is dynamic and could be anything... this
+        # admittedly only checks the addable types on default instances.
+        for cls in self.types.types.values():
+            addable_types = cls.all_addable_types().values()
+            assert (
+                (set(addable_types) - set(self.types))
+                 == set()
+             )
+
+    def assert_incomplete_types(self, name, signature=None):
+        bad = []
+        signature = list(signature)
+
+        for cls in self.types.types.values():
+            if isinstance(cls.__dict__[name], staticmethod):
+                tweaked_signature = signature
+            elif isinstance(cls.__dict__[name], classmethod):
+                tweaked_signature = ['cls', *signature]
+            else:
+                tweaked_signature = ['self', *signature]
+
+            attribute = getattr(cls, name)
+            if attribute is None:
+                bad.append(cls)
+            elif signature is not None:
+                actual_signature = inspect.signature(attribute)
+                actual_signature = actual_signature.parameters.keys()
+                actual_signature = list(actual_signature)
+                if tweaked_signature != actual_signature:
+                    bad.append(cls)
+                    continue
+
+        sys.stderr.write('\n')
+        for cls in bad:
+            sys.stderr.write(
+                '{path}  {name}\n'.format(
+                    path=epyqlib.utils.general.path_and_line(
+                        getattr(cls, name)),
+                    name=cls,
+                ),
+            )
+        assert [] == bad
+
+
+def build_tests(types, root_type, columns):
+    return type(
+        'BuiltTests',
+        (Tests,),
+        {
+            'types': types,
+            'root_type': root_type,
+            'columns': columns,
+        },
+    )

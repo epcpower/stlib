@@ -634,30 +634,8 @@ def test_array_update_children_length():
         assert len(array.children) == n
 
 
-def test_all_addable_also_in_types():
-    # Since addable types is dynamic and could be anything... this
-    # admittedly only checks the addable types on default instances.
-    for cls in epyqlib.pm.parametermodel.types.types.values():
-        addable_types = cls.all_addable_types().values()
-        assert set(addable_types) - set(
-            epyqlib.pm.parametermodel.types) == set()
-
-
-def test_all_have_can_drop_on():
-    epyqlib.tests.test_attrsmodel.all_have_can_drop_on(
-        types=epyqlib.pm.parametermodel.types,
-    )
-
-
-def test_all_have_can_delete():
-    epyqlib.tests.test_attrsmodel.all_have_can_delete(
-        types=epyqlib.pm.parametermodel.types,
-    )
-
-
-def test_all_fields_in_columns():
-    epyqlib.tests.test_attrsmodel.all_fields_in_columns(
-        types=epyqlib.pm.parametermodel.types,
-        root_type=epyqlib.pm.parametermodel.Root,
-        columns=epyqlib.pm.parametermodel.columns,
-    )
+TestAttrsModel = epyqlib.attrsmodel.build_tests(
+    types=epyqlib.pm.parametermodel.types,
+    root_type=epyqlib.pm.parametermodel.Root,
+    columns=epyqlib.pm.parametermodel.columns,
+)

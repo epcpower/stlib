@@ -90,6 +90,8 @@
                                     "minimum": null,
                                     "maximum": null,
                                     "nv_format": null,
+                                    "nv_factor": null,
+                                    "nv_cast": false,
                                     "uuid": "9d642888-b7f0-4d04-8ebf-10887249b179",
                                     "access_level_uuid": null,
                                     "enumeration_uuid": null,
@@ -139,6 +141,8 @@
                                     "minimum": null,
                                     "maximum": null,
                                     "nv_format": null,
+                                    "nv_factor": null,
+                                    "nv_cast": false,
                                     "uuid": "32666885-2934-481f-88fd-7e3157f702b1",
                                     "access_level_uuid": null,
                                     "enumeration_uuid": null,
@@ -190,6 +194,18 @@
                                                                 "77ed47bb-fbea-4756-b1c4-2e2be02aebc7",
                                                                 "a32ea0c1-0838-430f-8d3c-192b5bff3047"
                                                             ],
+                                                            "minimum": null,
+                                                            "maximum": null,
+                                                            "nv_format": null,
+                                                            "nv_factor": null,
+                                                            "nv_cast": false,
+                                                            "comment": null,
+                                                            "enumeration_uuid": null,
+                                                            "units": null,
+                                                            "visibility": null,
+                                                            "display_hexadecimal": false,
+                                                            "default": null,
+                                                            "decimal_places": null,
                                                             "uuid": "403b3a2c-f94a-490c-b112-87cdd3551e55"
                                                         },
                                                         {
@@ -201,6 +217,18 @@
                                                                 "77ed47bb-fbea-4756-b1c4-2e2be02aebc7",
                                                                 "9d642888-b7f0-4d04-8ebf-10887249b179"
                                                             ],
+                                                            "minimum": null,
+                                                            "maximum": null,
+                                                            "nv_format": null,
+                                                            "nv_factor": null,
+                                                            "nv_cast": false,
+                                                            "comment": null,
+                                                            "enumeration_uuid": null,
+                                                            "units": null,
+                                                            "visibility": null,
+                                                            "display_hexadecimal": false,
+                                                            "default": null,
+                                                            "decimal_places": null,
                                                             "uuid": "3fd1f0e6-09e7-413e-b169-3fafff126bbc"
                                                         }
                                                     ],
@@ -224,6 +252,18 @@
                                                                 "acda3b53-785c-4588-8b35-d58a9f2e10a8",
                                                                 "1c7d0fac-aaa6-415b-b7c1-08d1f5d07097"
                                                             ],
+                                                            "minimum": null,
+                                                            "maximum": null,
+                                                            "nv_format": null,
+                                                            "nv_factor": null,
+                                                            "nv_cast": false,
+                                                            "comment": null,
+                                                            "enumeration_uuid": null,
+                                                            "units": null,
+                                                            "visibility": null,
+                                                            "display_hexadecimal": false,
+                                                            "default": null,
+                                                            "decimal_places": null,
                                                             "uuid": "106cc983-0321-4ced-9e72-ab56d6bf1e7f"
                                                         },
                                                         {
@@ -235,6 +275,18 @@
                                                                 "acda3b53-785c-4588-8b35-d58a9f2e10a8",
                                                                 "32666885-2934-481f-88fd-7e3157f702b1"
                                                             ],
+                                                            "minimum": null,
+                                                            "maximum": null,
+                                                            "nv_format": null,
+                                                            "nv_factor": null,
+                                                            "nv_cast": false,
+                                                            "comment": null,
+                                                            "enumeration_uuid": null,
+                                                            "units": null,
+                                                            "visibility": null,
+                                                            "display_hexadecimal": false,
+                                                            "default": null,
+                                                            "decimal_places": null,
                                                             "uuid": "80fd2eb7-6c89-4b65-ad35-05d63522f991"
                                                         }
                                                     ],
@@ -269,6 +321,18 @@
                                                                 "77ed47bb-fbea-4756-b1c4-2e2be02aebc7",
                                                                 "a32ea0c1-0838-430f-8d3c-192b5bff3047"
                                                             ],
+                                                            "minimum": null,
+                                                            "maximum": null,
+                                                            "nv_format": null,
+                                                            "nv_factor": null,
+                                                            "nv_cast": false,
+                                                            "comment": null,
+                                                            "enumeration_uuid": null,
+                                                            "units": null,
+                                                            "visibility": null,
+                                                            "display_hexadecimal": false,
+                                                            "default": null,
+                                                            "decimal_places": null,
                                                             "uuid": "290b2762-61c7-4666-8f99-af3c0113d4a3"
                                                         },
                                                         {
@@ -280,6 +344,18 @@
                                                                 "77ed47bb-fbea-4756-b1c4-2e2be02aebc7",
                                                                 "9d642888-b7f0-4d04-8ebf-10887249b179"
                                                             ],
+                                                            "minimum": null,
+                                                            "maximum": null,
+                                                            "nv_format": null,
+                                                            "nv_factor": null,
+                                                            "nv_cast": false,
+                                                            "comment": null,
+                                                            "enumeration_uuid": null,
+                                                            "units": null,
+                                                            "visibility": null,
+                                                            "display_hexadecimal": false,
+                                                            "default": null,
+                                                            "decimal_places": null,
                                                             "uuid": "aee3a1de-b35a-4e7b-b274-1ef6766d5889"
                                                         }
                                                     ],
@@ -303,6 +379,18 @@
                                                                 "acda3b53-785c-4588-8b35-d58a9f2e10a8",
                                                                 "1c7d0fac-aaa6-415b-b7c1-08d1f5d07097"
                                                             ],
+                                                            "minimum": null,
+                                                            "maximum": null,
+                                                            "nv_format": null,
+                                                            "nv_factor": null,
+                                                            "nv_cast": false,
+                                                            "comment": null,
+                                                            "enumeration_uuid": null,
+                                                            "units": null,
+                                                            "visibility": null,
+                                                            "display_hexadecimal": false,
+                                                            "default": null,
+                                                            "decimal_places": null,
                                                             "uuid": "99a1be09-c4e0-41f1-bda4-d0f139038cbf"
                                                         },
                                                         {
@@ -314,6 +402,18 @@
                                                                 "acda3b53-785c-4588-8b35-d58a9f2e10a8",
                                                                 "32666885-2934-481f-88fd-7e3157f702b1"
                                                             ],
+                                                            "minimum": null,
+                                                            "maximum": null,
+                                                            "nv_format": null,
+                                                            "nv_factor": null,
+                                                            "nv_cast": false,
+                                                            "comment": null,
+                                                            "enumeration_uuid": null,
+                                                            "units": null,
+                                                            "visibility": null,
+                                                            "display_hexadecimal": false,
+                                                            "default": null,
+                                                            "decimal_places": null,
                                                             "uuid": "fa79e1aa-647d-4783-8b16-fe752ac8e8c4"
                                                         }
                                                     ],
@@ -358,6 +458,18 @@
                                                                 "77ed47bb-fbea-4756-b1c4-2e2be02aebc7",
                                                                 "a32ea0c1-0838-430f-8d3c-192b5bff3047"
                                                             ],
+                                                            "minimum": null,
+                                                            "maximum": null,
+                                                            "nv_format": null,
+                                                            "nv_factor": null,
+                                                            "nv_cast": false,
+                                                            "comment": null,
+                                                            "enumeration_uuid": null,
+                                                            "units": null,
+                                                            "visibility": null,
+                                                            "display_hexadecimal": false,
+                                                            "default": null,
+                                                            "decimal_places": null,
                                                             "uuid": "c076b3e1-a287-468c-80e4-43523a021feb"
                                                         },
                                                         {
@@ -369,6 +481,18 @@
                                                                 "77ed47bb-fbea-4756-b1c4-2e2be02aebc7",
                                                                 "9d642888-b7f0-4d04-8ebf-10887249b179"
                                                             ],
+                                                            "minimum": null,
+                                                            "maximum": null,
+                                                            "nv_format": null,
+                                                            "nv_factor": null,
+                                                            "nv_cast": false,
+                                                            "comment": null,
+                                                            "enumeration_uuid": null,
+                                                            "units": null,
+                                                            "visibility": null,
+                                                            "display_hexadecimal": false,
+                                                            "default": null,
+                                                            "decimal_places": null,
                                                             "uuid": "937be4d7-b578-4daa-aef0-4065198a613d"
                                                         }
                                                     ],
@@ -392,6 +516,18 @@
                                                                 "acda3b53-785c-4588-8b35-d58a9f2e10a8",
                                                                 "1c7d0fac-aaa6-415b-b7c1-08d1f5d07097"
                                                             ],
+                                                            "minimum": null,
+                                                            "maximum": null,
+                                                            "nv_format": null,
+                                                            "nv_factor": null,
+                                                            "nv_cast": false,
+                                                            "comment": null,
+                                                            "enumeration_uuid": null,
+                                                            "units": null,
+                                                            "visibility": null,
+                                                            "display_hexadecimal": false,
+                                                            "default": null,
+                                                            "decimal_places": null,
                                                             "uuid": "286079b0-6028-4959-8396-78c626cdab46"
                                                         },
                                                         {
@@ -403,6 +539,18 @@
                                                                 "acda3b53-785c-4588-8b35-d58a9f2e10a8",
                                                                 "32666885-2934-481f-88fd-7e3157f702b1"
                                                             ],
+                                                            "minimum": null,
+                                                            "maximum": null,
+                                                            "nv_format": null,
+                                                            "nv_factor": null,
+                                                            "nv_cast": false,
+                                                            "comment": null,
+                                                            "enumeration_uuid": null,
+                                                            "units": null,
+                                                            "visibility": null,
+                                                            "display_hexadecimal": false,
+                                                            "default": null,
+                                                            "decimal_places": null,
                                                             "uuid": "de30995a-ba26-49cf-abd0-84d3dc62b3eb"
                                                         }
                                                     ],
@@ -437,6 +585,18 @@
                                                                 "77ed47bb-fbea-4756-b1c4-2e2be02aebc7",
                                                                 "a32ea0c1-0838-430f-8d3c-192b5bff3047"
                                                             ],
+                                                            "minimum": null,
+                                                            "maximum": null,
+                                                            "nv_format": null,
+                                                            "nv_factor": null,
+                                                            "nv_cast": false,
+                                                            "comment": null,
+                                                            "enumeration_uuid": null,
+                                                            "units": null,
+                                                            "visibility": null,
+                                                            "display_hexadecimal": false,
+                                                            "default": null,
+                                                            "decimal_places": null,
                                                             "uuid": "6a151510-c6e5-4673-9198-d3d9fb0dfcdc"
                                                         },
                                                         {
@@ -448,6 +608,18 @@
                                                                 "77ed47bb-fbea-4756-b1c4-2e2be02aebc7",
                                                                 "9d642888-b7f0-4d04-8ebf-10887249b179"
                                                             ],
+                                                            "minimum": null,
+                                                            "maximum": null,
+                                                            "nv_format": null,
+                                                            "nv_factor": null,
+                                                            "nv_cast": false,
+                                                            "comment": null,
+                                                            "enumeration_uuid": null,
+                                                            "units": null,
+                                                            "visibility": null,
+                                                            "display_hexadecimal": false,
+                                                            "default": null,
+                                                            "decimal_places": null,
                                                             "uuid": "dd3887db-df84-4f5f-ae6f-98201403c1d2"
                                                         }
                                                     ],
@@ -471,6 +643,18 @@
                                                                 "acda3b53-785c-4588-8b35-d58a9f2e10a8",
                                                                 "1c7d0fac-aaa6-415b-b7c1-08d1f5d07097"
                                                             ],
+                                                            "minimum": null,
+                                                            "maximum": null,
+                                                            "nv_format": null,
+                                                            "nv_factor": null,
+                                                            "nv_cast": false,
+                                                            "comment": null,
+                                                            "enumeration_uuid": null,
+                                                            "units": null,
+                                                            "visibility": null,
+                                                            "display_hexadecimal": false,
+                                                            "default": null,
+                                                            "decimal_places": null,
                                                             "uuid": "d01008cc-cef0-4c95-b642-71e974690416"
                                                         },
                                                         {
@@ -482,6 +666,18 @@
                                                                 "acda3b53-785c-4588-8b35-d58a9f2e10a8",
                                                                 "32666885-2934-481f-88fd-7e3157f702b1"
                                                             ],
+                                                            "minimum": null,
+                                                            "maximum": null,
+                                                            "nv_format": null,
+                                                            "nv_factor": null,
+                                                            "nv_cast": false,
+                                                            "comment": null,
+                                                            "enumeration_uuid": null,
+                                                            "units": null,
+                                                            "visibility": null,
+                                                            "display_hexadecimal": false,
+                                                            "default": null,
+                                                            "decimal_places": null,
                                                             "uuid": "2b16a382-2fa2-41b4-a0dc-161c7496d13a"
                                                         }
                                                     ],
