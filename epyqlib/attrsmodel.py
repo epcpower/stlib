@@ -730,15 +730,15 @@ class Model:
         if field_metadata.updating:
             return
 
-
-        field_name = item.data(epyqlib.utils.qt.UserRoles.field_name)
-        field = getattr(attributes(type(node)).fields, field_name)
         if field_name is None:
             # TODO: why is it getting changed if there's nothing there?
             return
         datum = item.data(QtCore.Qt.DisplayRole)
-        if field.converter is not None:
-            datum = field.converter(datum)
+        if field_metadata.converter is not None:
+            if field_metadata.converter == two_state_checkbox:
+                datum = item.data(QtCore.Qt.CheckStateRole)
+
+            datum = field_metadata.converter(datum)
 
         setattr(node, field_name, datum)
 
@@ -850,6 +850,8 @@ class Model:
                                 value=display_datum,
                                 model=model,
                             )
+                        elif field_metadata.converter == two_state_checkbox:
+                            display_datum = ''
 
                         if display_datum is None:
                             # TODO: CAMPid 0794305784527546542452654254679680
