@@ -290,6 +290,8 @@ class Enumerations(epyqlib.treenode.TreeNode):
     original='original',
     field_names=(
         'nv_format',
+        'nv_factor',
+        'nv_cast',
         'access_level_uuid',
         'comment',
         'decimal_places',
@@ -334,6 +336,20 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
         converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True)
+        ),
+    )
+    nv_factor = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True)
+        ),
+    )
+    nv_cast = attr.ib(
+        default=False,
+        converter=epyqlib.attrsmodel.two_state_checkbox,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Boolean(),
         ),
     )
     uuid = epyqlib.attrsmodel.attr_uuid()
@@ -565,6 +581,18 @@ class Array(epyqlib.treenode.TreeNode):
     field_names=(
         'name',
         'access_level_uuid',
+        'enumeration_uuid',
+        'minimum',
+        'maximum',
+        'nv_format',
+        'nv_factor',
+        'nv_cast',
+        'comment',
+        'units',
+        'visibility',
+        'display_hexadecimal',
+        'default',
+        'decimal_places',
     ),
 )
 @attr.s(hash=False)
@@ -597,6 +625,90 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
         data_display=epyqlib.attrsmodel.name_from_uuid,
         list_selection_root='access level',
         no_graham=True,
+    )
+
+    minimum = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Decimal(allow_none=True, as_string=True),
+        ),
+    )
+    maximum = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Decimal(allow_none=True, as_string=True),
+        ),
+    )
+    nv_format = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True)
+        ),
+    )
+    nv_factor = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True)
+        ),
+    )
+    nv_cast = attr.ib(
+        default=False,
+        converter=epyqlib.attrsmodel.two_state_checkbox,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Boolean(),
+        ),
+    )
+    comment = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+    enumeration_uuid = epyqlib.attrsmodel.attr_uuid(
+        default=None,
+        allow_none=True,
+    )
+    units = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+    visibility = epyqlib.attrsmodel.attr_uuid(
+        default=None,
+        allow_none=True,
+        # converter=lambda x: x if x is None else AccessLevelsAccessLevel(x),
+        human_name='Visibility',
+        data_display=epyqlib.attrsmodel.name_from_uuid,
+        list_selection_root='visibility',
+    )
+    display_hexadecimal = attr.ib(
+        default=False,
+        converter=epyqlib.attrsmodel.two_state_checkbox,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Boolean(),
+        ),
+    )
+    # TODO: CAMPid 1342975467516679768543165421
+    default = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Decimal(allow_none=True, as_string=True),
+        ),
+    )
+    decimal_places = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_int_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Integer(allow_none=True),
+        ),
     )
 
     uuid = epyqlib.attrsmodel.attr_uuid()
@@ -732,6 +844,7 @@ class Table(epyqlib.treenode.TreeNode):
             field=graham.fields.MixedList(
                 fields=(
                     marshmallow.fields.Nested(graham.schema(Array)),
+                    marshmallow.fields.Nested(graham.schema(Group)),
                     marshmallow.fields.Nested(graham.schema(
                         TableEnumerationReference,
                     )),
@@ -836,7 +949,7 @@ class Table(epyqlib.treenode.TreeNode):
         arrays = [
             child
             for child in self.children
-            if isinstance(child, Array)
+            if isinstance(child, (Array, Group))
         ]
 
         with self._ignore_children():
@@ -886,6 +999,7 @@ class Table(epyqlib.treenode.TreeNode):
 
                 present = current
 
+            # for array in (*arrays, *groups):
             for array in arrays:
                 array_path = path + (array.uuid,)
                 previous = old_by_path.get(array_path)
@@ -932,6 +1046,7 @@ class Table(epyqlib.treenode.TreeNode):
         return epyqlib.attrsmodel.create_addable_types((
             TableEnumerationReference,
             Array,
+            Group,
         ))
 
     @classmethod
@@ -939,6 +1054,7 @@ class Table(epyqlib.treenode.TreeNode):
         return epyqlib.attrsmodel.create_addable_types((
             TableEnumerationReference,
             Array,
+            Group,
             TableGroupElement,
         ))
 
@@ -1159,22 +1275,58 @@ columns = epyqlib.attrsmodel.columns(
     merge('type_name', Parameter, Group),
     merge('length', Array),
     merge('named_enumerators', Array),
-    merge('units', Parameter, ArrayParameterElement),
+    merge(
+        'units',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
     merge(
         'enumeration_uuid',
         Parameter,
         TableEnumerationReference,
         ArrayParameterElement,
+        TableArrayElement,
     ),
 
     merge('value', Enumerator, AccessLevel),
-    merge('default', Parameter, ArrayParameterElement),
-    merge('minimum', Parameter, ArrayParameterElement),
-    merge('maximum', Parameter, ArrayParameterElement),
+    merge(
+        'default',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
+    merge(
+        'minimum',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
+    merge(
+        'maximum',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
 
-    merge('nv_format', Parameter, ArrayParameterElement),
-    merge('nv_factor', Parameter),
-    merge('nv_cast', Parameter),
+    merge(
+        'nv_format',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
+    merge(
+        'nv_factor',
+        Parameter,
+        TableArrayElement,
+        ArrayParameterElement,
+    ),
+    merge(
+        'nv_cast',
+        Parameter,
+        TableArrayElement,
+        ArrayParameterElement,
+    ),
     merge('read_only', Parameter),
     merge(
         'access_level_uuid',
@@ -1182,12 +1334,32 @@ columns = epyqlib.attrsmodel.columns(
         TableArrayElement,
         ArrayParameterElement,
     ),
-    merge('visibility', Parameter, ArrayParameterElement),
+    merge(
+        'visibility',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
 
-    merge('display_hexadecimal', Parameter, ArrayParameterElement),
-    merge('decimal_places', Parameter, ArrayParameterElement),
+    merge(
+        'display_hexadecimal',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
+    merge(
+        'decimal_places',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
 
-    merge('comment', Parameter, ArrayParameterElement),
+    merge(
+        'comment',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
 
     merge('original_frame_name', Parameter),
     merge('original_multiplexer_name', Parameter),
