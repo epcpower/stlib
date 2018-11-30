@@ -9,6 +9,7 @@ import attr
 import collections
 import can
 import contextlib
+import decimal
 import enum
 from epyqlib.abstractcolumns import AbstractColumns
 import epyqlib.attrsmodel
@@ -700,7 +701,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         for child in self.all_nv():
             value = d.get(child.fields.name, None)
             if value is not None:
-                child.scratch.set_human_value(value)
+                child.scratch.set_human_value(decimal.Decimal(value))
                 child.fields.scratch = child.scratch.full_string
                 only_in_file.remove(child.fields.name)
             else:
