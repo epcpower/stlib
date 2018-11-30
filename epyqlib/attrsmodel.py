@@ -1124,6 +1124,14 @@ class Tests:
                  == set()
              )
 
+    def test_hashability(self):
+        for cls in self.types:
+            hash(cls())
+
+    def test_has_uuid(self):
+        for cls in self.types:
+            assert hasattr(cls, 'uuid')
+
     def assert_incomplete_types(self, name, signature=None):
         bad = []
         signature = list(signature)
