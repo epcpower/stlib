@@ -1125,8 +1125,15 @@ class Tests:
              )
 
     def test_hashability(self):
+        expected = []
+        result = []
         for cls in self.types:
-            hash(cls())
+            try:
+                hash(cls())
+            except:
+                result.append(cls)
+
+        assert result == expected
 
     def test_has_uuid(self):
         for cls in self.types:
