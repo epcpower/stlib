@@ -1,6 +1,7 @@
 import can
 from canmatrix import canmatrix
 import copy
+import decimal
 import epyqlib.utils.general
 import functools
 import itertools
@@ -161,11 +162,11 @@ class Signal:
     def __init__(self, signal, frame, connect=None, parent=None):
         # self.attributes = signal._attributes # {dict} {'GenSigStartValue': '0.0', 'LongName': 'Enable'}
         try:
-            self.default_value = signal.attributes['GenSigStartValue']
+            self.default_value = decimal.Decimal(signal.attributes['GenSigStartValue'])
         except KeyError:
             self.default_value = None
         else:
-            self.default_value = float(self.default_value)
+            self.default_value = self.default_value
         self.long_name = signal.attributes.get('LongName', None)
         self.hexadecimal_output = signal.attributes.get('HexadecimalOutput',
                                                          None)
@@ -179,17 +180,17 @@ class Signal:
         # TODO: maybe not use a string, but used to help with decimal places
         self.factor = signal.factor
         try:
-            self.max = float(signal.max) # {str} '1'
+            self.max = signal.max
         except ValueError:
             # TODO: default based on signal range
             self.max = None
         try:
-            self.min = float(signal.min) # {str} '0'
+            self.min = signal.min
         except ValueError:
             # TODO: default based on signal range
             self.min = None
         try:
-            self.offset = float(signal.offset) # {str} '0'
+            self.offset = signal.offset
         except ValueError:
             self.offset = 0
 
@@ -202,7 +203,7 @@ class Signal:
 
         self.name = signal.name # {str} 'Enable_command'
         # self.receiver = signal.receiver # {str} ''
-        self.signal_size = int(signal.signalsize) # {int} 2
+        self.signal_size = int(signal.size) # {int} 2
         self.start_bit = int(signal.getStartbit()) # {int} 0
         self.unit = signal.unit # {str} ''
         self.enumeration = {int(k): v for k, v in signal.values.items()} # {dict} {'0': 'Disable', '2': 'Error', '1': 'Enable', '3': 'N/A'}
@@ -248,7 +249,7 @@ class Signal:
         )
 
     def to_human(self, value):
-        return self.offset + (value * float(self.factor))
+        return self.offset + (value * self.factor)
 
     def from_human(self, value):
         return round((value - self.offset) / self.factor)
@@ -283,13 +284,11 @@ class Signal:
                         except ValueError:
                             index = int(raw_value)
 
-                value = float(index)
+                value = index
             else:
                 value = locale.atof(raw_value)
-        elif raw_value is None:
-            value = raw_value
         else:
-            value = float(raw_value)
+            value = raw_value
 
         if value is not None:
             value = self.from_human(value)
@@ -345,7 +344,7 @@ class Signal:
                     return (magnitude, 0)
                 frac_part = abs(x) - int_part
                 multiplier = 10 ** (max_digits - magnitude)
-                frac_digits = multiplier + int(multiplier * frac_part + 0.5)
+                frac_digits = multiplier + int(multiplier * frac_part + decimal.Decimal('0.5'))
                 while frac_digits % 10 == 0:
                     frac_digits /= 10
                 scale = int(math.log10(frac_digits))
@@ -399,7 +398,7 @@ class Signal:
                     # TODO: and _offset...
 
                     self.scaled_value = (
-                        self.offset + (float(self.value) * self.factor)
+                        self.offset + (self.value * self.factor)
                     )
 
                     value = self.scaled_value
@@ -439,7 +438,7 @@ class Signal:
                     # TODO: and _offset...
 
                     scaled_value = (
-                        self.offset + (float(value) * self.factor)
+                        self.offset + (value * self.factor)
                     )
 
                     full_string = self.format_float(scaled_value)
@@ -597,7 +596,7 @@ class Frame(QtCanListener):
 
                 offset = neo_signal.offset
                 if offset is None:
-                    offset = 0
+                    offset = decimal.Decimal('0')
 
                 default_value = neo_signal.default_value
                 if default_value is None:
@@ -787,8 +786,8 @@ class Neo(QtCanListener):
 
         for frame in matrix.frames:
             if node_id_adjust is not None:
-                frame._Id = node_id_adjust(
-                    message_id=frame._Id,
+                frame.id = node_id_adjust(
+                    message_id=frame.id,
                     to_device=(
                         frame.attributes['Receivable'].casefold() == 'false'
                     ),
@@ -814,9 +813,9 @@ class Neo(QtCanListener):
                 # parsing messages later
                 multiplex_frame = canmatrix.Frame(
                         name=frame.name,
-                        Id=frame.id,
-                        dlc=frame.size,
-                        transmitter=frame.transmitter)
+                        id=frame.id,
+                        size=frame.size,
+                        transmitters=list(frame.transmitters))
                 if 'GenMsgCycleTime' in frame.attributes:
                     multiplex_frame.addAttribute(
                         'GenMsgCycleTime',
@@ -825,8 +824,8 @@ class Neo(QtCanListener):
                 multiplex_frame.extended = frame.extended
                 matrix_signal = canmatrix.Signal(
                         name=multiplex_signal.name,
-                        startBit=multiplex_signal.startbit,
-                        signalSize=multiplex_signal.signalsize,
+                        startBit=multiplex_signal.startBit,
+                        size=multiplex_signal.size,
                         is_little_endian=multiplex_signal.is_little_endian,
                         is_signed=multiplex_signal.is_signed,
                         factor=multiplex_signal.factor,
@@ -853,9 +852,9 @@ class Neo(QtCanListener):
                     # just those signals.
                     matrix_frame = canmatrix.Frame(
                             name=frame.name,
-                            Id=frame.id,
-                            dlc=frame.size,
-                            transmitter=frame.transmitter)
+                            id=frame.id,
+                            size=frame.size,
+                            transmitters=list(frame.transmitters))
                     matrix_frame.extended = frame.extended
                     if 'GenMsgCycleTime' in frame.attributes:
                         matrix_frame.addAttribute(
@@ -867,8 +866,8 @@ class Neo(QtCanListener):
                         multiplex_value)])
                     matrix_signal = canmatrix.Signal(
                             name=multiplex_signal.name,
-                            startBit=multiplex_signal.startbit,
-                            signalSize=multiplex_signal.signalsize,
+                            startBit=multiplex_signal.startBit,
+                            size=multiplex_signal.size,
                             is_little_endian=multiplex_signal.is_little_endian,
                             is_signed=multiplex_signal.is_signed,
                             factor=multiplex_signal.factor,
