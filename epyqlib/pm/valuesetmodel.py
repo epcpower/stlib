@@ -115,19 +115,6 @@ def copy_parameter_data(
     )
 
 
-def name_attrib():
-    attrib = attr.ib(
-        default=None,
-        converter=epyqlib.attrsmodel.to_str_or_none,
-    )
-    graham.attrib(
-        attribute=attrib,
-        field=marshmallow.fields.String(),
-    )
-
-    return attrib
-
-
 def decimal_attrib(**kwargs):
     attrib = attr.ib(
         converter=epyqlib.attrsmodel.to_decimal_or_none,
@@ -149,7 +136,13 @@ def decimal_attrib(**kwargs):
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Parameter(epyqlib.treenode.TreeNode):
-    name = name_attrib()
+    name = attr.ib(
+        default='New Parameter',
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(),
+        ),
+    )
+
     value = decimal_attrib(default=None)
     user_default = decimal_attrib(default=None)
     factory_default = decimal_attrib(default=None)
