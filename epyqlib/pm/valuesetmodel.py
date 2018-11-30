@@ -138,6 +138,7 @@ def decimal_attrib(**kwargs):
 class Parameter(epyqlib.treenode.TreeNode):
     name = attr.ib(
         default='New Parameter',
+        converter=str,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
