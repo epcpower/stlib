@@ -6,7 +6,7 @@ bitstruct==4.0.0
 Click==7.0
 constantly==15.1.0
 decorator==4.3.0
--e git+https://github.com/ebroecker/canmatrix@0beb8229555e743bb441181ff31cb37e82fff219#egg=canmatrix
+git+https://github.com/ebroecker/canmatrix@8f63047c18dcb65f7904d298cbf603d2e6325b85#egg=canmatrix
 future==0.16.0
 gitdb2==2.0.5
 GitPython==2.1.11
