@@ -286,7 +286,7 @@ class Signal:
 
                 value = index
             else:
-                value = locale.atof(raw_value)
+                value = decimal.Decimal(locale.delocalize(raw_value))
         else:
             value = raw_value
 
