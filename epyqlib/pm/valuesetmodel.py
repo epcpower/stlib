@@ -117,7 +117,8 @@ def copy_parameter_data(
 
 def name_attrib():
     attrib = attr.ib(
-        converter=str,
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
     )
     graham.attrib(
         attribute=attrib,
