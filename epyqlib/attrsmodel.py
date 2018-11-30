@@ -1126,14 +1126,24 @@ class Tests:
 
     def test_hashability(self):
         expected = []
-        result = []
+        bad = []
         for cls in self.types:
+            instance = cls()
             try:
-                hash(cls())
-            except:
-                result.append(cls)
+                hash(instance)
+            except TypeError :
+                bad.append(cls)
 
-        assert result == expected
+        sys.stderr.write('\n')
+        for cls in bad:
+            sys.stderr.write(
+                '{path}  {name}\n'.format(
+                    path=epyqlib.utils.general.path_and_line(cls),
+                    name=cls.__name__,
+                ),
+            )
+
+        assert bad == expected
 
     def test_has_uuid(self):
         for cls in self.types:
