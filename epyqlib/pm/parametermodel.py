@@ -73,7 +73,9 @@ class Parameter(epyqlib.treenode.TreeNode):
         attribute=enumeration_uuid,
         human_name='Enumeration',
         data_display=epyqlib.attrsmodel.name_from_uuid,
-        list_selection_root='enumerations',
+        delegate=epyqlib.attrsmodel.SingleSelectByRootDelegateCache(
+            list_selection_root='enumerations',
+        )
     )
 
     decimal_places = attr.ib(

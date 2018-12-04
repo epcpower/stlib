@@ -74,7 +74,7 @@ class Metadata:
     human_name = attr.ib(default=None)
     converter = attr.ib(default=None)
     no_column = attr.ib(default=False)
-    list_selection_root = attr.ib(default=None)
+    delegate = attr.ib(default=None)
     updating = attr.ib(default=False)
 
 
@@ -144,8 +144,9 @@ def fields(cls):
 def list_selection_roots(cls):
     d = {}
     for field in fields(cls):
-        if field.list_selection_root:
-            d[field.name] = field.list_selection_root
+        if field.delegate is not None:
+            if field.delegate.list_selection_root:
+                d[field.name] = field.delegate.list_selection_root
     return d
 
 
@@ -391,7 +392,9 @@ def attr_uuid(
         attribute=attribute,
         human_name=human_name,
         data_display=data_display,
-        list_selection_root=list_selection_root,
+        delegate=epyqlib.attrsmodel.SingleSelectByRootDelegateCache(
+            list_selection_root=list_selection_root,
+        ),
     )
 
     return attribute
@@ -510,21 +513,35 @@ def get_connection_id(parent, child):
     return (parent, child.uuid)
 
 
+@attr.s
+class SingleSelectByRootDelegateCache:
+    list_selection_root = attr.ib()
+    text_column_name = attr.ib(default='Name')
+    cached_delegate = attr.ib(default=None)
+
+    def get_delegate(self, model, parent):
+        if self.cached_delegate is not None:
+            return self.cached_delegate
+
+        root_node = model.list_selection_roots[
+            self.list_selection_root
+        ]
+
+        self.cached_delegate = EnumerationDelegate(
+            text_column_name=self.text_column_name,
+            root=root_node,
+            parent=parent,
+        )
+
+        return self.cached_delegate
+
+
 class DelegateSelector:
     def __init__(self, parent=None):
         self.parent = parent
         self.regular = QtWidgets.QStyledItemDelegate(parent)
         self.enumerations = {}
 
-    def enumeration_delegate(self, root):
-        return self.enumerations.setdefault(
-            root,
-            EnumerationDelegate(
-                text_column_name='Name',
-                root=root,
-                parent=self.parent,
-            ),
-        )
 
     def select(self, index):
         index = to_source_model(index)
@@ -534,14 +551,10 @@ class DelegateSelector:
         field_name = item.data(epyqlib.utils.qt.UserRoles.field_name)
         model = item.data(epyqlib.utils.qt.UserRoles.attrs_model)
 
-        list_selection_root = getattr(fields(type(node)), field_name)
-        list_selection_root = list_selection_root.list_selection_root
-
-        if list_selection_root is not None:
-            list_selection_root = model.list_selection_roots[
-                list_selection_root
-            ]
-            delegate = self.enumeration_delegate(list_selection_root)
+        metadata = getattr(fields(type(node)), field_name)
+        
+        if metadata.delegate is not None:
+            delegate = metadata.delegate.get_delegate(model, self.parent)
         else:
             delegate = self.regular
 
