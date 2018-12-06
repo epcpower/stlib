@@ -260,6 +260,7 @@ def file_dialog(
         filters,
         default=0,
         save=False,
+        multiple=False,
         caption='',
         parent=None,
         path_factory=str,
@@ -272,18 +273,23 @@ def file_dialog(
     # ]
     # TODO: CAMPid 97456612391231265743713479129
 
+    if save:
+        multiple = False
+
     filter_strings = [create_filter_string(f[0], f[1]) for f in filters]
     filter_string = ';;'.join(filter_strings)
 
     if save:
         dialog = QtWidgets.QFileDialog.getSaveFileName
+    elif multiple:
+        dialog = QtWidgets.QFileDialog.getOpenFileNames
     else:
         dialog = QtWidgets.QFileDialog.getOpenFileName
 
     if 'dir' in kwargs:
         kwargs['directory'] = kwargs.pop('dir')
 
-    file = dialog(
+    selected = dialog(
         parent=parent,
         filter=filter_string,
         initialFilter=filter_strings[default],
@@ -291,10 +297,13 @@ def file_dialog(
         **kwargs
     )[0]
 
-    if len(file) == 0:
+    if multiple:
+        return [path_factory(path) for path in selected]
+
+    if len(selected) == 0:
         return None
 
-    return path_factory(file)
+    return path_factory(selected)
 
 
 def get_code():
