@@ -1043,7 +1043,7 @@ class Model:
         can_drop = new_parent.can_drop_on(node=node)
 
         logger.debug('canDropMimeData: {}: {}, {}'.format(
-            new_parent.name, row, can_drop))
+            getattr(new_parent, 'name', '<no name attribute>'), row, can_drop))
 
         return can_drop
 
