@@ -1009,7 +1009,9 @@ class Model:
             else:
                 new_child = new_parent.child_from(node)
 
-            if row == -1:
+            if new_child is None:
+                pass
+            elif row == -1:
                 new_parent.append_child(new_child)
             else:
                 new_parent.insert_child(row, new_child)
