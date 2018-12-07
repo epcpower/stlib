@@ -999,7 +999,9 @@ class Model:
         if action == QtCore.Qt.MoveAction:
             logger.debug('node name: {}'.format(node.name))
             logger.debug((data, action, row, column, parent))
-            logger.debug('dropped on: {}'.format(new_parent.name))
+            logger.debug('dropped on: {}'.format(
+                getattr(new_parent, 'name', '<no name attribute>'),
+            ))
 
             local = node.find_root() == self.root
 
