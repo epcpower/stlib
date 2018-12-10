@@ -689,6 +689,11 @@ class Model:
             supported_drop_actions=self.supportedDropActions,
         )
 
+        self.model.invisibleRootItem().setData(
+            self,
+            epyqlib.utils.qt.UserRoles.attrs_model,
+        )
+
         self.mime_type = 'application/com.epcpower.pm.attrsmodel'
 
         self.columns = columns
