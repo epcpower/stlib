@@ -45,7 +45,10 @@ def name_from_uuid(node, value, model):
     if value is None:
         return None
 
-    target_node = model.node_from_uuid(value)
+    try:
+        target_node = model.node_from_uuid(value)
+    except NotFoundError:
+        return str(value)
 
     return target_node.name
 

@@ -1147,7 +1147,7 @@ class Enumeration(epyqlib.treenode.TreeNode):
             yield child.value
 
     def can_drop_on(self, node):
-        return False
+        return isinstance(node, Enumerator)
 
     def can_delete(self, node=None):
         if node is None:
