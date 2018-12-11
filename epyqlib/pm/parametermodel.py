@@ -1264,6 +1264,7 @@ types = epyqlib.attrsmodel.Types(
         TableArrayElement,
         TableGroupElement,
     ),
+    external_list_selection_roots={'sunspec types'},
 )
 
 

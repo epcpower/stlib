@@ -242,6 +242,7 @@ class Types:
         ),
         default=(),
     )
+    external_list_selection_roots = attr.ib(factory=set)
 
     def __attrs_post_init__(self):
         for t in self.types.values():
@@ -263,11 +264,11 @@ class Types:
         return type_
     
     def list_selection_roots(self):
-        roots = set()
+        roots = set(self.external_list_selection_roots)
         for v in self.types.values():
             t = list_selection_roots(v)
             roots.update(t.values())
-        
+
         return roots
 
 
