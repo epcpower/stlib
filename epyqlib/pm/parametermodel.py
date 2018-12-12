@@ -1140,6 +1140,12 @@ class SunSpecEnumerator(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.Integer(allow_none=True),
         ),
     )
+    type = attr.ib(
+        default='',
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(),
+        ),
+    )
     uuid = epyqlib.attrsmodel.attr_uuid()
 
     def __attrs_post_init__(self):
