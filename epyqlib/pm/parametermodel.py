@@ -1104,6 +1104,53 @@ class Enumerator(epyqlib.treenode.TreeNode):
     can_delete = epyqlib.attrsmodel.childless_can_delete
 
 
+@graham.schemify(tag='sunspec_enumerator')
+@epyqlib.attrsmodel.ify()
+@epyqlib.utils.qt.pyqtify()
+@attr.s(hash=False)
+class SunSpecEnumerator(epyqlib.treenode.TreeNode):
+    name = attr.ib(
+        default='New Sunspec Enumerator',
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(),
+        ),
+    )
+    label = attr.ib(
+        default='',
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(),
+        ),
+    )
+    description = attr.ib(
+        default='',
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(),
+        ),
+    )
+    notes = attr.ib(
+        default='',
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(),
+        ),
+    )
+    value = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Integer(allow_none=True),
+        ),
+    )
+    uuid = epyqlib.attrsmodel.attr_uuid()
+
+    def __attrs_post_init__(self):
+        super().__init__()
+
+    def can_drop_on(self, node):
+        return False
+
+    can_delete = epyqlib.attrsmodel.childless_can_delete
+
+
 @graham.schemify(tag='enumeration', register=True)
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
@@ -1121,6 +1168,7 @@ class Enumeration(epyqlib.treenode.TreeNode):
         metadata=graham.create_metadata(
             field=graham.fields.MixedList(fields=(
                 marshmallow.fields.Nested(graham.schema(Enumerator)),
+                marshmallow.fields.Nested(graham.schema(SunSpecEnumerator)),
             )),
         ),
     )
@@ -1256,6 +1304,7 @@ types = epyqlib.attrsmodel.Types(
         ArrayParameterElement,
         Enumeration,
         Enumerator,
+        SunSpecEnumerator,
         Enumerations,
         AccessLevel,
         AccessLevels,
@@ -1292,7 +1341,7 @@ columns = epyqlib.attrsmodel.columns(
         TableArrayElement,
     ),
 
-    merge('value', Enumerator, AccessLevel),
+    merge('value', Enumerator, SunSpecEnumerator, AccessLevel),
     merge(
         'default',
         Parameter,
@@ -1311,6 +1360,8 @@ columns = epyqlib.attrsmodel.columns(
         ArrayParameterElement,
         TableArrayElement,
     ),
+
+    merge('label', SunSpecEnumerator),
 
     merge(
         'nv_format',
@@ -1357,12 +1408,18 @@ columns = epyqlib.attrsmodel.columns(
         TableArrayElement,
     ),
 
-    merge(
-        'comment',
-        Parameter,
-        ArrayParameterElement,
-        TableArrayElement,
+    (
+        merge(
+            'comment',
+            Parameter,
+            ArrayParameterElement,
+            TableArrayElement,
+        )
+        +
+        merge('description', SunSpecEnumerator)
     ),
+
+    merge('notes', SunSpecEnumerator),
 
     merge('original_frame_name', Parameter),
     merge('original_multiplexer_name', Parameter),
