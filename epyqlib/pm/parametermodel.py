@@ -28,6 +28,12 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(),
         ),
     )
+    abbreviation = attr.ib(
+        default='',
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(),
+        ),
+    )
     type_name = attr.ib(
         default=None,
         converter=epyqlib.attrsmodel.to_str_or_none,
