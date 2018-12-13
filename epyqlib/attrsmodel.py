@@ -679,7 +679,7 @@ class PyQStandardItemModel(QtGui.QStandardItemModel):
 
 
 class Model:
-    def __init__(self, root, columns, parent=None):
+    def __init__(self, root, columns, drop_sources=(), parent=None):
         self.root = root
         self.root.model = self
         self._all_items_list = []
@@ -715,6 +715,8 @@ class Model:
         self.connected_signals = {}
 
         self.list_selection_roots = {}
+
+        self.add_drop_sources(*drop_sources)
 
         check_uuids(self.root)
 

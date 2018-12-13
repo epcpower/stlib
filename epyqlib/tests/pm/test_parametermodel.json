@@ -10,6 +10,7 @@
                 {
                     "_type": "parameter",
                     "name": "Parameter A A",
+                    "abbreviation": "",
                     "type_name": null,
                     "default": null,
                     "minimum": null,
@@ -62,6 +63,7 @@
                                 {
                                     "_type": "parameter",
                                     "name": "A0",
+                                    "abbreviation": "",
                                     "type_name": null,
                                     "default": null,
                                     "minimum": null,
@@ -113,6 +115,7 @@
                                 {
                                     "_type": "parameter",
                                     "name": "B0",
+                                    "abbreviation": "",
                                     "type_name": null,
                                     "default": null,
                                     "minimum": null,
@@ -701,6 +704,7 @@
         {
             "_type": "parameter",
             "name": "Parameter B",
+            "abbreviation": "",
             "type_name": null,
             "default": "42",
             "minimum": null,

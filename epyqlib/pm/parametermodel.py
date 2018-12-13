@@ -25,7 +25,7 @@ class Parameter(epyqlib.treenode.TreeNode):
     name = attr.ib(
         default='New Parameter',
         metadata=graham.create_metadata(
-            field=marshmallow.fields.String(),
+            field=marshmallow.fields.String(allow_none=True),
         ),
     )
     abbreviation = attr.ib(
@@ -1336,7 +1336,11 @@ def merge(name, *types):
 
 columns = epyqlib.attrsmodel.columns(
     merge('name', *types.types.values()),
-    merge('type_name', Parameter, Group),
+    merge('abbreviation', Parameter),
+    (
+        merge('type_name', Parameter, Group)
+        + merge('type', SunSpecEnumerator)
+    ),
     merge('length', Array),
     merge('named_enumerators', Array),
     merge(
