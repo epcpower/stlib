@@ -1442,7 +1442,7 @@ columns = epyqlib.attrsmodel.columns(
         merge('description', SunSpecEnumerator)
     ),
 
-    merge('notes', SunSpecEnumerator),
+    merge('notes', Parameter, SunSpecEnumerator),
 
     merge('original_frame_name', Parameter),
     merge('original_multiplexer_name', Parameter),
