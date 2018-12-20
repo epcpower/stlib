@@ -41,11 +41,15 @@ class MultipleFoundError(Exception):
     pass
 
 
+# TODO: CAMPid 8695426542167924656654271657917491654
 def name_from_uuid(node, value, model):
     if value is None:
         return None
 
-    target_node = model.node_from_uuid(value)
+    try:
+        target_node = model.node_from_uuid(value)
+    except NotFoundError:
+        return str(value)
 
     return target_node.name
 
@@ -74,7 +78,7 @@ class Metadata:
     human_name = attr.ib(default=None)
     converter = attr.ib(default=None)
     no_column = attr.ib(default=False)
-    list_selection_root = attr.ib(default=None)
+    delegate = attr.ib(default=None)
     updating = attr.ib(default=False)
 
 
@@ -144,8 +148,9 @@ def fields(cls):
 def list_selection_roots(cls):
     d = {}
     for field in fields(cls):
-        if field.list_selection_root:
-            d[field.name] = field.list_selection_root
+        if field.delegate is not None:
+            if field.delegate.list_selection_root:
+                d[field.name] = field.delegate.list_selection_root
     return d
 
 
@@ -238,6 +243,7 @@ class Types:
         ),
         default=(),
     )
+    external_list_selection_roots = attr.ib(factory=set)
 
     def __attrs_post_init__(self):
         for t in self.types.values():
@@ -259,11 +265,11 @@ class Types:
         return type_
     
     def list_selection_roots(self):
-        roots = set()
+        roots = set(self.external_list_selection_roots)
         for v in self.types.values():
             t = list_selection_roots(v)
             roots.update(t.values())
-        
+
         return roots
 
 
@@ -391,7 +397,9 @@ def attr_uuid(
         attribute=attribute,
         human_name=human_name,
         data_display=data_display,
-        list_selection_root=list_selection_root,
+        delegate=epyqlib.attrsmodel.SingleSelectByRootDelegateCache(
+            list_selection_root=list_selection_root,
+        ),
     )
 
     return attribute
@@ -510,21 +518,35 @@ def get_connection_id(parent, child):
     return (parent, child.uuid)
 
 
+@attr.s
+class SingleSelectByRootDelegateCache:
+    list_selection_root = attr.ib()
+    text_column_name = attr.ib(default='Name')
+    cached_delegate = attr.ib(default=None)
+
+    def get_delegate(self, model, parent):
+        if self.cached_delegate is not None:
+            return self.cached_delegate
+
+        root_node = model.list_selection_roots[
+            self.list_selection_root
+        ]
+
+        self.cached_delegate = EnumerationDelegate(
+            text_column_name=self.text_column_name,
+            root=root_node,
+            parent=parent,
+        )
+
+        return self.cached_delegate
+
+
 class DelegateSelector:
     def __init__(self, parent=None):
         self.parent = parent
         self.regular = QtWidgets.QStyledItemDelegate(parent)
         self.enumerations = {}
 
-    def enumeration_delegate(self, root):
-        return self.enumerations.setdefault(
-            root,
-            EnumerationDelegate(
-                text_column_name='Name',
-                root=root,
-                parent=self.parent,
-            ),
-        )
 
     def select(self, index):
         index = to_source_model(index)
@@ -534,14 +556,10 @@ class DelegateSelector:
         field_name = item.data(epyqlib.utils.qt.UserRoles.field_name)
         model = item.data(epyqlib.utils.qt.UserRoles.attrs_model)
 
-        list_selection_root = getattr(fields(type(node)), field_name)
-        list_selection_root = list_selection_root.list_selection_root
-
-        if list_selection_root is not None:
-            list_selection_root = model.list_selection_roots[
-                list_selection_root
-            ]
-            delegate = self.enumeration_delegate(list_selection_root)
+        metadata = getattr(fields(type(node)), field_name)
+        
+        if metadata.delegate is not None:
+            delegate = metadata.delegate.get_delegate(model, self.parent)
         else:
             delegate = self.regular
 
@@ -661,7 +679,7 @@ class PyQStandardItemModel(QtGui.QStandardItemModel):
 
 
 class Model:
-    def __init__(self, root, columns, parent=None):
+    def __init__(self, root, columns, drop_sources=(), parent=None):
         self.root = root
         self.root.model = self
         self._all_items_list = []
@@ -674,6 +692,11 @@ class Model:
             mime_data=self.mimeData,
             drop_mime_data=self.dropMimeData,
             supported_drop_actions=self.supportedDropActions,
+        )
+
+        self.model.invisibleRootItem().setData(
+            self,
+            epyqlib.utils.qt.UserRoles.attrs_model,
         )
 
         self.mime_type = 'application/com.epcpower.pm.attrsmodel'
@@ -692,6 +715,8 @@ class Model:
         self.connected_signals = {}
 
         self.list_selection_roots = {}
+
+        self.add_drop_sources(*drop_sources)
 
         check_uuids(self.root)
 
@@ -986,7 +1011,9 @@ class Model:
         if action == QtCore.Qt.MoveAction:
             logger.debug('node name: {}'.format(node.name))
             logger.debug((data, action, row, column, parent))
-            logger.debug('dropped on: {}'.format(new_parent.name))
+            logger.debug('dropped on: {}'.format(
+                getattr(new_parent, 'name', '<no name attribute>'),
+            ))
 
             local = node.find_root() == self.root
 
@@ -996,7 +1023,9 @@ class Model:
             else:
                 new_child = new_parent.child_from(node)
 
-            if row == -1:
+            if new_child is None:
+                pass
+            elif row == -1:
                 new_parent.append_child(new_child)
             else:
                 new_parent.insert_child(row, new_child)
@@ -1030,7 +1059,7 @@ class Model:
         can_drop = new_parent.can_drop_on(node=node)
 
         logger.debug('canDropMimeData: {}: {}, {}'.format(
-            new_parent.name, row, can_drop))
+            getattr(new_parent, 'name', '<no name attribute>'), row, can_drop))
 
         return can_drop
 
@@ -1125,6 +1154,31 @@ class Tests:
                 (set(addable_types) - set(self.types))
                  == set()
              )
+
+    def test_hashability(self):
+        expected = []
+        bad = []
+        for cls in self.types:
+            instance = cls()
+            try:
+                hash(instance)
+            except TypeError :
+                bad.append(cls)
+
+        sys.stderr.write('\n')
+        for cls in bad:
+            sys.stderr.write(
+                '{path}  {name}\n'.format(
+                    path=epyqlib.utils.general.path_and_line(cls),
+                    name=cls.__name__,
+                ),
+            )
+
+        assert bad == expected
+
+    def test_has_uuid(self):
+        for cls in self.types:
+            assert hasattr(cls, 'uuid')
 
     def assert_incomplete_types(self, name, signature=None):
         bad = []

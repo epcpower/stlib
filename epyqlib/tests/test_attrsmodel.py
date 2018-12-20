@@ -788,7 +788,9 @@ def test_enumeration(qtbot):
         )
         epyqlib.attrsmodel.attrib(
             attribute=enumeration_uuid,
-            list_selection_root='test list_selection_root',
+            delegate=epyqlib.attrsmodel.SingleSelectByRootDelegateCache(
+                list_selection_root='test list_selection_root',
+            ),
             converter=epyqlib.attrsmodel.convert_uuid,
         )
         uuid = epyqlib.attrsmodel.attr_uuid()
@@ -914,20 +916,24 @@ def test_all_selection_roots_avail():
         b = attr.ib(default=None)
         c = attr.ib(default=None)
         epyqlib.attrsmodel.attrib(
-           attribute=c,
-           list_selection_root='c root',
+            attribute=c,
+            delegate=epyqlib.attrsmodel.SingleSelectByRootDelegateCache(
+                list_selection_root='c root',
+            ),
         )
         d = attr.ib(default=None)
         epyqlib.attrsmodel.attrib(
-           attribute=d,
-           list_selection_root='d root',
+            attribute=d,
+            delegate=epyqlib.attrsmodel.SingleSelectByRootDelegateCache(
+                list_selection_root='d root',
+            ),
         )
 
         def __attrs_post_init__(self):
             super().__init__()
 
     expected = {'c':'c root', 'd':'d root'}
-    assert epyqlib.attrsmodel.list_selection_roots(C) == expected
+    assert  epyqlib.attrsmodel.list_selection_roots(C) == expected
 
 
 def test_types_list_selection_roots():
@@ -942,13 +948,17 @@ def test_types_list_selection_roots():
         c = attr.ib(default=None)
         epyqlib.attrsmodel.attrib(
             attribute=c,
-            list_selection_root='c root',
+            delegate=epyqlib.attrsmodel.SingleSelectByRootDelegateCache(
+                list_selection_root='c root',
+            ),
         )
 
         d = attr.ib(default=None)
         epyqlib.attrsmodel.attrib(
             attribute=d,
-            list_selection_root='d root',
+            delegate=epyqlib.attrsmodel.SingleSelectByRootDelegateCache(
+                list_selection_root='d root',
+            ),
         )
 
         def __attrs_post_init__(self):
@@ -965,13 +975,17 @@ def test_types_list_selection_roots():
         g = attr.ib(default=None)
         epyqlib.attrsmodel.attrib(
             attribute=g,
-            list_selection_root='g root',
+            delegate=epyqlib.attrsmodel.SingleSelectByRootDelegateCache(
+                list_selection_root='g root',
+            ),
         )
 
         h = attr.ib(default=None)
         epyqlib.attrsmodel.attrib(
             attribute=h,
-            list_selection_root='h root',
+            delegate=epyqlib.attrsmodel.SingleSelectByRootDelegateCache(
+                list_selection_root='h root',
+            ),
         )
 
         def __attrs_post_init__(self):
