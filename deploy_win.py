@@ -305,7 +305,7 @@ to_copy = [
 ]
 
 for source, destination in to_copy:
-    shutil.copy(os.path.join('epyq', source), os.path.join(config, destination))
+    shutil.copy(os.path.join('src', 'epyq', source), os.path.join(config, destination))
 
 
 report_and_check_call(

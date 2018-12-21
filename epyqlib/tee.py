@@ -32,12 +32,16 @@ class Tee:
         return getattr(self, '__methodmissing__')
 
     def __methodmissing__(self, *args, **kwargs):
-        call = getattr(self.principals[0], self.__missing_method_name)
-        result = call(*args, **kwargs)
+        call = getattr(self.principals[0], self.__missing_method_name, None)
+        if call is not None:
+            result = call(*args, **kwargs)
+        else:
+            result = None
 
         for principal in self.principals[1:]:
-            call = getattr(principal, self.__missing_method_name)
-            call(*args, **kwargs)
+            call = getattr(principal, self.__missing_method_name, None)
+            if call is not None:
+                call(*args, **kwargs)
 
         return result
 
