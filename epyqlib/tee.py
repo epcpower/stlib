@@ -35,6 +35,8 @@ class Tee:
         call = getattr(self.principals[0], self.__missing_method_name, None)
         if call is not None:
             result = call(*args, **kwargs)
+        else:
+            result = None
 
         for principal in self.principals[1:]:
             call = getattr(principal, self.__missing_method_name, None)
