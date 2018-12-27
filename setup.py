@@ -48,7 +48,7 @@ setuptools.setup(
         'python-can',
         'twisted>=18.9.0rc1',
     ],
-    extras_requires={
+    extras_require={
         'deploy': [
             'gitpython',
             'requests',
