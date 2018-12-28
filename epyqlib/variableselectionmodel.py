@@ -10,6 +10,7 @@ import epyqlib.treenode
 import epyqlib.twisted.cancalibrationprotocol as ccp
 import epyqlib.utils.qt
 import epyqlib.utils.twisted
+import epyqlib.variableselectionmodel
 import functools
 import io
 import itertools
