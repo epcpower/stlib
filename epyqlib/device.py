@@ -12,6 +12,8 @@ import collections
 import epyqlib.canneo
 import epyqlib.deviceextension
 import epyqlib.faultlogmodel
+# https://www.riverbankcomputing.com/pipermail/pyqt/2018-December/041218.html
+import epyqlib.filesview
 try:
     import epyqlib.resources.code
 except ImportError:
@@ -72,6 +74,7 @@ class Elements(Enum):
     nv = 5
     scripting = 6
     fault_log = 7
+    files = 8
 
 
 @unique
@@ -82,10 +85,16 @@ class Tabs(Enum):
     nv = 4
     scripting = 5
     fault_log = 6
+    files = 7
 
     @classmethod
     def defaults(cls):
-        return set(cls) - {cls.variables, cls.scripting, cls.fault_log}
+        return set(cls) - {
+            cls.variables,
+            cls.scripting,
+            cls.fault_log,
+            cls.files,
+        }
 
 
 def j1939_node_id_adjust(message_id, device_id, to_device, controller_id):
@@ -374,6 +383,9 @@ class Device:
             self.elements.discard(Elements.fault_log)
         else:
             depended_on.add(Elements.nv)
+
+        if Tabs.files not in tabs:
+            self.elements.discard(Elements.files)
 
         self.elements |= depended_on
 
@@ -867,6 +879,8 @@ class Device:
             self.ui.tabs.removeTab(self.ui.tabs.indexOf(self.ui.scripting))
         if Tabs.fault_log not in tabs:
             self.ui.tabs.removeTab(self.ui.tabs.indexOf(self.ui.faultlog))
+        if Tabs.files not in tabs:
+            self.ui.tabs.removeTab(self.ui.tabs.indexOf(self.ui.files))
 
         self.ui.tabs.setCurrentIndex(0)
 

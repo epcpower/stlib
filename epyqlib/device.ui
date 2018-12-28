@@ -137,6 +137,16 @@
            </item>
           </layout>
          </widget>
+         <widget class="QWidget" name="files">
+          <attribute name="title">
+           <string>Files</string>
+          </attribute>
+          <layout class="QGridLayout" name="gridLayout">
+           <item row="0" column="0">
+            <widget class="FilesViewQtBuilder" name="files_view" native="true"/>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>
@@ -170,6 +180,11 @@
    <class>FaultLogView</class>
    <extends>QWidget</extends>
    <header>epyqlib.faultlogview</header>
+  </customwidget>
+  <customwidget>
+   <class>FilesViewQtBuilder</class>
+   <extends>QWidget</extends>
+   <header>epyqlib.filesview</header>
   </customwidget>
   <customwidget>
    <class>OverlayLabel</class>
