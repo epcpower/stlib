@@ -1008,6 +1008,8 @@ class Model:
         node, new_parent, source_row = self.source_target_for_drop(
             column, data, parent, row)
 
+        node_to_insert_before = new_parent.child_at_row(row)
+
         if action == QtCore.Qt.MoveAction:
             logger.debug('node name: {}'.format(node.name))
             logger.debug((data, action, row, column, parent))
@@ -1028,7 +1030,8 @@ class Model:
             elif row == -1:
                 new_parent.append_child(new_child)
             else:
-                new_parent.insert_child(row, new_child)
+                new_row = new_parent.row_of_child(node_to_insert_before)
+                new_parent.insert_child(new_row, new_child)
 
         # Always returning False so that Qt won't do anything...  like
         # thinking it knows which row of items to delete to finish the
