@@ -1030,8 +1030,9 @@ class Model:
             else:
                 new_parent.insert_child(row, new_child)
 
-            return local
-
+        # Always returning False so that Qt won't do anything...  like
+        # thinking it knows which row of items to delete to finish the
+        # move.
         return False
 
     def source_target_for_drop(self, column, data, parent, row):
