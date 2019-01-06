@@ -1008,7 +1008,8 @@ class Model:
         node, new_parent, source_row = self.source_target_for_drop(
             column, data, parent, row)
 
-        node_to_insert_before = new_parent.child_at_row(row)
+        if row != -1:
+            node_to_insert_before = new_parent.child_at_row(row)
 
         if action == QtCore.Qt.MoveAction:
             logger.debug('node name: {}'.format(node.name))
