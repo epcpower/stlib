@@ -9,6 +9,7 @@ import attr
 import can
 import canmatrix.formats
 import collections
+import decimal
 import epyqlib.canneo
 import epyqlib.deviceextension
 import epyqlib.faultlogmodel
@@ -721,7 +722,7 @@ class Device:
                 )
                 with open(parameter_defaults_path) as f:
                     self.nvs.defaults_from_dict(
-                        d=json.load(f),
+                        d=json.load(f, parse_float=decimal.Decimal),
                         default_metas=default_metas,
                     )
 
@@ -730,14 +731,14 @@ class Device:
                     if epyqlib.nv.MetaEnum.minimum not in self.metas:
                         if nv.min is not None:
                             nv.set_meta(
-                                data=float(nv.min),
+                                data=nv.min,
                                 meta=epyqlib.nv.MetaEnum.minimum,
                             )
 
                     if epyqlib.nv.MetaEnum.maximum not in self.metas:
                         if nv.max is not None:
                             nv.set_meta(
-                                data=float(nv.max),
+                                data=nv.max,
                                 meta=epyqlib.nv.MetaEnum.maximum,
                             )
 

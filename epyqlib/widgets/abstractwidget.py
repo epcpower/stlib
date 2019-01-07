@@ -400,8 +400,8 @@ class AbstractWidget(QtWidgets.QWidget):
             self.signal_object = signal
 
             if signal is not None:
-                self.set_range(min=float(signal.min),
-                               max=float(signal.max))
+                self.set_range(min=signal.min,
+                               max=signal.max)
 
                 signal.force_value_changed()
 

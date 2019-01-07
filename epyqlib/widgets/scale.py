@@ -150,7 +150,7 @@ class Scale(epyqlib.widgets.abstractwidget.AbstractWidget,
             min = self.minimum
             max = self.maximum
 
-        self.ui.scale.setRange(min=min, max=max)
+        self.ui.scale.setRange(min=float(min), max=float(max))
 
     def set_unit_text(self, units):
         self.ui.units.setText('[{}]'.format(units))

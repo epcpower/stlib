@@ -248,7 +248,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                         if value == 'Enable':
                             self.save_frame = frame
                             self.save_signal = signal
-                            self.save_value = float(key)
+                            self.save_value = key
 
         save_status_name = self.configuration.to_nv_status
         for frame in self.status_frames.values():
@@ -259,7 +259,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                             self.confirm_save_frame = frame
                             self.confirm_save_multiplex_value = signal.multiplex
                             self.confirm_save_signal = signal
-                            self.confirm_save_value = float(key)
+                            self.confirm_save_value = key
 
         if self.confirm_save_frame is None:
             raise Exception(
@@ -796,7 +796,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             if value is not None:
                 for meta in default_metas:
                     child.set_meta(
-                        data=float(value),
+                        data=value,
                         meta=meta,
                     )
                     self.changed.emit(

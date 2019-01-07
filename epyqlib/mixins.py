@@ -29,7 +29,7 @@ class OverrideRange:
 
     @minimum.setter
     def minimum(self, min):
-        self._min = float(min)
+        self._min = min
 
     @pyqtProperty(float)
     def maximum(self):
@@ -37,7 +37,7 @@ class OverrideRange:
 
     @maximum.setter
     def maximum(self, max):
-        self._max = float(max)
+        self._max = max
 
 
 if __name__ == '__main__':
