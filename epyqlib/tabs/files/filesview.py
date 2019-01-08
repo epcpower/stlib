@@ -35,6 +35,11 @@ class FilesView(UiBase):
 
     def setup_ui(self):
         self.ui.setupUi(self)
+        print("[Filesview] setup_ui called")
+        self.ui.something.clicked.connect(self.echo)
+
+    def echo(self):
+        print("[Filesview] echo")
 
 
 # .ui files need a direct module attribute, not a class method, afaict.

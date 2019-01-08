@@ -14,7 +14,7 @@ import epyqlib.canneo
 import epyqlib.deviceextension
 import epyqlib.faultlogmodel
 # https://www.riverbankcomputing.com/pipermail/pyqt/2018-December/041218.html
-import epyqlib.filesview
+import epyqlib.tabs.files.filesview
 try:
     import epyqlib.resources.code
 except ImportError:
