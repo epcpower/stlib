@@ -3,14 +3,18 @@ atomicwrites==1.2.1
 attrs==18.2.0
 Automat==0.7.0
 bitstruct==6.0.0
+certifi==2018.11.29
+chardet==3.0.4
 Click==7.0
 constantly==15.1.0
+decorator==4.3.0
 EasyProcess==0.2.3
 git+https://github.com/ebroecker/canmatrix@8f63047c18dcb65f7904d298cbf603d2e6325b85#egg=canmatrix
 future==0.17.1
 gitdb2==2.0.5
 GitPython==2.1.11
 git+https://github.com/altendky/graham@89f3b3e6aad3b98bafa83f28fbbc11bb92df6ad8#egg=graham
+greenlet==0.4.15
 hyperlink==18.0.0
 idna==2.7
 incremental==17.5.0
@@ -36,10 +40,12 @@ python-docx==0.8.7
 python-dotenv==0.9.1
 PyVirtualDisplay==0.2.1
 git+https://github.com/altendky/qt5reactor@ce3ea2dad6d71adb10cde79b64bc0c7d27e9139c#egg=qt5reactor
+requests==2.21.0
 six==1.11.0
 smmap2==2.0.5
 Twisted==18.9.0
 typing==3.6.6
+urllib3==1.24.1
 wrapt==1.10.11
 zope.interface==4.6.0
 
