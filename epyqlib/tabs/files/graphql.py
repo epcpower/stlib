@@ -1,20 +1,13 @@
-
-# Approach 1: Strings
-# Approach 2: JSON objects
 import json
-
 import requests
 
 
 class API:
     server_info = {
-      "name": "EPC dev",
-      "url": "https://b3oofrroujeutdd4zclqlwedhm.appsync-api.us-west-2.amazonaws.com/graphql",
-      "options": {
+        "url": "https://b3oofrroujeutdd4zclqlwedhm.appsync-api.us-west-2.amazonaws.com/graphql",
         "headers": {
           "x-api-key": "da2-77ph5d7dlnghhnlufivpbn3cri"
         }
-      }
     }
 
     listInvertersQuery = """
@@ -31,13 +24,12 @@ class API:
     """
 
     listInverters = {
-        # "operationName": "ListInverters",
         "query": listInvertersQuery,
         "variables": {}
     }
 
-    getInverterQuery = """
-        query getInverter($inverterId: ID!) { 
+    get_inverter_string = """
+        query ($inverterId: ID!) { 
             getInverter(id: $inverterId) { 
                 createdAt 
                 deploymentDate 
@@ -60,19 +52,42 @@ class API:
         } 
     """
 
-    getInverter = {
-        # "operationName": "ListInverters",
-        "query": getInverterQuery,
-        "variables": {
-            "inverterId": "d2ea61cf-50f1-4ece-9caa-8b5fd250036d"
+    def getInverterQuery(self, inverter_id):
+        return {
+            "query": self.get_inverter_string,
+            "variables": {
+                "inverterId": inverter_id
+            }
         }
-    }
+
+    get_association_str = """
+        query ($inverterId: ID!) {
+            getAssociations(inverterId: $inverterId) {
+                items {
+                    id
+                    customer { name }
+                    file {filename, uploadPath}
+                    model {name}
+                    inverter {id, serialNumber}
+                    site {name}
+                }
+            }
+        }
+    """
+
+    def getAssociationQuery(self, inverter_id):
+        return {
+            "query": self.get_association_str,
+            "variables": {
+                "inverterId": inverter_id
+            }
+        }
 
 
     def make_request(self, json):
         return requests.post(
             self.server_info["url"],
-            headers=self.server_info["options"]["headers"],
+            headers=self.server_info["headers"],
             json=json
         )
 
@@ -81,8 +96,16 @@ class API:
 
         return json.loads(response.text)['data']['listInverters']['items']
 
+    def get_inverter_test(self):
+        return self.get_inverter("d2ea61cf-50f1-4ece-9caa-8b5fd250036d")
 
-    def get_inverter(self):
-        response = self.make_request(self.getInverter)
+    def get_associations_test(self):
+        return self.get_associations("1e4aabcc-d470-4dac-abf5-b9b4f6b8841e")
 
-        return json.loads(response.text)
+    def get_inverter(self, inverter_id):
+        response = self.make_request(self.getInverterQuery(inverter_id))
+        return json.loads(response.text)['data']['getInverter']
+
+    def get_associations(self, inverter_id):
+        response = self.make_request(self.getAssociationQuery(inverter_id))
+        return json.loads(response.text)['data']['getAssociations']['items']
