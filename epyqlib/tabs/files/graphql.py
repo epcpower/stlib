@@ -52,7 +52,7 @@ class API:
         } 
     """
 
-    def getInverterQuery(self, inverter_id):
+    def getInverterQuery(self, inverter_id: str):
         return {
             "query": self.get_inverter_string,
             "variables": {
@@ -75,7 +75,7 @@ class API:
         }
     """
 
-    def getAssociationQuery(self, inverter_id):
+    def getAssociationQuery(self, inverter_id: str):
         return {
             "query": self.get_association_str,
             "variables": {
@@ -102,10 +102,10 @@ class API:
     def get_associations_test(self):
         return self.get_associations("1e4aabcc-d470-4dac-abf5-b9b4f6b8841e")
 
-    def get_inverter(self, inverter_id):
+    def get_inverter(self, inverter_id: str):
         response = self.make_request(self.getInverterQuery(inverter_id))
         return json.loads(response.text)['data']['getInverter']
 
-    def get_associations(self, inverter_id):
+    def get_associations(self, inverter_id: str):
         response = self.make_request(self.getAssociationQuery(inverter_id))
         return json.loads(response.text)['data']['getAssociations']['items']
