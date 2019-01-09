@@ -185,7 +185,7 @@ def tabulate_signals(signals):
             '', '',
             signal.name,
             '{}/{}'.format(startbit % 8, startbit // 8),
-            signal.signalsize,
+            signal.size,
             signal.factor,
             signal.unit,
             '{}: {}'.format(signal.enumeration, signal.values) if
@@ -210,7 +210,7 @@ def doc_signals(signals):
         rows.append((
             signal.name,
             '{}/{}'.format(startbit % 8, startbit // 8),
-            signal.signalsize,
+            signal.size,
             signal.factor,
             signal.unit,
             enumeration,
