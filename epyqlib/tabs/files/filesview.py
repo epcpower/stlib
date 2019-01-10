@@ -1,10 +1,11 @@
 import pathlib
 
 import attr
-import PyQt5.uic
-from PyQt5.QtWidgets import QListWidget, QListWidgetItem, QPushButton, QListView, QTableWidget
-from PyQt5.QtGui import QColor, QBrush
+from PyQt5.QtCore import Qt
 
+import PyQt5.uic
+from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem
+from PyQt5.QtGui import QColor, QBrush
 
 Ui, UiBase = PyQt5.uic.loadUiType(
     pathlib.Path(__file__).with_suffix('.ui'),
@@ -20,8 +21,10 @@ class FilesView(UiBase):
     btn_more: QPushButton
     btn_other: QPushButton
 
-    list_widget: QListWidget
-    list_view: QTableWidget
+    files_grid: QTreeWidget
+
+    model: QTreeWidgetItem
+    flag: bool = False
 
     brush = QBrush(QColor(22, 22, 22, 22))
 
@@ -51,25 +54,40 @@ class FilesView(UiBase):
         self.btn_more = self.ui.more
         self.btn_other = self.ui.other
 
-        self.list_view = self.ui.listView
-        self.list_widget = self.ui.listWidget
+        self.files_grid = self.ui.treeWidget
 
         print("[Filesview] setup_ui called")
         self.btn_something.clicked.connect(self.echo)
         self.btn_more.setDisabled(True)
-        self.list_widget.itemClicked.connect(self.item_clicked)
+        self.btn_more.clicked.connect(self.more_clicked)
 
-        self.list_view.itemClicked.connect(self.item_clicked)
+        self.files_grid.setHeaderLabels(["Filename", "Source", "Timestamp"])
 
-    def echo(self):
-        print("[Filesview] echo")
+        generic = QTreeWidgetItem(self.files_grid, ["Generic Files"])
+        generic.setExpanded(True)
 
-        item = QListWidgetItem("Foo!")
-        item.setBackground(self.brush)
-        self.list_widget.addItem(item)
+        self.model = QTreeWidgetItem(self.files_grid, ["Model-specific files"])
+        self.model.setExpanded(True)
 
-    def item_clicked(self):
-        self.btn_more.setDisabled(self.list_widget.currentRow() == 0)
+        generic1 = QTreeWidgetItem(generic, ["bar", "a", "1"])
+        model1 = QTreeWidgetItem(self.model, ["baz", "b", "2"])
+        model2 = QTreeWidgetItem(self.model, ["boo", "c", "0"])
+
+        self.files_grid.itemClicked.connect(self.echo)
+
+    def echo(self, item: QTreeWidgetItem, column: int):
+        print("[Filesview] echo " + item.text(column))
+        self.btn_more.setDisabled(False)
+
+    def more_clicked(self):
+        if self.flag:
+            col = 1
+        else:
+            col = 2
+        self.model.sortChildren(col, Qt.AscendingOrder)
+        self.flag = not self.flag
+
+
 
 
 # .ui files need a direct module attribute, not a class method, afaict.
