@@ -1,4 +1,4 @@
-import epyqlib.filesview
+import epyqlib.tabs.files.filesview
 import epyqlib.abstractpluginclass
 
 # See file COPYING in this source tree
