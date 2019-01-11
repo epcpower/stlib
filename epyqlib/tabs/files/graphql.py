@@ -2,6 +2,10 @@ import json
 import requests
 
 
+class GraphQLException(Exception):
+    pass
+
+
 class API:
     server_info = {
         "url": "https://b3oofrroujeutdd4zclqlwedhm.appsync-api.us-west-2.amazonaws.com/graphql",
@@ -10,9 +14,9 @@ class API:
         }
     }
 
-    listInvertersQuery = """
+    list_inverters_query = """
         query {
-            listInverters(limit: 2) {
+            list_inverters(limit: 2) {
                 items {
                     id,
                     serialNumber,
@@ -23,8 +27,8 @@ class API:
         }
     """
 
-    listInverters = {
-        "query": listInvertersQuery,
+    list_inverters = {
+        "query": list_inverters_query,
         "variables": {}
     }
 
@@ -52,7 +56,7 @@ class API:
         } 
     """
 
-    def getInverterQuery(self, inverter_id: str):
+    def get_inverter_query(self, inverter_id: str):
         return {
             "query": self.get_inverter_string,
             "variables": {
@@ -75,7 +79,7 @@ class API:
         }
     """
 
-    def getAssociationQuery(self, inverter_id: str):
+    def get_association_query(self, inverter_id: str):
         return {
             "query": self.get_association_str,
             "variables": {
@@ -83,18 +87,23 @@ class API:
             }
         }
 
-
     def make_request(self, json):
-        return requests.post(
+        response = requests.post(
             self.server_info["url"],
             headers=self.server_info["headers"],
             json=json
         )
 
-    def fetch_inverter_list(self):
-        response = self.make_request(self.listInverters)
+        errors = response.json().get('errors')
+        if errors is not None:
+            raise GraphQLException(errors)
 
-        return json.loads(response.text)['data']['listInverters']['items']
+        return response
+
+    def fetch_inverter_list(self):
+        response = self.make_request(self.list_inverters)
+
+        return json.loads(response.text)['data']['list_inverters']['items']
 
     def get_inverter_test(self):
         return self.get_inverter("d2ea61cf-50f1-4ece-9caa-8b5fd250036d")
@@ -103,9 +112,10 @@ class API:
         return self.get_associations("1e4aabcc-d470-4dac-abf5-b9b4f6b8841e")
 
     def get_inverter(self, inverter_id: str):
-        response = self.make_request(self.getInverterQuery(inverter_id))
+        response = self.make_request(self.get_inverter_query(inverter_id))
         return json.loads(response.text)['data']['getInverter']
 
     def get_associations(self, inverter_id: str):
-        response = self.make_request(self.getAssociationQuery(inverter_id))
-        return json.loads(response.text)['data']['getAssociations']['items']
+        response = self.make_request(self.get_association_query(inverter_id))
+        return json.loads(response.text)
+

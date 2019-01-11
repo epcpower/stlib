@@ -45,9 +45,19 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="other">
+        <widget class="QLineEdit" name="txt_col_width">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="set_col_width">
          <property name="text">
-          <string>Other...</string>
+          <string>Set Column Width</string>
          </property>
         </widget>
        </item>

@@ -4,7 +4,7 @@ import attr
 from PyQt5.QtCore import Qt
 
 import PyQt5.uic
-from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem
+from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit
 from PyQt5.QtGui import QColor, QBrush
 
 Ui, UiBase = PyQt5.uic.loadUiType(
@@ -17,16 +17,17 @@ Ui, UiBase = PyQt5.uic.loadUiType(
 
 @attr.s
 class FilesView(UiBase):
-    btn_something: QPushButton
-    btn_more: QPushButton
-    btn_other: QPushButton
+    class Sections:
+        model: QTreeWidgetItem
+        customer: QTreeWidgetItem
+        site: QTreeWidgetItem
+        inverter: QTreeWidgetItem
 
-    files_grid: QTreeWidget
+    section_headers = Sections()
 
-    model: QTreeWidgetItem
     flag: bool = False
 
-    brush = QBrush(QColor(22, 22, 22, 22))
+    gray_brush = QBrush(QColor(22, 22, 22, 22))
 
     ui = attr.ib(factory=Ui)
 
@@ -47,33 +48,50 @@ class FilesView(UiBase):
     def __attrs_post_init__(self):
         super().__init__()
 
-    def setup_ui(self):
-        self.ui.setupUi(self)
+    # noinspection PyAttributeOutsideInit
+    def bind(self):
+        self.btn_something: QPushButton = self.ui.something
+        self.btn_more: QPushButton = self.ui.more
+        # self.btn_other: QPushButton = self.ui.other
 
-        self.btn_something = self.ui.something
-        self.btn_more = self.ui.more
-        self.btn_other = self.ui.other
+        self.txt_col_width: QLineEdit = self.ui.txt_col_width
+        self.btn_set_col_width: QPushButton = self.ui.set_col_width
 
-        self.files_grid = self.ui.treeWidget
+        self.files_grid: QTreeWidget = self.ui.treeWidget
 
-        print("[Filesview] setup_ui called")
+    def populate_tree(self):
+        self.files_grid.setHeaderLabels(["Filename", "Source", "Timestamp", "Notes"])
+        self.files_grid.setColumnWidth(0, 300)
+        self.files_grid.setColumnWidth(4, 500)
+
+        self.section_headers.model = QTreeWidgetItem(self.files_grid, ["Model-specific files"])
+        self.section_headers.model.setExpanded(True)
+        self.section_headers.customer = QTreeWidgetItem(self.files_grid, ["Customer-specific files"])
+        self.section_headers.customer.setExpanded(True)
+        self.section_headers.site = QTreeWidgetItem(self.files_grid, ["Site-specific files"])
+        self.section_headers.site.setExpanded(True)
+        self.section_headers.inverter = QTreeWidgetItem(self.files_grid, ["Inverter-specific files"])
+        self.section_headers.inverter.setExpanded(True)
+
+        model1 = QTreeWidgetItem(self.section_headers.model, ["bar", "a", "1"])
+        customer1 = QTreeWidgetItem(self.section_headers.customer, ["baz", "b", "2"])
+        customer2 = QTreeWidgetItem(self.section_headers.customer, ["boo", "c", "0"])
+
+        self.files_grid.itemClicked.connect(self.echo)
+
+    def setup_buttons(self):
         self.btn_something.clicked.connect(self.echo)
         self.btn_more.setDisabled(True)
         self.btn_more.clicked.connect(self.more_clicked)
+        self.btn_set_col_width.clicked.connect(self.set_col_width_clicked)
 
-        self.files_grid.setHeaderLabels(["Filename", "Source", "Timestamp"])
+    def setup_ui(self):
+        print("[Filesview] setup_ui called")
+        self.ui.setupUi(self)
 
-        generic = QTreeWidgetItem(self.files_grid, ["Generic Files"])
-        generic.setExpanded(True)
-
-        self.model = QTreeWidgetItem(self.files_grid, ["Model-specific files"])
-        self.model.setExpanded(True)
-
-        generic1 = QTreeWidgetItem(generic, ["bar", "a", "1"])
-        model1 = QTreeWidgetItem(self.model, ["baz", "b", "2"])
-        model2 = QTreeWidgetItem(self.model, ["boo", "c", "0"])
-
-        self.files_grid.itemClicked.connect(self.echo)
+        self.bind()
+        self.populate_tree()
+        self.setup_buttons()
 
     def echo(self, item: QTreeWidgetItem, column: int):
         print("[Filesview] echo " + item.text(column))
@@ -84,9 +102,11 @@ class FilesView(UiBase):
             col = 1
         else:
             col = 2
-        self.model.sortChildren(col, Qt.AscendingOrder)
+        self.section_headers.customer.sortChildren(col, Qt.AscendingOrder)
         self.flag = not self.flag
 
+    def set_col_width_clicked(self):
+        self.files_grid.setColumnWidth(0, int(self.txt_col_width.text()))
 
 
 
