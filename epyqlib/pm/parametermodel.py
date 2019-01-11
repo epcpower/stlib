@@ -174,7 +174,6 @@ class Parameter(epyqlib.treenode.TreeNode):
     visibility = epyqlib.attrsmodel.attr_uuid_list(
         default=None,
         allow_none=True,
-        # converter=lambda x: x if x is None else AccessLevelsAccessLevel(x),
     )
     epyqlib.attrsmodel.attrib(
         attribute=visibility,
@@ -413,13 +412,17 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
-    visibility = epyqlib.attrsmodel.attr_uuid(
+    visibility = epyqlib.attrsmodel.attr_uuid_list(
         default=None,
         allow_none=True,
-        # converter=lambda x: x if x is None else AccessLevelsAccessLevel(x),
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=visibility,
         human_name='Visibility',
         data_display=epyqlib.attrsmodel.name_from_uuid,
-        list_selection_root='visibility',
+        delegate=epyqlib.attrsmodel.MultiSelectByRootDelegateCache(
+            list_selection_root='visibility',
+        )
     )
     original = attr.ib(
         default=None,
@@ -700,13 +703,17 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
-    visibility = epyqlib.attrsmodel.attr_uuid(
+    visibility = epyqlib.attrsmodel.attr_uuid_list(
         default=None,
         allow_none=True,
-        # converter=lambda x: x if x is None else AccessLevelsAccessLevel(x),
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=visibility,
         human_name='Visibility',
         data_display=epyqlib.attrsmodel.name_from_uuid,
-        list_selection_root='visibility',
+        delegate=epyqlib.attrsmodel.MultiSelectByRootDelegateCache(
+            list_selection_root='visibility',
+        )
     )
     display_hexadecimal = attr.ib(
         default=False,
