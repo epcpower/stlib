@@ -1,5 +1,5 @@
-import json
-import requests
+import asyncio
+import aiohttp
 
 
 class GraphQLException(Exception):
@@ -16,7 +16,7 @@ class API:
 
     list_inverters_query = """
         query {
-            list_inverters(limit: 2) {
+            listInverters(limit: 2) {
                 items {
                     id,
                     serialNumber,
@@ -66,7 +66,7 @@ class API:
 
     get_association_str = """
         query ($inverterId: ID!) {
-            getAssociations(inverterId: $inverterId) {
+            getInverterAssociations(inverterId: $inverterId) {
                 items {
                     id
                     customer { name }
@@ -87,35 +87,38 @@ class API:
             }
         }
 
-    def make_request(self, json):
-        response = requests.post(
-            self.server_info["url"],
-            headers=self.server_info["headers"],
-            json=json
-        )
 
-        errors = response.json().get('errors')
-        if errors is not None:
-            raise GraphQLException(errors)
+    async def make_request(self, json):
+        url = self.server_info["url"]
+        headers = self.server_info["headers"]
 
-        return response
+        async with aiohttp.ClientSession(headers=headers) as session:
+            async with session.post(url, json=json) as response:
+                body = await response.json()
+                errors = body.get('errors')
+                if errors is not None:
+                    raise GraphQLException(errors)
+                return body
 
-    def fetch_inverter_list(self):
-        response = self.make_request(self.list_inverters)
 
-        return json.loads(response.text)['data']['list_inverters']['items']
+    async def fetch_inverter_list(self):
+        response = await self.make_request(self.list_inverters)
 
-    def get_inverter_test(self):
-        return self.get_inverter("d2ea61cf-50f1-4ece-9caa-8b5fd250036d")
+        return response['data']['listInverters']['items']
 
-    def get_associations_test(self):
-        return self.get_associations("1e4aabcc-d470-4dac-abf5-b9b4f6b8841e")
+    async def get_inverter_test(self):
+        return await self.get_inverter("d2ea61cf-50f1-4ece-9caa-8b5fd250036d")
 
-    def get_inverter(self, inverter_id: str):
-        response = self.make_request(self.get_inverter_query(inverter_id))
-        return json.loads(response.text)['data']['getInverter']
+    async def get_associations_test(self):
+        return await self.get_associations("TestInvz")
 
-    def get_associations(self, inverter_id: str):
-        response = self.make_request(self.get_association_query(inverter_id))
-        return json.loads(response.text)
+    async def get_inverter(self, inverter_id: str):
+        response = await self.make_request(self.get_inverter_query(inverter_id))
+        return response['data']['getInverter']
 
+    async def get_associations(self, inverter_id: str):
+        response = await self.make_request(self.get_association_query(inverter_id))
+        return response['data']['getInverterAssociations']['items']
+
+    def awai(self, coroutine):
+        return asyncio.get_event_loop().run_until_complete(coroutine)

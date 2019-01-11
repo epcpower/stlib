@@ -7,6 +7,8 @@ import PyQt5.uic
 from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit
 from PyQt5.QtGui import QColor, QBrush
 
+from tabs.files.files_controller import FilesController
+
 Ui, UiBase = PyQt5.uic.loadUiType(
     pathlib.Path(__file__).with_suffix('.ui'),
 )
@@ -24,6 +26,7 @@ class FilesView(UiBase):
         inverter: QTreeWidgetItem
 
     section_headers = Sections()
+    controller = FilesController()
 
     flag: bool = False
 
@@ -48,6 +51,15 @@ class FilesView(UiBase):
     def __attrs_post_init__(self):
         super().__init__()
 
+    def setup_ui(self):
+        print("[Filesview] setup_ui called")
+        self.ui.setupUi(self)
+
+        self.bind()
+        self.populate_tree()
+        self.setup_buttons()
+
+    ### Setup methods
     # noinspection PyAttributeOutsideInit
     def bind(self):
         self.btn_something: QPushButton = self.ui.something
@@ -85,14 +97,9 @@ class FilesView(UiBase):
         self.btn_more.clicked.connect(self.more_clicked)
         self.btn_set_col_width.clicked.connect(self.set_col_width_clicked)
 
-    def setup_ui(self):
-        print("[Filesview] setup_ui called")
-        self.ui.setupUi(self)
 
-        self.bind()
-        self.populate_tree()
-        self.setup_buttons()
 
+    ### Actions
     def echo(self, item: QTreeWidgetItem, column: int):
         print("[Filesview] echo " + item.text(column))
         self.btn_more.setDisabled(False)
