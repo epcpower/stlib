@@ -50,7 +50,12 @@ def name_from_uuid(node, value, model):
         target_node = model.node_from_uuid(value)
     except NotFoundError:
         return str(value)
-
+    if type(target_node) is list:
+        names = []
+        for n in target_node:
+            names.append(n.name)
+        return names
+    
     return target_node.name
 
 
@@ -371,6 +376,51 @@ def convert_uuid(x):
     return uuid.UUID(x)
 
 
+def convert_uuid_list(x):
+    if x is None:
+        return None
+    
+    l = []
+    for y in x:
+        l.append(convert_uuid(y.uuid))
+
+    return l
+
+
+def attr_uuid_list(
+        metadata=None,
+        human_name='UUID List',
+        data_display=None,
+        list_selection_root=None,
+        no_graham=False,
+        default=attr.Factory(uuid.uuid4),
+        **field_options,
+):
+    if metadata is None:
+        metadata = {}
+
+    attribute = attr.ib(
+        default=default,
+        converter=convert_uuid_list,
+        metadata=metadata,
+    )
+    if not no_graham:
+        graham.attrib(
+            attribute=attribute,
+            field=marshmallow.fields.UUID(**field_options),
+        )
+    attrib(
+        attribute=attribute,
+        human_name=human_name,
+        data_display=data_display,
+        delegate=epyqlib.attrsmodel.MultiSelectByRootDelegateCache(
+            list_selection_root=list_selection_root,
+        ),
+    )
+
+    return attribute
+
+
 def attr_uuid(
         metadata=None,
         human_name='UUID',
@@ -541,6 +591,29 @@ class SingleSelectByRootDelegateCache:
         return self.cached_delegate
 
 
+@attr.s
+class MultiSelectByRootDelegateCache:
+    list_selection_root = attr.ib()
+    text_column_name = attr.ib(default='Name')
+    cached_delegate = attr.ib(default=None)
+
+    def get_delegate(self, model, parent):
+        if self.cached_delegate is not None:
+            return self.cached_delegate
+
+        root_node = model.list_selection_roots[
+            self.list_selection_root
+        ]
+
+        self.cached_delegate = EnumerationDelegateMulti(
+            text_column_name=self.text_column_name,
+            root=root_node,
+            parent=parent,
+        )
+
+        return self.cached_delegate
+
+
 class DelegateSelector:
     def __init__(self, parent=None):
         self.parent = parent
@@ -571,6 +644,20 @@ class CustomCombo(PyQt5.QtWidgets.QComboBox):
     def hidePopup(self):
         super().hidePopup()
 
+        QtCore.QCoreApplication.postEvent(
+            self,
+            QtGui.QKeyEvent(
+                QtCore.QEvent.KeyPress,
+                QtCore.Qt.Key_Enter,
+                QtCore.Qt.NoModifier,
+            ),
+        )
+
+
+class CustomMulti(PyQt5.QtWidgets.QListWidget):
+    def hidePopup(self):
+        super().hidePopup()
+        
         QtCore.QCoreApplication.postEvent(
             self,
             QtGui.QKeyEvent(
@@ -636,6 +723,47 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
 
         datum = str(selected_node.uuid)
         model.setData(index, datum)
+
+
+class EnumerationDelegateMulti(QtWidgets.QStyledItemDelegate):
+    def __init__(self, text_column_name, root, parent):
+        super().__init__(parent)
+
+        self.text_column_name = text_column_name
+        self.root = root
+
+    def createEditor(self, parent, option, index):
+        return CustomMulti(parent=parent)
+
+    def setEditorData(self, editor, index):
+        super().setEditorData(editor, index)
+
+        model_index = to_source_model(index)
+        model = model_index.model()
+
+        raw = model.data(model_index, epyqlib.utils.qt.UserRoles.raw)
+        editor.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        for node in self.root.children:
+            it = PyQt5.QtWidgets.QListWidgetItem(editor)
+            it.setText(node.name)
+            it.uuid = node.uuid
+            for r in raw:
+                if r == it.uuid:
+                    it.setSelected(True)
+
+        editor.setMinimumHeight(editor.sizeHint().height())
+        editor.show()
+
+    def setModelData(self, editor, model, index):
+        index = epyqlib.utils.qt.resolve_index_to_model(index)
+        model = index.model()
+
+        selected_items = editor.selectedItems()
+        data = []
+        for item in selected_items:
+            data.append(item)
+
+        model.setData(index, data)
 
 
 class PyQStandardItemModel(QtGui.QStandardItemModel):
@@ -1052,7 +1180,12 @@ class Model:
 
     def node_from_uuid(self, u):
         for model in {self} | self.droppable_from:
-            node = model.uuid_to_node.get(u)
+            if type(u) is list:
+                node = []
+                for i in u:
+                    node.append(model.uuid_to_node.get(i))
+            else:
+                node = model.uuid_to_node.get(u)
             if node is not None:
                 return node
 
