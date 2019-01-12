@@ -4,30 +4,30 @@ import textwrap
 from PyQt5 import QtWidgets
 import PyQt5.uic
 
-import epyqlib.filesview
+import epyqlib.tabs.files.filesview
 
 
 def test_init(qtbot):
-    view = epyqlib.filesview.FilesView()
+    view = epyqlib.tabs.files.filesview.FilesView()
     qtbot.add_widget(view)
 
     view.show()
     qtbot.wait_for_window_shown(widget=view)
 
     assert view.parent() is None
-    assert isinstance(view.ui, epyqlib.filesview.Ui)
+    assert isinstance(view.ui, epyqlib.tabs.files.filesview.Ui)
     assert not hasattr(view.ui, 'something')
 
 
 def test_build(qtbot):
-    view = epyqlib.filesview.FilesView.build()
+    view = epyqlib.tabs.files.filesview.FilesView.build()
     qtbot.add_widget(view)
 
     view.show()
     qtbot.wait_for_window_shown(widget=view)
 
     assert view.parent() is None
-    assert isinstance(view.ui, epyqlib.filesview.Ui)
+    assert isinstance(view.ui, epyqlib.tabs.files.filesview.Ui)
     assert hasattr(view.ui, 'something')
 
 
@@ -35,14 +35,14 @@ def test_qt_build(qtbot):
     widget = QtWidgets.QWidget()
     qtbot.add_widget(widget)
 
-    view = epyqlib.filesview.FilesView.qt_build(parent=widget)
+    view = epyqlib.tabs.files.filesview.FilesView.qt_build(parent=widget)
     qtbot.add_widget(view)
 
     view.show()
     qtbot.wait_for_window_shown(widget=view)
 
     assert view.parent() is widget
-    assert isinstance(view.ui, epyqlib.filesview.Ui)
+    assert isinstance(view.ui, epyqlib.tabs.files.filesview.Ui)
     assert hasattr(view.ui, 'something')
 
 
@@ -73,7 +73,7 @@ def test_from_ui(qtbot):
       <customwidget>
        <class>FilesViewQtBuilder</class>
        <extends>QWidget</extends>
-       <header>epyqlib.filesview</header>
+       <header>epyqlib.tabs.files.filesview</header>
       </customwidget>
      </customwidgets>
      <resources/>
@@ -90,5 +90,5 @@ def test_from_ui(qtbot):
     qtbot.wait_for_window_shown(widget=view)
 
     assert view.parent() is widget
-    assert isinstance(view.ui, epyqlib.filesview.Ui)
+    assert isinstance(view.ui, epyqlib.tabs.files.filesview.Ui)
     assert hasattr(view.ui, 'something')
