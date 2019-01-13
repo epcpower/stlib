@@ -50,13 +50,20 @@ def name_from_uuid(node, value, model):
         target_node = model.node_from_uuid(value)
     except NotFoundError:
         return str(value)
-    if type(target_node) is list:
-        names = []
-        for n in target_node:
-            names.append(n.name)
-        return names
-    
+
     return target_node.name
+
+
+def names_from_uuid_list(node, value, model):
+    if value is None:
+        return None
+
+    target_nodes = model.nodes_from_uuid_list(value)
+
+    names = []
+    for n in target_nodes:
+        names.append(n.name)
+    return names
 
 
 @attr.s
@@ -379,10 +386,13 @@ def convert_uuid(x):
 def convert_uuid_list(x):
     if x is None:
         return None
-    
+
     l = []
     for y in x:
-        l.append(convert_uuid(y.uuid))
+        if isinstance(y, uuid.UUID):
+            l.append(y)
+        else:
+            l.append(convert_uuid(y.uuid))
 
     return l
 
@@ -393,7 +403,7 @@ def attr_uuid_list(
         data_display=None,
         list_selection_root=None,
         no_graham=False,
-        default=attr.Factory(uuid.uuid4),
+        default=attr.Factory(list),
         **field_options,
 ):
     if metadata is None:
@@ -407,7 +417,7 @@ def attr_uuid_list(
     if not no_graham:
         graham.attrib(
             attribute=attribute,
-            field=marshmallow.fields.UUID(**field_options),
+            field=marshmallow.fields.List(marshmallow.fields.UUID(**field_options), **field_options),
         )
     attrib(
         attribute=attribute,
@@ -1190,6 +1200,18 @@ class Model:
                 return node
 
         raise NotFoundError('''UUID '{}' not found'''.format(u))
+
+    def nodes_from_uuid_list(self, u):
+        nodes = []
+        for i in u:
+            try:
+                target_node = self.node_from_uuid(i)
+            except NotFoundError:
+                target_node = str(u)
+            
+            nodes.append(target_node)
+
+        return nodes
 
     def canDropMimeData(self, mime, action, row, column, parent):
         node, new_parent, _ = self.source_target_for_drop(

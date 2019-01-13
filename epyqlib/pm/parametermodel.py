@@ -178,7 +178,7 @@ class Parameter(epyqlib.treenode.TreeNode):
     epyqlib.attrsmodel.attrib(
         attribute=visibility,
         human_name='Visibility',
-        data_display=epyqlib.attrsmodel.name_from_uuid,
+        data_display=epyqlib.attrsmodel.names_from_uuid_list,
         delegate=epyqlib.attrsmodel.MultiSelectByRootDelegateCache(
             list_selection_root='visibility',
         )
@@ -419,7 +419,7 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
     epyqlib.attrsmodel.attrib(
         attribute=visibility,
         human_name='Visibility',
-        data_display=epyqlib.attrsmodel.name_from_uuid,
+        data_display=epyqlib.attrsmodel.names_from_uuid_list,
         delegate=epyqlib.attrsmodel.MultiSelectByRootDelegateCache(
             list_selection_root='visibility',
         )
@@ -710,7 +710,7 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
     epyqlib.attrsmodel.attrib(
         attribute=visibility,
         human_name='Visibility',
-        data_display=epyqlib.attrsmodel.name_from_uuid,
+        data_display=epyqlib.attrsmodel.names_from_uuid_list,
         delegate=epyqlib.attrsmodel.MultiSelectByRootDelegateCache(
             list_selection_root='visibility',
         )
