@@ -16,7 +16,7 @@ class API:
 
     list_inverters_query = """
         query {
-            listInverters(limit: 2) {
+            listInverters(limit: 200) {
                 items {
                     id,
                     serialNumber,
@@ -110,7 +110,7 @@ class API:
         return await self.get_inverter("d2ea61cf-50f1-4ece-9caa-8b5fd250036d")
 
     async def get_associations_test(self):
-        return await self.get_associations("TestInvz")
+        return await self.get_associations("TestInv")
 
     async def get_inverter(self, inverter_id: str):
         response = await self.make_request(self.get_inverter_query(inverter_id))

@@ -2,12 +2,13 @@ import pathlib
 
 import attr
 from PyQt5.QtCore import Qt
+from twisted.internet.defer import ensureDeferred
 
 import PyQt5.uic
 from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit
 from PyQt5.QtGui import QColor, QBrush
 
-from tabs.files.files_controller import FilesController
+from .files_controller import FilesController
 
 Ui, UiBase = PyQt5.uic.loadUiType(
     pathlib.Path(__file__).with_suffix('.ui'),
@@ -59,6 +60,8 @@ class FilesView(UiBase):
         self.populate_tree()
         self.setup_buttons()
 
+        self.fetch_files()
+
     ### Setup methods
     # noinspection PyAttributeOutsideInit
     def bind(self):
@@ -85,9 +88,9 @@ class FilesView(UiBase):
         self.section_headers.inverter = QTreeWidgetItem(self.files_grid, ["Inverter-specific files"])
         self.section_headers.inverter.setExpanded(True)
 
-        model1 = QTreeWidgetItem(self.section_headers.model, ["bar", "a", "1"])
-        customer1 = QTreeWidgetItem(self.section_headers.customer, ["baz", "b", "2"])
-        customer2 = QTreeWidgetItem(self.section_headers.customer, ["boo", "c", "0"])
+        # model1 = QTreeWidgetItem(self.section_headers.model, ["bar", "a", "1"])
+        # customer1 = QTreeWidgetItem(self.section_headers.customer, ["baz", "b", "2"])
+        # customer2 = QTreeWidgetItem(self.section_headers.customer, ["boo", "c", "0"])
 
         self.files_grid.itemClicked.connect(self.echo)
 
@@ -97,6 +100,14 @@ class FilesView(UiBase):
         self.btn_more.clicked.connect(self.more_clicked)
         self.btn_set_col_width.clicked.connect(self.set_col_width_clicked)
 
+    def fetch_files(self):
+        print('[Filesview] About to fire off files request')
+        deferred = ensureDeferred(self.controller.get_inverter_associations('TestInv'))
+        deferred.addCallback(self.show_files)
+
+    def show_files(self, associations):
+        print('[Filesview] Files request finished')
+        print(associations)
 
 
     ### Actions
