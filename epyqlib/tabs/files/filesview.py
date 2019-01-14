@@ -104,10 +104,20 @@ class FilesView(UiBase):
         print('[Filesview] About to fire off files request')
         deferred = ensureDeferred(self.controller.get_inverter_associations('TestInv'))
         deferred.addCallback(self.show_files)
+        deferred.addErrback(self.files_err)
 
     def show_files(self, associations):
         print('[Filesview] Files request finished')
         print(associations)
+        for item in associations['model']:
+            QTreeWidgetItem(self.section_headers.model, [item['file']['filename']])
+
+        for item in associations['inverter']:
+            QTreeWidgetItem(self.section_headers.inverter, [item['file']['filename']])
+
+    def files_err(self, error):
+        print('ERROR Fetching files')
+        print(error)
 
 
     ### Actions

@@ -4,6 +4,7 @@ atomicwrites==1.2.1
 attrs==18.2.0
 Automat==0.7.0
 bitstruct==6.0.0
+certitude==1.0.1
 Click==7.0
 constantly==15.1.0
 EasyProcess==0.2.3
@@ -39,6 +40,7 @@ PyVirtualDisplay==0.2.1
 git+https://github.com/altendky/qt5reactor@ce3ea2dad6d71adb10cde79b64bc0c7d27e9139c#egg=qt5reactor
 six==1.11.0
 smmap2==2.0.5
+treq==18.6.0
 Twisted==18.9.0
 typing==3.6.6
 wrapt==1.10.11

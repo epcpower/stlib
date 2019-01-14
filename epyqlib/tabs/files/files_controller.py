@@ -17,13 +17,13 @@ class FilesController:
         associations = await self.api.get_associations(inverter_id)
         for association in associations:
             if association['customer'] is not None:
-                associations['customer'].append(association)
+                groups['customer'].append(association)
             elif association['site'] is not None:
-                associations['site'].append(association)
+                groups['site'].append(association)
             elif association['model'] is not None:
-                associations['model'].append(association)
+                groups['model'].append(association)
             else:
-                associations['inverter'].append(association)
+                groups['inverter'].append(association)
 
-        return associations
+        return groups
 

@@ -1,5 +1,10 @@
 import asyncio
-import aiohttp
+# import aiohttp
+import json
+
+from twisted.web.iweb import IResponse
+
+import treq
 
 
 class GraphQLException(Exception):
@@ -56,7 +61,7 @@ class API:
         } 
     """
 
-    def get_inverter_query(self, inverter_id: str):
+    def _get_inverter_query(self, inverter_id: str):
         return {
             "query": self.get_inverter_string,
             "variables": {
@@ -79,7 +84,7 @@ class API:
         }
     """
 
-    def get_association_query(self, inverter_id: str):
+    def _get_association_query(self, inverter_id: str):
         return {
             "query": self.get_association_str,
             "variables": {
@@ -87,38 +92,69 @@ class API:
             }
         }
 
-
-    async def make_request(self, json):
+    async def _make_request(self, body):
         url = self.server_info["url"]
         headers = self.server_info["headers"]
+        response: IResponse = await treq.post(url, headers=headers, json=body)
+        if response.code >= 400:
+            raise GraphQLException(response.code)
 
-        async with aiohttp.ClientSession(headers=headers) as session:
-            async with session.post(url, json=json) as response:
-                body = await response.json()
-                errors = body.get('errors')
-                if errors is not None:
-                    raise GraphQLException(errors)
-                return body
+        content = await treq.content(response)
+        body = await treq.json_content(response)
+
+        return body
 
 
     async def fetch_inverter_list(self):
-        response = await self.make_request(self.list_inverters)
+        response = await self._make_request(self.list_inverters)
 
         return response['data']['listInverters']['items']
 
     async def get_inverter_test(self):
         return await self.get_inverter("d2ea61cf-50f1-4ece-9caa-8b5fd250036d")
 
-    async def get_associations_test(self):
-        return await self.get_associations("TestInv")
-
     async def get_inverter(self, inverter_id: str):
-        response = await self.make_request(self.get_inverter_query(inverter_id))
+        response = await self._make_request(self._get_inverter_query(inverter_id))
         return response['data']['getInverter']
 
     async def get_associations(self, inverter_id: str):
-        response = await self.make_request(self.get_association_query(inverter_id))
+        response = await self._make_request(self._get_association_query(inverter_id))
         return response['data']['getInverterAssociations']['items']
 
     def awai(self, coroutine):
+        # Or `async.run(coroutine)`
         return asyncio.get_event_loop().run_until_complete(coroutine)
+
+    def run(self, coroutine):
+        from twisted.internet.defer import ensureDeferred
+        deferred = ensureDeferred(coroutine)
+        deferred.addCallback(succ)
+        deferred.addErrback(err)
+        return deferred
+
+    def foo(self, reactor):
+        return self.run(self.get_associations("TestInv"))
+
+
+
+
+def main(reactor):
+    from twisted.internet.defer import ensureDeferred
+
+    api = API()
+    deferred = ensureDeferred(api.get_associations("TestInv"))
+    deferred.addCallback(succ)
+    deferred.addErrback(err)
+    return deferred
+
+def succ(body):
+    print("SUCCESS")
+    print(body)
+
+def err(error):
+    print("ERROR ENCOUNTERED")
+    print(error)
+
+if __name__ == "__main__":
+    from twisted.internet.task import react
+    react(main)
