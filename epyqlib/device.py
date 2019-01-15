@@ -1125,6 +1125,10 @@ class Device:
             self.nv_looping_set.start()
             self.nv_tab_looping_set.stop()
 
+        #TODO: Remove this and find a better way to manage when files view should fetch its list
+        if self.ui.tabs.indexOf(self.ui.files) == index:
+            self.ui.files_view.tab_selected()
+
     def absolute_path(self, path=''):
         # TODO: CAMPid 9549757292917394095482739548437597676742
         if not QFileInfo(path).isAbsolute():

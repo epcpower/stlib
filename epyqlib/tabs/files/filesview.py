@@ -8,6 +8,7 @@ import PyQt5.uic
 from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit
 from PyQt5.QtGui import QColor, QBrush
 
+from epyqlib.utils.twisted import errbackhook as show_error_dialog
 from .files_controller import FilesController
 
 Ui, UiBase = PyQt5.uic.loadUiType(
@@ -60,6 +61,7 @@ class FilesView(UiBase):
         self.populate_tree()
         self.setup_buttons()
 
+    def tab_selected(self):
         self.fetch_files()
 
     ### Setup methods
@@ -104,20 +106,18 @@ class FilesView(UiBase):
         print('[Filesview] About to fire off files request')
         deferred = ensureDeferred(self.controller.get_inverter_associations('TestInv'))
         deferred.addCallback(self.show_files)
-        deferred.addErrback(self.files_err)
+        deferred.addErrback(show_error_dialog)
 
     def show_files(self, associations):
         print('[Filesview] Files request finished')
         print(associations)
         for item in associations['model']:
-            QTreeWidgetItem(self.section_headers.model, [item['file']['filename']])
+            if item['file'] is not None:
+                QTreeWidgetItem(self.section_headers.model, [item['file']['filename']])
 
         for item in associations['inverter']:
-            QTreeWidgetItem(self.section_headers.inverter, [item['file']['filename']])
-
-    def files_err(self, error):
-        print('ERROR Fetching files')
-        print(error)
+            if item['file'] is not None:
+                QTreeWidgetItem(self.section_headers.inverter, [item['file']['filename']])
 
 
     ### Actions
