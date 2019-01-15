@@ -888,6 +888,12 @@ class Table(epyqlib.treenode.TreeNode):
         no_column=True,
     )
 
+    combinations = attr.ib(default=None)
+    epyqlib.attrsmodel.attrib(
+        attribute=combinations,
+        no_column=True,
+    )
+
     def __attrs_post_init__(self):
         super().__init__()
 
@@ -996,6 +1002,8 @@ class Table(epyqlib.treenode.TreeNode):
             }
 
         product = list(itertools.product(*enumerations))
+
+        self.combinations = product
 
         model = self.find_root().model
 
