@@ -79,7 +79,7 @@ class Parameter(epyqlib.treenode.TreeNode):
         attribute=enumeration_uuid,
         human_name='Enumeration',
         data_display=epyqlib.attrsmodel.name_from_uuid,
-        delegate=epyqlib.attrsmodel.SingleSelectByRootDelegateCache(
+        delegate=epyqlib.attrsmodel.RootDelegateCache(
             list_selection_root='enumerations',
         )
     )
@@ -179,8 +179,9 @@ class Parameter(epyqlib.treenode.TreeNode):
         attribute=visibility,
         human_name='Visibility',
         data_display=epyqlib.attrsmodel.names_from_uuid_list,
-        delegate=epyqlib.attrsmodel.MultiSelectByRootDelegateCache(
+        delegate=epyqlib.attrsmodel.RootDelegateCache(
             list_selection_root='visibility',
+            multi_select=True,
         )
     )
 
@@ -420,8 +421,9 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
         attribute=visibility,
         human_name='Visibility',
         data_display=epyqlib.attrsmodel.names_from_uuid_list,
-        delegate=epyqlib.attrsmodel.MultiSelectByRootDelegateCache(
+        delegate=epyqlib.attrsmodel.RootDelegateCache(
             list_selection_root='visibility',
+            multi_select=True,
         )
     )
     original = attr.ib(
@@ -711,8 +713,9 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
         attribute=visibility,
         human_name='Visibility',
         data_display=epyqlib.attrsmodel.names_from_uuid_list,
-        delegate=epyqlib.attrsmodel.MultiSelectByRootDelegateCache(
+        delegate=epyqlib.attrsmodel.RootDelegateCache(
             list_selection_root='visibility',
+            multi_select=True,
         )
     )
     display_hexadecimal = attr.ib(
