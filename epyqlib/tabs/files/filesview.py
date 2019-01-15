@@ -5,9 +5,10 @@ from PyQt5.QtCore import Qt
 from twisted.internet.defer import ensureDeferred
 
 import PyQt5.uic
-from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit
+from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QFileDialog
 from PyQt5.QtGui import QColor, QBrush
 
+from epyqlib.utils import qt
 from epyqlib.utils.twisted import errbackhook as show_error_dialog
 from .files_controller import FilesController
 
@@ -27,6 +28,7 @@ class FilesView(UiBase):
         site: QTreeWidgetItem
         inverter: QTreeWidgetItem
 
+    # Files grid is 0-indexed
     section_headers = Sections()
     controller = FilesController()
 
@@ -67,12 +69,8 @@ class FilesView(UiBase):
     ### Setup methods
     # noinspection PyAttributeOutsideInit
     def bind(self):
-        self.btn_something: QPushButton = self.ui.something
-        self.btn_more: QPushButton = self.ui.more
-        # self.btn_other: QPushButton = self.ui.other
-
-        self.txt_col_width: QLineEdit = self.ui.txt_col_width
-        self.btn_set_col_width: QPushButton = self.ui.set_col_width
+        self.btn_download_file: QPushButton = self.ui.download_file
+        self.btn_send_to_inverter: QPushButton = self.ui.send_to_inverter
 
         self.files_grid: QTreeWidget = self.ui.treeWidget
 
@@ -90,17 +88,17 @@ class FilesView(UiBase):
         self.section_headers.inverter = QTreeWidgetItem(self.files_grid, ["Inverter-specific files"])
         self.section_headers.inverter.setExpanded(True)
 
-        # model1 = QTreeWidgetItem(self.section_headers.model, ["bar", "a", "1"])
-        # customer1 = QTreeWidgetItem(self.section_headers.customer, ["baz", "b", "2"])
-        # customer2 = QTreeWidgetItem(self.section_headers.customer, ["boo", "c", "0"])
-
         self.files_grid.itemClicked.connect(self.echo)
 
+    def _enable_buttoms(self, enable):
+        self.btn_download_file.setDisabled(enable)
+        self.btn_send_to_inverter.setDisabled(enable)
+
     def setup_buttons(self):
-        self.btn_something.clicked.connect(self.echo)
-        self.btn_more.setDisabled(True)
-        self.btn_more.clicked.connect(self.more_clicked)
-        self.btn_set_col_width.clicked.connect(self.set_col_width_clicked)
+        self._enable_buttoms(False)
+
+        self.btn_download_file.clicked.connect(self._download_file_clicked)
+        self.btn_send_to_inverter.clicked.connect(self._send_to_inverter_clicked)
 
     def fetch_files(self):
         print('[Filesview] About to fire off files request')
@@ -125,16 +123,15 @@ class FilesView(UiBase):
         print("[Filesview] echo " + item.text(column))
         self.btn_more.setDisabled(False)
 
-    def more_clicked(self):
-        if self.flag:
-            col = 1
-        else:
-            col = 2
-        self.section_headers.customer.sortChildren(col, Qt.AscendingOrder)
-        self.flag = not self.flag
+    def _download_file_clicked(self):
+        # filename = qt.file_dialog(filters=['foo.epc'], save=True, parent=self.files_grid)
+        directory = QFileDialog.getExistingDirectory(parent=self.files_grid, caption='Pick location to download')
+        print(f'[Filesview] Filename picked: {directory}')
 
-    def set_col_width_clicked(self):
-        self.files_grid.setColumnWidth(0, int(self.txt_col_width.text()))
+
+    def _send_to_inverter_clicked(self):
+        pass
+
 
 
 

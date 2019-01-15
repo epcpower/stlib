@@ -15,3 +15,11 @@ def test_get_associations():
     assert output is not None
     assert output['model'] is not None
     assert output['model'][0] is not None
+
+@pytest.inlineCallbacks
+@pytest.mark.skip(reason="Just for local testing")
+def test_get_file():
+    controller = FilesController()
+
+    output = yield ensureDeferred(controller.download_file("test_large.out", "/Users/benb/Desktop/test.out"))
+    assert output is None
