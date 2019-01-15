@@ -1252,3 +1252,30 @@ class UserRoles(epyqlib.utils.general.AutoNumberIntEnum):
     field_name = None
     attrs_model = None
     column_index = None
+
+
+def from_index(index, model):
+    row_count = model.rowCount(index)
+    if row_count == 0:
+        return []
+
+    lines = []
+    for i in range(row_count):
+        child = model.index(i, 0, index)
+        lines.append(child.data())
+        lines.append(from_index(index=child, model=model))
+
+    return lines
+
+
+def indented_text_from_model(model, index=None):
+    if index is None:
+        index = QtCore.QModelIndex()
+
+    lines = from_index(index=index, model=model)
+    lines = [
+        'Root',
+        lines,
+    ]
+
+    return epyqlib.utils.general.format_nested_lists(lines, indent="'   ")
