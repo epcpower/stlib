@@ -46,7 +46,7 @@ setuptools.setup(
         'click',
         'python-docx',
         'python-can',
-        'twisted>=18.9.0rc1',
+        'twisted[tls]>=18.9.0',
     ],
     extras_require={
         'deploy': [

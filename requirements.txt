@@ -41,7 +41,9 @@ git+https://github.com/altendky/qt5reactor@ce3ea2dad6d71adb10cde79b64bc0c7d27e91
 six==1.11.0
 smmap2==2.0.5
 treq==18.6.0
-Twisted==18.9.0
+Twisted[tls]==18.9.0
+Twisted[osx_platform,tls]==18.9.0; platform_system == "Darwin"
+Twisted[windows_platform,tls]==18.9.0; platform_system == "Windows"
 typing==3.6.6
 wrapt==1.10.11
 zope.interface==4.6.0
