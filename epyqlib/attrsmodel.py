@@ -1235,7 +1235,12 @@ class Model:
 
 class Reference(marshmallow.fields.UUID):
     def _serialize(self, value, attr, obj):
-        return super()._serialize(value.uuid, attr, obj)
+        if value is None:
+            uuid = None
+        else:
+            uuid = value.uuid
+
+        return super()._serialize(uuid, attr, obj)
 
 
 def columns_to_code(c):
