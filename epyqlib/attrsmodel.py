@@ -1190,12 +1190,7 @@ class Model:
 
     def node_from_uuid(self, u):
         for model in {self} | self.droppable_from:
-            if type(u) is list:
-                node = []
-                for i in u:
-                    node.append(model.uuid_to_node.get(i))
-            else:
-                node = model.uuid_to_node.get(u)
+            node = model.uuid_to_node.get(u)
             if node is not None:
                 return node
 
