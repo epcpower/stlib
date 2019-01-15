@@ -405,3 +405,26 @@ def path_and_line(o):
 def intersect_dicts(a, b):
     common_keys = set(a).intersection(b)
     return {k: a[k] for k in common_keys}
+
+
+# TODO: CAMPid 073407143081341008467657184603164130
+def format_nested_lists(it, indent='    ', indentation=''):
+    result = []
+
+    for item in it:
+        if isinstance(item, list):
+            result.extend(format_nested_lists(
+                it=item,
+                indent=indent,
+                indentation=indentation + indent),
+            )
+        elif item.strip() == '':
+            result.append('')
+        else:
+            result.append(indentation + item)
+
+    if indentation == '':
+        result.append('')
+        return '\n'.join(result)
+    else:
+        return result
