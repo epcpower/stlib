@@ -1152,7 +1152,9 @@ class Model:
             node_to_insert_before = new_parent.child_at_row(row)
 
         if action == QtCore.Qt.MoveAction:
-            logger.debug('node name: {}'.format(node.name))
+            logger.debug('node name: {}'.format(
+                getattr(node, 'name', '<missing attribute>'),
+            ))
             logger.debug((data, action, row, column, parent))
             logger.debug('dropped on: {}'.format(
                 getattr(new_parent, 'name', '<no name attribute>'),
