@@ -21,21 +21,20 @@ Ui, UiBase = PyQt5.uic.loadUiType(
 
 
 @attr.s
+class Sections:
+    model: QTreeWidgetItem = attr.ib(default=None)
+    customer: QTreeWidgetItem = attr.ib(default=None)
+    site: QTreeWidgetItem = attr.ib(default=None)
+    inverter: QTreeWidgetItem = attr.ib(default=None)
+
+
+@attr.s
 class FilesView(UiBase):
-    class Sections:
-        model: QTreeWidgetItem
-        customer: QTreeWidgetItem
-        site: QTreeWidgetItem
-        inverter: QTreeWidgetItem
-
     # Files grid is 0-indexed
-    section_headers = Sections()
-    controller = FilesController()
-
-    flag: bool = False
-
-    gray_brush = QBrush(QColor(22, 22, 22, 22))
-
+    section_headers = attr.ib(factory=Sections)
+    controller = attr.ib(factory=FilesController)
+    flag: bool = attr.ib(default=False)
+    gray_brush = attr.ib(factory=lambda: QBrush(QColor(22, 22, 22, 22)))
     ui = attr.ib(factory=Ui)
 
     @classmethod

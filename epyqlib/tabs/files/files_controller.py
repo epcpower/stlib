@@ -1,15 +1,18 @@
+import attr
 import treq
 from twisted.internet.defer import Deferred
 
 from .graphql import API
 
 
+@attr.s
 class FilesController:
-
-    bucket_path = 'https://s3-us-west-2.amazonaws.com/epc-files-dev/public/firmware/'
-
-    def __init__(self):
-        self.api = API()
+    api = attr.ib(factory=API)
+    bucket_path = attr.ib(
+        default=(
+            'https://s3-us-west-2.amazonaws.com/epc-files-dev/public/firmware/'
+        )
+    )
 
     async def get_inverter_associations(self, inverter_id: str):
         groups = {
