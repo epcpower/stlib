@@ -10,6 +10,7 @@ from PyQt5.QtGui import QColor, QBrush
 
 from epyqlib.utils import qt
 from epyqlib.utils.twisted import errbackhook as show_error_dialog
+import epyqlib.utils.twisted
 from .files_controller import FilesController
 
 Ui, UiBase = PyQt5.uic.loadUiType(
@@ -37,6 +38,7 @@ class FilesView(UiBase):
     gray_brush = QBrush(QColor(22, 22, 22, 22))
 
     ui = attr.ib(factory=Ui)
+    device_interface = attr.ib(default=None)
 
     @classmethod
     def build(cls):
@@ -59,9 +61,16 @@ class FilesView(UiBase):
         print("[Filesview] setup_ui called")
         self.ui.setupUi(self)
 
+        self.ui.get_serial_number.clicked.connect(
+            lambda: self.get_serial_number(),
+        )
+
         self.bind()
         self.populate_tree()
         self.setup_buttons()
+
+    def set_device_interface(self, device_interface):
+        self.device_interface = device_interface
 
     def tab_selected(self):
         self.fetch_files()
@@ -132,7 +141,14 @@ class FilesView(UiBase):
     def _send_to_inverter_clicked(self):
         pass
 
-
+    @epyqlib.utils.twisted.ensure_deferred
+    @epyqlib.utils.twisted.errback_dialog
+    async def get_serial_number(self):
+        serial_number = await self.device_interface.get_serial_number()
+        epyqlib.utils.qt.dialog(
+            parent=self,
+            message=f'Serial Number: {serial_number}',
+        )
 
 
 # .ui files need a direct module attribute, not a class method, afaict.

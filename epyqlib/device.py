@@ -1107,6 +1107,11 @@ class Device:
             )
             self.ui.scripting_view.set_model(scripting_model)
 
+        self.device_interface = DeviceInterface(device=self)
+
+        if Tabs.files in tabs:
+            self.ui.files_view.set_device_interface(self.device_interface)
+
         self.notifiees = notifiees
         for notifiee in notifiees:
             self.bus.notifier.add(notifiee)
@@ -1255,6 +1260,28 @@ class FrameTimeout(epyqlib.canneo.QtCanListener):
 
     def terminate(self):
         self.timer.stop()
+
+
+@attr.s
+class DeviceInterface:
+    device = attr.ib()
+
+    async def get_serial_number(self):
+        serial_number_signal = self.device.nvs.signal_from_names(
+            'SN',
+            'SerialNumber',
+        )
+
+        serial_number_response = await self.device.nvs.read_all_from_device(
+            only_these=(serial_number_signal,),
+            meta=(epyqlib.nv.MetaEnum.value,),
+        )
+
+        serial_number = int(
+            serial_number_response[0][serial_number_signal.status_signal],
+        )
+
+        return serial_number
 
 
 if __name__ == '__main__':

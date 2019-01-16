@@ -88,6 +88,13 @@
          </column>
         </widget>
        </item>
+       <item>
+        <widget class="QPushButton" name="get_serial_number">
+         <property name="text">
+          <string>Get Serial Number</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
     </layout>
