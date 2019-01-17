@@ -215,6 +215,8 @@ class Parameter(epyqlib.treenode.TreeNode):
                 self.minimum = value
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
 
 
 @graham.schemify(tag='group', register=True)
@@ -263,6 +265,9 @@ class Group(epyqlib.treenode.TreeNode):
 
         return True
 
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+
 
 @graham.schemify(tag='enumerations')
 @epyqlib.attrsmodel.ify()
@@ -300,6 +305,9 @@ class Enumerations(epyqlib.treenode.TreeNode):
             return self.tree_parent.can_delete(node=self)
 
         return True
+
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
 
 
 @graham.schemify(tag='array_parameter_element')
@@ -442,6 +450,8 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
         return False
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
 
 
 @graham.schemify(tag='array_group_element')
@@ -474,6 +484,8 @@ class ArrayGroupElement(epyqlib.treenode.TreeNode):
         return False
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
 
 
 class InvalidArrayLength(Exception):
@@ -594,6 +606,9 @@ class Array(epyqlib.treenode.TreeNode):
             return False
 
         return True
+
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
 
 
 @graham.schemify(tag='table_array_element', register=True)
@@ -756,6 +771,8 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
         return False
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
 
 
 @graham.schemify(tag='table_group_element', register=True)
@@ -816,6 +833,9 @@ class TableGroupElement(epyqlib.treenode.TreeNode):
     def can_delete(self, node=None):
         return False
 
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+
 
 @graham.schemify(tag='table_enumeration_reference')
 @epyqlib.attrsmodel.ify()
@@ -849,6 +869,9 @@ class TableEnumerationReference(epyqlib.treenode.TreeNode):
 
     def link(self, enumeration):
         self.enumeration_uuid = enumeration.uuid
+
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
 
 
 @graham.schemify(tag='table', register=True)
@@ -1107,6 +1130,9 @@ class Table(epyqlib.treenode.TreeNode):
 
         return not isinstance(node, TableGroupElement)
 
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+
 
 @graham.schemify(tag='enumerator')
 @epyqlib.attrsmodel.ify()
@@ -1135,6 +1161,8 @@ class Enumerator(epyqlib.treenode.TreeNode):
         return False
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
 
 
 @graham.schemify(tag='sunspec_enumerator')
@@ -1188,6 +1216,8 @@ class SunSpecEnumerator(epyqlib.treenode.TreeNode):
         return False
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
 
 
 @graham.schemify(tag='enumeration', register=True)
@@ -1242,6 +1272,9 @@ class Enumeration(epyqlib.treenode.TreeNode):
 
         return True
 
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+
 
 @graham.schemify(tag='access_level')
 @epyqlib.attrsmodel.ify()
@@ -1270,6 +1303,8 @@ class AccessLevel(epyqlib.treenode.TreeNode):
         return False
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
 
 
 @graham.schemify(tag='access_levels', register=True)
@@ -1326,6 +1361,9 @@ class AccessLevels(epyqlib.treenode.TreeNode):
 
     def default(self):
         return min(self.children, key=lambda x: x.value)
+
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
 
 
 Root = epyqlib.attrsmodel.Root(

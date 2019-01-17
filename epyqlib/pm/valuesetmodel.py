@@ -182,6 +182,8 @@ class Parameter(epyqlib.treenode.TreeNode):
         return False
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
 
 
 Root = epyqlib.attrsmodel.Root(
