@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 import treq
 from twisted.internet.defer import Deferred
 
@@ -10,6 +12,21 @@ class FilesController:
 
     def __init__(self):
         self.api = API()
+        self.last_sync: datetime = None
+
+    def set_sync_time(self) -> str:
+        self.last_sync = datetime.now()
+        return self.get_sync_time()
+
+    def get_sync_time(self) -> str:
+        return self.last_sync.strftime('%l:%M%p %m/%d')
+
+    def should_sync(self):
+        if self.last_sync is None:
+            return True
+
+        sync_time = self.last_sync + timedelta(minutes=5)
+        return sync_time < datetime.now()
 
     async def get_inverter_associations(self, inverter_id: str):
         groups = {

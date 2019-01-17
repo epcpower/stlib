@@ -109,6 +109,13 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QLabel" name="last_sync">
+         <property name="text">
+          <string>Last sync at:</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item row="1" column="0">

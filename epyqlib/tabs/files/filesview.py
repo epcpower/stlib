@@ -1,11 +1,12 @@
 import pathlib
+import time
 
 import attr
 from PyQt5.QtCore import Qt
 from twisted.internet.defer import ensureDeferred
 
 import PyQt5.uic
-from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QFileDialog, QCheckBox
+from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QFileDialog, QCheckBox, QLabel
 from PyQt5.QtGui import QColor, QBrush
 
 from epyqlib.utils import qt
@@ -63,15 +64,18 @@ class FilesView(UiBase):
         self.setup_buttons()
 
     def tab_selected(self):
-        self.fetch_files()
+        if self.controller.should_sync():
+            self.fetch_files()
 
     ### Setup methods
     # noinspection PyAttributeOutsideInit
     def bind(self):
-        self.chk_sync_now: QCheckBox = self.ui.sync_now
+        self.lbl_last_sync: QLabel = self.ui.last_sync
+        self.btn_sync_now: QPushButton = self.ui.sync_now
         self.btn_login: QPushButton = self.ui.login
         self.btn_download_file: QPushButton = self.ui.download_file
         self.btn_send_to_inverter: QPushButton = self.ui.send_to_inverter
+        self.chk_auto_sync: QCheckBox = self.ui.auto_sync
 
         self.files_grid: QTreeWidget = self.ui.treeWidget
 
@@ -106,17 +110,27 @@ class FilesView(UiBase):
         self.btn_download_file.clicked.connect(self._download_file_clicked)
         self.btn_send_to_inverter.clicked.connect(self._send_to_inverter_clicked)
 
+        self.btn_sync_now.clicked.connect(self.fetch_files)
+
     def fetch_files(self):
         print('[Filesview] About to fire off files request')
         deferred = ensureDeferred(self.controller.get_inverter_associations('TestInv'))
         deferred.addCallback(self.show_files)
         deferred.addErrback(show_error_dialog)
 
+    def _remove_all_children(self, parent: QTreeWidgetItem):
+        while parent.childCount() > 0:
+            parent.removeChild(parent.child(0))
+
     def show_files(self, associations):
         print('[Filesview] Files request finished')
         print(associations)
+        sync_time = self.controller.set_sync_time()
+        self.lbl_last_sync.setText(f'Last sync at:{sync_time}')
 
         def _add_item(list: [dict], parent: QTreeWidgetItem):
+            self._remove_all_children(parent)
+
             for item in list:
                 if item['file'] is not None:
                     QTreeWidgetItem(parent, [item['file']['filename']])
