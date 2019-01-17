@@ -75,7 +75,7 @@ class API:
                 items {
                     id
                     customer { name }
-                    file {filename, uploadPath}
+                    file {filename, type, uploadPath}
                     model {name}
                     inverter {id, serialNumber}
                     site {name}

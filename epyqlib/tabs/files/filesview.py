@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 from twisted.internet.defer import ensureDeferred
 
 import PyQt5.uic
-from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QFileDialog
+from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QFileDialog, QCheckBox
 from PyQt5.QtGui import QColor, QBrush
 
 from epyqlib.utils import qt
@@ -19,20 +19,16 @@ Ui, UiBase = PyQt5.uic.loadUiType(
 
 # TODO: what about `in_designer=False`
 
+class _Sections:
+    params: QTreeWidgetItem
+    pvms: QTreeWidgetItem
+    firmware: QTreeWidgetItem
+    fault_logs: QTreeWidgetItem
+    other: QTreeWidgetItem
 
 @attr.s
 class FilesView(UiBase):
-    class Sections:
-        model: QTreeWidgetItem
-        customer: QTreeWidgetItem
-        site: QTreeWidgetItem
-        inverter: QTreeWidgetItem
 
-    # Files grid is 0-indexed
-    section_headers = Sections()
-    controller = FilesController()
-
-    flag: bool = False
 
     gray_brush = QBrush(QColor(22, 22, 22, 22))
 
@@ -56,6 +52,9 @@ class FilesView(UiBase):
         super().__init__()
 
     def setup_ui(self):
+        self.section_headers = _Sections()
+        self.controller = FilesController()
+
         print("[Filesview] setup_ui called")
         self.ui.setupUi(self)
 
@@ -69,33 +68,40 @@ class FilesView(UiBase):
     ### Setup methods
     # noinspection PyAttributeOutsideInit
     def bind(self):
+        self.chk_sync_now: QCheckBox = self.ui.sync_now
+        self.btn_login: QPushButton = self.ui.login
         self.btn_download_file: QPushButton = self.ui.download_file
         self.btn_send_to_inverter: QPushButton = self.ui.send_to_inverter
 
         self.files_grid: QTreeWidget = self.ui.treeWidget
 
     def populate_tree(self):
-        self.files_grid.setHeaderLabels(["Filename", "Source", "Timestamp", "Notes"])
+        self.files_grid.setHeaderLabels(["Filename", "Local", "Web", "Association", "Creator", "Created At", "Associated At", "Notes"])
         self.files_grid.setColumnWidth(0, 300)
-        self.files_grid.setColumnWidth(4, 500)
+        self.files_grid.setColumnWidth(1, 35)
+        self.files_grid.setColumnWidth(2, 35)
+        self.files_grid.setColumnWidth(7, 500)
 
-        self.section_headers.model = QTreeWidgetItem(self.files_grid, ["Model-specific files"])
-        self.section_headers.model.setExpanded(True)
-        self.section_headers.customer = QTreeWidgetItem(self.files_grid, ["Customer-specific files"])
-        self.section_headers.customer.setExpanded(True)
-        self.section_headers.site = QTreeWidgetItem(self.files_grid, ["Site-specific files"])
-        self.section_headers.site.setExpanded(True)
-        self.section_headers.inverter = QTreeWidgetItem(self.files_grid, ["Inverter-specific files"])
-        self.section_headers.inverter.setExpanded(True)
+        # make_entry = lambda caption:
+        def make_entry(caption):
+            val = QTreeWidgetItem(self.files_grid, [caption])
+            val.setExpanded(True)
+            return val
+
+        self.section_headers.params = make_entry("Parameter Sets")
+        self.section_headers.pvms = make_entry("Value Sets")
+        self.section_headers.firmware = make_entry("Firmware")
+        self.section_headers.fault_logs = make_entry("Fault Logs")
+        self.section_headers.other = make_entry("Other files")
 
         self.files_grid.itemClicked.connect(self.echo)
 
-    def _enable_buttoms(self, enable):
+    def _enable_buttons(self, enable):
         self.btn_download_file.setDisabled(enable)
         self.btn_send_to_inverter.setDisabled(enable)
 
     def setup_buttons(self):
-        self._enable_buttoms(False)
+        self._enable_buttons(False)
 
         self.btn_download_file.clicked.connect(self._download_file_clicked)
         self.btn_send_to_inverter.clicked.connect(self._send_to_inverter_clicked)
@@ -109,19 +115,22 @@ class FilesView(UiBase):
     def show_files(self, associations):
         print('[Filesview] Files request finished')
         print(associations)
-        for item in associations['model']:
-            if item['file'] is not None:
-                QTreeWidgetItem(self.section_headers.model, [item['file']['filename']])
 
-        for item in associations['inverter']:
-            if item['file'] is not None:
-                QTreeWidgetItem(self.section_headers.inverter, [item['file']['filename']])
+        def _add_item(list: [dict], parent: QTreeWidgetItem):
+            for item in list:
+                if item['file'] is not None:
+                    QTreeWidgetItem(parent, [item['file']['filename']])
+
+        _add_item(associations['parameter'], self.section_headers.params)
+        #_add_item(associations['pvms'], self.section_headers.pvms)
+        _add_item(associations['firmware'], self.section_headers.firmware)
+        #_add_item(associations['faultLogs'], self.section_headers.fault_logs)
+        _add_item(associations['other'], self.section_headers.other)
 
 
     ### Actions
     def echo(self, item: QTreeWidgetItem, column: int):
         print("[Filesview] echo " + item.text(column))
-        self.btn_more.setDisabled(False)
 
     def _download_file_clicked(self):
         # filename = qt.file_dialog(filters=['foo.epc'], save=True, parent=self.files_grid)
