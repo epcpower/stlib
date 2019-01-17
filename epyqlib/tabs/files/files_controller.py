@@ -12,6 +12,7 @@ class FilesController:
 
     def __init__(self):
         self.api = API()
+        self.old_notes: str = None
         self.last_sync: datetime = None
 
     def set_sync_time(self) -> str:
@@ -52,3 +53,12 @@ class FilesController:
         deferred.addCallback(treq.collect, outf.write)
         deferred.addBoth(lambda _: outf.close())
         return await deferred
+
+    def set_original_notes(self, notes: str):
+        self.old_notes = notes
+
+    def notes_modified(self, new_notes):
+        if self.old_notes is None:
+            return False
+
+        return (len(self.old_notes) != len(new_notes)) or self.old_notes != new_notes

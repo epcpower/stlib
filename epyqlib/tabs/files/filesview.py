@@ -7,7 +7,8 @@ from PyQt5.QtCore import Qt
 from twisted.internet.defer import ensureDeferred
 
 import PyQt5.uic
-from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QFileDialog, QCheckBox, QLabel
+from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QFileDialog, QCheckBox, QLabel, \
+    QPlainTextEdit
 from PyQt5.QtGui import QColor, QBrush
 
 from epyqlib.utils import qt
@@ -88,6 +89,9 @@ class FilesView(UiBase):
         self.upload_time: QLineEdit = self.ui.upload_time
         self.version: QLineEdit = self.ui.version
 
+        self.notes: QPlainTextEdit = self.ui.notes
+        self.btn_save_notes: QPushButton = self.ui.save_notes
+
 
     def populate_tree(self):
         self.files_grid.setHeaderLabels(["Filename", "Local", "Web", "Association", "Creator", "Created At", "Associated At", "Notes"])
@@ -108,6 +112,8 @@ class FilesView(UiBase):
         self.section_headers.fault_logs = make_entry("Fault Logs")
         self.section_headers.other = make_entry("Other files")
 
+        self.notes.textChanged.connect(self._notes_changed)
+
         self.files_grid.itemClicked.connect(self._file_item_clicked)
 
     def _enable_buttons(self, enable):
@@ -116,9 +122,6 @@ class FilesView(UiBase):
 
     def setup_buttons(self):
         self._enable_buttons(False)
-
-        self.btn_download_file.clicked.connect(self._download_file_clicked)
-        self.btn_send_to_inverter.clicked.connect(self._send_to_inverter_clicked)
 
         self.btn_sync_now.clicked.connect(self.fetch_files)
 
@@ -159,18 +162,21 @@ class FilesView(UiBase):
             self._show_file_details(item.obj)
 
     def _download_file_clicked(self):
-        # filename = qt.file_dialog(filters=['foo.epc'], save=True, parent=self.files_grid)
         directory = QFileDialog.getExistingDirectory(parent=self.files_grid, caption='Pick location to download')
         print(f'[Filesview] Filename picked: {directory}')
 
 
-    def _send_to_inverter_clicked(self):
-        pass
+    def _notes_changed(self):
+        changed = self.controller.notes_modified(self.notes.toPlainText())
 
+        self.btn_save_notes.setDisabled(not changed)
 
     ### UI Update methods
     def _show_file_details(self, association):
         self.filename.setText(association['file']['filename'])
+        self.version.setText(association['file']['version'])
+        self.notes.setPlainText(association['file']['notes'])
+        self.controller.set_original_notes(association['file']['notes'])
 
 
 # .ui files need a direct module attribute, not a class method, afaict.
