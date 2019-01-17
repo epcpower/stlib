@@ -1,3 +1,4 @@
+import json
 import pathlib
 import time
 
@@ -20,6 +21,11 @@ Ui, UiBase = PyQt5.uic.loadUiType(
 
 # TODO: what about `in_designer=False`
 
+class QTreeWidgetItemWithObj(QTreeWidgetItem):
+    def __init__(self):
+        super().__init__()
+        self.obj = None
+
 class _Sections:
     params: QTreeWidgetItem
     pvms: QTreeWidgetItem
@@ -29,8 +35,6 @@ class _Sections:
 
 @attr.s
 class FilesView(UiBase):
-
-
     gray_brush = QBrush(QColor(22, 22, 22, 22))
 
     ui = attr.ib(factory=Ui)
@@ -53,10 +57,6 @@ class FilesView(UiBase):
         super().__init__()
 
     def setup_ui(self):
-        self.section_headers = _Sections()
-        self.controller = FilesController()
-
-        print("[Filesview] setup_ui called")
         self.ui.setupUi(self)
 
         self.bind()
@@ -70,6 +70,9 @@ class FilesView(UiBase):
     ### Setup methods
     # noinspection PyAttributeOutsideInit
     def bind(self):
+        self.section_headers = _Sections()
+        self.controller = FilesController()
+
         self.lbl_last_sync: QLabel = self.ui.last_sync
         self.btn_sync_now: QPushButton = self.ui.sync_now
         self.btn_login: QPushButton = self.ui.login
@@ -78,6 +81,13 @@ class FilesView(UiBase):
         self.chk_auto_sync: QCheckBox = self.ui.auto_sync
 
         self.files_grid: QTreeWidget = self.ui.treeWidget
+
+        self.assigned_by: QLineEdit = self.ui.assigned_by
+        self.assigned_time: QLineEdit = self.ui.assigned_time
+        self.filename: QLineEdit = self.ui.filename
+        self.upload_time: QLineEdit = self.ui.upload_time
+        self.version: QLineEdit = self.ui.version
+
 
     def populate_tree(self):
         self.files_grid.setHeaderLabels(["Filename", "Local", "Web", "Association", "Creator", "Created At", "Associated At", "Notes"])
@@ -98,7 +108,7 @@ class FilesView(UiBase):
         self.section_headers.fault_logs = make_entry("Fault Logs")
         self.section_headers.other = make_entry("Other files")
 
-        self.files_grid.itemClicked.connect(self.echo)
+        self.files_grid.itemClicked.connect(self._file_item_clicked)
 
     def _enable_buttons(self, enable):
         self.btn_download_file.setDisabled(enable)
@@ -133,7 +143,8 @@ class FilesView(UiBase):
 
             for item in list:
                 if item['file'] is not None:
-                    QTreeWidgetItem(parent, [item['file']['filename']])
+                    widget = QTreeWidgetItem(parent, [item['file']['filename']])
+                    widget.obj = item
 
         _add_item(associations['parameter'], self.section_headers.params)
         #_add_item(associations['pvms'], self.section_headers.pvms)
@@ -143,8 +154,9 @@ class FilesView(UiBase):
 
 
     ### Actions
-    def echo(self, item: QTreeWidgetItem, column: int):
-        print("[Filesview] echo " + item.text(column))
+    def _file_item_clicked(self, item: QTreeWidgetItem, column: int):
+        if hasattr(item, 'obj'):
+            self._show_file_details(item.obj)
 
     def _download_file_clicked(self):
         # filename = qt.file_dialog(filters=['foo.epc'], save=True, parent=self.files_grid)
@@ -156,6 +168,9 @@ class FilesView(UiBase):
         pass
 
 
+    ### UI Update methods
+    def _show_file_details(self, association):
+        self.filename.setText(association['file']['filename'])
 
 
 # .ui files need a direct module attribute, not a class method, afaict.

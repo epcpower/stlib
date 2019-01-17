@@ -75,10 +75,12 @@ class API:
                 items {
                     id
                     customer { name }
-                    file {filename, type, uploadPath}
+                    file {filename, notes, type, uploadPath, version}
                     model {name}
                     inverter {id, serialNumber}
                     site {name}
+                    
+                    # updatedAt
                 }
             }
         }
@@ -101,6 +103,9 @@ class API:
 
         content = await treq.content(response)
         body = await treq.json_content(response)
+
+        if (body.get('data') is None and body.get('errors') is not None):
+            raise GraphQLException(body['errors'])
 
         return body
 
