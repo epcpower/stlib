@@ -426,8 +426,9 @@ def attr_uuid_list(
         attribute=attribute,
         human_name=human_name,
         data_display=data_display,
-        delegate=epyqlib.attrsmodel.MultiSelectByRootDelegateCache(
+        delegate=epyqlib.attrsmodel.RootDelegateCache(
             list_selection_root=list_selection_root,
+            multi_select=True,
         ),
     )
 
@@ -460,7 +461,7 @@ def attr_uuid(
         attribute=attribute,
         human_name=human_name,
         data_display=data_display,
-        delegate=epyqlib.attrsmodel.SingleSelectByRootDelegateCache(
+        delegate=epyqlib.attrsmodel.RootDelegateCache(
             list_selection_root=list_selection_root,
         ),
     )
@@ -590,11 +591,23 @@ def get_connection_id(parent, child):
     return (parent, child.uuid)
 
 
+def hide_popup(self):
+    QtCore.QCoreApplication.postEvent(
+        self,
+        QtGui.QKeyEvent(
+            QtCore.QEvent.KeyPress,
+            QtCore.Qt.Key_Enter,
+            QtCore.Qt.NoModifier,
+        ),
+    )
+
+
 @attr.s
-class SingleSelectByRootDelegateCache:
+class RootDelegateCache:
     list_selection_root = attr.ib()
     text_column_name = attr.ib(default='Name')
     cached_delegate = attr.ib(default=None)
+    multi_select = attr.ib(default=False)
 
     def get_delegate(self, model, parent):
         if self.cached_delegate is not None:
@@ -604,30 +617,11 @@ class SingleSelectByRootDelegateCache:
             self.list_selection_root
         ]
 
-        self.cached_delegate = EnumerationDelegate(
-            text_column_name=self.text_column_name,
-            root=root_node,
-            parent=parent,
-        )
+        delegate = EnumerationDelegate
+        if self.multi_select:
+            delegate = EnumerationDelegateMulti
 
-        return self.cached_delegate
-
-
-@attr.s
-class MultiSelectByRootDelegateCache:
-    list_selection_root = attr.ib()
-    text_column_name = attr.ib(default='Name')
-    cached_delegate = attr.ib(default=None)
-
-    def get_delegate(self, model, parent):
-        if self.cached_delegate is not None:
-            return self.cached_delegate
-
-        root_node = model.list_selection_roots[
-            self.list_selection_root
-        ]
-
-        self.cached_delegate = EnumerationDelegateMulti(
+        self.cached_delegate = delegate(
             text_column_name=self.text_column_name,
             root=root_node,
             parent=parent,
@@ -665,29 +659,13 @@ class DelegateSelector:
 class CustomCombo(PyQt5.QtWidgets.QComboBox):
     def hidePopup(self):
         super().hidePopup()
-
-        QtCore.QCoreApplication.postEvent(
-            self,
-            QtGui.QKeyEvent(
-                QtCore.QEvent.KeyPress,
-                QtCore.Qt.Key_Enter,
-                QtCore.Qt.NoModifier,
-            ),
-        )
+        hide_popup(self)
 
 
 class CustomMulti(PyQt5.QtWidgets.QListWidget):
     def hidePopup(self):
         super().hidePopup()
-        
-        QtCore.QCoreApplication.postEvent(
-            self,
-            QtGui.QKeyEvent(
-                QtCore.QEvent.KeyPress,
-                QtCore.Qt.Key_Enter,
-                QtCore.Qt.NoModifier,
-            ),
-        )
+        hide_popup(self)
 
 
 class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
@@ -1201,12 +1179,7 @@ class Model:
 
     def node_from_uuid(self, u):
         for model in {self} | self.droppable_from:
-            if type(u) is list:
-                node = []
-                for i in u:
-                    node.append(model.uuid_to_node.get(i))
-            else:
-                node = model.uuid_to_node.get(u)
+            node = model.uuid_to_node.get(u)
             if node is not None:
                 return node
 

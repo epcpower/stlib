@@ -45,21 +45,9 @@ class Event:
         if self.action is pause_sentinel:
             return self
 
-        signal = self.device.neo.signal_by_path(*self.action.signal)
-
-        # TODO: CAMPid 079320743340327834208
-        is_nv = signal.frame.id == self.device.nvs.set_frames[0].id
-        if is_nv:
-            print('switching', self.action.signal)
-            signal = self.device.nvs.neo.signal_by_path(*self.action.signal)
-
         return attr.evolve(
-            self,
-            action=attr.evolve(
-                self.action,
-                signal=signal,
-                is_nv=is_nv,
-            )
+            inst=self,
+            action=self.action.resolve(device=self.device),
         )
 
 
@@ -96,10 +84,70 @@ class Action:
         print('standard setting:', self.signal.name, self.value)
         self.signal.set_human_value(self.value)
 
-    def nv_handler(self, nvs):
+    def set_nv_value(self):
         print('nv setting:', self.signal.name, self.value)
         self.signal.set_human_value(self.value)
+
+    def nv_handler(self, nvs):
+        self.set_nv_value()
         nvs.write_all_to_device(only_these=(self.signal,))
+
+    def resolve(self, device):
+        signal = device.neo.signal_by_path(*self.signal)
+
+        # TODO: CAMPid 079320743340327834208
+        is_nv = signal.frame.id == device.nvs.set_frames[0].id
+        if is_nv:
+            print('switching', self.signal)
+            signal = device.nvs.neo.signal_by_path(*self.signal)
+
+        return attr.evolve(
+            inst=self,
+            signal=signal,
+            is_nv=is_nv,
+        )
+
+
+@attr.s(frozen=True)
+class CompoundAction:
+    actions = attr.ib()
+
+    def __call__(self, nvs=None):
+        nv_actions = []
+
+        for action in self.actions:
+            if action.is_nv:
+                nv_actions.append(action)
+                continue
+
+            action(nvs=nvs)
+
+        for action in nv_actions:
+            action.set_nv_value()
+
+        if len(nv_actions) > 0:
+            nvs.write_all_to_device(
+                only_these=tuple(action.signal for action in nv_actions),
+            )
+
+    def resolve(self, device):
+        return attr.evolve(
+            inst=self,
+            actions=tuple(
+                action.resolve(device=device)
+                for action in self.actions
+            )
+        )
+
+
+def compound_event_from_events(events):
+    return attr.evolve(
+        inst=events[0],
+        action=CompoundAction(
+            actions=tuple(event.action for event in events),
+        ),
+    )
+
 
 
 pause_sentinel = Action(signal=[], value=0)
@@ -177,6 +225,14 @@ def csv_load(f, devices):
         events.extend(events_group)
 
         last_event_time = event_time
+
+    events = [
+        compound_event_from_events(tuple(events))
+        for key, events in itertools.groupby(
+            iterable=events,
+            key=lambda e: (e.time, e.device),
+        )
+    ]
 
     if len(missing_device_names) > 0:
         raise MissingDevicesError(missing_device_names)
