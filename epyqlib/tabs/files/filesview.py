@@ -9,7 +9,7 @@ from twisted.internet.defer import ensureDeferred
 import PyQt5.uic
 from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QFileDialog, QCheckBox, QLabel, \
     QPlainTextEdit
-from PyQt5.QtGui import QColor, QBrush
+from PyQt5.QtGui import QColor, QBrush, QTextCursor
 
 from epyqlib.utils import qt
 from epyqlib.utils.twisted import errbackhook as show_error_dialog
@@ -91,6 +91,7 @@ class FilesView(UiBase):
 
         self.notes: QPlainTextEdit = self.ui.notes
         self.btn_save_notes: QPushButton = self.ui.save_notes
+        self.btn_reset_notes: QPushButton = self.ui.reset_notes
 
 
     def populate_tree(self):
@@ -124,6 +125,7 @@ class FilesView(UiBase):
         self._enable_buttons(False)
 
         self.btn_sync_now.clicked.connect(self.fetch_files)
+        self.btn_reset_notes.clicked.connect(self._reset_notes)
 
     def fetch_files(self):
         print('[Filesview] About to fire off files request')
@@ -167,16 +169,24 @@ class FilesView(UiBase):
 
 
     def _notes_changed(self):
+        ensureDeferred(self._disable_notes())
+
+    def _reset_notes(self):
+        self.notes.setPlainText(self.controller.old_notes)
+        self.notes.moveCursor(QTextCursor.End)
+
+    async def _disable_notes(self):
         changed = self.controller.notes_modified(self.notes.toPlainText())
 
         self.btn_save_notes.setDisabled(not changed)
+        self.btn_reset_notes.setDisabled(not changed)
 
     ### UI Update methods
     def _show_file_details(self, association):
         self.filename.setText(association['file']['filename'])
         self.version.setText(association['file']['version'])
-        self.notes.setPlainText(association['file']['notes'])
         self.controller.set_original_notes(association['file']['notes'])
+        self.notes.setPlainText(association['file']['notes'])
 
 
 # .ui files need a direct module attribute, not a class method, afaict.
