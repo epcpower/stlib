@@ -920,6 +920,12 @@ class Table(epyqlib.treenode.TreeNode):
         no_column=True,
     )
 
+    arrays = attr.ib(default=None)
+    epyqlib.attrsmodel.attrib(
+        attribute=arrays,
+        no_column=True,
+    )
+
     def __attrs_post_init__(self):
         super().__init__()
 
@@ -1010,6 +1016,7 @@ class Table(epyqlib.treenode.TreeNode):
             for child in self.children
             if isinstance(child, (Array, Group))
         ]
+        self.arrays = arrays
 
         with self._ignore_children():
             if old_group is None:
