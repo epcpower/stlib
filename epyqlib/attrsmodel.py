@@ -677,7 +677,7 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
         column = attrs_model.columns.index_of(self.text_column_name)
         root_index = attrs_model.index_from_node(self.root)
 
-        editor.setModel(model)
+        editor.setModel(root_index.model())
         editor.setModelColumn(column)
         editor.setRootModelIndex(root_index)
 
@@ -702,12 +702,19 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
         attrs_model = item.data(epyqlib.utils.qt.UserRoles.attrs_model)
         parent_index = attrs_model.index_from_node(self.root)
 
-        selected_index = model.index(
+        enumeration_model = parent_index.model()
+        enumeration_attrs_model = parent_index.data(
+            epyqlib.utils.qt.UserRoles.attrs_model,
+        )
+
+        selected_index = enumeration_model.index(
             editor_index,
             0,
             parent_index,
         )
-        selected_node = attrs_model.node_from_index(selected_index)
+        selected_node = enumeration_attrs_model.node_from_index(
+            selected_index,
+        )
 
         datum = str(selected_node.uuid)
         model.setData(index, datum)
@@ -1106,9 +1113,15 @@ class Model:
         return node
 
     def index_from_node(self, node):
-        item = self.item_from_node(node)
-        index = self.model.indexFromItem(item)
-        return index
+        for root in {self} | self.droppable_from:
+            try:
+                item = root.item_from_node(node)
+            except KeyError:
+                continue
+            index = root.model.indexFromItem(item)
+            return index
+
+        return None
 
     def mimeData(self, indexes):
         [node] = {self.node_from_index(i) for i in indexes}
