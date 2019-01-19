@@ -1018,7 +1018,12 @@ class Model:
                         item.setData(display_text, PyQt5.QtCore.Qt.DisplayRole)
                         item.setData(edit_text, PyQt5.QtCore.Qt.EditRole)
                         item.setData(datum, epyqlib.utils.qt.UserRoles.raw)
-
+                        if item.isCheckable():
+                            item.setCheckState(
+                                PyQt5.QtCore.Qt.Checked
+                                if datum
+                                else PyQt5.QtCore.Qt.Unchecked,
+                            )
                         field_metadata.updating = False
 
                     connections.update(key_value(
