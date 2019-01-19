@@ -1016,7 +1016,17 @@ class Table(epyqlib.treenode.TreeNode):
             for child in self.children
             if isinstance(child, (Array, Group))
         ]
-        self.arrays = arrays
+        self.arrays_and_groups = arrays
+        self.arrays = [
+            child
+            for child in self.children
+            if isinstance(child, Array)
+        ]
+        self.groups = [
+            child
+            for child in self.children
+            if isinstance(child, Group)
+        ]
 
         with self._ignore_children():
             if old_group is None:
