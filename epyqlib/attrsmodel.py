@@ -681,8 +681,7 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
         editor.setModelColumn(column)
         editor.setRootModelIndex(root_index)
 
-        node = attrs_model.node_from_index(model_index)
-        target_uuid = node.uuid
+        target_uuid = model_index.data(epyqlib.utils.qt.UserRoles.raw)
 
         if target_uuid is not None:
             target_node = attrs_model.node_from_uuid(target_uuid)
