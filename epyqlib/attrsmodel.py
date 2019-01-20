@@ -439,6 +439,7 @@ def attr_uuid(
         list_selection_root=None,
         no_graham=False,
         default=attr.Factory(uuid.uuid4),
+        editable=True,
         **field_options,
 ):
     if metadata is None:
@@ -461,6 +462,7 @@ def attr_uuid(
         delegate=epyqlib.attrsmodel.RootDelegateCache(
             list_selection_root=list_selection_root,
         ),
+        editable=editable,
     )
 
     return attribute
