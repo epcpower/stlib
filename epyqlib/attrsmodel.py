@@ -951,7 +951,13 @@ class Model:
                 field_name = column.fields.get(type(child))
 
                 item = QtGui.QStandardItem()
-                item.setEditable(type(child) in column.fields)
+                editable = False
+                field_for_column = column.fields.get(type(child))
+                if field_for_column is not None:
+                    metadata = getattr(fields(type(child)), field_for_column)
+                    editable = metadata.editable
+
+                item.setEditable(editable)
                 if i == 0:
                     self._all_items_list.append(item)
                     self.node_to_item[child] = item
@@ -967,10 +973,9 @@ class Model:
                 )
 
                 if field_name is not None:
-                    fields = attributes(type(child)).fields
                     checkable = (
-                            getattr(fields, field_name).converter
-                            == two_state_checkbox
+                        getattr(fields(type(child)), field_name).converter
+                        == two_state_checkbox
                     )
                     item.setCheckable(checkable)
 
