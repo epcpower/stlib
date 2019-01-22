@@ -428,3 +428,12 @@ def format_nested_lists(it, indent='    ', indentation=''):
         return '\n'.join(result)
     else:
         return result
+
+
+def ordered_unique(iterable):
+    seen = set()
+
+    for item in iterable:
+        if item not in seen:
+            seen.add(item)
+            yield item
