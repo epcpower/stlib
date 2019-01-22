@@ -442,6 +442,7 @@ def attr_uuid(
         list_selection_root=None,
         no_graham=False,
         default=attr.Factory(uuid.uuid4),
+        editable=True,
         **field_options,
 ):
     if metadata is None:
@@ -464,6 +465,7 @@ def attr_uuid(
         delegate=epyqlib.attrsmodel.RootDelegateCache(
             list_selection_root=list_selection_root,
         ),
+        editable=editable,
     )
 
     return attribute
@@ -693,8 +695,7 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
         editor.setModelColumn(column)
         editor.setRootModelIndex(root_index)
 
-        node = attrs_model.node_from_index(model_index)
-        target_uuid = node.uuid
+        target_uuid = model_index.data(epyqlib.utils.qt.UserRoles.raw)
 
         if target_uuid is not None:
             target_node = attrs_model.node_from_uuid(target_uuid)
@@ -960,11 +961,37 @@ class Model:
 
             changed_signals = epyqlib.utils.qt.pyqtified(child).changed
 
+            uneditable_highlight = QtGui.QColor('grey')
+            uneditable_highlight.setAlphaF(0.4)
+            droppable_highlight = QtGui.QColor('orange')
+            droppable_highlight.setAlphaF(0.4)
+            droppable_row = hasattr(row, 'addable_types') or hasattr(row, 'all_addable_types')
+
             for i, column in enumerate(self.columns):
                 field_name = column.fields.get(type(child))
 
                 item = QtGui.QStandardItem()
-                item.setEditable(type(child) in column.fields)
+                editable = False
+                has_field = False
+                field_for_column = column.fields.get(type(child))
+                if field_for_column is not None:
+                    metadata = getattr(fields(type(child)), field_for_column)
+                    editable = metadata.editable
+                    has_field = True
+
+                item.setEditable(editable)
+                if not editable and has_field:
+                    if droppable_row:
+                        item.setData(
+                            uneditable_highlight,
+                            QtCore.Qt.ItemDataRole.BackgroundRole,
+                        )
+                    else:
+                        item.setData(
+                            droppable_highlight,
+                            QtCore.Qt.ItemDataRole.BackgroundRole,
+                        )
+
                 if i == 0:
                     self._all_items_list.append(item)
                     self.node_to_item[child] = item
@@ -980,10 +1007,9 @@ class Model:
                 )
 
                 if field_name is not None:
-                    fields = attributes(type(child)).fields
                     checkable = (
-                            getattr(fields, field_name).converter
-                            == two_state_checkbox
+                        getattr(fields(type(child)), field_name).converter
+                        == two_state_checkbox
                     )
                     item.setCheckable(checkable)
 
@@ -1031,7 +1057,12 @@ class Model:
                         item.setData(display_text, PyQt5.QtCore.Qt.DisplayRole)
                         item.setData(edit_text, PyQt5.QtCore.Qt.EditRole)
                         item.setData(datum, epyqlib.utils.qt.UserRoles.raw)
-
+                        if item.isCheckable():
+                            item.setCheckState(
+                                PyQt5.QtCore.Qt.Checked
+                                if datum
+                                else PyQt5.QtCore.Qt.Unchecked,
+                            )
                         field_metadata.updating = False
 
                     connections.update(key_value(

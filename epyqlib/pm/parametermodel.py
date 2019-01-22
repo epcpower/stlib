@@ -119,6 +119,21 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.Boolean(),
         ),
     )
+
+    embedded_getter = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+
+    embedded_setter = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+
     read_only = attr.ib(
         default=False,
         converter=epyqlib.attrsmodel.two_state_checkbox,
@@ -756,6 +771,18 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
         ),
     )
 
+    index = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Integer(allow_none=False),
+        )
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=index,
+        editable=False,
+        no_column=True,
+    )
+
     uuid = epyqlib.attrsmodel.attr_uuid()
 
     original = attr.ib(
@@ -817,6 +844,30 @@ class TableGroupElement(epyqlib.treenode.TreeNode):
                 marshmallow.fields.Nested(graham.schema(TableArrayElement)),
             )),
         ),
+    )
+
+    axis = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        )
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=axis,
+        editable=False,
+        no_column=True,
+    )
+
+    curve_index = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Integer(allow_none=True),
+        )
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=curve_index,
+        editable=False,
+        no_column=True,
     )
 
     uuid = epyqlib.attrsmodel.attr_uuid()
@@ -889,6 +940,34 @@ class Table(epyqlib.treenode.TreeNode):
         ),
     )
 
+    embedded_getter = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+
+    embedded_setter = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+
+    active_curve_getter = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+
+    active_curve_setter = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+
     children = attr.ib(
         default=attr.Factory(list),
         cmp=False,
@@ -923,6 +1002,18 @@ class Table(epyqlib.treenode.TreeNode):
     arrays = attr.ib(default=None)
     epyqlib.attrsmodel.attrib(
         attribute=arrays,
+        no_column=True,
+    )
+
+    arrays_and_groups = attr.ib(default=None)
+    epyqlib.attrsmodel.attrib(
+        attribute=arrays_and_groups,
+        no_column=True,
+    )
+
+    curve_group_combinations = attr.ib(default=None)
+    epyqlib.attrsmodel.attrib(
+        attribute=curve_group_combinations,
         no_column=True,
     )
 
@@ -1048,6 +1139,19 @@ class Table(epyqlib.treenode.TreeNode):
 
         self.combinations = product
 
+        self.curve_group_combinations = tuple(
+            epyqlib.utils.general.ordered_unique(
+                tuple(
+                    x
+                    for x in itertools.takewhile(
+                        lambda y: y.tree_parent.name != 'Curves',
+                        combination,
+                    )
+                )
+                for combination in self.combinations
+            )
+        )
+
         model = self.find_root().model
 
         for combination in product:
@@ -1072,13 +1176,24 @@ class Table(epyqlib.treenode.TreeNode):
                     if isinstance(current.original, uuid.UUID):
                         current.original = model.node_from_uuid(current.original)
 
+                if layer.tree_parent.name == 'Curves':
+                    current.curve_index = int(layer.value)
+
                 if current.tree_parent is None:
                     present.append_child(current)
 
                 present = current
 
-            # for array in (*arrays, *groups):
+            axes = ['x', 'y', 'z']
+            axes_iterator = iter(axes)
             for array in arrays:
+                if isinstance(array, Array):
+                    try:
+                        axis = next(axes_iterator)
+                    except StopIteration:
+                        raise
+                else:
+                    axis = None
                 array_path = path + (array.uuid,)
                 previous = old_by_path.get(array_path)
                 if previous is None:
@@ -1096,10 +1211,12 @@ class Table(epyqlib.treenode.TreeNode):
                             current.original
                         )
 
+                current.axis = axis
+
                 if current.tree_parent is None:
                     present.append_child(current)
 
-                for element in array.children:
+                for index, element in enumerate(array.children):
                     element_path = array_path + (element.uuid,)
                     previous_element = old_by_path.get(element_path)
                     if previous_element is None:
@@ -1116,6 +1233,8 @@ class Table(epyqlib.treenode.TreeNode):
                             current_element.original = model.node_from_uuid(
                                 current_element.original
                             )
+
+                    current_element.index = index
 
                     if current_element.tree_parent is None:
                         current.append_child(current_element)
@@ -1198,8 +1317,9 @@ class SunSpecEnumerator(epyqlib.treenode.TreeNode):
     )
     label = attr.ib(
         default='',
+        convert=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
-            field=marshmallow.fields.String(),
+            field=marshmallow.fields.String(allow_none=True),
         ),
     )
     description = attr.ib(
@@ -1464,6 +1584,10 @@ columns = epyqlib.attrsmodel.columns(
 
     merge('label', SunSpecEnumerator),
 
+    merge('embedded_getter', Table, Parameter),
+    merge('embedded_setter', Table, Parameter),
+    merge('active_curve_getter', Table),
+    merge('active_curve_setter', Table),
     merge(
         'nv_format',
         Parameter,

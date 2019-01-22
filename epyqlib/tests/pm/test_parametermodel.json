@@ -22,6 +22,8 @@
                     "nv_format": null,
                     "nv_factor": null,
                     "nv_cast": false,
+                    "embedded_getter": null,
+                    "embedded_setter": null,
                     "read_only": false,
                     "access_level_uuid": null,
                     "parameter_uuid": null,
@@ -43,6 +45,10 @@
                 {
                     "_type": "table",
                     "name": "Table A",
+                    "embedded_getter": null,
+                    "embedded_setter": null,
+                    "active_curve_getter": null,
+                    "active_curve_setter": null,
                     "children": [
                         {
                             "_type": "table_enumeration_reference",
@@ -76,6 +82,8 @@
                                     "nv_format": null,
                                     "nv_factor": null,
                                     "nv_cast": false,
+                                    "embedded_getter": null,
+                                    "embedded_setter": null,
                                     "read_only": false,
                                     "access_level_uuid": null,
                                     "parameter_uuid": null,
@@ -129,6 +137,8 @@
                                     "nv_format": null,
                                     "nv_factor": null,
                                     "nv_cast": false,
+                                    "embedded_getter": null,
+                                    "embedded_setter": null,
                                     "read_only": false,
                                     "access_level_uuid": null,
                                     "parameter_uuid": null,
@@ -212,6 +222,7 @@
                                                             "display_hexadecimal": false,
                                                             "default": null,
                                                             "decimal_places": null,
+                                                            "index": 0,
                                                             "uuid": "403b3a2c-f94a-490c-b112-87cdd3551e55"
                                                         },
                                                         {
@@ -235,9 +246,12 @@
                                                             "display_hexadecimal": false,
                                                             "default": null,
                                                             "decimal_places": null,
+                                                            "index": 1,
                                                             "uuid": "3fd1f0e6-09e7-413e-b169-3fafff126bbc"
                                                         }
                                                     ],
+                                                    "axis": "x",
+                                                    "curve_index": null,
                                                     "uuid": "993ededd-6083-4c1e-aa72-bf08ee3ea61c"
                                                 },
                                                 {
@@ -270,6 +284,7 @@
                                                             "display_hexadecimal": false,
                                                             "default": null,
                                                             "decimal_places": null,
+                                                            "index": 0,
                                                             "uuid": "106cc983-0321-4ced-9e72-ab56d6bf1e7f"
                                                         },
                                                         {
@@ -293,12 +308,17 @@
                                                             "display_hexadecimal": false,
                                                             "default": null,
                                                             "decimal_places": null,
+                                                            "index": 1,
                                                             "uuid": "80fd2eb7-6c89-4b65-ad35-05d63522f991"
                                                         }
                                                     ],
+                                                    "axis": "y",
+                                                    "curve_index": null,
                                                     "uuid": "72ce1cf9-0c90-48e9-a37c-aee1b36fca80"
                                                 }
                                             ],
+                                            "axis": null,
+                                            "curve_index": null,
                                             "uuid": "9d37bb7f-2618-4ce8-b9f9-214c19851361"
                                         },
                                         {
@@ -339,6 +359,7 @@
                                                             "display_hexadecimal": false,
                                                             "default": null,
                                                             "decimal_places": null,
+                                                            "index": 0,
                                                             "uuid": "290b2762-61c7-4666-8f99-af3c0113d4a3"
                                                         },
                                                         {
@@ -362,9 +383,12 @@
                                                             "display_hexadecimal": false,
                                                             "default": null,
                                                             "decimal_places": null,
+                                                            "index": 1,
                                                             "uuid": "aee3a1de-b35a-4e7b-b274-1ef6766d5889"
                                                         }
                                                     ],
+                                                    "axis": "x",
+                                                    "curve_index": null,
                                                     "uuid": "712cda8a-4744-4da2-a1d1-1573625bbf14"
                                                 },
                                                 {
@@ -397,6 +421,7 @@
                                                             "display_hexadecimal": false,
                                                             "default": null,
                                                             "decimal_places": null,
+                                                            "index": 0,
                                                             "uuid": "99a1be09-c4e0-41f1-bda4-d0f139038cbf"
                                                         },
                                                         {
@@ -420,15 +445,22 @@
                                                             "display_hexadecimal": false,
                                                             "default": null,
                                                             "decimal_places": null,
+                                                            "index": 1,
                                                             "uuid": "fa79e1aa-647d-4783-8b16-fe752ac8e8c4"
                                                         }
                                                     ],
+                                                    "axis": "y",
+                                                    "curve_index": null,
                                                     "uuid": "e74d9047-1635-43f3-825b-6844fab96a00"
                                                 }
                                             ],
+                                            "axis": null,
+                                            "curve_index": null,
                                             "uuid": "b748bc78-0267-477e-95ec-e64a6686e010"
                                         }
                                     ],
+                                    "axis": null,
+                                    "curve_index": null,
                                     "uuid": "904d287d-2cdd-487e-ada9-ed0f8a552078"
                                 },
                                 {
@@ -476,6 +508,7 @@
                                                             "display_hexadecimal": false,
                                                             "default": null,
                                                             "decimal_places": null,
+                                                            "index": 0,
                                                             "uuid": "c076b3e1-a287-468c-80e4-43523a021feb"
                                                         },
                                                         {
@@ -499,9 +532,12 @@
                                                             "display_hexadecimal": false,
                                                             "default": null,
                                                             "decimal_places": null,
+                                                            "index": 1,
                                                             "uuid": "937be4d7-b578-4daa-aef0-4065198a613d"
                                                         }
                                                     ],
+                                                    "axis": "x",
+                                                    "curve_index": null,
                                                     "uuid": "f0989f09-4066-4047-8d61-c134c6e1e55c"
                                                 },
                                                 {
@@ -534,6 +570,7 @@
                                                             "display_hexadecimal": false,
                                                             "default": null,
                                                             "decimal_places": null,
+                                                            "index": 0,
                                                             "uuid": "286079b0-6028-4959-8396-78c626cdab46"
                                                         },
                                                         {
@@ -557,12 +594,17 @@
                                                             "display_hexadecimal": false,
                                                             "default": null,
                                                             "decimal_places": null,
+                                                            "index": 1,
                                                             "uuid": "de30995a-ba26-49cf-abd0-84d3dc62b3eb"
                                                         }
                                                     ],
+                                                    "axis": "y",
+                                                    "curve_index": null,
                                                     "uuid": "18e84e98-e8ad-4d4a-9180-951350f6590c"
                                                 }
                                             ],
+                                            "axis": null,
+                                            "curve_index": null,
                                             "uuid": "9dc75463-f6a9-411f-b0a7-5c311086ff69"
                                         },
                                         {
@@ -603,6 +645,7 @@
                                                             "display_hexadecimal": false,
                                                             "default": null,
                                                             "decimal_places": null,
+                                                            "index": 0,
                                                             "uuid": "6a151510-c6e5-4673-9198-d3d9fb0dfcdc"
                                                         },
                                                         {
@@ -626,9 +669,12 @@
                                                             "display_hexadecimal": false,
                                                             "default": null,
                                                             "decimal_places": null,
+                                                            "index": 1,
                                                             "uuid": "dd3887db-df84-4f5f-ae6f-98201403c1d2"
                                                         }
                                                     ],
+                                                    "axis": "x",
+                                                    "curve_index": null,
                                                     "uuid": "1134bc2e-93d9-4b33-8164-dca0520f3910"
                                                 },
                                                 {
@@ -661,6 +707,7 @@
                                                             "display_hexadecimal": false,
                                                             "default": null,
                                                             "decimal_places": null,
+                                                            "index": 0,
                                                             "uuid": "d01008cc-cef0-4c95-b642-71e974690416"
                                                         },
                                                         {
@@ -684,18 +731,27 @@
                                                             "display_hexadecimal": false,
                                                             "default": null,
                                                             "decimal_places": null,
+                                                            "index": 1,
                                                             "uuid": "2b16a382-2fa2-41b4-a0dc-161c7496d13a"
                                                         }
                                                     ],
+                                                    "axis": "y",
+                                                    "curve_index": null,
                                                     "uuid": "d84963e3-164e-4df8-9f5e-cf6717e20b0d"
                                                 }
                                             ],
+                                            "axis": null,
+                                            "curve_index": null,
                                             "uuid": "1178e67b-ddda-43f3-a26a-30d0e10a2bd3"
                                         }
                                     ],
+                                    "axis": null,
+                                    "curve_index": null,
                                     "uuid": "104d1901-524e-412b-84e7-98707dce362d"
                                 }
                             ],
+                            "axis": null,
+                            "curve_index": null,
                             "uuid": "428124a2-6fe3-4b40-9e23-f78e19c7aa7a"
                         }
                     ],
@@ -719,6 +775,8 @@
             "nv_format": null,
             "nv_factor": null,
             "nv_cast": false,
+            "embedded_getter": null,
+            "embedded_setter": null,
             "read_only": false,
             "access_level_uuid": null,
             "parameter_uuid": null,
