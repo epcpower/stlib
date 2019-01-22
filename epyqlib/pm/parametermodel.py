@@ -891,6 +891,24 @@ class Table(epyqlib.treenode.TreeNode):
         no_column=True,
     )
 
+    combinations = attr.ib(default=None)
+    epyqlib.attrsmodel.attrib(
+        attribute=combinations,
+        no_column=True,
+    )
+
+    arrays = attr.ib(default=None)
+    epyqlib.attrsmodel.attrib(
+        attribute=arrays,
+        no_column=True,
+    )
+
+    arrays_and_groups = attr.ib(default=None)
+    epyqlib.attrsmodel.attrib(
+        attribute=arrays_and_groups,
+        no_column=True,
+    )
+
     def __attrs_post_init__(self):
         super().__init__()
 
@@ -981,6 +999,17 @@ class Table(epyqlib.treenode.TreeNode):
             for child in self.children
             if isinstance(child, (Array, Group))
         ]
+        self.arrays_and_groups = arrays
+        self.arrays = [
+            child
+            for child in self.children
+            if isinstance(child, Array)
+        ]
+        self.groups = [
+            child
+            for child in self.children
+            if isinstance(child, Group)
+        ]
 
         with self._ignore_children():
             if old_group is None:
@@ -999,6 +1028,8 @@ class Table(epyqlib.treenode.TreeNode):
             }
 
         product = list(itertools.product(*enumerations))
+
+        self.combinations = product
 
         model = self.find_root().model
 
