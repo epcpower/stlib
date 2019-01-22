@@ -949,17 +949,37 @@ class Model:
 
             changed_signals = epyqlib.utils.qt.pyqtified(child).changed
 
+            uneditable_highlight = QtGui.QColor('grey')
+            uneditable_highlight.setAlphaF(0.4)
+            droppable_highlight = QtGui.QColor('orange')
+            droppable_highlight.setAlphaF(0.4)
+            droppable_row = hasattr(row, 'addable_types') or hasattr(row, 'all_addable_types')
+
             for i, column in enumerate(self.columns):
                 field_name = column.fields.get(type(child))
 
                 item = QtGui.QStandardItem()
                 editable = False
+                has_field = False
                 field_for_column = column.fields.get(type(child))
                 if field_for_column is not None:
                     metadata = getattr(fields(type(child)), field_for_column)
                     editable = metadata.editable
+                    has_field = True
 
                 item.setEditable(editable)
+                if not editable and has_field:
+                    if droppable_row:
+                        item.setData(
+                            uneditable_highlight,
+                            QtCore.Qt.ItemDataRole.BackgroundRole,
+                        )
+                    else:
+                        item.setData(
+                            droppable_highlight,
+                            QtCore.Qt.ItemDataRole.BackgroundRole,
+                        )
+
                 if i == 0:
                     self._all_items_list.append(item)
                     self.node_to_item[child] = item
