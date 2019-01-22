@@ -1161,7 +1161,7 @@ class Table(epyqlib.treenode.TreeNode):
 
                 present = current
 
-            axes = ['x', 'y']
+            axes = ['x', 'y', 'z']
             axes_iterator = iter(axes)
             for array in arrays:
                 if isinstance(array, Array):
@@ -1548,6 +1548,8 @@ columns = epyqlib.attrsmodel.columns(
 
     merge('embedded_getter', Table, Parameter),
     merge('embedded_setter', Table, Parameter),
+    merge('active_curve_getter', Table),
+    merge('active_curve_setter', Table),
     merge(
         'nv_format',
         Parameter,
