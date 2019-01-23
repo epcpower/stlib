@@ -363,6 +363,9 @@ def Root(default_name, valid_types):
         def can_drop_on(self, node):
             return isinstance(node, tuple(self.addable_types().values()))
 
+        remove_old_on_drop = default_remove_old_on_drop
+        child_from = default_child_from
+
         @staticmethod
         def can_delete(node=None):
             if node is None:
@@ -553,6 +556,15 @@ def childless_can_delete(self, node=None):
         )
 
     return self.tree_parent.can_delete(node=self)
+
+
+def default_remove_old_on_drop(self, node):
+    return node.find_root() == self.find_root()
+
+
+@staticmethod
+def default_child_from(node):
+    return node
 
 
 def to_source_model(index):
@@ -1180,13 +1192,10 @@ class Model:
                 getattr(new_parent, 'name', '<no name attribute>'),
             ))
 
-            local = node.find_root() == self.root
-
-            if local:
+            if new_parent.remove_old_on_drop(node=node):
                 node.tree_parent.remove_child(child=node)
-                new_child = node
-            else:
-                new_child = new_parent.child_from(node)
+
+            new_child = new_parent.child_from(node=node)
 
             if new_child is None:
                 pass
@@ -1329,6 +1338,18 @@ class Tests:
             signature=['node'],
         )
 
+    def test_all_have_remove_old_on_drop(self):
+        self.assert_incomplete_types(
+            name='remove_old_on_drop',
+            signature=['node'],
+        )
+
+    def test_all_have_child_from(self):
+        self.assert_incomplete_types(
+            name='child_from',
+            signature=['node'],
+        )
+
     def test_all_addable_also_in_types(self):
         # Since addable types is dynamic and could be anything... this
         # admittedly only checks the addable types on default instances.
@@ -1365,38 +1386,52 @@ class Tests:
             assert hasattr(cls, 'uuid')
 
     def assert_incomplete_types(self, name, signature=None):
-        bad = []
+        missing = []
+        bad_signature = []
         signature = list(signature)
 
         for cls in self.types.types.values():
-            if isinstance(cls.__dict__[name], staticmethod):
-                tweaked_signature = signature
-            elif isinstance(cls.__dict__[name], classmethod):
-                tweaked_signature = ['cls', *signature]
-            else:
-                tweaked_signature = ['self', *signature]
-
-            attribute = getattr(cls, name)
+            attribute = getattr(cls, name, None)
             if attribute is None:
-                bad.append(cls)
+                missing.append((cls, name))
             elif signature is not None:
+                if isinstance(cls.__dict__[name], staticmethod):
+                    tweaked_signature = signature
+                elif isinstance(cls.__dict__[name], classmethod):
+                    tweaked_signature = ['cls', *signature]
+                else:
+                    tweaked_signature = ['self', *signature]
+
                 actual_signature = inspect.signature(attribute)
                 actual_signature = actual_signature.parameters.keys()
                 actual_signature = list(actual_signature)
                 if tweaked_signature != actual_signature:
-                    bad.append(cls)
+                    bad_signature.append(
+                        (cls, tweaked_signature, actual_signature),
+                    )
                     continue
 
         sys.stderr.write('\n')
-        for cls in bad:
+        for cls, attribute in missing:
             sys.stderr.write(
-                '{path}  {name}\n'.format(
+                '{path}  {name} is missing: {attribute}\n'.format(
+                    path=epyqlib.utils.general.path_and_line(cls),
+                    name=cls,
+                    attribute=attribute,
+                ),
+            )
+        for cls, expected, actual in bad_signature:
+            sys.stderr.write(
+                '{path}  {name} has signature {actual}, should be {expected}\n'.format(
                     path=epyqlib.utils.general.path_and_line(
                         getattr(cls, name)),
                     name=cls,
+                    actual=actual,
+                    expected=expected,
                 ),
             )
-        assert [] == bad
+        assert [] == missing
+        assert [] == bad_signature
 
 
 def build_tests(types, root_type, columns):

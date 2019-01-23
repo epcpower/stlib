@@ -7,6 +7,7 @@ import sys
 import textwrap
 import time
 import traceback
+import uuid
 import weakref
 
 import epyqlib.utils.general
@@ -1049,7 +1050,7 @@ def pyqtify_passthrough_properties(original, field_names):
             @property
             def property_(self, name=name):
                 original_ = getattr(self, original)
-                if original_ is None:
+                if original_ is None or isinstance(original_, uuid.UUID):
                     return pyqtify_get(self, name)
 
                 return getattr(original_, name)
