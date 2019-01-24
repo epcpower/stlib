@@ -440,6 +440,8 @@ def attr_uuid(
         human_name='UUID',
         data_display=None,
         list_selection_root=None,
+        list_selection_path=None,
+        override_delegate=None,
         no_graham=False,
         default=attr.Factory(uuid.uuid4),
         editable=True,
@@ -458,15 +460,33 @@ def attr_uuid(
             attribute=attribute,
             field=marshmallow.fields.UUID(**field_options),
         )
-    attrib(
-        attribute=attribute,
-        human_name=human_name,
-        data_display=data_display,
-        delegate=epyqlib.attrsmodel.RootDelegateCache(
-            list_selection_root=list_selection_root,
-        ),
-        editable=editable,
-    )
+
+    if list_selection_path is not None:
+        if list_selection_root is not None:
+            raise MultipleFoundError(
+                    'list_selection_path and list_selection_root both definded'
+            )
+        else:
+            attrib(
+                attribute=attribute,
+                human_name=human_name,
+                data_display=data_display,
+                delegate=epyqlib.attrsmodel.CustomDelegate(
+                    list_selection_path=list_selection_path,
+                    override_delegate=override_delegate,
+                ),
+                editable=editable,
+            )
+    else:
+        attrib(
+            attribute=attribute,
+            human_name=human_name,
+            data_display=data_display,
+            delegate=epyqlib.attrsmodel.RootDelegateCache(
+                list_selection_root=list_selection_root
+            ),
+            editable=editable,
+        )
 
     return attribute
 
@@ -632,6 +652,32 @@ class RootDelegateCache:
         return self.cached_delegate
 
 
+@attr.s
+class CustomDelegate:
+    list_selection_path = attr.ib(default=None)
+    override_delegate = attr.ib(default=None)
+    text_column_name = attr.ib(default='Name')
+
+    def get_delegate(self, node, parent):
+        pth, obj = self.list_selection_path
+        if pth is None or pth == '/':
+            root_node = node.find_root()
+        elif pth == '..':
+            root_node = node.tree_parent
+        else:
+            root_node = node.child_by_name(obj)
+        
+        delegate = EnumerationDelegate
+        if self.override_delegate is not None:
+            delegate = self.override_delegate
+
+        return delegate(
+            text_column_name=self.text_column_name,
+            root=root_node,
+            parent=parent,
+        )
+
+
 class DelegateSelector:
     def __init__(self, parent=None):
         self.parent = parent
@@ -650,7 +696,10 @@ class DelegateSelector:
         metadata = getattr(fields(type(node)), field_name)
         
         if metadata.delegate is not None:
-            delegate = metadata.delegate.get_delegate(model, self.parent)
+            node_or_model = model
+            if isinstance(metadata.delegate, epyqlib.attrsmodel.CustomDelegate):
+                node_or_model = node
+            delegate = metadata.delegate.get_delegate(node_or_model, self.parent)
         else:
             delegate = self.regular
 
@@ -767,11 +816,7 @@ class EnumerationDelegateMulti(QtWidgets.QStyledItemDelegate):
         model = index.model()
 
         selected_items = editor.selectedItems()
-        data = []
-        for item in selected_items:
-            data.append(item)
-
-        model.setData(index, data)
+        model.setData(index, selected_items)
 
 
 class PyQStandardItemModel(QtGui.QStandardItemModel):
