@@ -31,7 +31,7 @@ class FilesController:
 
     async def get_inverter_associations(self, inverter_id: str):
         groups = {
-            'params': [],
+            'parameter': [],
             'firmware': [],
             'fault_logs': [],
             'other': []
