@@ -4,7 +4,7 @@ import time
 
 import pytest
 
-from epyqlib.tabs.files.configuration import Configuration, ConfigurationError
+from epyqlib.tabs.files.configuration import Configuration, ConfigurationError, Vars
 
 tempdir = tempfile.gettempdir()
 filename = f'test-{int(time.time()) % 100000}.json'
@@ -35,6 +35,7 @@ def test_invalid_json():
         file.write("[1,2,3]")
     with pytest.raises(ConfigurationError):
         load_configuration()
+    cleanup()
 
 
 
@@ -43,3 +44,20 @@ def test_invalid_json():
         file.write('{"bogus": "value"}')
     with pytest.raises(ConfigurationError):
         load_configuration()
+    cleanup()
+
+
+def test_log_serial():
+    configuration = load_configuration()
+    configuration.log_serial_number("123")
+    assert configuration.get(Vars.unique_inverters) == ["123"]
+    configuration.log_serial_number("123")
+    assert configuration.get(Vars.unique_inverters) == ["123"]
+    configuration = load_configuration()
+    assert configuration.get(Vars.unique_inverters) == ["123"]
+
+    configuration.log_serial_number("456")
+    assert configuration.get(Vars.unique_inverters) == ["123", "456"]
+    configuration = load_configuration()
+    assert configuration.get(Vars.unique_inverters) == ["123", "456"]
+
