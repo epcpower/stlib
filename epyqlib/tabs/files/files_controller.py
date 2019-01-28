@@ -3,12 +3,18 @@ from datetime import datetime, timedelta
 import treq
 import twisted
 from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
+import attr
 from twisted.internet.defer import Deferred, ensureDeferred
 from twisted.internet.interfaces import IDelayedCall
 
 from epyqlib.tabs.files.configuration import Configuration, Vars
 from epyqlib.utils.twisted import errbackhook as show_error_dialog
 from .graphql import API, InverterNotFoundException
+
+@attr.s(slots=True)
+class AssociationMapping():
+    association = attr.ib()
+    row: QTreeWidgetItem = attr.ib()
 
 
 class FilesController:
@@ -23,6 +29,7 @@ class FilesController:
         self.last_sync: datetime = None
 
         self.configuration = Configuration()
+        self.associations: [str, AssociationMapping] = {}
 
         self.sync_timer: IDelayedCall = None
 
@@ -42,22 +49,14 @@ class FilesController:
 
     ## Data fetching
     async def get_inverter_associations(self, inverter_id: str):
-        groups = {
-            'parameter': [],
-            'firmware': [],
-            'fault_logs': [],
-            'other': []
-        }
-
         associations = await self.api.get_associations(inverter_id)
         for association in associations:
             type = association['file']['type'].lower()
-            if groups.get(type) is None:
-                groups[type] = []
-            groups[type].append(association)
+            row = self.view.show_file(type, association['file']['filename'])
+            self.associations[association['id'] + association['file']['id']] = AssociationMapping(association, row)
 
         self._set_sync_time()
-        return groups
+        self.view.lbl_last_sync.setText(f'Last sync at:{self.get_sync_time()}')
 
     async def download_file(self, filename: str, destination: str):
         outf = open(destination, 'wb')
@@ -98,12 +97,13 @@ class FilesController:
         self.fetch_files(self.view.inverter_id.text())
 
     def file_item_clicked(self, item: QTreeWidgetItem, column: int):
-        if hasattr(item, 'obj'):
-            self.view.show_file_details(item.obj)
+        m: AssociationMapping = next(a for a in self.associations.values() if a.row == item)
+        self.view.show_file_details(m.association)
+        # m.row.setText(Cols.notes, m.association['id'])
 
     def fetch_files(self, inverter_id):
         deferred = ensureDeferred(self.get_inverter_associations(inverter_id))
-        deferred.addCallback(self.view.show_files)
+        # deferred.addCallback(self.view.show_files)
         deferred.addErrback(self.inverter_error_handler)
         deferred.addErrback(show_error_dialog)
 

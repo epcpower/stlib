@@ -28,9 +28,24 @@ class _Sections:
     fault_logs: QTreeWidgetItem
     other: QTreeWidgetItem
 
+class Cols:
+    filename = 0
+    local = 1
+    web = 2
+    association = 3
+    creator = 4
+    created_at = 5,
+    associated_at = 6
+    notes = 7
+
+def get_keys(obj):
+    return [key for key in obj.__dict__.keys() if not key.startswith("__")]
+
 @attr.s
 class FilesView(UiBase):
     gray_brush = QBrush(QColor(22, 22, 22, 22))
+    check_icon = u'✅'
+    question_icon = u'❓'
 
     ui = attr.ib(factory=Ui)
 
@@ -58,6 +73,7 @@ class FilesView(UiBase):
         from .files_controller import FilesController
         self.controller = FilesController(self)
         self.controller.setup()
+
 
     def tab_selected(self):
         self.controller.tab_selected()
@@ -99,15 +115,17 @@ class FilesView(UiBase):
 
         self.files_grid.itemClicked.connect(self.controller.file_item_clicked)
 
+        self.notes.textChanged.connect(self._notes_changed)
+
         self.btn_reset_notes.clicked.connect(self._reset_notes)
 
 
     def populate_tree(self):
-        self.files_grid.setHeaderLabels(["Filename", "Local", "Web", "Association", "Creator", "Created At", "Associated At", "Notes"])
-        self.files_grid.setColumnWidth(0, 300)
-        self.files_grid.setColumnWidth(1, 35)
-        self.files_grid.setColumnWidth(2, 35)
-        self.files_grid.setColumnWidth(7, 500)
+        self.files_grid.setHeaderLabels(get_keys(Cols))
+        self.files_grid.setColumnWidth(Cols.filename, 300)
+        self.files_grid.setColumnWidth(Cols.local, 35)
+        self.files_grid.setColumnWidth(Cols.web, 35)
+        self.files_grid.setColumnWidth(Cols.notes, 500)
 
         # make_entry = lambda caption:
         def make_entry(caption):
@@ -121,7 +139,6 @@ class FilesView(UiBase):
         self.section_headers.fault_logs = make_entry("Fault Logs")
         self.section_headers.other = make_entry("Other files")
 
-        self.notes.textChanged.connect(self._notes_changed)
 
 
     def _enable_buttons(self, enable):
@@ -139,26 +156,45 @@ class FilesView(UiBase):
         while parent.childCount() > 0:
             parent.removeChild(parent.child(0))
 
-    def show_files(self, associations):
-        print('[Filesview] Files request finished')
-        print(associations)
-        sync_time = self.controller.get_sync_time()
-        self.lbl_last_sync.setText(f'Last sync at:{sync_time}')
+    # def show_files(self, associations):
+    #     print('[Filesview] Files request finished')
+    #     print(associations)
+    #     sync_time = self.controller.get_sync_time()
+    #     self.lbl_last_sync.setText(f'Last sync at:{sync_time}')
+    #
+    #     def _add_item(list: [dict], parent: QTreeWidgetItem):
+    #         self._remove_all_children(parent)
+    #
+    #         for item in list:
+    #             if item['file'] is not None:
+    #                 cols = [
+    #                     item['file']['filename'],
+    #                     self.question_icon,
+    #                     self.check_icon
+    #
+    #                 ]
+    #                 widget = QTreeWidgetItem(parent, cols)
+    #                 widget.obj = item
+    #
+    #     _add_item(associations['parameter'], self.section_headers.params)
+    #     #_add_item(associations['pvms'], self.section_headers.pvms)
+    #     _add_item(associations['firmware'], self.section_headers.firmware)
+    #     #_add_item(associations['faultLogs'], self.section_headers.fault_logs)
+    #     _add_item(associations['other'], self.section_headers.other)
 
-        def _add_item(list: [dict], parent: QTreeWidgetItem):
-            self._remove_all_children(parent)
 
-            for item in list:
-                if item['file'] is not None:
-                    widget = QTreeWidgetItem(parent, [item['file']['filename']])
-                    widget.obj = item
 
-        _add_item(associations['parameter'], self.section_headers.params)
-        #_add_item(associations['pvms'], self.section_headers.pvms)
-        _add_item(associations['firmware'], self.section_headers.firmware)
-        #_add_item(associations['faultLogs'], self.section_headers.fault_logs)
-        _add_item(associations['other'], self.section_headers.other)
+    def show_file(self, type: str, filename):
+        parents = {
+            'firmware': self.section_headers.firmware,
+            'log': self.section_headers.fault_logs,
+            'other': self.section_headers.other,
+            'parameter': self.section_headers.params,
+            'pvms': self.section_headers.pvms
+        }
 
+        parent = parents[type]
+        return QTreeWidgetItem(parent, [filename, self.question_icon, self.check_icon])
 
     ### Action
     def _notes_changed(self):
