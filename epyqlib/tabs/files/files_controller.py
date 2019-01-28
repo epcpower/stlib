@@ -44,6 +44,7 @@ class FilesController:
                 groups[type] = []
             groups[type].append(association)
 
+        self.set_sync_time()
         return groups
 
     async def download_file(self, filename: str, destination: str):

@@ -1,13 +1,14 @@
 import asyncio
-# import aiohttp
-import json
-
 from twisted.web.iweb import IResponse
-
 import treq
+
+from epyqlib.utils.general import safe_get
 
 
 class GraphQLException(Exception):
+    pass
+
+class InverterNotFoundException(Exception):
     pass
 
 
@@ -124,6 +125,10 @@ class API:
 
     async def get_associations(self, inverter_id: str):
         response = await self._make_request(self._get_association_query(inverter_id))
+        message = safe_get(response, ['errors', 0, 'message']) or ''
+        if ('Unable to find inverter' in message):
+            raise InverterNotFoundException(message)
+
         return response['data']['getInverterAssociations']['items']
 
     def awai(self, coroutine):
@@ -139,7 +144,6 @@ class API:
 
     def foo(self, reactor):
         return self.run(self.get_associations("TestInv"))
-
 
 
 

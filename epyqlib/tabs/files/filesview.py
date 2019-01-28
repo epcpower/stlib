@@ -11,6 +11,7 @@ from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit
     QPlainTextEdit
 from PyQt5.QtGui import QColor, QBrush, QTextCursor
 
+from epyqlib.tabs.files.graphql import InverterNotFoundException
 from epyqlib.utils import qt
 from epyqlib.utils.twisted import errbackhook as show_error_dialog
 from .files_controller import FilesController
@@ -66,7 +67,7 @@ class FilesView(UiBase):
 
     def tab_selected(self):
         if self.controller.should_sync():
-            self.fetch_files()
+            self.fetch_files('TestInv')
 
     ### Setup methods
     # noinspection PyAttributeOutsideInit
@@ -80,6 +81,9 @@ class FilesView(UiBase):
         self.btn_download_file: QPushButton = self.ui.download_file
         self.btn_send_to_inverter: QPushButton = self.ui.send_to_inverter
         self.chk_auto_sync: QCheckBox = self.ui.auto_sync
+
+        self.inverter_id: QLineEdit = self.ui.inverter_id
+        self.inverter_id_error: QLabel = self.ui.inverter_id_error
 
         self.files_grid: QTreeWidget = self.ui.treeWidget
 
@@ -124,13 +128,18 @@ class FilesView(UiBase):
     def setup_buttons(self):
         self._enable_buttons(False)
 
+        self.inverter_id.returnPressed.connect(self.inverter_id_changed)
+        self.inverter_id.setReadOnly(False)  #TODO: Link to whether or not they have admin access
+        self._show_inverter_id_error(None)
+
         self.btn_sync_now.clicked.connect(self.fetch_files)
         self.btn_reset_notes.clicked.connect(self._reset_notes)
 
-    def fetch_files(self):
+    def fetch_files(self, inverter_id):
         print('[Filesview] About to fire off files request')
-        deferred = ensureDeferred(self.controller.get_inverter_associations('TestInv'))
+        deferred = ensureDeferred(self.controller.get_inverter_associations(inverter_id))
         deferred.addCallback(self.show_files)
+        deferred.addErrback(self.inverter_error_handler)
         deferred.addErrback(show_error_dialog)
 
     def _remove_all_children(self, parent: QTreeWidgetItem):
@@ -140,7 +149,7 @@ class FilesView(UiBase):
     def show_files(self, associations):
         print('[Filesview] Files request finished')
         print(associations)
-        sync_time = self.controller.set_sync_time()
+        sync_time = self.controller.get_sync_time()
         self.lbl_last_sync.setText(f'Last sync at:{sync_time}')
 
         def _add_item(list: [dict], parent: QTreeWidgetItem):
@@ -181,12 +190,30 @@ class FilesView(UiBase):
         self.btn_save_notes.setDisabled(not changed)
         self.btn_reset_notes.setDisabled(not changed)
 
+    def inverter_id_changed(self):
+        self._show_inverter_id_error(None)
+        self.fetch_files(self.inverter_id.text())
+
+    def inverter_error_handler(self, error):
+        if error.type is InverterNotFoundException:  #Twisted wraps errors in its own class
+            self._show_inverter_id_error("Error: Inverter ID not found.")
+        else:
+            raise error
+
+
     ### UI Update methods
     def _show_file_details(self, association):
         self.filename.setText(association['file']['filename'])
         self.version.setText(association['file']['version'])
         self.controller.set_original_notes(association['file']['notes'])
         self.notes.setPlainText(association['file']['notes'])
+
+    def _show_inverter_id_error(self, error):
+        if error is None:
+            self.inverter_id_error.setText("")
+        else:
+            self.inverter_id_error.setText(f"<font color='red'>{error}</font>")
+
 
 
 # .ui files need a direct module attribute, not a class method, afaict.
