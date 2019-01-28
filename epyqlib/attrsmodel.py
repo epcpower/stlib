@@ -365,6 +365,7 @@ def Root(default_name, valid_types):
 
         remove_old_on_drop = default_remove_old_on_drop
         child_from = default_child_from
+        internal_move = default_internal_move
 
         @staticmethod
         def can_delete(node=None):
@@ -585,6 +586,10 @@ def default_remove_old_on_drop(self, node):
 @staticmethod
 def default_child_from(node):
     return node
+
+
+def default_internal_move(self, node, node_to_insert_before):
+    return False
 
 
 def to_source_model(index):
@@ -1225,6 +1230,7 @@ class Model:
         node, new_parent, source_row = self.source_target_for_drop(
             column, data, parent, row)
 
+        node_to_insert_before = None
         if row != -1:
             node_to_insert_before = new_parent.child_at_row(row)
 
@@ -1237,18 +1243,27 @@ class Model:
                 getattr(new_parent, 'name', '<no name attribute>'),
             ))
 
-            if new_parent.remove_old_on_drop(node=node):
-                node.tree_parent.remove_child(child=node)
+            moved = False
 
-            new_child = new_parent.child_from(node=node)
+            if new_parent is node.tree_parent:
+                moved = new_parent.internal_move(
+                    node=node,
+                    node_to_insert_before=node_to_insert_before,
+                )
 
-            if new_child is None:
-                pass
-            elif row == -1:
-                new_parent.append_child(new_child)
-            else:
-                new_row = new_parent.row_of_child(node_to_insert_before)
-                new_parent.insert_child(new_row, new_child)
+            if not moved:
+                if new_parent.remove_old_on_drop(node=node):
+                    node.tree_parent.remove_child(child=node)
+
+                new_child = new_parent.child_from(node=node)
+
+                if new_child is None:
+                    pass
+                elif row == -1:
+                    new_parent.append_child(new_child)
+                else:
+                    new_row = new_parent.row_of_child(node_to_insert_before)
+                    new_parent.insert_child(new_row, new_child)
 
         # Always returning False so that Qt won't do anything...  like
         # thinking it knows which row of items to delete to finish the
@@ -1393,6 +1408,12 @@ class Tests:
         self.assert_incomplete_types(
             name='child_from',
             signature=['node'],
+        )
+
+    def test_all_have_internal_move(self):
+        self.assert_incomplete_types(
+            name='internal_move',
+            signature=['node', 'node_to_insert_before'],
         )
 
     def test_all_addable_also_in_types(self):
