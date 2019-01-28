@@ -1,20 +1,30 @@
 from datetime import datetime, timedelta
 
 import treq
-from twisted.internet.defer import Deferred
+from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
+from twisted.internet.defer import Deferred, ensureDeferred
 
-from .graphql import API
+from epyqlib.utils.twisted import errbackhook as show_error_dialog
+from .graphql import API, InverterNotFoundException
 
 
 class FilesController:
 
     bucket_path = 'https://s3-us-west-2.amazonaws.com/epc-files-dev/public/firmware/'
 
-    def __init__(self):
+    from epyqlib.tabs.files.filesview import FilesView
+    def __init__(self, view: FilesView):
+        self.view = view
         self.api = API()
         self.old_notes: str = None
         self.last_sync: datetime = None
 
+    def setup(self):
+        self.view.bind()
+        self.view.populate_tree()
+        self.view.setup_buttons()
+
+    ## Sync Info Methods
     def set_sync_time(self) -> str:
         self.last_sync = datetime.now()
         return self.get_sync_time()
@@ -29,6 +39,7 @@ class FilesController:
         sync_time = self.last_sync + timedelta(minutes=5)
         return sync_time < datetime.now()
 
+    ## Data fetching
     async def get_inverter_associations(self, inverter_id: str):
         groups = {
             'parameter': [],
@@ -55,8 +66,44 @@ class FilesController:
         deferred.addBoth(lambda _: outf.close())
         return await deferred
 
+    ## Lifecycle events
+    def tab_selected(self):
+        if self.should_sync():
+            self.fetch_files('TestInv')
+
+    ## UI Events
+    def download_file_clicked(self):
+        directory = QFileDialog.getExistingDirectory(parent=self.view.files_grid, caption='Pick location to download')
+        print(f'[Filesview] Filename picked: {directory}')
+
+    def auto_sync_checked(self):
+        checked = self.view.chk_auto_sync.isChecked()
+        self.view.btn_sync_now.setDisabled(checked)
+
+    def sync_now_clicked(self):
+        self.view.show_inverter_id_error(None)
+        self.fetch_files(self.view.inverter_id.text())
+
+    def file_item_clicked(self, item: QTreeWidgetItem, column: int):
+        if hasattr(item, 'obj'):
+            self.view.show_file_details(item.obj)
+
+    def fetch_files(self, inverter_id):
+        deferred = ensureDeferred(self.get_inverter_associations(inverter_id))
+        deferred.addCallback(self.view.show_files)
+        deferred.addErrback(self.inverter_error_handler)
+        deferred.addErrback(show_error_dialog)
+
+    def inverter_error_handler(self, error):
+        if error.type is InverterNotFoundException:  # Twisted wraps errors in its own class
+            self.view.show_inverter_id_error("Error: Inverter ID not found.")
+        else:
+            raise error
+
+
+    ## Notes
     def set_original_notes(self, notes: str):
-        self.old_notes = notes
+        self.old_notes = notes or ''
 
     def notes_modified(self, new_notes):
         if self.old_notes is None:

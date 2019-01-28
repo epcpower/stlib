@@ -1,20 +1,13 @@
-import json
 import pathlib
-import time
-
-import attr
-from PyQt5.QtCore import Qt
-from twisted.internet.defer import ensureDeferred
 
 import PyQt5.uic
-from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QFileDialog, QCheckBox, QLabel, \
-    QPlainTextEdit
+import attr
 from PyQt5.QtGui import QColor, QBrush, QTextCursor
+from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QCheckBox, QLabel, \
+    QPlainTextEdit
+from twisted.internet.defer import ensureDeferred
 
 from epyqlib.tabs.files.graphql import InverterNotFoundException
-from epyqlib.utils import qt
-from epyqlib.utils.twisted import errbackhook as show_error_dialog
-from .files_controller import FilesController
 
 Ui, UiBase = PyQt5.uic.loadUiType(
     pathlib.Path(__file__).with_suffix('.ui'),
@@ -58,22 +51,21 @@ class FilesView(UiBase):
     def __attrs_post_init__(self):
         super().__init__()
 
+    # noinspection PyAttributeOutsideInit
     def setup_ui(self):
         self.ui.setupUi(self)
 
-        self.bind()
-        self.populate_tree()
-        self.setup_buttons()
+        from .files_controller import FilesController
+        self.controller = FilesController(self)
+        self.controller.setup()
 
     def tab_selected(self):
-        if self.controller.should_sync():
-            self.fetch_files('TestInv')
+        self.controller.tab_selected()
 
     ### Setup methods
     # noinspection PyAttributeOutsideInit
     def bind(self):
         self.section_headers = _Sections()
-        self.controller = FilesController()
 
         self.lbl_last_sync: QLabel = self.ui.last_sync
         self.btn_sync_now: QPushButton = self.ui.sync_now
@@ -98,6 +90,18 @@ class FilesView(UiBase):
         self.btn_reset_notes: QPushButton = self.ui.reset_notes
 
 
+
+        # Bind click events
+        self.btn_download_file.clicked.connect(self.controller.download_file_clicked)
+        self.btn_sync_now.clicked.connect(self.controller.sync_now_clicked)
+        self.chk_auto_sync.clicked.connect(self.controller.auto_sync_checked)
+        self.inverter_id.returnPressed.connect(self.controller.sync_now_clicked)
+
+        self.files_grid.itemClicked.connect(self.controller.file_item_clicked)
+
+        self.btn_reset_notes.clicked.connect(self._reset_notes)
+
+
     def populate_tree(self):
         self.files_grid.setHeaderLabels(["Filename", "Local", "Web", "Association", "Creator", "Created At", "Associated At", "Notes"])
         self.files_grid.setColumnWidth(0, 300)
@@ -119,7 +123,6 @@ class FilesView(UiBase):
 
         self.notes.textChanged.connect(self._notes_changed)
 
-        self.files_grid.itemClicked.connect(self._file_item_clicked)
 
     def _enable_buttons(self, enable):
         self.btn_download_file.setDisabled(enable)
@@ -128,19 +131,9 @@ class FilesView(UiBase):
     def setup_buttons(self):
         self._enable_buttons(False)
 
-        self.inverter_id.returnPressed.connect(self.inverter_id_changed)
         self.inverter_id.setReadOnly(False)  #TODO: Link to whether or not they have admin access
-        self._show_inverter_id_error(None)
+        self.show_inverter_id_error(None)
 
-        self.btn_sync_now.clicked.connect(self.fetch_files)
-        self.btn_reset_notes.clicked.connect(self._reset_notes)
-
-    def fetch_files(self, inverter_id):
-        print('[Filesview] About to fire off files request')
-        deferred = ensureDeferred(self.controller.get_inverter_associations(inverter_id))
-        deferred.addCallback(self.show_files)
-        deferred.addErrback(self.inverter_error_handler)
-        deferred.addErrback(show_error_dialog)
 
     def _remove_all_children(self, parent: QTreeWidgetItem):
         while parent.childCount() > 0:
@@ -167,16 +160,7 @@ class FilesView(UiBase):
         _add_item(associations['other'], self.section_headers.other)
 
 
-    ### Actions
-    def _file_item_clicked(self, item: QTreeWidgetItem, column: int):
-        if hasattr(item, 'obj'):
-            self._show_file_details(item.obj)
-
-    def _download_file_clicked(self):
-        directory = QFileDialog.getExistingDirectory(parent=self.files_grid, caption='Pick location to download')
-        print(f'[Filesview] Filename picked: {directory}')
-
-
+    ### Action
     def _notes_changed(self):
         ensureDeferred(self._disable_notes())
 
@@ -190,25 +174,23 @@ class FilesView(UiBase):
         self.btn_save_notes.setDisabled(not changed)
         self.btn_reset_notes.setDisabled(not changed)
 
-    def inverter_id_changed(self):
-        self._show_inverter_id_error(None)
-        self.fetch_files(self.inverter_id.text())
+
 
     def inverter_error_handler(self, error):
         if error.type is InverterNotFoundException:  #Twisted wraps errors in its own class
-            self._show_inverter_id_error("Error: Inverter ID not found.")
+            self.show_inverter_id_error("Error: Inverter ID not found.")
         else:
             raise error
 
 
     ### UI Update methods
-    def _show_file_details(self, association):
+    def show_file_details(self, association):
         self.filename.setText(association['file']['filename'])
         self.version.setText(association['file']['version'])
         self.controller.set_original_notes(association['file']['notes'])
         self.notes.setPlainText(association['file']['notes'])
 
-    def _show_inverter_id_error(self, error):
+    def show_inverter_id_error(self, error):
         if error is None:
             self.inverter_id_error.setText("")
         else:
