@@ -53,6 +53,7 @@ class ConfigurationError(Exception):
 
 
 class Vars:
+    auto_sync = "auto_sync"
     provided_serial_number = "provided_serial_number"
     unique_inverters = "unique_inverters"
     username = "username"
