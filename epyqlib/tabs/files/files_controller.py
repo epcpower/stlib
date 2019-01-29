@@ -8,6 +8,7 @@ from twisted.internet.defer import Deferred, ensureDeferred
 from twisted.internet.interfaces import IDelayedCall
 
 from epyqlib.tabs.files.configuration import Configuration, Vars
+from epyqlib.tabs.files.filesview import Cols, Relationships
 from epyqlib.utils.twisted import errbackhook as show_error_dialog
 from .graphql import API, InverterNotFoundException
 
@@ -52,11 +53,39 @@ class FilesController:
         associations = await self.api.get_associations(inverter_id)
         for association in associations:
             type = association['file']['type'].lower()
-            row = self.view.show_file(type, association['file']['filename'])
+            row = self.view.attach_row_to_parent(type, association['file']['filename'])
             self.associations[association['id'] + association['file']['id']] = AssociationMapping(association, row)
+            self.render_association_to_row(association, row)
 
         self._set_sync_time()
         self.view.lbl_last_sync.setText(f'Last sync at:{self.get_sync_time()}')
+
+    def render_association_to_row(self, association, row: QTreeWidgetItem):
+        row.setText(Cols.filename, association['file']['filename'])
+        row.setText(Cols.version, association['file']['version'])
+        row.setText(Cols.notes, association['file']['notes'])
+
+
+
+        if(association.get('model')):
+            model_name = " " + association['model']['name']
+
+            if association.get('customer'):
+                relationship = Relationships.customer
+                rel_text = association['customer']['name'] + model_name
+            elif association.get('site'):
+                relationship = Relationships.site
+                rel_text = association['site']['name'] + model_name
+            else:
+                relationship = Relationships.model
+                rel_text = "All" + model_name
+        else:
+            relationship = Relationships.inverter
+            rel_text = association['inverter']['serialNumber']
+
+        self.view.show_relationship(row, relationship, rel_text)
+
+
 
     async def download_file(self, filename: str, destination: str):
         outf = open(destination, 'wb')

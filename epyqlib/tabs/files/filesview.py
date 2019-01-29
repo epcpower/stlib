@@ -1,4 +1,5 @@
 import pathlib
+from enum import Enum
 
 import PyQt5.uic
 import attr
@@ -16,17 +17,13 @@ Ui, UiBase = PyQt5.uic.loadUiType(
 
 # TODO: what about `in_designer=False`
 
-class QTreeWidgetItemWithObj(QTreeWidgetItem):
-    def __init__(self):
-        super().__init__()
-        self.obj = None
-
 class _Sections:
     params: QTreeWidgetItem
     pvms: QTreeWidgetItem
     firmware: QTreeWidgetItem
     fault_logs: QTreeWidgetItem
     other: QTreeWidgetItem
+
 
 class Cols:
     filename = 0
@@ -36,7 +33,17 @@ class Cols:
     creator = 4
     created_at = 5,
     associated_at = 6
-    notes = 7
+    version = 7
+    notes = 8
+
+
+class Relationships(Enum):
+    inverter = QBrush(QColor(187, 187, 187))  # Gray
+    model = QBrush(QColor(112, 173, 71))  # Green
+    customer = QBrush(QColor(143, 170, 220))  # Blue
+    site = QBrush(QColor(255, 208, 64))  # Yellow
+
+
 
 def get_keys(obj):
     return [key for key in obj.__dict__.keys() if not key.startswith("__")]
@@ -121,6 +128,8 @@ class FilesView(UiBase):
 
 
     def populate_tree(self):
+        self.files_grid.setAlternatingRowColors(True)
+
         self.files_grid.setHeaderLabels(get_keys(Cols))
         self.files_grid.setColumnWidth(Cols.filename, 300)
         self.files_grid.setColumnWidth(Cols.local, 35)
@@ -184,7 +193,7 @@ class FilesView(UiBase):
 
 
 
-    def show_file(self, type: str, filename):
+    def attach_row_to_parent(self, type: str, filename):
         parents = {
             'firmware': self.section_headers.firmware,
             'log': self.section_headers.fault_logs,
@@ -195,6 +204,10 @@ class FilesView(UiBase):
 
         parent = parents[type]
         return QTreeWidgetItem(parent, [filename, self.question_icon, self.check_icon])
+
+    def show_relationship(self, row: QTreeWidgetItem, relationship: Relationships, rel_text: str):
+        row.setBackground(Cols.association, relationship.value)
+        row.setText(Cols.association, rel_text)
 
     ### Action
     def _notes_changed(self):
