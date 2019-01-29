@@ -868,7 +868,7 @@ class Model:
     def __init__(self, root, columns, drop_sources=(), parent=None):
         self.root = root
         self.root.model = self
-        self._all_items_list = []
+        self._all_items_dict = {}
         self.node_to_item = {}
         self.uuid_to_node = {}
 
@@ -1043,7 +1043,10 @@ class Model:
                         )
 
                 if i == 0:
-                    self._all_items_list.append(item)
+                    self._all_items_dict[(
+                        item.data(epyqlib.utils.qt.UserRoles.node),
+                        item.column(),
+                    )] = item
                     self.node_to_item[child] = item
                 item.setData(child, epyqlib.utils.qt.UserRoles.node)
                 item.setData(i, epyqlib.utils.qt.UserRoles.column_index)
@@ -1186,8 +1189,11 @@ class Model:
         self.node_to_item.pop(node)
         for taken_item in taken_items:
             try:
-                self._all_items_list.remove(taken_item)
-            except ValueError:
+                del self._all_items_dict[(
+                    taken_item.data(epyqlib.utils.qt.UserRoles.node),
+                    taken_item.column(),
+                )]
+            except KeyError:
                 pass
         self.pyqtify_disconnect(parent, node)
 
