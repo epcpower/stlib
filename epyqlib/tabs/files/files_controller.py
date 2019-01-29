@@ -53,8 +53,15 @@ class FilesController:
         associations = await self.api.get_associations(inverter_id)
         for association in associations:
             type = association['file']['type'].lower()
-            row = self.view.attach_row_to_parent(type, association['file']['filename'])
-            self.associations[association['id'] + association['file']['id']] = AssociationMapping(association, row)
+            key = association['id'] + association['file']['id']
+            if (key in self.associations):
+                row = self.associations[key].row
+                self.associations[key].association = association # Update the association in case it's changed
+            else:
+                row = self.view.attach_row_to_parent(type, association['file']['filename'])
+                self.associations[association['id'] + association['file']['id']] = AssociationMapping(association, row)
+
+            # Render either the new or updated association
             self.render_association_to_row(association, row)
 
         self._set_sync_time()
@@ -64,8 +71,6 @@ class FilesController:
         row.setText(Cols.filename, association['file']['filename'])
         row.setText(Cols.version, association['file']['version'])
         row.setText(Cols.notes, association['file']['notes'])
-
-
 
         if(association.get('model')):
             model_name = " " + association['model']['name']
@@ -84,8 +89,6 @@ class FilesController:
             rel_text = association['inverter']['serialNumber']
 
         self.view.show_relationship(row, relationship, rel_text)
-
-
 
     async def download_file(self, filename: str, destination: str):
         outf = open(destination, 'wb')
