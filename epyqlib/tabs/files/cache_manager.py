@@ -54,6 +54,7 @@ class CacheManager:
                 return
             else:
                 raise NotADirectoryError(f"Files cache dir {dir_name} already exists but is not a directory")
+
         os.mkdir(dir_name)
 
     def filenames(self):
