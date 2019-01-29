@@ -1104,10 +1104,7 @@ class Table(epyqlib.treenode.TreeNode):
             if child.enumeration_uuid is None:
                 continue
 
-            enumeration, = root.nodes_by_attribute(
-                attribute_value=child.enumeration_uuid,
-                attribute_name='uuid',
-            )
+            enumeration = root.model.node_from_uuid(child.enumeration_uuid)
 
             enumerations.append(enumeration.children)
 
