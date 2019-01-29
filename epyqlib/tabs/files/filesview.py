@@ -31,7 +31,7 @@ class Cols:
     web = 2
     association = 3
     creator = 4
-    created_at = 5,
+    created_at = 5
     associated_at = 6
     version = 7
     notes = 8
@@ -48,11 +48,16 @@ class Relationships(Enum):
 def get_keys(obj):
     return [key for key in obj.__dict__.keys() if not key.startswith("__")]
 
+def get_values(obj):
+    return [obj.__dict__[key] for key in get_keys(obj)]
+
 @attr.s
 class FilesView(UiBase):
     gray_brush = QBrush(QColor(22, 22, 22, 22))
     check_icon = u'✅'
     question_icon = u'❓'
+
+    time_format = '%l:%M%p %m/%d'
 
     ui = attr.ib(factory=Ui)
 
@@ -148,8 +153,6 @@ class FilesView(UiBase):
         self.section_headers.fault_logs = make_entry("Fault Logs")
         self.section_headers.other = make_entry("Other files")
 
-
-
     def _enable_buttons(self, enable):
         self.btn_download_file.setDisabled(enable)
         self.btn_send_to_inverter.setDisabled(enable)
@@ -211,19 +214,17 @@ class FilesView(UiBase):
 
     ### Action
     def _notes_changed(self):
-        ensureDeferred(self._disable_notes())
+        ensureDeferred(self._disable_notes_buttons())
 
     def _reset_notes(self):
         self.notes.setPlainText(self.controller.old_notes)
         self.notes.moveCursor(QTextCursor.End)
 
-    async def _disable_notes(self):
+    async def _disable_notes_buttons(self):
         changed = self.controller.notes_modified(self.notes.toPlainText())
 
         self.btn_save_notes.setDisabled(not changed)
         self.btn_reset_notes.setDisabled(not changed)
-
-
 
     def inverter_error_handler(self, error):
         if error.type is InverterNotFoundException:  #Twisted wraps errors in its own class
@@ -234,10 +235,17 @@ class FilesView(UiBase):
 
     ### UI Update methods
     def show_file_details(self, association):
-        self.filename.setText(association['file']['filename'])
-        self.version.setText(association['file']['version'])
-        self.controller.set_original_notes(association['file']['notes'])
-        self.notes.setPlainText(association['file']['notes'])
+        if association is not None:
+            self.filename.setText(association['file']['filename'])
+            self.version.setText(association['file']['version'])
+            self.controller.set_original_notes(association['file']['notes'])
+            self.notes.setPlainText(association['file']['notes'])
+            self.notes.setReadOnly(False)
+        else:
+            self.filename.clear()
+            self.version.clear()
+            self.notes.setReadOnly(True)
+            self.notes.clear()
 
     def show_inverter_id_error(self, error):
         if error is None:

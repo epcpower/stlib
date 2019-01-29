@@ -7,8 +7,9 @@ import attr
 from twisted.internet.defer import Deferred, ensureDeferred
 from twisted.internet.interfaces import IDelayedCall
 
+from epyqlib.tabs.files.cache_manager import CacheManager
 from epyqlib.tabs.files.configuration import Configuration, Vars
-from epyqlib.tabs.files.filesview import Cols, Relationships
+from epyqlib.tabs.files.filesview import Cols, Relationships, get_keys, get_values
 from epyqlib.utils.twisted import errbackhook as show_error_dialog
 from .graphql import API, InverterNotFoundException
 
@@ -29,6 +30,9 @@ class FilesController:
         self.old_notes: str = None
         self.last_sync: datetime = None
 
+        self.cache_manager = CacheManager()
+        self.log_manager = CacheManager("logs")
+        self.log_rows = {}
         self.configuration = Configuration()
         self.associations: [str, AssociationMapping] = {}
 
@@ -38,7 +42,11 @@ class FilesController:
         self.view.bind()
         self.view.populate_tree()
         self.view.setup_buttons()
+
+        self._show_local_logs()
+
         self.view.chk_auto_sync.setChecked(self.configuration.get(Vars.auto_sync))
+
 
     ## Sync Info Methods
     def _set_sync_time(self) -> str:
@@ -46,7 +54,7 @@ class FilesController:
         return self.get_sync_time()
 
     def get_sync_time(self) -> str:
-        return self.last_sync.strftime('%l:%M%p %m/%d')
+        return self.last_sync.strftime(self.view.time_format)
 
     ## Data fetching
     async def get_inverter_associations(self, inverter_id: str):
@@ -129,9 +137,11 @@ class FilesController:
         self.fetch_files(self.view.inverter_id.text())
 
     def file_item_clicked(self, item: QTreeWidgetItem, column: int):
-        m: AssociationMapping = next(a for a in self.associations.values() if a.row == item)
-        self.view.show_file_details(m.association)
-        # m.row.setText(Cols.notes, m.association['id'])
+        if (item in get_values(self.view.section_headers)):
+            self.view.show_file_details(None)
+        else:
+            mapping: AssociationMapping = next(a for a in self.associations.values() if a.row == item)
+            self.view.show_file_details(mapping.association)
 
     def fetch_files(self, inverter_id):
         deferred = ensureDeferred(self.get_inverter_associations(inverter_id))
@@ -155,3 +165,16 @@ class FilesController:
             return False
 
         return (len(self.old_notes) != len(new_notes)) or self.old_notes != new_notes
+
+    def _show_local_logs(self):
+        for filename in self.log_manager.filenames():
+            row = self.view.attach_row_to_parent('log', filename)
+            self.log_rows[filename] = row
+
+            row.setText(Cols.local, self.view.check_icon)
+            row.setText(Cols.web, self.view.question_icon)
+
+            ctime = self.log_manager.stat(filename).st_ctime
+            ctime = datetime.fromtimestamp(ctime)
+            row.setText(Cols.created_at, ctime.strftime(self.view.time_format))
+
