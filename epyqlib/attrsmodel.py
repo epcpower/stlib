@@ -986,10 +986,6 @@ class Model:
         return item.data(epyqlib.utils.qt.UserRoles.node)
 
     def _pyqtify_connect(self, parent, child):
-        def key_value(instance, name, slot):
-            signal = inspect.getattr_static(obj=instance, attr=name)
-            return ((signal, (instance, slot)),)
-
         connections = {}
         connection_id = get_connection_id(parent=parent, child=child)
         if connection_id in self.connected_signals:
@@ -1068,61 +1064,53 @@ class Model:
 
                     def slot(datum, item=item):
                         node = item.data(epyqlib.utils.qt.UserRoles.node)
-                        model = item.data(
-                            epyqlib.utils.qt.UserRoles.attrs_model,
-                        )
-                        field_name = item.data(
-                            epyqlib.utils.qt.UserRoles.field_name,
-                        )
+                        model = node.find_root().model
                         field_metadata = getattr(
-                            attributes(node).fields,
+                            fields(node),
                             field_name,
                         )
                         data_display = field_metadata.data_display
 
                         field_metadata.updating = True
+                        try:
+                            display_datum = datum
+                            if data_display is not None:
+                                display_datum = data_display(
+                                    node,
+                                    value=display_datum,
+                                    model=model,
+                                )
+                            elif field_metadata.converter == two_state_checkbox:
+                                display_datum = ''
 
-                        display_datum = datum
-                        if data_display is not None:
-                            display_datum = data_display(
-                                node,
-                                value=display_datum,
-                                model=model,
-                            )
-                        elif field_metadata.converter == two_state_checkbox:
-                            display_datum = ''
+                            if display_datum is None:
+                                # TODO: CAMPid 0794305784527546542452654254679680
+                                # The display role is supposed to be '-' for None
+                                # but they can't be different
+                                #
+                                # http://doc.qt.io/qt-5/qstandarditem.html#data
+                                #   The default implementation treats Qt::EditRole
+                                #   and Qt::DisplayRole as referring to the same
+                                #   data
+                                display_text = ''
+                                # edit_text = ''
+                            else:
+                                display_text = str(display_datum)
+                                # edit_text = display_text
 
-                        if display_datum is None:
-                            # TODO: CAMPid 0794305784527546542452654254679680
-                            # The display role is supposed to be '-' for None
-                            # but they can't be different
-                            #
-                            # http://doc.qt.io/qt-5/qstandarditem.html#data
-                            #   The default implementation treats Qt::EditRole
-                            #   and Qt::DisplayRole as referring to the same
-                            #   data
-                            display_text = ''
-                            edit_text = ''
-                        else:
-                            display_text = str(display_datum)
-                            edit_text = display_text
+                            item.setData(display_text, PyQt5.QtCore.Qt.DisplayRole)
+                            # item.setData(edit_text, PyQt5.QtCore.Qt.EditRole)
+                            item.setData(datum, epyqlib.utils.qt.UserRoles.raw)
+                            if item.isCheckable():
+                                item.setCheckState(
+                                    PyQt5.QtCore.Qt.Checked
+                                    if datum
+                                    else PyQt5.QtCore.Qt.Unchecked,
+                                )
+                        finally:
+                            field_metadata.updating = False
 
-                        item.setData(display_text, PyQt5.QtCore.Qt.DisplayRole)
-                        item.setData(edit_text, PyQt5.QtCore.Qt.EditRole)
-                        item.setData(datum, epyqlib.utils.qt.UserRoles.raw)
-                        if item.isCheckable():
-                            item.setCheckState(
-                                PyQt5.QtCore.Qt.Checked
-                                if datum
-                                else PyQt5.QtCore.Qt.Unchecked,
-                            )
-                        field_metadata.updating = False
-
-                    connections.update(key_value(
-                        instance=changed_signals,
-                        name='_pyqtify_signal_' + field_name,
-                        slot=slot,
-                    ))
+                    connections[getattr(changed_signals, '_pyqtify_signal_' + field_name)] = slot
 
                     slot(getattr(child, field_name))
 
@@ -1130,20 +1118,11 @@ class Model:
 
             parent_item.insertRow(row, items)
 
+        connections[child.pyqt_signals.child_added] = self.child_added
+        connections[child.pyqt_signals.child_removed] = self.deleted
 
-        connections.update(key_value(
-            instance=child.pyqt_signals,
-            name='child_added',
-            slot=self.child_added,
-        ))
-        connections.update(key_value(
-            instance=child.pyqt_signals,
-            name='child_removed',
-            slot=self.deleted,
-        ))
-
-        for signal, (instance, slot) in connections.items():
-            signal.__get__(instance).connect(slot)
+        for signal, slot in connections.items():
+            signal.connect(slot)
 
     def pyqtify_disconnect(self, parent, child):
         def visit(node, nodes):
@@ -1170,8 +1149,8 @@ class Model:
             # TODO: why is this even happening?
             return
 
-        for signal, (instance, slot) in connections.items():
-            signal.__get__(instance).disconnect(slot)
+        for signal, slot in connections.items():
+            signal.disconnect(slot)
 
         self.uuid_to_node.pop(child.uuid)
 
