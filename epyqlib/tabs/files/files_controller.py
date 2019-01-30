@@ -1,3 +1,4 @@
+import shutil
 from datetime import datetime
 
 import attr
@@ -9,7 +10,7 @@ from twisted.internet.interfaces import IDelayedCall
 from epyqlib.tabs.files.bucket_manager import BucketManager
 from epyqlib.tabs.files.cache_manager import CacheManager
 from epyqlib.tabs.files.configuration import Configuration, Vars
-from epyqlib.tabs.files.filesview import Cols, Relationships, get_values
+from epyqlib.tabs.files.filesview import Cols, Relationships, get_values, FilesView
 from epyqlib.tabs.files.log_manager import LogManager
 from epyqlib.utils.twisted import errbackhook as show_error_dialog
 from .graphql import API, InverterNotFoundException
@@ -75,7 +76,7 @@ class FilesController:
         self._set_sync_time()
         self.view.lbl_last_sync.setText(f'Last sync at:{self.get_sync_time()}')
 
-        return await self.sync_files()
+        await self.sync_files()
 
     async def sync_files(self):
         missing_hashes = set()
@@ -84,23 +85,38 @@ class FilesController:
             hash = mapping.association['file']['hash']
             if(not self.cache_manager.has_hash(hash)):
                 missing_hashes.add(hash)
+            else:
+                mapping.row.setText(Cols.local, FilesView.check_icon)
 
         if len(missing_hashes) == 0:
             print("All files already hashed locally.")
             return
 
-        coroutines = [self.download_file(hash) for hash in missing_hashes]
+        coroutines = [self.sync_file(hash) for hash in missing_hashes]
 
         for coro in coroutines:
             await coro
 
-        # result = await asyncio.gather(*coroutines)
+    async def sync_file(self, hash):
+        await self.download_file(hash)
+
+        mapping: AssociationMapping
+        for mapping in self._get_mapping_for_hash(hash):
+            mapping.row.setText(Cols.local, FilesView.check_icon)
+
+
+    def _get_mapping_for_hash(self, hash: str) -> [AssociationMapping]:
+        map: AssociationMapping
+        return [map for map in self.associations.values() if map.association['file']['hash'] == hash]
+
+    def _get_mapping_for_row(self, row: QTreeWidgetItem) -> AssociationMapping:
+        return next(map for map in self.associations.values() if map.row == row)
 
 
     def render_association_to_row(self, association, row: QTreeWidgetItem):
         row.setText(Cols.filename, association['file']['filename'])
         row.setText(Cols.version, association['file']['version'])
-        row.setText(Cols.notes, association['file']['hash'] or association['file']['notes'])
+        row.setText(Cols.notes, association['file']['notes'])
 
         if(association.get('model')):
             model_name = " " + association['model']['name']
@@ -124,6 +140,7 @@ class FilesController:
         print(f"[Files Controller] Downloading missing file hash {hash}")
         filename = self.cache_manager.get_file_path(hash)
         await self.bucket_manager.download_file(hash, filename)
+        return hash
 
     ## Lifecycle events
     def tab_selected(self):
@@ -134,9 +151,19 @@ class FilesController:
             self.sync_and_schedule()
 
     ## UI Events
-    def download_file_clicked(self):
-        directory = QFileDialog.getExistingDirectory(parent=self.view.files_grid, caption='Pick location to download')
-        print(f'[Filesview] Filename picked: {directory}')
+    async def save_file_as_clicked(self):
+        map = self._get_mapping_for_row(self.view.files_grid.currentItem())
+        hash = map.association['file']['hash']
+        if hash not in self.cache_manager.hashes():
+            await self.sync_file(hash)
+
+        (destination, filter) = QFileDialog.getSaveFileName(
+            parent=self.view.files_grid,
+            caption="Pick location to save file",
+            directory=map.association['file']['filename']
+        )
+
+        shutil.copy2(self.cache_manager.get_file_path(hash), destination)
 
     def auto_sync_checked(self):
         checked = self.view.chk_auto_sync.isChecked()
@@ -158,9 +185,11 @@ class FilesController:
     def file_item_clicked(self, item: QTreeWidgetItem, column: int):
         if (item in get_values(self.view.section_headers)):
             self.view.show_file_details(None)
+            self.view.enable_file_action_buttons(False)
         else:
             mapping: AssociationMapping = next(a for a in self.associations.values() if a.row == item)
             self.view.show_file_details(mapping.association)
+            self.view.enable_file_action_buttons(True)
 
     def fetch_files(self, inverter_id):
         deferred = ensureDeferred(self.get_inverter_associations(inverter_id))

@@ -62,7 +62,7 @@
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="download_file">
+        <widget class="QPushButton" name="save_file_as">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
            <horstretch>0</horstretch>
@@ -76,7 +76,7 @@
           </size>
          </property>
          <property name="text">
-          <string>Download File</string>
+          <string>Save File As...</string>
          </property>
         </widget>
        </item>

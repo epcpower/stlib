@@ -3,6 +3,7 @@ from enum import Enum
 
 import PyQt5.uic
 import attr
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QBrush, QTextCursor
 from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QCheckBox, QLabel, \
     QPlainTextEdit
@@ -98,7 +99,7 @@ class FilesView(UiBase):
         self.lbl_last_sync: QLabel = self.ui.last_sync
         self.btn_sync_now: QPushButton = self.ui.sync_now
         self.btn_login: QPushButton = self.ui.login
-        self.btn_download_file: QPushButton = self.ui.download_file
+        self.btn_save_file_as: QPushButton = self.ui.save_file_as
         self.btn_send_to_inverter: QPushButton = self.ui.send_to_inverter
         self.chk_auto_sync: QCheckBox = self.ui.auto_sync
 
@@ -120,7 +121,7 @@ class FilesView(UiBase):
 
 
         # Bind click events
-        self.btn_download_file.clicked.connect(self.controller.download_file_clicked)
+        self.btn_save_file_as.clicked.connect(self._save_file_as_clicked)
         self.btn_sync_now.clicked.connect(self.controller.sync_now_clicked)
         self.chk_auto_sync.clicked.connect(self.controller.auto_sync_checked)
         self.inverter_id.returnPressed.connect(self.controller.sync_now_clicked)
@@ -137,7 +138,7 @@ class FilesView(UiBase):
 
         self.files_grid.setHeaderLabels(get_keys(Cols))
         self.files_grid.setColumnWidth(Cols.filename, 250)
-        self.files_grid.setColumnWidth(Cols.local, 30)
+        self.files_grid.setColumnWidth(Cols.local, 35)
         self.files_grid.setColumnWidth(Cols.web, 30)
         self.files_grid.setColumnWidth(Cols.association, 150)
         self.files_grid.setColumnWidth(Cols.notes, 500)
@@ -155,7 +156,7 @@ class FilesView(UiBase):
         self.section_headers.other = make_entry("Other files")
 
     def _enable_buttons(self, enable):
-        self.btn_download_file.setDisabled(enable)
+        self.btn_save_file_as.setDisabled(enable)
         self.btn_send_to_inverter.setDisabled(enable)
 
     def setup_buttons(self):
@@ -207,7 +208,9 @@ class FilesView(UiBase):
         }
 
         parent = parents[type]
-        return QTreeWidgetItem(parent, [filename, self.question_icon, self.check_icon])
+        row = QTreeWidgetItem(parent, [filename, self.question_icon, self.check_icon])
+        row.setTextAlignment(Cols.local, Qt.AlignRight)
+        return row
 
     def show_relationship(self, row: QTreeWidgetItem, relationship: Relationships, rel_text: str):
         row.setBackground(Cols.association, relationship.value)
@@ -248,13 +251,18 @@ class FilesView(UiBase):
             self.notes.setReadOnly(True)
             self.notes.clear()
 
+    def enable_file_action_buttons(self, enabled):
+        self.btn_send_to_inverter.setDisabled(not enabled)
+        self.btn_save_file_as.setDisabled(not enabled)
+
     def show_inverter_id_error(self, error):
         if error is None:
             self.inverter_id_error.setText("")
         else:
             self.inverter_id_error.setText(f"<font color='red'>{error}</font>")
 
-
+    def _save_file_as_clicked(self):
+        ensureDeferred(self.controller.save_file_as_clicked())
 
 # .ui files need a direct module attribute, not a class method, afaict.
 FilesViewQtBuilder = FilesView.qt_build
