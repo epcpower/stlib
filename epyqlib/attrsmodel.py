@@ -1063,7 +1063,7 @@ class Model:
                     )
                     item.setCheckable(checkable)
 
-                    def slot(datum, item=item):
+                    def slot(datum, item=item, field_name=field_name):
                         node = item.data(epyqlib.utils.qt.UserRoles.node)
                         model = node.find_root().model
                         field_metadata = getattr(
