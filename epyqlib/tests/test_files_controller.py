@@ -1,6 +1,3 @@
-import os
-import tempfile
-from os import path
 from unittest.mock import MagicMock
 
 import pytest
@@ -10,18 +7,8 @@ from epyqlib.tabs.files.cache_manager import CacheManager
 from epyqlib.tabs.files.files_controller import FilesController
 from epyqlib.tabs.files.filesview import FilesView
 
-@pytest.fixture
-def temp_dir(request):
-    dir = tempfile.mkdtemp()
-
-    def cleanup():
-        for file in os.listdir(dir):
-            os.remove(path.join(dir, file))
-        os.rmdir(dir)
-
-    request.addfinalizer(cleanup)
-
-    return dir
+# noinspection PyUnresolvedReferences
+from epyqlib.tests.utils.test_fixtures import temp_dir
 
 
 @pytest.inlineCallbacks
@@ -36,10 +23,9 @@ def test_get_associations():
     assert output['model'][0] is not None
 
 
-@pytest.mark.skip(reason="Just for local testing")
+# @pytest.mark.skip(reason="Just for local testing")
 @pytest.inlineCallbacks
 def test_get_file(temp_dir):
-
     view = MagicMock(spec=FilesView)
     controller = FilesController(view)
 

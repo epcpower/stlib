@@ -1,19 +1,19 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
-import treq
+import attr
 import twisted
 from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
-import attr
 from twisted.internet.defer import Deferred, ensureDeferred
 from twisted.internet.interfaces import IDelayedCall
 
 from epyqlib.tabs.files.bucket_manager import BucketManager
 from epyqlib.tabs.files.cache_manager import CacheManager
 from epyqlib.tabs.files.configuration import Configuration, Vars
-from epyqlib.tabs.files.filesview import Cols, Relationships, get_keys, get_values
+from epyqlib.tabs.files.filesview import Cols, Relationships, get_values
 from epyqlib.tabs.files.log_manager import LogManager
 from epyqlib.utils.twisted import errbackhook as show_error_dialog
 from .graphql import API, InverterNotFoundException
+
 
 @attr.s(slots=True)
 class AssociationMapping():
@@ -22,8 +22,6 @@ class AssociationMapping():
 
 
 class FilesController:
-
-
     from epyqlib.tabs.files.filesview import FilesView
     def __init__(self, view: FilesView):
         self.view = view
@@ -77,16 +75,26 @@ class FilesController:
         self._set_sync_time()
         self.view.lbl_last_sync.setText(f'Last sync at:{self.get_sync_time()}')
 
-        self.sync_files()
+        return await self.sync_files()
 
-    def sync_files(self):
-        missing_hashes = []
+    async def sync_files(self):
+        missing_hashes = set()
         for key, mapping in self.associations.items():
             # mapping is of type AssociationMapping
             hash = mapping.association['file']['hash']
             if(not self.cache_manager.has_hash(hash)):
-                missing_hashes.append(hash)
+                missing_hashes.add(hash)
 
+        if len(missing_hashes) == 0:
+            print("All files already hashed locally.")
+            return
+
+        coroutines = [self.download_file(hash) for hash in missing_hashes]
+
+        for coro in coroutines:
+            await coro
+
+        # result = await asyncio.gather(*coroutines)
 
 
     def render_association_to_row(self, association, row: QTreeWidgetItem):
@@ -113,8 +121,9 @@ class FilesController:
         self.view.show_relationship(row, relationship, rel_text)
 
     async def download_file(self, hash: str):
-        with self.cache_manager.get_file_ref(hash, "wb") as file:
-            await self.bucket_manager.download_file(hash, file)
+        print(f"[Files Controller] Downloading missing file hash {hash}")
+        filename = self.cache_manager.get_file_path(hash)
+        await self.bucket_manager.download_file(hash, filename)
 
     ## Lifecycle events
     def tab_selected(self):

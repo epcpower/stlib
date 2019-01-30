@@ -42,8 +42,8 @@ class CacheManager:
     def has_hash(self, hash: str) -> bool:
         return path.exists(path.join(self._cache_dir, hash))
 
-    def get_file_ref(self, filename: str, mode: str):
-        return open(path.join(self._cache_dir, filename), mode)
+    def get_file_path(self, filename: str):
+        return path.join(self._cache_dir, filename)
 
     def stat(self, filename) -> os.stat_result:
         return os.stat(path.join(self._cache_dir, filename))
