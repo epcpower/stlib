@@ -1063,7 +1063,12 @@ class Model:
                     )
                     item.setCheckable(checkable)
 
-                    def slot(datum, item=item, field_name=field_name):
+                    def slot(
+                            datum,
+                            item=item,
+                            field_name=field_name,
+                            editable=editable,
+                    ):
                         node = item.data(epyqlib.utils.qt.UserRoles.node)
                         model = node.find_root().model
                         field_metadata = getattr(
@@ -1095,12 +1100,19 @@ class Model:
                                 #   data
                                 display_text = ''
                                 # edit_text = ''
+                                if editable:
+                                    decoration = QtGui.QColor('green')
+                                    decoration.setAlphaF(0.4)
+                                else:
+                                    decoration = None
                             else:
                                 display_text = str(display_datum)
                                 # edit_text = display_text
+                                decoration = None
 
                             item.setData(display_text, PyQt5.QtCore.Qt.DisplayRole)
                             # item.setData(edit_text, PyQt5.QtCore.Qt.EditRole)
+                            item.setData(decoration, PyQt5.QtCore.Qt.DecorationRole)
                             item.setData(datum, epyqlib.utils.qt.UserRoles.raw)
                             if item.isCheckable():
                                 item.setCheckState(
