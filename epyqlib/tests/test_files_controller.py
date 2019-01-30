@@ -1,8 +1,27 @@
+import os
+import tempfile
+from os import path
+from unittest.mock import MagicMock
+
 import pytest
 from twisted.internet.defer import ensureDeferred
-from twisted.plugins.twisted_reactors import asyncio
 
+from epyqlib.tabs.files.cache_manager import CacheManager
 from epyqlib.tabs.files.files_controller import FilesController
+from epyqlib.tabs.files.filesview import FilesView
+
+@pytest.fixture
+def temp_dir(request):
+    dir = tempfile.mkdtemp()
+
+    def cleanup():
+        for file in os.listdir(dir):
+            os.remove(path.join(dir, file))
+        os.rmdir(dir)
+
+    request.addfinalizer(cleanup)
+
+    return dir
 
 
 @pytest.inlineCallbacks
@@ -16,10 +35,21 @@ def test_get_associations():
     assert output['model'] is not None
     assert output['model'][0] is not None
 
-@pytest.inlineCallbacks
-@pytest.mark.skip(reason="Just for local testing")
-def test_get_file():
-    controller = FilesController()
 
-    output = yield ensureDeferred(controller.download_file("test_large.out", "/Users/benb/Desktop/test.out"))
-    assert output is None
+@pytest.mark.skip(reason="Just for local testing")
+@pytest.inlineCallbacks
+def test_get_file(temp_dir):
+
+    view = MagicMock(spec=FilesView)
+    controller = FilesController(view)
+
+    hash = "52e2678f71a591e9e0edfcf249ff07ae"
+
+    controller.cache_manager = CacheManager(temp_dir)
+
+    assert controller.cache_manager.has_hash(hash) is False
+
+    output = yield ensureDeferred(controller.download_file(hash))
+    # assert output is None
+
+    assert controller.cache_manager.has_hash(hash) is True

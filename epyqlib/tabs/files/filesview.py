@@ -136,9 +136,10 @@ class FilesView(UiBase):
         self.files_grid.setAlternatingRowColors(True)
 
         self.files_grid.setHeaderLabels(get_keys(Cols))
-        self.files_grid.setColumnWidth(Cols.filename, 300)
-        self.files_grid.setColumnWidth(Cols.local, 35)
-        self.files_grid.setColumnWidth(Cols.web, 35)
+        self.files_grid.setColumnWidth(Cols.filename, 250)
+        self.files_grid.setColumnWidth(Cols.local, 30)
+        self.files_grid.setColumnWidth(Cols.web, 30)
+        self.files_grid.setColumnWidth(Cols.association, 150)
         self.files_grid.setColumnWidth(Cols.notes, 500)
 
         # make_entry = lambda caption:

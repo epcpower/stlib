@@ -7,9 +7,11 @@ import attr
 from twisted.internet.defer import Deferred, ensureDeferred
 from twisted.internet.interfaces import IDelayedCall
 
+from epyqlib.tabs.files.bucket_manager import BucketManager
 from epyqlib.tabs.files.cache_manager import CacheManager
 from epyqlib.tabs.files.configuration import Configuration, Vars
 from epyqlib.tabs.files.filesview import Cols, Relationships, get_keys, get_values
+from epyqlib.tabs.files.log_manager import LogManager
 from epyqlib.utils.twisted import errbackhook as show_error_dialog
 from .graphql import API, InverterNotFoundException
 
@@ -21,7 +23,6 @@ class AssociationMapping():
 
 class FilesController:
 
-    bucket_path = 'https://s3-us-west-2.amazonaws.com/epc-files-dev/public/firmware/'
 
     from epyqlib.tabs.files.filesview import FilesView
     def __init__(self, view: FilesView):
@@ -30,8 +31,9 @@ class FilesController:
         self.old_notes: str = None
         self.last_sync: datetime = None
 
+        self.bucket_manager = BucketManager()
         self.cache_manager = CacheManager()
-        self.log_manager = CacheManager("logs")
+        self.log_manager = LogManager("logs")
         self.log_rows = {}
         self.configuration = Configuration()
         self.associations: [str, AssociationMapping] = {}
@@ -75,10 +77,22 @@ class FilesController:
         self._set_sync_time()
         self.view.lbl_last_sync.setText(f'Last sync at:{self.get_sync_time()}')
 
+        self.sync_files()
+
+    def sync_files(self):
+        missing_hashes = []
+        for key, mapping in self.associations.items():
+            # mapping is of type AssociationMapping
+            hash = mapping.association['file']['hash']
+            if(not self.cache_manager.has_hash(hash)):
+                missing_hashes.append(hash)
+
+
+
     def render_association_to_row(self, association, row: QTreeWidgetItem):
         row.setText(Cols.filename, association['file']['filename'])
         row.setText(Cols.version, association['file']['version'])
-        row.setText(Cols.notes, association['file']['notes'])
+        row.setText(Cols.notes, association['file']['hash'] or association['file']['notes'])
 
         if(association.get('model')):
             model_name = " " + association['model']['name']
@@ -98,13 +112,9 @@ class FilesController:
 
         self.view.show_relationship(row, relationship, rel_text)
 
-    async def download_file(self, filename: str, destination: str):
-        outf = open(destination, 'wb')
-
-        deferred: Deferred = treq.get(self.bucket_path + filename)
-        deferred.addCallback(treq.collect, outf.write)
-        deferred.addBoth(lambda _: outf.close())
-        return await deferred
+    async def download_file(self, hash: str):
+        with self.cache_manager.get_file_ref(hash, "wb") as file:
+            await self.bucket_manager.download_file(hash, file)
 
     ## Lifecycle events
     def tab_selected(self):

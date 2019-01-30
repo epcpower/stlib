@@ -5,7 +5,6 @@ from os import path
 
 
 class CacheManager:
-    _hashes_file = path.join(os.getcwd(), 'hashes.json')
 
     def __init__(self, cache_dir="cache"):
         cache_dir = path.join(os.getcwd(), cache_dir)
@@ -14,36 +13,16 @@ class CacheManager:
 
         self._verify_hashes()
 
-    def _save(self):
-        with open(self._hashes_file, 'w') as file:
-            json.dump(self._hashes, file, indent=2)
-
     def _verify_hashes(self):
-        if path.exists(self._hashes_file):
-            with open(self._hashes_file, 'r') as hashes:
-                self._hashes = json.load(hashes)
-        else:
-            self._hashes = {}
-
-        to_remove = []
-        # Clear out files that are gone
-        for hash, filename in self._hashes.items():
-            if not path.exists(path.join(self._cache_dir, filename)):
-                to_remove.append(hash)
-
-        for hash in to_remove:
-            del(self._hashes[hash])
-
-        # Make sure every file on disk is in our hashes
-        for file in os.listdir(self._cache_dir):
-            filename = path.join(self._cache_dir, file)
-            self._hashes[self._md5(filename)] = file
-
-        self._save()
+        for filename in self.hashes():
+            hash = self._md5(filename)
+            if (hash != filename):
+                print(f"File {filename} failed hash verification. Deleting.")
+                os.unlink(path.join(self._cache_dir, filename))
 
     def _md5(self, filename: str) -> str:
         md5 = hashlib.md5()
-        with open(filename, "rb") as file:
+        with open(path.join(self._cache_dir, filename), "rb") as file:
             for chunk in iter(lambda: file.read(4096), b""):
                 md5.update(chunk)
         return md5.hexdigest()
@@ -57,8 +36,14 @@ class CacheManager:
 
         os.mkdir(dir_name)
 
-    def filenames(self):
-        return self._hashes.values()
+    def hashes(self):
+        return os.listdir(self._cache_dir)
+
+    def has_hash(self, hash: str) -> bool:
+        return path.exists(path.join(self._cache_dir, hash))
+
+    def get_file_ref(self, filename: str, mode: str):
+        return open(path.join(self._cache_dir, filename), mode)
 
     def stat(self, filename) -> os.stat_result:
         return os.stat(path.join(self._cache_dir, filename))
