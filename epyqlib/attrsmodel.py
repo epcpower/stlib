@@ -664,14 +664,15 @@ class CustomDelegate:
     text_column_name = attr.ib(default='Name')
 
     def get_delegate(self, node, parent):
-        pth, obj = self.list_selection_path
-        if pth is None or pth == '/':
-            root_node = node.find_root()
-        elif pth == '..':
-            root_node = node.tree_parent
-        else:
-            root_node = node.child_by_name(obj)
-        
+        root_node = node
+        for element in self.list_selection_path:
+            if element == '/':
+                root_node = root_node.find_root()
+            elif element == '..':
+                root_node = root_node.tree_parent
+            else:
+                root_node = root_node.child_by_name(element)
+
         delegate = EnumerationDelegate
         if self.override_delegate is not None:
             delegate = self.override_delegate
