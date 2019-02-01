@@ -365,6 +365,7 @@ def Root(default_name, valid_types):
 
         remove_old_on_drop = default_remove_old_on_drop
         child_from = default_child_from
+        internal_move = default_internal_move
 
         @staticmethod
         def can_delete(node=None):
@@ -440,6 +441,8 @@ def attr_uuid(
         human_name='UUID',
         data_display=None,
         list_selection_root=None,
+        list_selection_path=None,
+        override_delegate=None,
         no_graham=False,
         default=attr.Factory(uuid.uuid4),
         editable=True,
@@ -458,15 +461,33 @@ def attr_uuid(
             attribute=attribute,
             field=marshmallow.fields.UUID(**field_options),
         )
-    attrib(
-        attribute=attribute,
-        human_name=human_name,
-        data_display=data_display,
-        delegate=epyqlib.attrsmodel.RootDelegateCache(
-            list_selection_root=list_selection_root,
-        ),
-        editable=editable,
-    )
+
+    if list_selection_path is not None:
+        if list_selection_root is not None:
+            raise MultipleFoundError(
+                    'list_selection_path and list_selection_root both definded'
+            )
+        else:
+            attrib(
+                attribute=attribute,
+                human_name=human_name,
+                data_display=data_display,
+                delegate=epyqlib.attrsmodel.CustomDelegate(
+                    list_selection_path=list_selection_path,
+                    override_delegate=override_delegate,
+                ),
+                editable=editable,
+            )
+    else:
+        attrib(
+            attribute=attribute,
+            human_name=human_name,
+            data_display=data_display,
+            delegate=epyqlib.attrsmodel.RootDelegateCache(
+                list_selection_root=list_selection_root
+            ),
+            editable=editable,
+        )
 
     return attribute
 
@@ -567,6 +588,10 @@ def default_child_from(node):
     return node
 
 
+def default_internal_move(self, node, node_to_insert_before):
+    return False
+
+
 def to_source_model(index):
     model = index.model()
     while not isinstance(model, QtGui.QStandardItemModel):
@@ -632,6 +657,33 @@ class RootDelegateCache:
         return self.cached_delegate
 
 
+@attr.s
+class CustomDelegate:
+    list_selection_path = attr.ib(default=None)
+    override_delegate = attr.ib(default=None)
+    text_column_name = attr.ib(default='Name')
+
+    def get_delegate(self, node, parent):
+        root_node = node
+        for element in self.list_selection_path:
+            if element == '/':
+                root_node = root_node.find_root()
+            elif element == '..':
+                root_node = root_node.tree_parent
+            else:
+                root_node = root_node.child_by_name(element)
+
+        delegate = EnumerationDelegate
+        if self.override_delegate is not None:
+            delegate = self.override_delegate
+
+        return delegate(
+            text_column_name=self.text_column_name,
+            root=root_node,
+            parent=parent,
+        )
+
+
 class DelegateSelector:
     def __init__(self, parent=None):
         self.parent = parent
@@ -650,7 +702,10 @@ class DelegateSelector:
         metadata = getattr(fields(type(node)), field_name)
         
         if metadata.delegate is not None:
-            delegate = metadata.delegate.get_delegate(model, self.parent)
+            node_or_model = model
+            if isinstance(metadata.delegate, epyqlib.attrsmodel.CustomDelegate):
+                node_or_model = node
+            delegate = metadata.delegate.get_delegate(node_or_model, self.parent)
         else:
             delegate = self.regular
 
@@ -767,11 +822,7 @@ class EnumerationDelegateMulti(QtWidgets.QStyledItemDelegate):
         model = index.model()
 
         selected_items = editor.selectedItems()
-        data = []
-        for item in selected_items:
-            data.append(item)
-
-        model.setData(index, data)
+        model.setData(index, selected_items)
 
 
 class PyQStandardItemModel(QtGui.QStandardItemModel):
@@ -818,7 +869,7 @@ class Model:
     def __init__(self, root, columns, drop_sources=(), parent=None):
         self.root = root
         self.root.model = self
-        self._all_items_list = []
+        self._all_items_dict = {}
         self.node_to_item = {}
         self.uuid_to_node = {}
 
@@ -936,10 +987,6 @@ class Model:
         return item.data(epyqlib.utils.qt.UserRoles.node)
 
     def _pyqtify_connect(self, parent, child):
-        def key_value(instance, name, slot):
-            signal = inspect.getattr_static(obj=instance, attr=name)
-            return ((signal, (instance, slot)),)
-
         connections = {}
         connection_id = get_connection_id(parent=parent, child=child)
         if connection_id in self.connected_signals:
@@ -993,7 +1040,10 @@ class Model:
                         )
 
                 if i == 0:
-                    self._all_items_list.append(item)
+                    self._all_items_dict[(
+                        item.data(epyqlib.utils.qt.UserRoles.node),
+                        item.column(),
+                    )] = item
                     self.node_to_item[child] = item
                 item.setData(child, epyqlib.utils.qt.UserRoles.node)
                 item.setData(i, epyqlib.utils.qt.UserRoles.column_index)
@@ -1013,63 +1063,67 @@ class Model:
                     )
                     item.setCheckable(checkable)
 
-                    def slot(datum, item=item):
+                    def slot(
+                            datum,
+                            item=item,
+                            field_name=field_name,
+                            editable=editable,
+                    ):
                         node = item.data(epyqlib.utils.qt.UserRoles.node)
-                        model = item.data(
-                            epyqlib.utils.qt.UserRoles.attrs_model,
-                        )
-                        field_name = item.data(
-                            epyqlib.utils.qt.UserRoles.field_name,
-                        )
+                        model = node.find_root().model
                         field_metadata = getattr(
-                            attributes(node).fields,
+                            fields(node),
                             field_name,
                         )
                         data_display = field_metadata.data_display
 
                         field_metadata.updating = True
+                        try:
+                            display_datum = datum
+                            if data_display is not None:
+                                display_datum = data_display(
+                                    node,
+                                    value=display_datum,
+                                    model=model,
+                                )
+                            elif field_metadata.converter == two_state_checkbox:
+                                display_datum = ''
 
-                        display_datum = datum
-                        if data_display is not None:
-                            display_datum = data_display(
-                                node,
-                                value=display_datum,
-                                model=model,
-                            )
-                        elif field_metadata.converter == two_state_checkbox:
-                            display_datum = ''
+                            if display_datum is None:
+                                # TODO: CAMPid 0794305784527546542452654254679680
+                                # The display role is supposed to be '-' for None
+                                # but they can't be different
+                                #
+                                # http://doc.qt.io/qt-5/qstandarditem.html#data
+                                #   The default implementation treats Qt::EditRole
+                                #   and Qt::DisplayRole as referring to the same
+                                #   data
+                                display_text = ''
+                                # edit_text = ''
+                                if editable:
+                                    decoration = QtGui.QColor('green')
+                                    decoration.setAlphaF(0.4)
+                                else:
+                                    decoration = None
+                            else:
+                                display_text = str(display_datum)
+                                # edit_text = display_text
+                                decoration = None
 
-                        if display_datum is None:
-                            # TODO: CAMPid 0794305784527546542452654254679680
-                            # The display role is supposed to be '-' for None
-                            # but they can't be different
-                            #
-                            # http://doc.qt.io/qt-5/qstandarditem.html#data
-                            #   The default implementation treats Qt::EditRole
-                            #   and Qt::DisplayRole as referring to the same
-                            #   data
-                            display_text = ''
-                            edit_text = ''
-                        else:
-                            display_text = str(display_datum)
-                            edit_text = display_text
+                            item.setData(display_text, PyQt5.QtCore.Qt.DisplayRole)
+                            # item.setData(edit_text, PyQt5.QtCore.Qt.EditRole)
+                            item.setData(decoration, PyQt5.QtCore.Qt.DecorationRole)
+                            item.setData(datum, epyqlib.utils.qt.UserRoles.raw)
+                            if item.isCheckable():
+                                item.setCheckState(
+                                    PyQt5.QtCore.Qt.Checked
+                                    if datum
+                                    else PyQt5.QtCore.Qt.Unchecked,
+                                )
+                        finally:
+                            field_metadata.updating = False
 
-                        item.setData(display_text, PyQt5.QtCore.Qt.DisplayRole)
-                        item.setData(edit_text, PyQt5.QtCore.Qt.EditRole)
-                        item.setData(datum, epyqlib.utils.qt.UserRoles.raw)
-                        if item.isCheckable():
-                            item.setCheckState(
-                                PyQt5.QtCore.Qt.Checked
-                                if datum
-                                else PyQt5.QtCore.Qt.Unchecked,
-                            )
-                        field_metadata.updating = False
-
-                    connections.update(key_value(
-                        instance=changed_signals,
-                        name='_pyqtify_signal_' + field_name,
-                        slot=slot,
-                    ))
+                    connections[getattr(changed_signals, '_pyqtify_signal_' + field_name)] = slot
 
                     slot(getattr(child, field_name))
 
@@ -1077,20 +1131,11 @@ class Model:
 
             parent_item.insertRow(row, items)
 
+        connections[child.pyqt_signals.child_added] = self.child_added
+        connections[child.pyqt_signals.child_removed] = self.deleted
 
-        connections.update(key_value(
-            instance=child.pyqt_signals,
-            name='child_added',
-            slot=self.child_added,
-        ))
-        connections.update(key_value(
-            instance=child.pyqt_signals,
-            name='child_removed',
-            slot=self.deleted,
-        ))
-
-        for signal, (instance, slot) in connections.items():
-            signal.__get__(instance).connect(slot)
+        for signal, slot in connections.items():
+            signal.connect(slot)
 
     def pyqtify_disconnect(self, parent, child):
         def visit(node, nodes):
@@ -1117,8 +1162,8 @@ class Model:
             # TODO: why is this even happening?
             return
 
-        for signal, (instance, slot) in connections.items():
-            signal.__get__(instance).disconnect(slot)
+        for signal, slot in connections.items():
+            signal.disconnect(slot)
 
         self.uuid_to_node.pop(child.uuid)
 
@@ -1136,8 +1181,11 @@ class Model:
         self.node_to_item.pop(node)
         for taken_item in taken_items:
             try:
-                self._all_items_list.remove(taken_item)
-            except ValueError:
+                del self._all_items_dict[(
+                    taken_item.data(epyqlib.utils.qt.UserRoles.node),
+                    taken_item.column(),
+                )]
+            except KeyError:
                 pass
         self.pyqtify_disconnect(parent, node)
 
@@ -1180,6 +1228,7 @@ class Model:
         node, new_parent, source_row = self.source_target_for_drop(
             column, data, parent, row)
 
+        node_to_insert_before = None
         if row != -1:
             node_to_insert_before = new_parent.child_at_row(row)
 
@@ -1192,18 +1241,27 @@ class Model:
                 getattr(new_parent, 'name', '<no name attribute>'),
             ))
 
-            if new_parent.remove_old_on_drop(node=node):
-                node.tree_parent.remove_child(child=node)
+            moved = False
 
-            new_child = new_parent.child_from(node=node)
+            if new_parent is node.tree_parent:
+                moved = new_parent.internal_move(
+                    node=node,
+                    node_to_insert_before=node_to_insert_before,
+                )
 
-            if new_child is None:
-                pass
-            elif row == -1:
-                new_parent.append_child(new_child)
-            else:
-                new_row = new_parent.row_of_child(node_to_insert_before)
-                new_parent.insert_child(new_row, new_child)
+            if not moved:
+                if new_parent.remove_old_on_drop(node=node):
+                    node.tree_parent.remove_child(child=node)
+
+                new_child = new_parent.child_from(node=node)
+
+                if new_child is None:
+                    pass
+                elif row == -1:
+                    new_parent.append_child(new_child)
+                else:
+                    new_row = new_parent.row_of_child(node_to_insert_before)
+                    new_parent.insert_child(new_row, new_child)
 
         # Always returning False so that Qt won't do anything...  like
         # thinking it knows which row of items to delete to finish the
@@ -1348,6 +1406,12 @@ class Tests:
         self.assert_incomplete_types(
             name='child_from',
             signature=['node'],
+        )
+
+    def test_all_have_internal_move(self):
+        self.assert_incomplete_types(
+            name='internal_move',
+            signature=['node', 'node_to_insert_before'],
         )
 
     def test_all_addable_also_in_types(self):
