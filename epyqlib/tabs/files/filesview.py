@@ -212,6 +212,9 @@ class FilesView(UiBase):
         row.setTextAlignment(Cols.local, Qt.AlignRight)
         return row
 
+    def remove_row(self, row: QTreeWidgetItem):
+        self.files_grid.removeItemWidget(row)
+
     def show_relationship(self, row: QTreeWidgetItem, relationship: Relationships, rel_text: str):
         row.setBackground(Cols.association, relationship.value)
         row.setText(Cols.association, rel_text)

@@ -104,6 +104,9 @@ class FilesController:
         for mapping in self._get_mapping_for_hash(hash):
             mapping.row.setText(Cols.local, FilesView.check_icon)
 
+    def _get_key_for_hash(self, hash: str):
+        value: AssociationMapping
+        return next(key for key, value in self.associations.items() if value.association['file']['hash'] == hash)
 
     def _get_mapping_for_hash(self, hash: str) -> [AssociationMapping]:
         map: AssociationMapping
@@ -169,18 +172,40 @@ class FilesController:
         checked = self.view.chk_auto_sync.isChecked()
         self.configuration.set(Vars.auto_sync, checked)
         if checked:
-            self.sync_and_schedule()
+            ensureDeferred(self.sync_and_schedule())
         else:
-            if (self.sync_timer is not None):
-                self.sync_timer.cancel()
+            ensureDeferred(self.api.unsubscribe())
+            # if (self.sync_timer is not None):
+            #     self.sync_timer.cancel()
 
-    def sync_and_schedule(self):
+    async def sync_and_schedule(self):
         self.fetch_files(self.view.inverter_id.text())
-        self.sync_timer = twisted.internet.reactor.callLater(300, self.sync_and_schedule)
+        # self.sync_timer = twisted.internet.reactor.callLater(300, self.sync_and_schedule)
+        await self.api.subscribe(self.file_updated)
 
     def sync_now_clicked(self):
         self.view.show_inverter_id_error(None)
         self.fetch_files(self.view.inverter_id.text())
+
+    def file_updated(self, action, payload):
+        if (action == 'created'):
+            pass
+            # Get file info including association
+            # Create row for info
+            # Add info and row to self.associations
+
+        key = self._get_key_for_hash(payload['hash'])
+
+        if (action == 'updated'):
+            map: AssociationMapping = self.associations[key]
+            map.association['file'].update(payload)
+            self.render_association_to_row(map.association, map.row)
+
+        if (action == 'deleted'):
+            self.view.remove_row(self.associations[key].row)
+            del(self.associations[key])
+
+
 
     def file_item_clicked(self, item: QTreeWidgetItem, column: int):
         if (item in get_values(self.view.section_headers)):

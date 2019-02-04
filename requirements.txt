@@ -20,6 +20,7 @@ lxml==4.2.5
 marshmallow==2.16.3
 more-itertools==4.3.0
 natsort==5.5.0
+paho-mqtt=1.4.0
 Pint==0.8.1
 pluggy==0.8.0
 py==1.7.0

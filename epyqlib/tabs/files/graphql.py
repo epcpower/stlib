@@ -1,7 +1,14 @@
 import asyncio
-from twisted.web.iweb import IResponse
-import treq
+import json
+from typing import Callable
 
+import treq
+from twisted.internet import reactor
+from twisted.internet.defer import ensureDeferred
+from twisted.python.failure import Failure
+from twisted.web.iweb import IResponse
+
+from epyqlib.tabs.files.websocket_handler import WebSocketHandler
 from epyqlib.utils.general import safe_get
 
 
@@ -13,6 +20,8 @@ class InverterNotFoundException(Exception):
 
 
 class API:
+    ws_handler = WebSocketHandler()
+
     server_info = {
         "url": "https://b3oofrroujeutdd4zclqlwedhm.appsync-api.us-west-2.amazonaws.com/graphql",
         "headers": {
@@ -98,9 +107,12 @@ class API:
     async def _make_request(self, body):
         url = self.server_info["url"]
         headers = self.server_info["headers"]
+        d: str = json.dumps(body, indent=4)
+        d = d.replace("\\n", "\n")
+        print(d)
         response: IResponse = await treq.post(url, headers=headers, json=body)
         if response.code >= 400:
-            raise GraphQLException(response.code)
+            raise GraphQLException(f"{response.code} {response.phrase.decode('ascii')}")
 
         content = await treq.content(response)
         body = await treq.json_content(response)
@@ -142,9 +154,28 @@ class API:
         deferred.addErrback(err)
         return deferred
 
-    def foo(self, reactor):
-        return self.run(self.get_associations("TestInv"))
 
+    async def subscribe(self, message_handler: Callable[[str, dict], None]):
+        gql = """subscription {
+                    created: fileCreated { id }
+                    updated: fileUpdated { id }
+                    deleted: fileDeleted { id }
+                }"""
+
+        query = {
+            "query": gql,
+            "variables": {}
+        }
+
+        response = await self._make_request(query)
+        mqttInfo = response['extensions']['subscription']['mqttConnections'][0]
+        topics = response['extensions']['subscription']['newSubscriptions']
+        client_id = mqttInfo['client']
+        url = mqttInfo['url']
+        self.ws_handler.connect(url, client_id, topics, message_handler)
+
+    async def unsubscribe(self):
+        self.ws_handler.disconnect()
 
 
 def main(reactor):
@@ -160,10 +191,19 @@ def succ(body):
     print("SUCCESS")
     print(body)
 
-def err(error):
+def err(error: Failure):
     print("ERROR ENCOUNTERED")
-    print(error)
+    print(error.type)
+    print(error.value)
+    print(error.getBriefTraceback())
+    reactor.stop()
 
 if __name__ == "__main__":
-    from twisted.internet.task import react
-    react(main)
+    # from twisted.internet.task import react
+    # react(main)
+
+    api = API()
+    d = ensureDeferred(api.subscribe())
+    d.addCallback(succ)
+    d.addErrback(err)
+    reactor.run()
