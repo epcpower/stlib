@@ -5,8 +5,8 @@ import PyQt5.uic
 import attr
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QBrush, QTextCursor
-from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QCheckBox, QLabel, \
-    QPlainTextEdit
+from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QLabel, \
+    QPlainTextEdit, QBoxLayout, QHBoxLayout, QGridLayout
 from twisted.internet.defer import ensureDeferred
 
 from epyqlib.tabs.files.graphql import InverterNotFoundException
@@ -96,13 +96,12 @@ class FilesView(UiBase):
     def bind(self):
         self.section_headers = _Sections()
 
-        self.lbl_last_sync: QLabel = self.ui.last_sync
-        self.btn_sync_now: QPushButton = self.ui.sync_now
-        self.btn_login: QPushButton = self.ui.login
-        self.btn_save_file_as: QPushButton = self.ui.save_file_as
-        self.btn_send_to_inverter: QPushButton = self.ui.send_to_inverter
-        self.chk_auto_sync: QCheckBox = self.ui.auto_sync
+        self.root: QGridLayout = self.ui.gridLayout
 
+        self.lbl_not_logged_in: QLabel = self.ui.lbl_not_logged_in
+        self.btn_login: QPushButton = self.ui.login
+
+        self.lbl_inverter_id: QLabel = self.ui.lbl_inverter_id
         self.inverter_id: QLineEdit = self.ui.inverter_id
         self.inverter_id_error: QLabel = self.ui.inverter_id_error
 
@@ -118,19 +117,27 @@ class FilesView(UiBase):
         self.btn_save_notes: QPushButton = self.ui.save_notes
         self.btn_reset_notes: QPushButton = self.ui.reset_notes
 
+        self.btn_save_file_as: QPushButton = self.ui.save_file_as
+        self.btn_send_to_inverter: QPushButton = self.ui.send_to_inverter
 
+        self.lbl_last_sync: QLabel = self.ui.last_sync
+        self.btn_sync_now: QPushButton = self.ui.sync_now
 
         # Bind click events
-        self.btn_save_file_as.clicked.connect(self._save_file_as_clicked)
-        self.btn_sync_now.clicked.connect(self.controller.sync_now_clicked)
-        self.chk_auto_sync.clicked.connect(self.controller.auto_sync_checked)
+        self.btn_login.clicked.connect(self._login_clicked)
         self.inverter_id.returnPressed.connect(self.controller.sync_now_clicked)
 
         self.files_grid.itemClicked.connect(self.controller.file_item_clicked)
 
-        self.notes.textChanged.connect(self._notes_changed)
+        self.btn_save_file_as.clicked.connect(self._save_file_as_clicked)
+        self.btn_sync_now.clicked.connect(self.controller.sync_now_clicked)
 
+        self.notes.textChanged.connect(self._notes_changed)
         self.btn_reset_notes.clicked.connect(self._reset_notes)
+
+        # Set initial state
+        self.lbl_not_logged_in.setText("<font color='red'><b>Warning: You are not currently logged in to EPC Sync. "
+                                       "To sync the latest configuration files for this inverter, login here:</b></font>")
 
 
     def populate_tree(self):
@@ -143,7 +150,6 @@ class FilesView(UiBase):
         self.files_grid.setColumnWidth(Cols.association, 150)
         self.files_grid.setColumnWidth(Cols.notes, 500)
 
-        # make_entry = lambda caption:
         def make_entry(caption):
             val = QTreeWidgetItem(self.files_grid, [caption])
             val.setExpanded(True)
@@ -169,33 +175,6 @@ class FilesView(UiBase):
     def _remove_all_children(self, parent: QTreeWidgetItem):
         while parent.childCount() > 0:
             parent.removeChild(parent.child(0))
-
-    # def show_files(self, associations):
-    #     print('[Filesview] Files request finished')
-    #     print(associations)
-    #     sync_time = self.controller.get_sync_time()
-    #     self.lbl_last_sync.setText(f'Last sync at:{sync_time}')
-    #
-    #     def _add_item(list: [dict], parent: QTreeWidgetItem):
-    #         self._remove_all_children(parent)
-    #
-    #         for item in list:
-    #             if item['file'] is not None:
-    #                 cols = [
-    #                     item['file']['filename'],
-    #                     self.question_icon,
-    #                     self.check_icon
-    #
-    #                 ]
-    #                 widget = QTreeWidgetItem(parent, cols)
-    #                 widget.obj = item
-    #
-    #     _add_item(associations['parameter'], self.section_headers.params)
-    #     #_add_item(associations['pvms'], self.section_headers.pvms)
-    #     _add_item(associations['firmware'], self.section_headers.firmware)
-    #     #_add_item(associations['faultLogs'], self.section_headers.fault_logs)
-    #     _add_item(associations['other'], self.section_headers.other)
-
 
 
     def attach_row_to_parent(self, type: str, filename):
@@ -241,6 +220,13 @@ class FilesView(UiBase):
 
 
     ### UI Update methods
+    def show_logged_out_warning(self, enabled):
+        self.lbl_not_logged_in.setHidden(not enabled)
+        self.btn_login.setHidden(not enabled)
+
+        self.lbl_inverter_id.setHidden(enabled)
+        self.inverter_id.setHidden(enabled)
+
     def show_file_details(self, association):
         if association is not None:
             self.filename.setText(association['file']['filename'])
@@ -264,8 +250,13 @@ class FilesView(UiBase):
         else:
             self.inverter_id_error.setText(f"<font color='red'>{error}</font>")
 
+    def _login_clicked(self):
+        ensureDeferred(self.controller.login_clicked())
+
     def _save_file_as_clicked(self):
         ensureDeferred(self.controller.save_file_as_clicked())
+
+
 
 # .ui files need a direct module attribute, not a class method, afaict.
 FilesViewQtBuilder = FilesView.qt_build

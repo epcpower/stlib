@@ -3,20 +3,28 @@ import os
 
 
 class Configuration:
+    _instance = None
+
     def __init__(self, directory=os.getcwd(), filename='epyq-config.json'):
         self.required_keys = [key for key in Vars.__dict__.keys() if not key.startswith("__")]
 
         self.filename = os.path.join(directory, filename)
         self.file_error = False
         if os.path.exists(self.filename):
-            self.read_file()
+            self._read_file()
         else:
             self.config = dict()
             for key in self.required_keys:
                 self.config[key] = None
 
-    def read_file(self):
+    @staticmethod
+    def get_instance():
+        if Configuration._instance is None:
+            Configuration._instance = Configuration()
 
+        return Configuration._instance
+
+    def _read_file(self):
         with open(self.filename, 'r') as infile:
             contents = json.load(infile)
         if type(contents) is not dict:
@@ -28,7 +36,7 @@ class Configuration:
                 raise ConfigurationError(f'Required key {key} is missing from configuration file.')
         self.config = contents
 
-    def write_file(self):
+    def _write_file(self):
         if not self.file_error:
             with open(self.filename, 'w') as outfile:
                 json.dump(self.config, outfile, indent=2)
@@ -38,8 +46,7 @@ class Configuration:
 
     def set(self, key, value):
         self.config[key] = value
-        self.write_file()
-
+        self._write_file()
 
     def log_serial_number(self, serial_number: str):
         if self.config[Vars.unique_inverters] is None:

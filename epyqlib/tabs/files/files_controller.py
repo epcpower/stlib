@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
 from twisted.internet.defer import Deferred, ensureDeferred
 from twisted.internet.interfaces import IDelayedCall
 
+from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
 from epyqlib.tabs.files.bucket_manager import BucketManager
 from epyqlib.tabs.files.cache_manager import CacheManager
 from epyqlib.tabs.files.configuration import Configuration, Vars
@@ -34,7 +35,8 @@ class FilesController:
         self.cache_manager = CacheManager()
         self.log_manager = LogManager("logs")
         self.log_rows = {}
-        self.configuration = Configuration()
+        self.aws_login_manager = AwsLoginManager.get_instance()
+        self.configuration = Configuration.get_instance()
         self.associations: [str, AssociationMapping] = {}
 
         self.sync_timer: IDelayedCall = None
@@ -43,10 +45,10 @@ class FilesController:
         self.view.bind()
         self.view.populate_tree()
         self.view.setup_buttons()
+        self.view.show_logged_out_warning(True)
 
         self._show_local_logs()
 
-        self.view.chk_auto_sync.setChecked(self.configuration.get(Vars.auto_sync))
 
 
     ## Sync Info Methods
@@ -154,6 +156,10 @@ class FilesController:
             self.sync_and_schedule()
 
     ## UI Events
+    async def login_clicked(self):
+        self.aws_login_manager.show_login_window(self.view.files_grid)
+        self.view.show_logged_out_warning(self.aws_login_manager.is_logged_in())
+
     async def save_file_as_clicked(self):
         map = self._get_mapping_for_row(self.view.files_grid.currentItem())
         hash = map.association['file']['hash']
@@ -168,16 +174,6 @@ class FilesController:
 
         if destination != '':
             shutil.copy2(self.cache_manager.get_file_path(hash), destination)
-
-    def auto_sync_checked(self):
-        checked = self.view.chk_auto_sync.isChecked()
-        self.configuration.set(Vars.auto_sync, checked)
-        if checked:
-            ensureDeferred(self.sync_and_schedule())
-        else:
-            ensureDeferred(self.api.unsubscribe())
-            # if (self.sync_timer is not None):
-            #     self.sync_timer.cancel()
 
     async def sync_and_schedule(self):
         self.fetch_files(self.view.inverter_id.text())
