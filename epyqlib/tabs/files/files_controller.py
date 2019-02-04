@@ -166,7 +166,8 @@ class FilesController:
             directory=map.association['file']['filename']
         )
 
-        shutil.copy2(self.cache_manager.get_file_path(hash), destination)
+        if destination != '':
+            shutil.copy2(self.cache_manager.get_file_path(hash), destination)
 
     def auto_sync_checked(self):
         checked = self.view.chk_auto_sync.isChecked()

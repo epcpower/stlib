@@ -107,14 +107,11 @@ class API:
     async def _make_request(self, body):
         url = self.server_info["url"]
         headers = self.server_info["headers"]
-        d: str = json.dumps(body, indent=4)
-        d = d.replace("\\n", "\n")
-        print(d)
         response: IResponse = await treq.post(url, headers=headers, json=body)
         if response.code >= 400:
             raise GraphQLException(f"{response.code} {response.phrase.decode('ascii')}")
 
-        content = await treq.content(response)
+        # content = await treq.content(response)
         body = await treq.json_content(response)
 
         if (body.get('data') is None and body.get('errors') is not None):
