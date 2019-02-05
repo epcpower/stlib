@@ -35,7 +35,7 @@ class Cols:
     created_at = 5
     associated_at = 6
     version = 7
-    notes = 8
+    description = 8
 
 
 class Relationships(Enum):
@@ -148,7 +148,7 @@ class FilesView(UiBase):
         self.files_grid.setColumnWidth(Cols.local, 35)
         self.files_grid.setColumnWidth(Cols.web, 30)
         self.files_grid.setColumnWidth(Cols.association, 150)
-        self.files_grid.setColumnWidth(Cols.notes, 500)
+        self.files_grid.setColumnWidth(Cols.description, 500)
 
         def make_entry(caption):
             val = QTreeWidgetItem(self.files_grid, [caption])

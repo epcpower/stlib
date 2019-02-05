@@ -63,6 +63,10 @@ class FilesController:
     async def get_inverter_associations(self, inverter_id: str):
         associations = await self.api.get_associations(inverter_id)
         for association in associations:
+            if association['file'] is None:
+                print(f"[Files Controller] WARNING: Association {association['id']} returned with null file associated")
+                continue
+
             type = association['file']['type'].lower()
             key = association['id'] + association['file']['id']
             if (key in self.associations):
@@ -121,7 +125,7 @@ class FilesController:
     def render_association_to_row(self, association, row: QTreeWidgetItem):
         row.setText(Cols.filename, association['file']['filename'])
         row.setText(Cols.version, association['file']['version'])
-        row.setText(Cols.notes, association['file']['notes'])
+        row.setText(Cols.description, association['file']['description'])
 
         if(association.get('model')):
             model_name = " " + association['model']['name']
