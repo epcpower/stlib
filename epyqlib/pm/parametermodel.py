@@ -17,6 +17,35 @@ __copyright__ = 'Copyright 2017, EPC Power Corp.'
 __license__ = 'GPLv2+'
 
 
+def create_abbreviation_attribute():
+    return attr.ib(
+        default='',
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(),
+        ),
+    )
+
+
+def create_notes_attribute():
+    return attr.ib(
+        default=None,
+        convert=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+
+
+def create_read_only_attribute():
+    return attr.ib(
+        default=False,
+        converter=epyqlib.attrsmodel.two_state_checkbox,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Boolean(),
+        ),
+    )
+
+
 @graham.schemify(tag='parameter')
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
@@ -28,12 +57,7 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
-    abbreviation = attr.ib(
-        default='',
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(),
-        ),
-    )
+    abbreviation = create_abbreviation_attribute()
     type_name = attr.ib(
         default=None,
         converter=epyqlib.attrsmodel.to_str_or_none,
@@ -134,13 +158,7 @@ class Parameter(epyqlib.treenode.TreeNode):
         ),
     )
 
-    read_only = attr.ib(
-        default=False,
-        converter=epyqlib.attrsmodel.two_state_checkbox,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.Boolean(),
-        ),
-    )
+    read_only = create_read_only_attribute()
 
     access_level_uuid = epyqlib.attrsmodel.attr_uuid(
         default=None,
@@ -161,13 +179,7 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
-    notes = attr.ib(
-        default=None,
-        convert=epyqlib.attrsmodel.to_str_or_none,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
-        ),
-    )
+    notes = create_notes_attribute()
     original_frame_name = attr.ib(
         default=None,
         metadata=graham.create_metadata(
@@ -355,6 +367,11 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(),
         ),
     )
+
+    abbreviation = create_abbreviation_attribute()
+    notes = create_notes_attribute()
+    read_only = create_read_only_attribute()
+
     # TODO: CAMPid 1342975467516679768543165421
     default = attr.ib(
         default=None,
@@ -641,6 +658,9 @@ class Array(epyqlib.treenode.TreeNode):
     original='original',
     field_names=(
         'name',
+        'abbreviation',
+        'notes',
+        'read_only',
         'access_level_uuid',
         'enumeration_uuid',
         'minimum',
@@ -665,6 +685,10 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(allow_none=True)
         ),
     )
+
+    abbreviation = create_abbreviation_attribute()
+    notes = create_notes_attribute()
+    read_only = create_read_only_attribute()
 
     path = attr.ib(
         factory=tuple,
@@ -1348,12 +1372,7 @@ class SunSpecEnumerator(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(),
         ),
     )
-    notes = attr.ib(
-        default='',
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(),
-        ),
-    )
+    notes = create_notes_attribute()
     value = attr.ib(
         default=None,
         converter=epyqlib.attrsmodel.to_decimal_or_none,
