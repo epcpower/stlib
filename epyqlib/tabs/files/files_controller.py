@@ -2,9 +2,9 @@ import shutil
 from datetime import datetime
 
 import attr
-import twisted
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
-from twisted.internet.defer import Deferred, ensureDeferred
+from twisted.internet.defer import ensureDeferred
 from twisted.internet.interfaces import IDelayedCall
 
 from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
@@ -62,6 +62,7 @@ class FilesController:
     ## Data fetching
     async def get_inverter_associations(self, inverter_id: str):
         associations = await self.api.get_associations(inverter_id)
+        self.view.files_grid.setSortingEnabled(False)
         for association in associations:
             if association['file'] is None:
                 print(f"[Files Controller] WARNING: Association {association['id']} returned with null file associated")
@@ -79,6 +80,8 @@ class FilesController:
             # Render either the new or updated association
             self.render_association_to_row(association, row)
 
+        self.view.files_grid.setSortingEnabled(True)
+        self.view.files_grid.sortByColumn(Cols.filename, Qt.SortOrder.AscendingOrder)
         self._set_sync_time()
         self.view.lbl_last_sync.setText(f'Last sync at:{self.get_sync_time()}')
 
