@@ -98,6 +98,9 @@
                                 {
                                     "_type": "array_parameter_element",
                                     "name": "A1",
+                                    "abbreviation": "",
+                                    "notes": null,
+                                    "read_only": false,
                                     "default": null,
                                     "minimum": null,
                                     "maximum": null,
@@ -153,6 +156,9 @@
                                 {
                                     "_type": "array_parameter_element",
                                     "name": "B1",
+                                    "abbreviation": "",
+                                    "notes": null,
+                                    "read_only": false,
                                     "default": null,
                                     "minimum": null,
                                     "maximum": null,
@@ -204,6 +210,9 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A0",
+                                                            "abbreviation": "",
+                                                            "notes": null,
+                                                            "read_only": false,
                                                             "path": [
                                                                 "a2cf0c0c-c55a-4a0c-b830-571b5abe089b",
                                                                 "165ccc7b-7ffc-4546-add2-11f0855f86d1",
@@ -228,6 +237,9 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
+                                                            "abbreviation": "",
+                                                            "notes": null,
+                                                            "read_only": false,
                                                             "path": [
                                                                 "a2cf0c0c-c55a-4a0c-b830-571b5abe089b",
                                                                 "165ccc7b-7ffc-4546-add2-11f0855f86d1",
@@ -266,6 +278,9 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B0",
+                                                            "abbreviation": "",
+                                                            "notes": null,
+                                                            "read_only": false,
                                                             "path": [
                                                                 "a2cf0c0c-c55a-4a0c-b830-571b5abe089b",
                                                                 "165ccc7b-7ffc-4546-add2-11f0855f86d1",
@@ -290,6 +305,9 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
+                                                            "abbreviation": "",
+                                                            "notes": null,
+                                                            "read_only": false,
                                                             "path": [
                                                                 "a2cf0c0c-c55a-4a0c-b830-571b5abe089b",
                                                                 "165ccc7b-7ffc-4546-add2-11f0855f86d1",
@@ -341,6 +359,9 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A0",
+                                                            "abbreviation": "",
+                                                            "notes": null,
+                                                            "read_only": false,
                                                             "path": [
                                                                 "a2cf0c0c-c55a-4a0c-b830-571b5abe089b",
                                                                 "64e3e07c-dd4f-439a-850c-69508bfd545c",
@@ -365,6 +386,9 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
+                                                            "abbreviation": "",
+                                                            "notes": null,
+                                                            "read_only": false,
                                                             "path": [
                                                                 "a2cf0c0c-c55a-4a0c-b830-571b5abe089b",
                                                                 "64e3e07c-dd4f-439a-850c-69508bfd545c",
@@ -403,6 +427,9 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B0",
+                                                            "abbreviation": "",
+                                                            "notes": null,
+                                                            "read_only": false,
                                                             "path": [
                                                                 "a2cf0c0c-c55a-4a0c-b830-571b5abe089b",
                                                                 "64e3e07c-dd4f-439a-850c-69508bfd545c",
@@ -427,6 +454,9 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
+                                                            "abbreviation": "",
+                                                            "notes": null,
+                                                            "read_only": false,
                                                             "path": [
                                                                 "a2cf0c0c-c55a-4a0c-b830-571b5abe089b",
                                                                 "64e3e07c-dd4f-439a-850c-69508bfd545c",
@@ -490,6 +520,9 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A0",
+                                                            "abbreviation": "",
+                                                            "notes": null,
+                                                            "read_only": false,
                                                             "path": [
                                                                 "effdff81-7da1-4cd8-863f-44f33c75813e",
                                                                 "165ccc7b-7ffc-4546-add2-11f0855f86d1",
@@ -514,6 +547,9 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
+                                                            "abbreviation": "",
+                                                            "notes": null,
+                                                            "read_only": false,
                                                             "path": [
                                                                 "effdff81-7da1-4cd8-863f-44f33c75813e",
                                                                 "165ccc7b-7ffc-4546-add2-11f0855f86d1",
@@ -552,6 +588,9 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B0",
+                                                            "abbreviation": "",
+                                                            "notes": null,
+                                                            "read_only": false,
                                                             "path": [
                                                                 "effdff81-7da1-4cd8-863f-44f33c75813e",
                                                                 "165ccc7b-7ffc-4546-add2-11f0855f86d1",
@@ -576,6 +615,9 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
+                                                            "abbreviation": "",
+                                                            "notes": null,
+                                                            "read_only": false,
                                                             "path": [
                                                                 "effdff81-7da1-4cd8-863f-44f33c75813e",
                                                                 "165ccc7b-7ffc-4546-add2-11f0855f86d1",
@@ -627,6 +669,9 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A0",
+                                                            "abbreviation": "",
+                                                            "notes": null,
+                                                            "read_only": false,
                                                             "path": [
                                                                 "effdff81-7da1-4cd8-863f-44f33c75813e",
                                                                 "64e3e07c-dd4f-439a-850c-69508bfd545c",
@@ -651,6 +696,9 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
+                                                            "abbreviation": "",
+                                                            "notes": null,
+                                                            "read_only": false,
                                                             "path": [
                                                                 "effdff81-7da1-4cd8-863f-44f33c75813e",
                                                                 "64e3e07c-dd4f-439a-850c-69508bfd545c",
@@ -689,6 +737,9 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B0",
+                                                            "abbreviation": "",
+                                                            "notes": null,
+                                                            "read_only": false,
                                                             "path": [
                                                                 "effdff81-7da1-4cd8-863f-44f33c75813e",
                                                                 "64e3e07c-dd4f-439a-850c-69508bfd545c",
@@ -713,6 +764,9 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
+                                                            "abbreviation": "",
+                                                            "notes": null,
+                                                            "read_only": false,
                                                             "path": [
                                                                 "effdff81-7da1-4cd8-863f-44f33c75813e",
                                                                 "64e3e07c-dd4f-439a-850c-69508bfd545c",

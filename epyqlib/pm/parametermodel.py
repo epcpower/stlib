@@ -1584,7 +1584,7 @@ def merge(name, *types):
 
 columns = epyqlib.attrsmodel.columns(
     merge('name', *types.types.values()),
-    merge('abbreviation', Parameter),
+    merge('abbreviation', Parameter, ArrayParameterElement, TableArrayElement),
     (
         merge('type_name', Parameter, Group)
         + merge('type', SunSpecEnumerator)
@@ -1649,7 +1649,7 @@ columns = epyqlib.attrsmodel.columns(
         TableArrayElement,
         ArrayParameterElement,
     ),
-    merge('read_only', Parameter),
+    merge('read_only', Parameter, ArrayParameterElement, TableArrayElement),
     merge(
         'access_level_uuid',
         Parameter,
@@ -1687,7 +1687,13 @@ columns = epyqlib.attrsmodel.columns(
         merge('description', SunSpecEnumerator)
     ),
 
-    merge('notes', Parameter, SunSpecEnumerator),
+    merge(
+        'notes',
+        Parameter,
+        SunSpecEnumerator,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
 
     merge('original_frame_name', Parameter),
     merge('original_multiplexer_name', Parameter),
