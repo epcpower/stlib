@@ -355,7 +355,7 @@
            <item>
             <widget class="QLabel" name="last_sync">
              <property name="text">
-              <string>Last sync at: 00:00 01/01</string>
+              <string>Last sync at:</string>
              </property>
             </widget>
            </item>
@@ -431,6 +431,9 @@
           <layout class="QHBoxLayout" name="horizontalLayout_3">
            <item>
             <widget class="QPushButton" name="reset_notes">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
              <property name="text">
               <string>Reset Notes</string>
              </property>

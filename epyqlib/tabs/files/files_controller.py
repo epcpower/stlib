@@ -42,14 +42,17 @@ class FilesController:
         self.sync_timer: IDelayedCall = None
 
     def setup(self):
+        self.aws_login_manager.register_listener(self.login_status_changed)
+
         self.view.bind()
         self.view.populate_tree()
         self.view.setup_buttons()
-        self.view.show_logged_out_warning(True)
+
+        logged_in = self.aws_login_manager.is_logged_in()
+        self.view.show_logged_out_warning(not logged_in)
+        self.view.enable_file_buttons(logged_in)
 
         self._show_local_logs()
-
-
 
     ## Sync Info Methods
     def _set_sync_time(self) -> str:
@@ -165,7 +168,6 @@ class FilesController:
     ## UI Events
     async def login_clicked(self):
         self.aws_login_manager.show_login_window(self.view.files_grid)
-        self.view.show_logged_out_warning(self.aws_login_manager.is_logged_in())
 
     async def save_file_as_clicked(self):
         map = self._get_mapping_for_row(self.view.files_grid.currentItem())
@@ -188,6 +190,9 @@ class FilesController:
         await self.api.subscribe(self.file_updated)
 
     def sync_now_clicked(self):
+        self._sync_now()
+
+    def _sync_now(self):
         self.view.show_inverter_id_error(None)
         self.fetch_files(self.view.inverter_id.text())
 
@@ -232,6 +237,14 @@ class FilesController:
         else:
             raise error
 
+    ## Application events
+    def login_status_changed(self, logged_in: bool):
+        self.view.show_logged_out_warning(not logged_in)
+        self.view.btn_sync_now.setDisabled(not logged_in)
+        self.view.enable_file_buttons(logged_in)
+
+        if logged_in:
+            self._sync_now()
 
     ## Notes
     def set_original_notes(self, notes: str):

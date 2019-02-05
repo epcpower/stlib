@@ -33,9 +33,8 @@ class Cols:
     association = 3
     creator = 4
     created_at = 5
-    associated_at = 6
-    version = 7
-    description = 8
+    version = 6
+    description = 7
 
 
 class Relationships(Enum):
@@ -161,12 +160,13 @@ class FilesView(UiBase):
         self.section_headers.fault_logs = make_entry("Fault Logs")
         self.section_headers.other = make_entry("Other files")
 
-    def _enable_buttons(self, enable):
-        self.btn_save_file_as.setDisabled(enable)
-        self.btn_send_to_inverter.setDisabled(enable)
+    def enable_file_buttons(self, enable):
+        self.btn_save_file_as.setDisabled(not enable)
+        self.btn_send_to_inverter.setDisabled(not enable)
 
     def setup_buttons(self):
-        self._enable_buttons(False)
+        self.enable_file_buttons(False)
+        self.btn_sync_now.setDisabled(True)
 
         self.inverter_id.setReadOnly(False)  #TODO: Link to whether or not they have admin access
         self.show_inverter_id_error(None)
