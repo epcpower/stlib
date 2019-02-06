@@ -63,8 +63,8 @@ class FilesController:
         return self.last_sync.strftime(self.view.time_format)
 
     ## Data fetching
-    async def get_inverter_associations(self, inverter_id: str):
-        associations = await self.api.get_associations(inverter_id)
+    async def get_inverter_associations(self, serial_number: str):
+        associations = await self.api.get_associations(serial_number)
         self.view.files_grid.setSortingEnabled(False)
         for association in associations:
             if association['file'] is None:
@@ -184,23 +184,23 @@ class FilesController:
     async def sync_and_schedule(self):
         await self.sync_now()
 
-        if len(self.view.inverter_id.text()) > 0:
+        if len(self.view.serial_number.text()) > 0:
             await self.api.subscribe(self.file_updated)
 
     async def sync_now(self):
         self.view.show_inverter_error(None)
 
         # If InverterId is not set and we're connected, get inverter serial #
-        if self.view.inverter_id.text() == '':
+        if self.view.serial_number.text() == '':
             if not self.view.device_interface.get_connected_status().connected:
                 self.view.show_inverter_error('Bus is disconnected. Unable to get Inverter Serial Number')
                 return
             serial_number = await self.view.device_interface.get_serial_number()
 
-            self.view.inverter_id.setText(serial_number)
+            self.view.serial_number.setText(serial_number)
 
-        if len(self.view.inverter_id.text()) > 0:
-            await self.fetch_files(self.view.inverter_id.text())
+        if len(self.view.serial_number.text()) > 0:
+            await self.fetch_files(self.view.serial_number.text())
 
     def file_updated(self, action, payload):
         if (action == 'created'):
@@ -231,9 +231,9 @@ class FilesController:
             self.view.show_file_details(mapping.association)
             self.view.enable_file_action_buttons(True)
 
-    async def fetch_files(self, inverter_id):
+    async def fetch_files(self, serial_number):
         try:
-            await self.get_inverter_associations(inverter_id)
+            await self.get_inverter_associations(serial_number)
         except InverterNotFoundException:
             self.view.show_inverter_error("Error: Inverter ID not found.")
 

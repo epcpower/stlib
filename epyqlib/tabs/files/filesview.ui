@@ -110,21 +110,21 @@
         </spacer>
        </item>
        <item>
-        <widget class="QLabel" name="lbl_inverter_id">
+        <widget class="QLabel" name="lbl_serial_number">
          <property name="text">
-          <string>Inverter ID</string>
+          <string>Inverter Serial Number</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="inverter_id">
+        <widget class="QLineEdit" name="serial_number">
          <property name="readOnly">
           <bool>true</bool>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="inverter_id_error">
+        <widget class="QLabel" name="lbl_inverter_error">
          <property name="text">
           <string>&lt;font color=&quot;red&quot;&gt;(inverter error here)&lt;/font&gt;</string>
          </property>

@@ -110,9 +110,9 @@ class FilesView(UiBase):
         self.lbl_not_logged_in: QLabel = self.ui.lbl_not_logged_in
         self.btn_login: QPushButton = self.ui.login
 
-        self.lbl_inverter_id: QLabel = self.ui.lbl_inverter_id
-        self.inverter_id: QLineEdit = self.ui.inverter_id
-        self.inverter_error: QLabel = self.ui.inverter_id_error
+        self.lbl_serial_number: QLabel = self.ui.lbl_serial_number
+        self.serial_number: QLineEdit = self.ui.serial_number
+        self.inverter_error: QLabel = self.ui.lbl_inverter_error
 
         self.files_grid: QTreeWidget = self.ui.treeWidget
 
@@ -134,7 +134,7 @@ class FilesView(UiBase):
 
         # Bind click events
         self.btn_login.clicked.connect(self._login_clicked)
-        self.inverter_id.returnPressed.connect(self._sync_now_clicked)
+        self.serial_number.returnPressed.connect(self._sync_now_clicked)
 
         self.files_grid.itemClicked.connect(self.controller.file_item_clicked)
 
@@ -178,7 +178,7 @@ class FilesView(UiBase):
         self.enable_file_buttons(False)
         self.btn_sync_now.setDisabled(True)
 
-        self.inverter_id.setReadOnly(False)  #TODO: Link to whether or not they have admin access
+        self.serial_number.setReadOnly(False)  #TODO: Link to whether or not they have admin access
         self.show_inverter_error(None)
 
 
@@ -232,7 +232,7 @@ class FilesView(UiBase):
         self.btn_reset_notes.setDisabled(not changed)
 
     def set_serial_number(self, serial_number: str):
-        self.inverter_id.setText(serial_number)
+        self.serial_number.setText(serial_number)
 
     def inverter_error_handler(self, error):
         if error.type is InverterNotFoundException:  #Twisted wraps errors in its own class
@@ -246,8 +246,8 @@ class FilesView(UiBase):
         self.lbl_not_logged_in.setHidden(not enabled)
         self.btn_login.setHidden(not enabled)
 
-        self.lbl_inverter_id.setHidden(enabled)
-        self.inverter_id.setHidden(enabled)
+        self.lbl_serial_number.setHidden(enabled)
+        self.serial_number.setHidden(enabled)
         self.inverter_error.setHidden(enabled)
 
     def show_file_details(self, association):

@@ -80,8 +80,8 @@ class API:
         }
 
     get_association_str = """
-        query ($inverterId: ID!) {
-            getInverterAssociations(inverterId: $inverterId) {
+        query ($serialNumber: String) {
+            getInverterAssociations(serialNumber: $serialNumber) {
                 items {
                     id
                     customer { name }
@@ -96,11 +96,11 @@ class API:
         }
     """
 
-    def _get_association_query(self, inverter_id: str):
+    def _get_association_query(self, serial_number: str):
         return {
             "query": self.get_association_str,
             "variables": {
-                "inverterId": inverter_id
+                "serialNumber": serial_number
             }
         }
 
@@ -132,8 +132,8 @@ class API:
         response = await self._make_request(self._get_inverter_query(inverter_id))
         return response['data']['getInverter']
 
-    async def get_associations(self, inverter_id: str):
-        response = await self._make_request(self._get_association_query(inverter_id))
+    async def get_associations(self, serial_number: str):
+        response = await self._make_request(self._get_association_query(serial_number))
         message = safe_get(response, ['errors', 0, 'message']) or ''
         if ('Unable to find inverter' in message):
             raise InverterNotFoundException(message)
