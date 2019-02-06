@@ -6,8 +6,14 @@ import attr
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QBrush, QTextCursor
 from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QLabel, \
-    QPlainTextEdit, QBoxLayout, QHBoxLayout, QGridLayout
+    QPlainTextEdit, QGridLayout
 from twisted.internet.defer import ensureDeferred
+
+
+# noinspection PyUnreachableCode
+if False:  # Tell the editor about the type, but don't invoke a cyclic depedency
+    from epyqlib.device import DeviceInterface
+
 
 from epyqlib.tabs.files.graphql import InverterNotFoundException
 
@@ -57,6 +63,8 @@ class FilesView(UiBase):
     check_icon = u'✅'
     question_icon = u'❓'
 
+    device_interface: 'DeviceInterface' = attr.ib(init=False)
+
     time_format = '%l:%M%p %m/%d'
 
     ui = attr.ib(factory=Ui)
@@ -86,6 +94,8 @@ class FilesView(UiBase):
         self.controller = FilesController(self)
         self.controller.setup()
 
+    def set_device_interface(self, device_interface):
+        self.device_interface = device_interface
 
     def tab_selected(self):
         self.controller.tab_selected()
@@ -102,7 +112,7 @@ class FilesView(UiBase):
 
         self.lbl_inverter_id: QLabel = self.ui.lbl_inverter_id
         self.inverter_id: QLineEdit = self.ui.inverter_id
-        self.inverter_id_error: QLabel = self.ui.inverter_id_error
+        self.inverter_error: QLabel = self.ui.inverter_id_error
 
         self.files_grid: QTreeWidget = self.ui.treeWidget
 
@@ -124,12 +134,12 @@ class FilesView(UiBase):
 
         # Bind click events
         self.btn_login.clicked.connect(self._login_clicked)
-        self.inverter_id.returnPressed.connect(self.controller.sync_now_clicked)
+        self.inverter_id.returnPressed.connect(self._sync_now_clicked)
 
         self.files_grid.itemClicked.connect(self.controller.file_item_clicked)
 
         self.btn_save_file_as.clicked.connect(self._save_file_as_clicked)
-        self.btn_sync_now.clicked.connect(self.controller.sync_now_clicked)
+        self.btn_sync_now.clicked.connect(self._sync_now_clicked)
 
         self.notes.textChanged.connect(self._notes_changed)
         self.btn_reset_notes.clicked.connect(self._reset_notes)
@@ -164,12 +174,12 @@ class FilesView(UiBase):
         self.btn_save_file_as.setDisabled(not enable)
         self.btn_send_to_inverter.setDisabled(not enable)
 
-    def setup_buttons(self):
+    def initialize_ui(self):
         self.enable_file_buttons(False)
         self.btn_sync_now.setDisabled(True)
 
         self.inverter_id.setReadOnly(False)  #TODO: Link to whether or not they have admin access
-        self.show_inverter_id_error(None)
+        self.show_inverter_error(None)
 
 
     def _remove_all_children(self, parent: QTreeWidgetItem):
@@ -199,6 +209,15 @@ class FilesView(UiBase):
         row.setText(Cols.association, rel_text)
 
     ### Action
+    def _sync_now_clicked(self):
+        ensureDeferred(self.controller.sync_now())
+
+    def _login_clicked(self):
+        ensureDeferred(self.controller.login_clicked())
+
+    def _save_file_as_clicked(self):
+        ensureDeferred(self.controller.save_file_as_clicked())
+
     def _notes_changed(self):
         ensureDeferred(self._disable_notes_buttons())
 
@@ -212,9 +231,12 @@ class FilesView(UiBase):
         self.btn_save_notes.setDisabled(not changed)
         self.btn_reset_notes.setDisabled(not changed)
 
+    def set_serial_number(self, serial_number: str):
+        self.inverter_id.setText(serial_number)
+
     def inverter_error_handler(self, error):
         if error.type is InverterNotFoundException:  #Twisted wraps errors in its own class
-            self.show_inverter_id_error("Error: Inverter ID not found.")
+            self.show_inverter_error("Error: Inverter ID not found.")
         else:
             raise error
 
@@ -226,6 +248,7 @@ class FilesView(UiBase):
 
         self.lbl_inverter_id.setHidden(enabled)
         self.inverter_id.setHidden(enabled)
+        self.inverter_error.setHidden(enabled)
 
     def show_file_details(self, association):
         if association is not None:
@@ -244,17 +267,12 @@ class FilesView(UiBase):
         self.btn_send_to_inverter.setDisabled(not enabled)
         self.btn_save_file_as.setDisabled(not enabled)
 
-    def show_inverter_id_error(self, error):
+    def show_inverter_error(self, error):
         if error is None:
-            self.inverter_id_error.setText("")
+            self.inverter_error.setText("")
         else:
-            self.inverter_id_error.setText(f"<font color='red'>{error}</font>")
+            self.inverter_error.setText(f"<font color='red'>{error}</font>")
 
-    def _login_clicked(self):
-        ensureDeferred(self.controller.login_clicked())
-
-    def _save_file_as_clicked(self):
-        ensureDeferred(self.controller.save_file_as_clicked())
 
 
 

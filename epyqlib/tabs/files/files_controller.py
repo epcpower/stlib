@@ -46,7 +46,7 @@ class FilesController:
 
         self.view.bind()
         self.view.populate_tree()
-        self.view.setup_buttons()
+        self.view.initialize_ui()
 
         logged_in = self.aws_login_manager.is_logged_in()
         self.view.show_logged_out_warning(not logged_in)
@@ -159,11 +159,8 @@ class FilesController:
 
     ## Lifecycle events
     def tab_selected(self):
-        if self.view.inverter_id.text() == '':
-            self.view.inverter_id.setText('TestInv')
-
         if self.configuration.get(Vars.auto_sync):
-            self.sync_and_schedule()
+            ensureDeferred(self.sync_and_schedule())
 
     ## UI Events
     async def login_clicked(self):
@@ -185,16 +182,25 @@ class FilesController:
             shutil.copy2(self.cache_manager.get_file_path(hash), destination)
 
     async def sync_and_schedule(self):
-        self.fetch_files(self.view.inverter_id.text())
-        # self.sync_timer = twisted.internet.reactor.callLater(300, self.sync_and_schedule)
-        await self.api.subscribe(self.file_updated)
+        await self.sync_now()
 
-    def sync_now_clicked(self):
-        self._sync_now()
+        if len(self.view.inverter_id.text()) > 0:
+            await self.api.subscribe(self.file_updated)
 
-    def _sync_now(self):
-        self.view.show_inverter_id_error(None)
-        self.fetch_files(self.view.inverter_id.text())
+    async def sync_now(self):
+        self.view.show_inverter_error(None)
+
+        # If InverterId is not set and we're connected, get inverter serial #
+        if self.view.inverter_id.text() == '':
+            if not self.view.device_interface.get_connected_status().connected:
+                self.view.show_inverter_error('Bus is disconnected. Unable to get Inverter Serial Number')
+                return
+            serial_number = await self.view.device_interface.get_serial_number()
+
+            self.view.inverter_id.setText(serial_number)
+
+        if len(self.view.inverter_id.text()) > 0:
+            await self.fetch_files(self.view.inverter_id.text())
 
     def file_updated(self, action, payload):
         if (action == 'created'):
@@ -225,26 +231,20 @@ class FilesController:
             self.view.show_file_details(mapping.association)
             self.view.enable_file_action_buttons(True)
 
-    def fetch_files(self, inverter_id):
-        deferred = ensureDeferred(self.get_inverter_associations(inverter_id))
-        # deferred.addCallback(self.view.show_files)
-        deferred.addErrback(self.inverter_error_handler)
-        deferred.addErrback(show_error_dialog)
-
-    def inverter_error_handler(self, error):
-        if error.type is InverterNotFoundException:  # Twisted wraps errors in its own class
-            self.view.show_inverter_id_error("Error: Inverter ID not found.")
-        else:
-            raise error
+    async def fetch_files(self, inverter_id):
+        try:
+            await self.get_inverter_associations(inverter_id)
+        except InverterNotFoundException:
+            self.view.show_inverter_error("Error: Inverter ID not found.")
 
     ## Application events
-    def login_status_changed(self, logged_in: bool):
+    async def login_status_changed(self, logged_in: bool):
         self.view.show_logged_out_warning(not logged_in)
         self.view.btn_sync_now.setDisabled(not logged_in)
         self.view.enable_file_buttons(logged_in)
 
         if logged_in:
-            self._sync_now()
+            await self.sync_now()
 
     ## Notes
     def set_original_notes(self, notes: str):

@@ -1,18 +1,26 @@
+import inspect
+
 from PyQt5.QtCore import QObject
-from typing import Callable
+from typing import Callable, Coroutine
+
+from twisted.internet.defer import ensureDeferred
 
 from epyqlib.tabs.files.configuration import Configuration, Vars
 
+
+## Async function that takes a bool whether or not the user was just logged in
+LoginListener = Callable[[bool], Coroutine]
 
 class AwsLoginManager():
 ### TODO: Wire up this stub
     _instance = None
 
+
     def __init__(self):
         if self._instance is not None:
             raise Exception("Tried to create another instance of AwsLoginManager although one already exists.")
         self._logged_in = False
-        self._listeners: [Callable[[bool], None]] = []
+        self._listeners: [LoginListener] = []
 
 
     @staticmethod
@@ -39,13 +47,15 @@ class AwsLoginManager():
     def _notify_listeners(self):
         # if login was successful, notify listeners
         for listener in self._listeners:
-            listener(self._logged_in)
+            result = listener(self._logged_in)
+            if inspect.iscoroutine(result):
+                ensureDeferred(result)
 
     def get_credentials(self):
         pass
 
-    def register_listener(self, listener: Callable[[None], None]):
+    def register_listener(self, listener: LoginListener):
         self._listeners.append(listener)
 
-    def remove_listener(self, listener: Callable[[None], None]):
+    def remove_listener(self, listener: LoginListener):
         self._listeners.remove(listener)

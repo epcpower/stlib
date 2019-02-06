@@ -1264,9 +1264,14 @@ class FrameTimeout(epyqlib.canneo.QtCanListener):
 
 @attr.s
 class DeviceInterface:
-    device = attr.ib()
+    device: Device = attr.ib()
 
-    async def get_serial_number(self):
+    @attr.s(slots=True, auto_attribs=True)
+    class TransmitStatus:
+        connected: bool
+        transmitting: bool
+
+    async def get_serial_number(self) -> str:
         serial_number_signal = self.device.nvs.signal_from_names(
             'SN',
             'SerialNumber',
@@ -1277,11 +1282,16 @@ class DeviceInterface:
             meta=(epyqlib.nv.MetaEnum.value,),
         )
 
-        serial_number = int(
+        serial_number = str(
             serial_number_response[0][serial_number_signal.status_signal],
         )
 
         return serial_number
+
+    def get_connected_status(self) -> TransmitStatus:
+        return DeviceInterface.TransmitStatus(connected=self.device.bus_online, transmitting=self.device.bus_tx)
+
+
 
 
 if __name__ == '__main__':
