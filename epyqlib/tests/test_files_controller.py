@@ -14,16 +14,16 @@ from epyqlib.tests.utils.test_fixtures import temp_dir
 @pytest.inlineCallbacks
 @pytest.mark.skip(reason="Could break at any time if database changes")
 def test_get_associations():
-    controller = FilesController()
+    view = MagicMock(spec=FilesView)
+    controller = FilesController(view)
 
-    deferred = ensureDeferred(controller.get_inverter_associations("TestInv"))
-    output = yield deferred
-    assert output is not None
-    assert output['model'] is not None
-    assert output['model'][0] is not None
+    deferred = ensureDeferred(controller.get_inverter_associations("0"))
+    results = yield deferred
+
+    view.attach_row_to_parent.assert_called()
 
 
-# @pytest.mark.skip(reason="Just for local testing")
+@pytest.mark.skip(reason="Just for local testing")
 @pytest.inlineCallbacks
 def test_get_file(temp_dir):
     view = MagicMock(spec=FilesView)

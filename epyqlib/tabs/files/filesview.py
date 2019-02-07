@@ -1,4 +1,5 @@
 import pathlib
+from datetime import datetime
 from enum import Enum
 
 import PyQt5.uic
@@ -186,6 +187,12 @@ class FilesView(UiBase):
         while parent.childCount() > 0:
             parent.removeChild(parent.child(0))
 
+    def enable_grid_sorting(self, enable: bool):
+        self.files_grid.setSortingEnabled(enable)
+
+        if enable is True:
+            self.files_grid.sortByColumn(Cols.filename, Qt.SortOrder.AscendingOrder)
+
 
     def attach_row_to_parent(self, type: str, filename):
         parents = {
@@ -272,6 +279,9 @@ class FilesView(UiBase):
             self.inverter_error.setText("")
         else:
             self.inverter_error.setText(f"<font color='red'>{error}</font>")
+
+    def show_sync_time(self, time: datetime):
+        self.lbl_last_sync.setText(f'Last sync at:{time.strftime(self.time_format)}')
 
 
 

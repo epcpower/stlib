@@ -1,5 +1,4 @@
 import hashlib
-import json
 import os
 from os import path
 
@@ -11,9 +10,7 @@ class CacheManager:
         self._ensure_dir(cache_dir)
         self._cache_dir = cache_dir
 
-        self._verify_hashes()
-
-    def _verify_hashes(self):
+    def verify_cache(self):
         for filename in self.hashes():
             hash = self._md5(filename)
             if (hash != filename):

@@ -29,7 +29,7 @@ class FilesController:
         self.view = view
         self.api = API()
         self.old_notes: str = None
-        self.last_sync: datetime = None
+        self._last_sync: datetime = None
 
         self.bucket_manager = BucketManager()
         self.cache_manager = CacheManager()
@@ -55,17 +55,13 @@ class FilesController:
         self._show_local_logs()
 
     ## Sync Info Methods
-    def _set_sync_time(self) -> str:
-        self.last_sync = datetime.now()
-        return self.get_sync_time()
-
-    def get_sync_time(self) -> str:
-        return self.last_sync.strftime(self.view.time_format)
+    def _set_sync_time(self) -> None:
+        self._last_sync = datetime.now()
 
     ## Data fetching
     async def get_inverter_associations(self, serial_number: str):
         associations = await self.api.get_associations(serial_number)
-        self.view.files_grid.setSortingEnabled(False)
+        self.view.enable_grid_sorting(False)
         for association in associations:
             if association['file'] is None:
                 print(f"[Files Controller] WARNING: Association {association['id']} returned with null file associated")
@@ -83,12 +79,10 @@ class FilesController:
             # Render either the new or updated association
             self.render_association_to_row(association, row)
 
-        self.view.files_grid.setSortingEnabled(True)
-        self.view.files_grid.sortByColumn(Cols.filename, Qt.SortOrder.AscendingOrder)
+        self.view.enable_grid_sorting(True)
         self._set_sync_time()
-        self.view.lbl_last_sync.setText(f'Last sync at:{self.get_sync_time()}')
+        self.view.show_sync_time(self._last_sync)
 
-        await self.sync_files()
 
     async def sync_files(self):
         missing_hashes = set()
@@ -159,6 +153,7 @@ class FilesController:
 
     ## Lifecycle events
     def tab_selected(self):
+        self.cache_manager.verify_cache()
         if self.configuration.get(Vars.auto_sync):
             ensureDeferred(self.sync_and_schedule())
 
@@ -234,6 +229,7 @@ class FilesController:
     async def fetch_files(self, serial_number):
         try:
             await self.get_inverter_associations(serial_number)
+            await self.sync_files()
         except InverterNotFoundException:
             self.view.show_inverter_error("Error: Inverter ID not found.")
 
