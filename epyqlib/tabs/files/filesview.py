@@ -4,10 +4,10 @@ from enum import Enum
 
 import PyQt5.uic
 import attr
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QColor, QBrush, QTextCursor
 from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QLabel, \
-    QPlainTextEdit, QGridLayout
+    QPlainTextEdit, QGridLayout, QMenu
 from twisted.internet.defer import ensureDeferred
 
 
@@ -128,9 +128,6 @@ class FilesView(UiBase):
         self.btn_save_notes: QPushButton = self.ui.save_notes
         self.btn_reset_notes: QPushButton = self.ui.reset_notes
 
-        self.btn_save_file_as: QPushButton = self.ui.save_file_as
-        self.btn_send_to_inverter: QPushButton = self.ui.send_to_inverter
-
         self.lbl_last_sync: QLabel = self.ui.last_sync
         self.btn_sync_now: QPushButton = self.ui.sync_now
 
@@ -140,7 +137,6 @@ class FilesView(UiBase):
 
         self.files_grid.itemClicked.connect(self.controller.file_item_clicked)
 
-        self.btn_save_file_as.clicked.connect(self._save_file_as_clicked)
         self.btn_sync_now.clicked.connect(self._sync_now_clicked)
 
         self.notes.textChanged.connect(self._notes_changed)
@@ -172,12 +168,11 @@ class FilesView(UiBase):
         self.section_headers.fault_logs = make_entry("Fault Logs")
         self.section_headers.other = make_entry("Other files")
 
-    def enable_file_buttons(self, enable):
-        self.btn_save_file_as.setDisabled(not enable)
-        self.btn_send_to_inverter.setDisabled(not enable)
 
     def initialize_ui(self):
-        self.enable_file_buttons(False)
+        self.files_grid.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.files_grid.customContextMenuRequested.connect(self._render_context_menu)
+
         self.btn_sync_now.setDisabled(True)
 
         self.serial_number.setReadOnly(False)  #TODO: Link to whether or not they have admin access
@@ -193,6 +188,15 @@ class FilesView(UiBase):
 
         if enable is True:
             self.files_grid.sortByColumn(Cols.filename, Qt.SortOrder.AscendingOrder)
+
+    def set_serial_number(self, serial_number: str):
+        self.serial_number.setText(serial_number)
+
+    def inverter_error_handler(self, error):
+        if error.type is InverterNotFoundException:  # Twisted wraps errors in its own class
+            self.show_inverter_error("Error: Inverter ID not found.")
+        else:
+            raise error
 
 
     def attach_row_to_parent(self, type: str, filename):
@@ -223,9 +227,6 @@ class FilesView(UiBase):
     def _login_clicked(self):
         ensureDeferred(self.controller.login_clicked())
 
-    def _save_file_as_clicked(self):
-        ensureDeferred(self.controller.save_file_as_clicked())
-
     def _notes_changed(self):
         ensureDeferred(self._disable_notes_buttons())
 
@@ -239,14 +240,29 @@ class FilesView(UiBase):
         self.btn_save_notes.setDisabled(not changed)
         self.btn_reset_notes.setDisabled(not changed)
 
-    def set_serial_number(self, serial_number: str):
-        self.serial_number.setText(serial_number)
+    def _render_context_menu(self, position: QPoint):
+        item = self.files_grid.itemAt(position)
 
-    def inverter_error_handler(self, error):
-        if error.type is InverterNotFoundException:  #Twisted wraps errors in its own class
-            self.show_inverter_error("Error: Inverter ID not found.")
-        else:
-            raise error
+        menu = QMenu(self.files_grid)
+
+        scratch = menu.addAction("Send to scratch")
+        active = menu.addAction("Send to active")
+        inverter = menu.addAction("Send to inverter")
+        save_as = menu.addAction("Save file as...")
+
+        action = menu.exec(self.files_grid.viewport().mapToGlobal(position))
+
+        if action is None:
+            pass
+        elif action is active:
+            pass
+        elif action is inverter:
+            pass
+        elif action is scratch:
+            print("[Files View] Scratch menu item clicked")
+        elif action is save_as:
+            ensureDeferred(self.controller.save_file_as_clicked(item))
+
 
 
     ### UI Update methods
@@ -271,10 +287,6 @@ class FilesView(UiBase):
             self.version.clear()
             self.notes.setReadOnly(True)
             self.notes.clear()
-
-    def enable_file_action_buttons(self, enabled):
-        self.btn_send_to_inverter.setDisabled(not enabled)
-        self.btn_save_file_as.setDisabled(not enabled)
 
     def show_inverter_error(self, error):
         if error is None:

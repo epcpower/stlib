@@ -51,7 +51,6 @@ class FilesController:
 
         logged_in = self.aws_login_manager.is_logged_in()
         self.view.show_logged_out_warning(not logged_in)
-        self.view.enable_file_buttons(logged_in)
 
         self._show_local_logs()
 
@@ -165,8 +164,11 @@ class FilesController:
     async def login_clicked(self):
         self.aws_login_manager.show_login_window(self.view.files_grid)
 
-    async def save_file_as_clicked(self):
-        map = self._get_mapping_for_row(self.view.files_grid.currentItem())
+    async def save_file_as_clicked(self, item: QTreeWidgetItem = None):
+        if item is None:
+            item = self.view.files_grid.currentItem()
+
+        map = self._get_mapping_for_row(item)
         hash = map.association['file']['hash']
         if hash not in self.cache_manager.hashes():
             await self.sync_file(hash)
@@ -183,7 +185,6 @@ class FilesController:
     async def sync_now(self):
         self.view.show_inverter_error(None)
 
-        unsubscribe: Coroutine = self.api.unsubscribe()
 
         serial_number = self.view.serial_number.text()
         # If InverterId is not set and we're connected, get inverter serial #
@@ -195,6 +196,8 @@ class FilesController:
 
             self.view.serial_number.setText(serial_number)
 
+
+        unsubscribe: Coroutine = self.api.unsubscribe()
 
         try:
             await self._fetch_files(self.view.serial_number.text())
@@ -229,11 +232,9 @@ class FilesController:
     def file_item_clicked(self, item: QTreeWidgetItem, column: int):
         if (item in get_values(self.view.section_headers)):
             self.view.show_file_details(None)
-            self.view.enable_file_action_buttons(False)
         else:
             mapping: AssociationMapping = next(a for a in self.associations.values() if a.row == item)
             self.view.show_file_details(mapping.association)
-            self.view.enable_file_action_buttons(True)
 
     async def _fetch_files(self, serial_number):
         """
@@ -247,7 +248,6 @@ class FilesController:
     async def login_status_changed(self, logged_in: bool):
         self.view.show_logged_out_warning(not logged_in)
         self.view.btn_sync_now.setDisabled(not logged_in)
-        self.view.enable_file_buttons(logged_in)
 
         if logged_in:
             await self.sync_now()
