@@ -61,6 +61,9 @@ class FilesController:
 
     ## Data fetching
     async def get_inverter_associations(self, serial_number: str):
+        """
+        :raises InverterNotFoundException
+        """
         associations = await self.api.get_associations(serial_number)
         self.view.enable_grid_sorting(False)
         for association in associations:
@@ -85,7 +88,7 @@ class FilesController:
         self.view.show_sync_time(self._last_sync)
 
 
-    async def sync_files(self):
+    async def _sync_files(self):
         missing_hashes = set()
         for key, mapping in self.associations.items():
             # mapping is of type AssociationMapping
@@ -180,10 +183,11 @@ class FilesController:
     async def sync_now(self):
         self.view.show_inverter_error(None)
 
-        unsubscribe: Coroutine = self.api.unsubscribe() if self.api.is_subscribed() else None
+        unsubscribe: Coroutine = self.api.unsubscribe()
 
+        serial_number = self.view.serial_number.text()
         # If InverterId is not set and we're connected, get inverter serial #
-        if self.view.serial_number.text() == '':
+        if serial_number == '':
             if not self.view.device_interface.get_connected_status().connected:
                 self.view.show_inverter_error('Bus is disconnected. Unable to get Inverter Serial Number')
                 return
@@ -191,14 +195,16 @@ class FilesController:
 
             self.view.serial_number.setText(serial_number)
 
-        if len(self.view.serial_number.text()) > 0:
-            await self.fetch_files(self.view.serial_number.text())
 
-        if unsubscribe is not None:
+        try:
+            await self._fetch_files(self.view.serial_number.text())
+        except InverterNotFoundException:
+            self.view.show_inverter_error("Error: Inverter ID not found.")
+            return
+        finally:
             await unsubscribe
 
-        if len(self.view.serial_number.text()) > 0:
-            await self.api.subscribe(self.file_updated)
+        await self.api.subscribe(self.file_updated)
 
     def file_updated(self, action, payload):
         if (action == 'created'):
@@ -229,12 +235,13 @@ class FilesController:
             self.view.show_file_details(mapping.association)
             self.view.enable_file_action_buttons(True)
 
-    async def fetch_files(self, serial_number):
-        try:
-            await self.get_inverter_associations(serial_number)
-            await self.sync_files()
-        except InverterNotFoundException:
-            self.view.show_inverter_error("Error: Inverter ID not found.")
+    async def _fetch_files(self, serial_number):
+        """
+        :raises InverterNotFoundException
+        """
+        await self.get_inverter_associations(serial_number)
+        await self._sync_files()
+
 
     ## Application events
     async def login_status_changed(self, logged_in: bool):
@@ -244,6 +251,8 @@ class FilesController:
 
         if logged_in:
             await self.sync_now()
+        else:
+            await self.api.unsubscribe()
 
     ## Notes
     def set_original_notes(self, notes: str):

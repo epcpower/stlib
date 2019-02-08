@@ -133,6 +133,9 @@ class API:
         return response['data']['getInverter']
 
     async def get_associations(self, serial_number: str):
+        """
+        :raises InverterNotFoundException
+        """
         response = await self._make_request(self._get_association_query(serial_number))
         message = safe_get(response, ['errors', 0, 'message']) or ''
         if ('Unable to find inverter' in message):
@@ -175,7 +178,8 @@ class API:
         return self.ws_handler.is_subscribed()
 
     async def unsubscribe(self):
-        self.ws_handler.disconnect()
+        if self.ws_handler.is_subscribed():
+            self.ws_handler.disconnect()
 
 
 def main(reactor):

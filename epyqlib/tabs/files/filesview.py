@@ -119,6 +119,7 @@ class FilesView(UiBase):
 
         self.assigned_by: QLineEdit = self.ui.assigned_by
         self.assigned_time: QLineEdit = self.ui.assigned_time
+        self.description: QLineEdit = self.ui.description
         self.filename: QLineEdit = self.ui.filename
         self.upload_time: QLineEdit = self.ui.upload_time
         self.version: QLineEdit = self.ui.version
@@ -261,6 +262,7 @@ class FilesView(UiBase):
         if association is not None:
             self.filename.setText(association['file']['filename'])
             self.version.setText(association['file']['version'])
+            self.description.setText(association['file']['description'])
             self.controller.set_original_notes(association['file']['notes'])
             self.notes.setPlainText(association['file']['notes'])
             self.notes.setReadOnly(False)
