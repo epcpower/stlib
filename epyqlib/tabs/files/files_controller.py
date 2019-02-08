@@ -6,6 +6,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
 from twisted.internet.defer import ensureDeferred
 from twisted.internet.interfaces import IDelayedCall
+from typing import Coroutine
 
 from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
 from epyqlib.tabs.files.bucket_manager import BucketManager
@@ -155,7 +156,7 @@ class FilesController:
     def tab_selected(self):
         self.cache_manager.verify_cache()
         if self.configuration.get(Vars.auto_sync):
-            ensureDeferred(self.sync_and_schedule())
+            ensureDeferred(self.sync_now())
 
     ## UI Events
     async def login_clicked(self):
@@ -176,14 +177,10 @@ class FilesController:
         if destination != '':
             shutil.copy2(self.cache_manager.get_file_path(hash), destination)
 
-    async def sync_and_schedule(self):
-        await self.sync_now()
-
-        if len(self.view.serial_number.text()) > 0:
-            await self.api.subscribe(self.file_updated)
-
     async def sync_now(self):
         self.view.show_inverter_error(None)
+
+        unsubscribe: Coroutine = self.api.unsubscribe() if self.api.is_subscribed() else None
 
         # If InverterId is not set and we're connected, get inverter serial #
         if self.view.serial_number.text() == '':
@@ -196,6 +193,12 @@ class FilesController:
 
         if len(self.view.serial_number.text()) > 0:
             await self.fetch_files(self.view.serial_number.text())
+
+        if unsubscribe is not None:
+            await unsubscribe
+
+        if len(self.view.serial_number.text()) > 0:
+            await self.api.subscribe(self.file_updated)
 
     def file_updated(self, action, payload):
         if (action == 'created'):

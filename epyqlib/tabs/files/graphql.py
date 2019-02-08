@@ -171,6 +171,9 @@ class API:
         url = mqttInfo['url']
         self.ws_handler.connect(url, client_id, topics, message_handler)
 
+    def is_subscribed(self):
+        return self.ws_handler.is_subscribed()
+
     async def unsubscribe(self):
         self.ws_handler.disconnect()
 

@@ -13,7 +13,7 @@ class WebSocketHandler():
         self.topics: {str: str}
         self._callback: Callable[[str, dict], None]
         self.loopingCall: LoopingCall
-        self.client: mqtt.Client
+        self.client: mqtt.Client = None
         self.topics: {str: str}
 
 
@@ -63,6 +63,9 @@ class WebSocketHandler():
         self.client.disconnect()
         self.client = None
         self.loopingCall.stop()
+
+    def is_subscribed(self):
+        return self.client is not None
 
     def _on_connect(self, client, userdata, flags, rc):
         print("[Graphql Websocket] On connect")
