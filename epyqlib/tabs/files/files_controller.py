@@ -136,16 +136,16 @@ class FilesController:
 
             if association.get('customer'):
                 relationship = Relationships.customer
-                rel_text = association['customer']['name'] + model_name
+                rel_text = association['customer']['name'] + "," + model_name
             elif association.get('site'):
                 relationship = Relationships.site
-                rel_text = association['site']['name'] + model_name
+                rel_text = association['site']['name'] + "," + model_name
             else:
                 relationship = Relationships.model
                 rel_text = "All" + model_name
         else:
             relationship = Relationships.inverter
-            rel_text = association['inverter']['serialNumber']
+            rel_text = "SN: " + association['inverter']['serialNumber']
 
         self.view.show_relationship(row, relationship, rel_text)
 
