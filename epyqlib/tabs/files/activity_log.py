@@ -21,8 +21,12 @@ class FaultClearedEvent():
     faultCode: str
     type = "fault-cleared"
 
+@attr.s(slots=True, auto_attribs=True)
+class PushToInverterEvent():
+    type = "push-to-inverter"
 
-EventDetails = Union[FaultClearedEvent, ParamSetEvent]
+
+EventDetails = Union[FaultClearedEvent, ParamSetEvent, PushToInverterEvent]
 
 
 @attr.s(slots=True, auto_attribs=True)
@@ -61,5 +65,6 @@ class ActivityLog:
 
     def add(self, event: Event):
         self._activity_cache.append(event)
+        self._notify_listeners(event)
 
 
