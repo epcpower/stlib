@@ -7,6 +7,8 @@ from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
 from twisted.internet.defer import ensureDeferred
 from twisted.internet.interfaces import IDelayedCall
 
+from epyqlib.tabs.files.activity_log import ActivityLog, Event
+from epyqlib.tabs.files.activity_syncer import ActivitySyncer
 from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
 from epyqlib.tabs.files.bucket_manager import BucketManager
 from epyqlib.tabs.files.cache_manager import CacheManager
@@ -26,19 +28,21 @@ class FilesController:
     from epyqlib.tabs.files.filesview import FilesView
     def __init__(self, view: FilesView):
         self.view = view
-        self.api = API()
         self.old_notes: str = None
         self._last_sync: datetime = None
 
+        self.activity_log = ActivityLog()
+        self.api = API()
+        self.activity_syncer = ActivitySyncer(self.activity_log, self.api)
+
+        self.aws_login_manager = AwsLoginManager.get_instance()
         self.bucket_manager = BucketManager()
         self.cache_manager = CacheManager()
+        self.configuration = Configuration.get_instance()
         self.log_manager = LogManager("logs")
         self.log_rows = {}
-        self.aws_login_manager = AwsLoginManager.get_instance()
-        self.configuration = Configuration.get_instance()
-        self.associations: [str, AssociationMapping] = {}
 
-        self.sync_timer: IDelayedCall = None
+        self.associations: [str, AssociationMapping] = {}
 
     def setup(self):
         self.aws_login_manager.register_listener(self.login_status_changed)
@@ -47,12 +51,15 @@ class FilesController:
         self.view.populate_tree()
         self.view.initialize_ui()
 
-        self.api.test_connection() # May need to also register a listener to be notified if we go offline?
+        ensureDeferred(self.api.test_connection()) # May need to also register a listener to be notified if we go offline?
 
         logged_in = self.aws_login_manager.is_logged_in()
         self.view.show_logged_out_warning(not logged_in)
 
+        self.activity_log.register_listener(self.activity_syncer.listener)
+
         self._show_local_logs()
+
 
     ## Sync Info Methods
     def _set_sync_time(self) -> None:
@@ -235,6 +242,11 @@ class FilesController:
         else:
             mapping: AssociationMapping = next(a for a in self.associations.values() if a.row == item)
             self.view.show_file_details(mapping.association)
+
+    def send_to_inverter(self, row: QTreeWidgetItem):
+        map = self._get_mapping_for_row(row)
+
+        self.activity_log.add(Event.new_param_set_event(self.view.serial_number.text(), 'FakeUser', 'TestParam', 'TestValue'))
 
     async def _fetch_files(self, serial_number):
         """

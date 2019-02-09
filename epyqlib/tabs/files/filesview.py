@@ -257,7 +257,7 @@ class FilesView(UiBase):
         elif action is active:
             pass
         elif action is inverter:
-            pass
+            self.controller.send_to_inverter(item)
         elif action is scratch:
             print("[Files View] Scratch menu item clicked")
         elif action is save_as:

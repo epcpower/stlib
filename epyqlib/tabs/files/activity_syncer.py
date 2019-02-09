@@ -1,0 +1,30 @@
+import attr
+
+from epyqlib.tabs.files.activity_log import ActivityLog, Event
+from epyqlib.tabs.files.graphql import API
+
+
+@attr.s(slots=True, auto_attribs=True)
+class ActivitySyncer():
+    activityLog: ActivityLog
+    api: API
+    syncing: bool = attr.ib(default=False)
+
+    async def listener(self, _: Event):
+        if self.api.is_offline is True:
+            return
+
+        if self.syncing is True:
+            return
+
+        self.syncing = True
+        try:
+            while self.activityLog.has_cached_events() is True:
+                event: Event = self.activityLog.read_oldest_event()
+                result = await self.api.create_activity(event)
+                self.activityLog.remove(event)
+        finally:
+            self.syncing = False
+
+
+

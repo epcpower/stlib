@@ -9,6 +9,7 @@ from twisted.internet.error import DNSLookupError
 from twisted.python.failure import Failure
 from twisted.web.iweb import IResponse
 
+from epyqlib.tabs.files.activity_log import Event
 from epyqlib.tabs.files.websocket_handler import WebSocketHandler
 from epyqlib.utils.general import safe_get
 
@@ -122,6 +123,44 @@ class API:
             "variables": {}
         }
 
+
+
+    #   createActivity(inverterId: String!, timestamp: String!, type: String!, customerId: String, siteId: String, actionJson: String!): Activity!
+    _create_activity = """
+        mutation Name (
+            $inverterId: String!,
+            $timestamp: String!,
+            $type: String!,
+            $actionJson: String!
+        ){
+            createActivity(
+                inverterId: $inverterId,
+                timestamp: $timestamp,
+                type: $type,
+                actionJson: $actionJson
+            ) {
+                  inverterId
+                  customerId
+                  siteId
+                  timestamp
+                  actionJson
+                  type
+                  createdBy
+            }
+        }
+    """
+
+    def _get_create_activity_mutation(self, inverter_id: str, timestamp: str, type: str, action_json: str):
+        return {
+            "query": self._create_activity,
+            "variables": {
+                "actionJson": action_json,
+                "inverterId": inverter_id,
+                "timestamp": timestamp,
+                "type": type
+            }
+        }
+
     async def _make_request(self, body):
         url = self.server_info["url"]
         headers = self.server_info["headers"]
@@ -160,6 +199,13 @@ class API:
             raise InverterNotFoundException(message)
 
         return response['data']['getInverterAssociations']['items']
+
+    async def create_activity(self, event: Event):
+        details_json = json.dumps(event.details)
+        request_body = self._get_create_activity_mutation(event.inverterId, event.timestamp, event.type, details_json)
+        print("[Graphql] Sending create activity request: " + json.dumps(request_body))
+        response = await self._make_request(request_body)
+        print(json.dumps(response))
 
     async def test_connection(self):
         try:
