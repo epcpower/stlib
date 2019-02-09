@@ -5,6 +5,7 @@ from typing import Callable
 import treq
 from twisted.internet import reactor
 from twisted.internet.defer import ensureDeferred
+from twisted.internet.error import DNSLookupError
 from twisted.python.failure import Failure
 from twisted.web.iweb import IResponse
 
@@ -21,6 +22,7 @@ class InverterNotFoundException(Exception):
 
 class API:
     ws_handler = WebSocketHandler()
+    is_offline = False
 
     server_info = {
         "url": "https://b3oofrroujeutdd4zclqlwedhm.appsync-api.us-west-2.amazonaws.com/graphql",
@@ -104,6 +106,22 @@ class API:
             }
         }
 
+    _ping_query = """
+        query {
+            __schema {
+                 types {
+                     name
+                 }
+            }
+        }
+    """
+
+    def _get_ping_query(self):
+        return {
+            "query": self._ping_query,
+            "variables": {}
+        }
+
     async def _make_request(self, body):
         url = self.server_info["url"]
         headers = self.server_info["headers"]
@@ -142,6 +160,14 @@ class API:
             raise InverterNotFoundException(message)
 
         return response['data']['getInverterAssociations']['items']
+
+    async def test_connection(self):
+        try:
+            response = await self._make_request(self._get_ping_query())
+            print("[Graphql] Connection test succeeded.")
+        except DNSLookupError:
+            print("[Graphql] Connection test failed. Setting offline mode to true.")
+            self.is_offline = True
 
     def awai(self, coroutine):
         # Or `async.run(coroutine)`
@@ -202,6 +228,7 @@ def err(error: Failure):
     print(error.getBriefTraceback())
     reactor.stop()
 
+
 if __name__ == "__main__":
     # from twisted.internet.task import react
     # react(main)
@@ -210,4 +237,5 @@ if __name__ == "__main__":
     d = ensureDeferred(api.subscribe())
     d.addCallback(succ)
     d.addErrback(err)
+    # ensureDeferred(api.test_connection())
     reactor.run()

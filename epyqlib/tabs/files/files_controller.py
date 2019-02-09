@@ -1,12 +1,11 @@
 import shutil
 from datetime import datetime
+from typing import Coroutine
 
 import attr
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
 from twisted.internet.defer import ensureDeferred
 from twisted.internet.interfaces import IDelayedCall
-from typing import Coroutine
 
 from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
 from epyqlib.tabs.files.bucket_manager import BucketManager
@@ -14,7 +13,6 @@ from epyqlib.tabs.files.cache_manager import CacheManager
 from epyqlib.tabs.files.configuration import Configuration, Vars
 from epyqlib.tabs.files.filesview import Cols, Relationships, get_values, FilesView
 from epyqlib.tabs.files.log_manager import LogManager
-from epyqlib.utils.twisted import errbackhook as show_error_dialog
 from .graphql import API, InverterNotFoundException
 
 
@@ -48,6 +46,8 @@ class FilesController:
         self.view.bind()
         self.view.populate_tree()
         self.view.initialize_ui()
+
+        self.api.test_connection() # May need to also register a listener to be notified if we go offline?
 
         logged_in = self.aws_login_manager.is_logged_in()
         self.view.show_logged_out_warning(not logged_in)
