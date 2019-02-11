@@ -242,10 +242,11 @@ class FilesController:
             mapping: AssociationMapping = next(a for a in self.associations.values() if a.row == item)
             self.view.show_file_details(mapping.association)
 
-    def send_to_inverter(self, row: QTreeWidgetItem):
+    async def send_to_inverter(self, row: QTreeWidgetItem):
         map = self._get_mapping_for_row(row)
 
-        self.activity_log.add(Event.new_param_set_event(self.view.serial_number.text(), 'FakeUser', 'TestParam', 'TestValue'))
+        event = Event.new_param_set_event(self.view.serial_number.text(), 'FakeUser', 'TestParam', 'TestValue')
+        await self.activity_log.add(event)
 
     async def _fetch_files(self, serial_number):
         """

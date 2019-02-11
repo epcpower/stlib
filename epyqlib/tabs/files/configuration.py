@@ -9,6 +9,9 @@ class Configuration:
         self.required_keys = [key for key in Vars.__dict__.keys() if not key.startswith("__")]
 
         self.directory = directory or os.path.join(os.getcwd(), 'sync')
+        if not os.path.lexists(self.directory):
+            os.mkdir(self.directory)
+
         self.filename = os.path.join(self.directory, filename)
         self.file_error = False
         if os.path.exists(self.filename):
@@ -45,6 +48,9 @@ class Configuration:
     def get(self, key):
         return self.config.get(key)
 
+    def get_bool(self, key):
+        return self.get(key) or False
+
     def set(self, key, value):
         self.config[key] = value
         self._write_file()
@@ -62,6 +68,7 @@ class ConfigurationError(Exception):
 
 class Vars:
     auto_sync = "auto_sync"
+    offline_mode = "offline_mode"
     provided_serial_number = "provided_serial_number"
     unique_inverters = "unique_inverters"
     username = "username"

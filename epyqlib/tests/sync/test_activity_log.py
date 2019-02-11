@@ -1,6 +1,8 @@
 import os
 
 # noinspection PyUnresolvedReferences
+import time
+
 import pytest
 from twisted.internet.defer import ensureDeferred
 
@@ -69,3 +71,36 @@ def test_writing_and_reading_from_file(temp_dir):
 
     event2 = activity_log.read_oldest_event()
     assert event1.inverter_id == event2.inverter_id
+
+@pytest.skip("Just here for benchmarking to make sure it's not too slow")
+@pytest.inlineCallbacks
+def test_benchmark_mass_writes(temp_dir):
+    activity_log = ActivityLog(temp_dir)
+    print(f"Using: {temp_dir}")
+
+    start = time.time()
+    for _ in range(1000):
+        event = Event.new_push_to_inverter("testInvId", "testUserId")
+        yield ensureDeferred(activity_log.add(event))
+    elapsed = time.time() - start
+    print(f"Writing 1000 events took {elapsed:.2f}")
+
+    time.sleep(1)
+
+    start = time.time()
+    event = Event.new_push_to_inverter("testInvId", "testUserId")
+    yield ensureDeferred(activity_log.add(event))
+    elapsed = time.time() - start
+    print(f"Writing last event took {elapsed:.2f}")
+
+    activity_log = ActivityLog(temp_dir)
+    start = time.time()
+    activity_log._read_cache_file()
+    elapsed = time.time() - start
+    print(f"Reading 1001 events took {elapsed:.2f}")
+
+
+
+
+
+
