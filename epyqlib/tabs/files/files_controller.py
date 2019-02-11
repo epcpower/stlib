@@ -5,7 +5,6 @@ from typing import Coroutine
 import attr
 from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
 from twisted.internet.defer import ensureDeferred
-from twisted.internet.interfaces import IDelayedCall
 
 from epyqlib.tabs.files.activity_log import ActivityLog, Event
 from epyqlib.tabs.files.activity_syncer import ActivitySyncer

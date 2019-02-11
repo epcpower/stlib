@@ -202,7 +202,7 @@ class API:
 
     async def create_activity(self, event: Event):
         details_json = json.dumps(event.details)
-        request_body = self._get_create_activity_mutation(event.inverterId, event.timestamp, event.type, details_json)
+        request_body = self._get_create_activity_mutation(event.inverter_id, event.timestamp, event.type, details_json)
         print("[Graphql] Sending create activity request: " + json.dumps(request_body))
         response = await self._make_request(request_body)
         print(json.dumps(response))

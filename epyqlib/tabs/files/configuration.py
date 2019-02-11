@@ -5,10 +5,11 @@ import os
 class Configuration:
     _instance = None
 
-    def __init__(self, directory=os.getcwd(), filename='epyq-config.json'):
+    def __init__(self, directory=None, filename='epyq-config.json'):
         self.required_keys = [key for key in Vars.__dict__.keys() if not key.startswith("__")]
 
-        self.filename = os.path.join(directory, filename)
+        self.directory = directory or os.path.join(os.getcwd(), 'sync')
+        self.filename = os.path.join(self.directory, filename)
         self.file_error = False
         if os.path.exists(self.filename):
             self._read_file()
