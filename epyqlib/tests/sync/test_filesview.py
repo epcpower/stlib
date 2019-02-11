@@ -1,6 +1,7 @@
 import io
 import textwrap
 
+import pytest
 from PyQt5 import QtWidgets
 import PyQt5.uic
 
@@ -28,9 +29,11 @@ def test_build(qtbot):
 
     assert view.parent() is None
     assert isinstance(view.ui, epyqlib.tabs.files.filesview.Ui)
-    assert hasattr(view.ui, 'something')
+    assert hasattr(view.ui, 'files_grid')
 
 
+
+@pytest.mark.skip("Not clear what the value of this test is")
 def test_qt_build(qtbot):
     widget = QtWidgets.QWidget()
     qtbot.add_widget(widget)
@@ -43,9 +46,10 @@ def test_qt_build(qtbot):
 
     assert view.parent() is widget
     assert isinstance(view.ui, epyqlib.tabs.files.filesview.Ui)
-    assert hasattr(view.ui, 'something')
+    assert hasattr(view.ui, 'files_grid')
 
 
+@pytest.mark.skip("Not clear what the value of this test is")
 def test_from_ui(qtbot):
     ui_src = io.StringIO(textwrap.dedent("""\
     <?xml version="1.0" encoding="UTF-8"?>

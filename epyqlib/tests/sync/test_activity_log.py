@@ -1,15 +1,14 @@
 import os
-
-# noinspection PyUnresolvedReferences
 import time
 
 import pytest
 from twisted.internet.defer import ensureDeferred
 
-from epyqlib.tests.utils.test_fixtures import temp_dir
 from epyqlib.tabs.files.activity_log import ActivityLog, Event
+# noinspection PyUnresolvedReferences
+from epyqlib.tests.utils.test_fixtures import temp_dir
 
-
+@pytest.inlineCallbacks
 def test_activity_log(temp_dir):
     activity_log = ActivityLog(temp_dir)
 
@@ -23,10 +22,11 @@ def test_activity_log(temp_dir):
     listener = Listener()
 
     activity_log.register_listener(listener.inc)
-    activity_log.add(Event.new_push_to_inverter("", ""))
+    yield ensureDeferred(activity_log.add(Event.new_push_to_inverter("", "")))
 
     assert listener.type == "push-to-inverter"
 
+@pytest.inlineCallbacks
 def test_removing(temp_dir):
     activity_log = ActivityLog(temp_dir)
 
@@ -36,12 +36,12 @@ def test_removing(temp_dir):
 
     assert len(activity_log._activity_cache) == 0
 
-    activity_log.add(Event.new_push_to_inverter("", ""))
+    yield ensureDeferred(activity_log.add(Event.new_push_to_inverter("", "")))
 
     assert len(activity_log._activity_cache) == 1
 
     activity_log.register_listener(RemovingListener().event)
-    activity_log.add(Event.new_push_to_inverter("", ""))
+    yield ensureDeferred(activity_log.add(Event.new_push_to_inverter("", "")))
 
     assert len(activity_log._activity_cache) == 1
 
@@ -72,8 +72,8 @@ def test_writing_and_reading_from_file(temp_dir):
     event2 = activity_log.read_oldest_event()
     assert event1.inverter_id == event2.inverter_id
 
-@pytest.skip("Just here for benchmarking to make sure it's not too slow")
 @pytest.inlineCallbacks
+@pytest.mark.skip("Just here for benchmarking to make sure it's not too slow")
 def test_benchmark_mass_writes(temp_dir):
     activity_log = ActivityLog(temp_dir)
     print(f"Using: {temp_dir}")

@@ -117,7 +117,7 @@ class FilesView(UiBase):
         self.serial_number: QLineEdit = self.ui.serial_number
         self.inverter_error: QLabel = self.ui.lbl_inverter_error
 
-        self.files_grid: QTreeWidget = self.ui.treeWidget
+        self.files_grid: QTreeWidget = self.ui.files_grid
 
         self.assigned_by: QLineEdit = self.ui.assigned_by
         self.assigned_time: QLineEdit = self.ui.assigned_time

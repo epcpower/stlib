@@ -434,7 +434,7 @@
       </layout>
      </item>
      <item row="2" column="0">
-      <widget class="QTreeWidget" name="treeWidget">
+      <widget class="QTreeWidget" name="files_grid">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
          <horstretch>0</horstretch>

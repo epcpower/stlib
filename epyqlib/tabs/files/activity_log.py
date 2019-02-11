@@ -72,11 +72,15 @@ class ActivityLog:
     def register_listener(self, listener: Callable):
         self._listeners.append(listener)
 
-    def _notify_listeners(self, event: Event):
+    async def _notify_listeners(self, event: Event):
+        coroutines = []
         for listener in self._listeners:
             result = listener(event)
             if inspect.iscoroutine(result):
-                ensureDeferred(result)
+                coroutines.append(result)
+
+        for coroutine in coroutines:
+            await coroutine
 
     ## Adding and removing events
     async def add(self, event: Event):
@@ -84,7 +88,7 @@ class ActivityLog:
 
         cache_write = self._write_cache_file()
 
-        self._notify_listeners(event)
+        await self._notify_listeners(event)
 
         await cache_write
 

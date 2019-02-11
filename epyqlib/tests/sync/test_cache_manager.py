@@ -17,6 +17,7 @@ def test_hashing(temp_dir):
     open(path.join(temp_dir, empty_file_hash), "w").close()
 
     manager = CacheManager(temp_dir)
+    manager.verify_cache()
 
     assert empty_file_hash in manager.hashes()
     assert "test" not in manager.hashes()
