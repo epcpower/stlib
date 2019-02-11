@@ -55,6 +55,17 @@ def test_writing_to_file(temp_dir):
 
     assert os.path.exists(cache_file)
 
-    # with open(cache_file, "r") as file:
-    #     for lines in file.readlines():
-    #         print(lines, end='')
+@pytest.inlineCallbacks
+def test_writing_and_reading_from_file(temp_dir):
+    activity_log = ActivityLog(temp_dir)
+    print(f"Using: {temp_dir}")
+    event1 = Event.new_push_to_inverter("testInvId", "testUserId")
+    yield ensureDeferred(activity_log.add(event1))
+
+    activity_log = ActivityLog(temp_dir)
+
+    assert activity_log.has_cached_events() is False
+    activity_log._read_cache_file()
+
+    event2 = activity_log.read_oldest_event()
+    assert event1.inverter_id == event2.inverter_id

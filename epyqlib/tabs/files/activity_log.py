@@ -1,5 +1,5 @@
 import inspect
-import json
+import pickle
 from collections import Callable
 from datetime import datetime
 import time
@@ -27,6 +27,8 @@ from twisted.internet.defer import ensureDeferred
 
 
 # EventDetails = Union[FaultClearedEvent, ParamSetEvent, PushToInverterEvent]
+from typing import Union
+
 from epyqlib.tabs.files.configuration import Configuration
 
 
@@ -46,17 +48,6 @@ class Event():
     @staticmethod
     def new_param_set_event(inverter_id: str, user_id: str, param_name: str, param_value: str):
         return Event(inverter_id, user_id, "param-set", {"paramName": param_name, "paramValue": param_value})
-
-    def to_dict(self):
-        return {
-            'details': self.details,
-            'inverterId': self.inverter_id,
-            'timestamp': self.timestamp,
-            'type': self.type,
-            'userId': self.user_id
-        }
-
-
 
 class ActivityLog:
     _instance = None
@@ -105,7 +96,7 @@ class ActivityLog:
     def has_cached_events(self):
         return len(self._activity_cache) > 0
 
-    def read_oldest_event(self):
+    def read_oldest_event(self) -> Union[Event, None]:
         if not self.has_cached_events():
             return None
 
@@ -115,7 +106,7 @@ class ActivityLog:
     def _read_cache_file(self):
         if path.exists(self._cache_file):
             with open(self._cache_file, 'rb') as cache:
-                cached_events = json.load(cache)
+                cached_events = pickle.load(cache)
                 if not isinstance(cached_events, list):
                     raise Exception(f"Error reading from {self._cache_file}. Not a JSON file with a list as the root.")
                 self._activity_cache = cached_events + self._activity_cache
@@ -129,11 +120,8 @@ class ActivityLog:
 
         self._last_write_time = now
 
-        e: Event
-        # event_dict = map(lambda e: e.to_dict(), self._activity_cache)
-        event_dicts = [e.to_dict() for e in self._activity_cache]
+        with open(self._cache_file, 'wb') as file_ref:
+            pickle.dump(self._activity_cache, file_ref)
 
-        with open(self._cache_file, 'w') as file_ref:
-            json.dump(event_dicts, file_ref, indent=2)
 
 
