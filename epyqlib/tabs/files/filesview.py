@@ -7,7 +7,7 @@ import attr
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QColor, QBrush, QTextCursor
 from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QLabel, \
-    QPlainTextEdit, QGridLayout, QMenu
+    QPlainTextEdit, QGridLayout, QMenu, QTextEdit
 from twisted.internet.defer import ensureDeferred
 
 
@@ -63,6 +63,8 @@ class FilesView(UiBase):
     gray_brush = QBrush(QColor(22, 22, 22, 22))
     check_icon = u'✅'
     question_icon = u'❓'
+
+    _log_text = ""
 
     device_interface: 'DeviceInterface' = attr.ib(init=False)
 
@@ -130,6 +132,8 @@ class FilesView(UiBase):
 
         self.lbl_last_sync: QLabel = self.ui.last_sync
         self.btn_sync_now: QPushButton = self.ui.sync_now
+
+        self.event_log: QTextEdit = self.ui.event_log
 
         # Bind click events
         self.btn_login.clicked.connect(self._login_clicked)
@@ -276,6 +280,7 @@ class FilesView(UiBase):
 
     def show_file_details(self, association):
         if association is not None:
+            self.add_log_line(datetime.now(), f"Clicked on {association['file']['filename']}")
             self.filename.setText(association['file']['filename'])
             self.version.setText(association['file']['version'])
             self.description.setText(association['file']['description'])
@@ -283,6 +288,7 @@ class FilesView(UiBase):
             self.notes.setPlainText(association['file']['notes'])
             self.notes.setReadOnly(False)
         else:
+            self.add_log_line(datetime.now(), f"Clicked on section header")
             self.filename.clear()
             self.version.clear()
             self.notes.setReadOnly(True)
@@ -296,6 +302,11 @@ class FilesView(UiBase):
 
     def show_sync_time(self, time: datetime):
         self.lbl_last_sync.setText(f'Last sync at:{time.strftime(self.time_format)}')
+
+    def add_log_line(self, timestamp: datetime, message: str):
+        new_text = f"<font color='lightGray'>[{timestamp.strftime(self.time_format).strip()}]</font> {message}<br/>"
+        self._log_text = new_text + self._log_text
+        self.event_log.setText(self._log_text)
 
 
 
