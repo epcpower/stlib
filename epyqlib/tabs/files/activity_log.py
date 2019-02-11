@@ -1,39 +1,22 @@
 import inspect
 import pickle
+import time
 from collections import Callable
 from datetime import datetime
-import time
 from os import path
+from typing import Union
 
 import attr
-from twisted.internet.defer import ensureDeferred
-
-
-# @attr.s(slots=True, auto_attribs=True)
-# class ParamSetEvent():
-#     paramName: str
-#     paramValue: str
-#     type = "param-set"
-#
-#
-# @attr.s(slots=True, auto_attribs=True)
-# class FaultClearedEvent():
-#     faultCode: str
-#     type = "fault-cleared"
-#
-# @attr.s(slots=True, auto_attribs=True)
-# class PushToInverterEvent():
-#     type: str = attr.ib(default="push-to-inverter")
-
-
-# EventDetails = Union[FaultClearedEvent, ParamSetEvent, PushToInverterEvent]
-from typing import Union
 
 from epyqlib.tabs.files.configuration import Configuration
 
-
 @attr.s(slots=True, auto_attribs=True)
 class Event():
+    class Type():
+        load_param_file = "load-param-file"
+        push_to_inverter = "push-to-inverter"
+        param_set = "param-set"
+
     inverter_id: str
     user_id: str
     # details: EventDetails
@@ -42,12 +25,17 @@ class Event():
     timestamp: str = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
 
     @staticmethod
-    def new_push_to_inverter(inverter_id: str, user_id: str):
-        return Event(inverter_id, user_id, "push-to-inverter", {})
+    def new_load_param_file(inverter_id: str, user_id: str, file_id: str, file_hash: str, filename: str):
+        details = {"fileId": file_id, "fileHash": file_hash, "filename": filename}
+        return Event(inverter_id, user_id, Event.Type.load_param_file, details)
 
     @staticmethod
     def new_param_set_event(inverter_id: str, user_id: str, param_name: str, param_value: str):
-        return Event(inverter_id, user_id, "param-set", {"paramName": param_name, "paramValue": param_value})
+        return Event(inverter_id, user_id, Event.Type.param_set, {"paramName": param_name, "paramValue": param_value})
+
+    @staticmethod
+    def new_push_to_inverter(inverter_id: str, user_id: str):
+        return Event(inverter_id, user_id, Event.Type.push_to_inverter, {})
 
 class ActivityLog:
     _instance = None

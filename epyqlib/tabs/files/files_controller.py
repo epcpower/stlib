@@ -1,6 +1,6 @@
 import shutil
 from datetime import datetime
-from typing import Coroutine
+from typing import Coroutine, Callable
 
 import attr
 from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
@@ -55,6 +55,7 @@ class FilesController:
         logged_in = self.aws_login_manager.is_logged_in()
         self.view.show_logged_out_warning(not logged_in)
 
+        self.activity_log.register_listener(lambda event: self.view.add_log_line(LogRenderer.render_event(event)))
         self.activity_log.register_listener(self.activity_syncer.listener)
 
         self._show_local_logs()
@@ -245,7 +246,14 @@ class FilesController:
     async def send_to_inverter(self, row: QTreeWidgetItem):
         map = self._get_mapping_for_row(row)
 
-        event = Event.new_param_set_event(self.view.serial_number.text(), 'FakeUser', 'TestParam', 'TestValue')
+        file = map.association['file']
+        event = Event.new_load_param_file(
+            self.view.serial_number.text(),
+            'FakeUser',
+            file['id'],
+            file['hash'],
+            file['filename']
+        )
         await self.activity_log.add(event)
 
     async def _fetch_files(self, serial_number):
@@ -287,4 +295,17 @@ class FilesController:
             ctime = self.log_manager.stat(filename).st_ctime
             ctime = datetime.fromtimestamp(ctime)
             row.setText(Cols.created_at, ctime.strftime(self.view.time_format))
+
+
+class LogRenderer():
+    @staticmethod
+    def render_event(event: Event) -> str:
+        if (event.type == Event.Type.load_param_file):
+            return f"Param file {event.details['filename']} loaded."  # (Hash: {event.details['fileHash'][:8]})"
+        elif (event.type == Event.Type.param_set):
+            return f"Parameter \"{event.details['paramName']}\" set to \"{event.details['paramValue']}\"."
+        elif (event.type == Event.Type.push_to_inverter):
+            return "All settings pushed to inverter."
+        else:
+            return f"Unknown event type: {event.type}. Details: {event.details}"
 

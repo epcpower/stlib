@@ -10,7 +10,6 @@ from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit
     QPlainTextEdit, QGridLayout, QMenu, QTextEdit
 from twisted.internet.defer import ensureDeferred
 
-
 # noinspection PyUnreachableCode
 if False:  # Tell the editor about the type, but don't invoke a cyclic depedency
     from epyqlib.device import DeviceInterface
@@ -280,7 +279,7 @@ class FilesView(UiBase):
 
     def show_file_details(self, association):
         if association is not None:
-            self.add_log_line(datetime.now(), f"Clicked on {association['file']['filename']}")
+            self.add_log_line(f"Clicked on {association['file']['filename']}")
             self.filename.setText(association['file']['filename'])
             self.version.setText(association['file']['version'])
             self.description.setText(association['file']['description'])
@@ -288,7 +287,7 @@ class FilesView(UiBase):
             self.notes.setPlainText(association['file']['notes'])
             self.notes.setReadOnly(False)
         else:
-            self.add_log_line(datetime.now(), f"Clicked on section header")
+            self.add_log_line(f"Clicked on section header")
             self.filename.clear()
             self.version.clear()
             self.notes.setReadOnly(True)
@@ -303,7 +302,8 @@ class FilesView(UiBase):
     def show_sync_time(self, time: datetime):
         self.lbl_last_sync.setText(f'Last sync at:{time.strftime(self.time_format)}')
 
-    def add_log_line(self, timestamp: datetime, message: str):
+    def add_log_line(self, message: str):
+        timestamp = datetime.now()
         new_text = f"<font color='lightGray'>[{timestamp.strftime(self.time_format).strip()}]</font> {message}<br/>"
         self._log_text = new_text + self._log_text
         self.event_log.setText(self._log_text)
