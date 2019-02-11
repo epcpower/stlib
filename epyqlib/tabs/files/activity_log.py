@@ -13,16 +13,40 @@ from epyqlib.tabs.files.configuration import Configuration
 @attr.s(slots=True, auto_attribs=True)
 class Event():
     class Type():
+        fault_cleared = "fault-cleared"
+        firmware_flashed = "firmware-flashed"
+        inverter_to_nv = "inverter-to-nv"
         load_param_file = "load-param-file"
         push_to_inverter = "push-to-inverter"
         param_set = "param-set"
+        new_raw_log = "new-raw-log"
 
     inverter_id: str
     user_id: str
-    # details: EventDetails
     type: str
     details: dict
     timestamp: str = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    @staticmethod
+    def new_fault_cleared(inverter_id: str, user_id: str, fault_code: Union[str, int]):
+        if isinstance(fault_code, int):
+            fault_code = str(fault_code)
+
+        details = {"faultCode": fault_code}
+        return Event(inverter_id, user_id, Event.Type.fault_cleared, details)
+
+    @staticmethod
+    def new_firmware_flashed(inverter_id: str, user_id: str, build_id: str):
+        details = {"buildId": build_id}
+        return Event(inverter_id, user_id, Event.Type.firmware_flashed, details)
+
+    @staticmethod
+    def new_inverter_to_nv(inverter_id: str, user_id: str):
+        return Event(inverter_id, user_id, Event.Type.inverter_to_nv, {})
+
+    @staticmethod
+    def new_param_set_event(inverter_id: str, user_id: str, param_name: str, param_value: str):
+        return Event(inverter_id, user_id, Event.Type.param_set, {"paramName": param_name, "paramValue": param_value})
 
     @staticmethod
     def new_load_param_file(inverter_id: str, user_id: str, file_id: str, file_hash: str, filename: str):
@@ -30,12 +54,13 @@ class Event():
         return Event(inverter_id, user_id, Event.Type.load_param_file, details)
 
     @staticmethod
-    def new_param_set_event(inverter_id: str, user_id: str, param_name: str, param_value: str):
-        return Event(inverter_id, user_id, Event.Type.param_set, {"paramName": param_name, "paramValue": param_value})
-
-    @staticmethod
     def new_push_to_inverter(inverter_id: str, user_id: str):
         return Event(inverter_id, user_id, Event.Type.push_to_inverter, {})
+
+    @staticmethod
+    def new_raw_log(inverter_id: str, user_id: str, filename: str, file_hash: str):
+        details = {"fileHash": file_hash, "filename": filename}
+        return Event(inverter_id, user_id, Event.Type.new_raw_log, details)
 
 class ActivityLog:
     _instance = None
