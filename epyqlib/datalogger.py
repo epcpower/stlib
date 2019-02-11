@@ -14,6 +14,7 @@ import epyqlib.twisted.busproxy
 import epyqlib.twisted.cancalibrationprotocol as ccp
 import epyqlib.twisted.nvs
 import epyqlib.utils.qt
+from epyqlib.tabs.files.log_manager import LogManager
 
 __copyright__ = 'Copyright 2017, EPC Power Corp.'
 __license__ = 'GPLv2+'
@@ -54,13 +55,24 @@ class DataLogger:
 
     def pull_raw_log(self, path):
         d = self._pull_raw_log()
+        # d = twisted.internet.defer.execute(self._pull_raw_log_fake)
         d.addCallback(write_to_file, path=path)
+        d.addCallback(lambda _: LogManager.get_instance().copy_into_cache(path))
 
         d.addErrback(epyqlib.utils.twisted.detour_result,
                      self.progress.fail)
         d.addErrback(epyqlib.utils.twisted.errbackhook)
 
         return d
+
+    ## NOMERGE: Remove this before merging to master
+    # usage: d = twisted.internet.defer.execute(self._pull_raw_log_fake)
+    def _pull_raw_log_fake(self):
+        with open('/Users/benb/Downloads/log.raw', 'rb') as file:
+            data = file.read()
+            self.progress.complete(message=None)
+            return data
+
 
     @twisted.internet.defer.inlineCallbacks
     def _pull_raw_log(self):

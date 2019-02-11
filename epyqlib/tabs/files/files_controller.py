@@ -10,7 +10,7 @@ from epyqlib.tabs.files.activity_log import ActivityLog, Event
 from epyqlib.tabs.files.activity_syncer import ActivitySyncer
 from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
 from epyqlib.tabs.files.bucket_manager import BucketManager
-from epyqlib.tabs.files.cache_manager import CacheManager
+from epyqlib.tabs.files.files_manager import FilesManager
 from epyqlib.tabs.files.configuration import Configuration, Vars
 from epyqlib.tabs.files.filesview import Cols, Relationships, get_values, FilesView
 from epyqlib.tabs.files.log_manager import LogManager
@@ -36,9 +36,9 @@ class FilesController:
 
         self.aws_login_manager = AwsLoginManager.get_instance()
         self.bucket_manager = BucketManager()
-        self.cache_manager = CacheManager()
         self.configuration = Configuration.get_instance()
-        self.log_manager = LogManager("logs")
+        self.cache_manager = FilesManager(self.configuration.directory)
+        self.log_manager = LogManager.init(self.configuration.directory)
         self.log_rows = {}
 
         self.associations: [str, AssociationMapping] = {}

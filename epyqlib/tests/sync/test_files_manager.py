@@ -2,7 +2,7 @@
 import os
 from os import path
 
-from epyqlib.tabs.files.cache_manager import CacheManager
+from epyqlib.tabs.files.files_manager import FilesManager
 
 # noinspection PyUnresolvedReferences
 from epyqlib.tests.utils.test_fixtures import temp_dir
@@ -16,7 +16,7 @@ def test_hashing(temp_dir):
 
     open(path.join(temp_dir, empty_file_hash), "w").close()
 
-    manager = CacheManager(temp_dir)
+    manager = FilesManager(temp_dir)
     manager.verify_cache()
 
     assert empty_file_hash in manager.hashes()

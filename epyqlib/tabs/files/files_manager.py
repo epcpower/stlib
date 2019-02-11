@@ -3,10 +3,10 @@ import os
 from os import path
 
 
-class CacheManager:
+class FilesManager:
 
-    def __init__(self, cache_dir="cache"):
-        cache_dir = path.join(os.getcwd(), cache_dir)
+    def __init__(self, files_dir):
+        cache_dir = path.join(files_dir, "files")
         self._ensure_dir(cache_dir)
         self._cache_dir = cache_dir
 

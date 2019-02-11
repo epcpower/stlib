@@ -1,30 +1,56 @@
 import hashlib
 import json
 import os
+import shutil
 from os import path
 
 
 class LogManager:
-    _hashes_file = path.join(os.getcwd(), 'hashes.json')
+    _instance: 'LogManager' = None
 
-    def __init__(self, cache_dir="cache"):
-        cache_dir = path.join(os.getcwd(), cache_dir)
-        self._ensure_dir(cache_dir)
-        self._cache_dir = cache_dir
+    def __init__(self, files_dir: str):
+        # if LogManager._instance is not None:
+        #     raise Exception("LogManager being created instead of using singleton")
 
-        self._verify_hashes()
+        self._hashes_file = path.join(files_dir, "log-hashes.json")
+        self._cache_dir = path.join(files_dir, "raw")
+        self._ensure_dir(self._cache_dir)
 
-    def _save(self):
+        self._hashes: dict[str, str] = {}
+
+        self._read_hashes_files()
+
+        # self._verify_hashes()
+
+    @staticmethod
+    def get_instance():
+        if LogManager._instance is None:
+            raise Exception("LogManager being used before initialized")
+        return LogManager._instance
+
+    @staticmethod
+    def init(files_dir: str):
+        LogManager._instance = LogManager(files_dir)
+        return LogManager._instance
+
+    def copy_into_cache(self, file_path: str):
+        basename = os.path.basename(file_path)
+        hash = self._md5(file_path)
+        shutil.copy2(file_path, path.join(self._cache_dir, hash))
+        self._hashes[hash] = basename
+        self._save_hashes_file()
+
+
+    def _save_hashes_file(self):
         with open(self._hashes_file, 'w') as file:
             json.dump(self._hashes, file, indent=2)
 
-    def _verify_hashes(self):
+    def _read_hashes_files(self):
         if path.exists(self._hashes_file):
             with open(self._hashes_file, 'r') as hashes:
                 self._hashes = json.load(hashes)
-        else:
-            self._hashes = {}
 
+    def _verify_hashes(self):
         to_remove = []
         # Clear out files that are gone
         for hash, filename in self._hashes.items():
@@ -39,7 +65,7 @@ class LogManager:
             filename = path.join(self._cache_dir, file)
             self._hashes[self._md5(filename)] = file
 
-        self._save()
+        self._save_hashes_file()
 
     def _md5(self, filename: str) -> str:
         md5 = hashlib.md5()

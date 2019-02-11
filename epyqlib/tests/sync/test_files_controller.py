@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 from twisted.internet.defer import ensureDeferred
 
-from epyqlib.tabs.files.cache_manager import CacheManager
+from epyqlib.tabs.files.files_manager import FilesManager
 from epyqlib.tabs.files.files_controller import FilesController
 from epyqlib.tabs.files.filesview import FilesView
 
@@ -31,7 +31,7 @@ def test_get_file(temp_dir):
 
     hash = "52e2678f71a591e9e0edfcf249ff07ae"
 
-    controller.cache_manager = CacheManager(temp_dir)
+    controller.cache_manager = FilesManager(temp_dir)
 
     assert controller.cache_manager.has_hash(hash) is False
 
