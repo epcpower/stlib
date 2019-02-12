@@ -54,8 +54,8 @@ class DataLogger:
             bus=self.bus)
 
     def pull_raw_log(self, path):
-        d = self._pull_raw_log()
-        # d = twisted.internet.defer.execute(self._pull_raw_log_fake)
+        # d = self._pull_raw_log()
+        d = twisted.internet.defer.execute(self._pull_raw_log_fake)
         d.addCallback(write_to_file, path=path)
         d.addCallback(lambda _: LogManager.get_instance().copy_into_cache(path))
 
@@ -68,10 +68,9 @@ class DataLogger:
     ## NOMERGE: Remove this before merging to master
     # usage: d = twisted.internet.defer.execute(self._pull_raw_log_fake)
     def _pull_raw_log_fake(self):
-        with open('/Users/benb/Downloads/log.raw', 'rb') as file:
-            data = file.read()
-            self.progress.complete(message=None)
-            return data
+        self.progress.complete(message=None)
+        from time import time
+        return bytes(str(time()), "utf-8")
 
 
     @twisted.internet.defer.inlineCallbacks

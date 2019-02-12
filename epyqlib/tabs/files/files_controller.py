@@ -285,14 +285,15 @@ class FilesController:
         return (len(self.old_notes) != len(new_notes)) or self.old_notes != new_notes
 
     def _show_local_logs(self):
-        for filename in self.log_manager.filenames():
+        for hash, filename in self.log_manager.items():
             row = self.view.attach_row_to_parent('log', filename)
             self.log_rows[filename] = row
 
             row.setText(Cols.local, self.view.check_icon)
             row.setText(Cols.web, self.view.question_icon)
 
-            ctime = self.log_manager.stat(filename).st_ctime
+            # ctime = self.log_manager.stat(filename).st_ctime
+            ctime = self.log_manager.stat(hash).st_ctime
             ctime = datetime.fromtimestamp(ctime)
             row.setText(Cols.created_at, ctime.strftime(self.view.time_format))
 

@@ -4,6 +4,8 @@ import os
 import shutil
 from os import path
 
+from typing import Tuple
+
 
 class LogManager:
     _instance: 'LogManager' = None
@@ -16,7 +18,7 @@ class LogManager:
         self._cache_dir = path.join(files_dir, "raw")
         self._ensure_dir(self._cache_dir)
 
-        self._hashes: dict[str, str] = {}
+        self._hashes: set[Tuple[str, str]] = set()
 
         self._read_hashes_files()
 
@@ -37,33 +39,38 @@ class LogManager:
         basename = os.path.basename(file_path)
         hash = self._md5(file_path)
         shutil.copy2(file_path, path.join(self._cache_dir, hash))
-        self._hashes[hash] = basename
+        self._hashes.add((hash, basename))
         self._save_hashes_file()
 
 
     def _save_hashes_file(self):
         with open(self._hashes_file, 'w') as file:
-            json.dump(self._hashes, file, indent=2)
+            json.dump(list(self._hashes), file, indent=2)
 
     def _read_hashes_files(self):
         if path.exists(self._hashes_file):
             with open(self._hashes_file, 'r') as hashes:
-                self._hashes = json.load(hashes)
+                lists: list[list[str]] = json.load(hashes)
+
+                # Transform list of lists into set of tuples
+                for pair in lists:
+                    self._hashes.add(tuple(pair))
 
     def _verify_hashes(self):
-        to_remove = []
+        to_remove = set()
         # Clear out files that are gone
-        for hash, filename in self._hashes.items():
+        for item in self._hashes:
+            hash, filename = item
             if not path.exists(path.join(self._cache_dir, filename)):
-                to_remove.append(hash)
+                to_remove.add(item)
 
-        for hash in to_remove:
-            del(self._hashes[hash])
+        for item in to_remove:
+            self._hashes.remove(item)
 
         # Make sure every file on disk is in our hashes
-        for file in os.listdir(self._cache_dir):
-            filename = path.join(self._cache_dir, file)
-            self._hashes[self._md5(filename)] = file
+        for filename in os.listdir(self._cache_dir):
+            full_path = path.join(self._cache_dir, filename)
+            self._hashes.add((self._md5(full_path), filename))
 
         self._save_hashes_file()
 
@@ -83,11 +90,19 @@ class LogManager:
 
         os.mkdir(dir_name)
 
+    def items(self):
+        return self._hashes
+
     def filenames(self):
-        return self._hashes.values()
+        return [t[1] for t in self._hashes]
 
     def has_hash(self, hash: str) -> bool:
-        return hash in self._hashes
+        # return hash in self._hashes
+        try:
+            next(filter(lambda t: t[0] == hash, self._hashes))
+            return True
+        except StopIteration:
+            return False
 
     def get_file_ref(self, filename: str, mode: str):
         return open(path.join(self._cache_dir, filename), mode)
