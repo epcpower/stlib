@@ -7,6 +7,7 @@ import sys
 import textwrap
 import time
 import traceback
+import uuid
 import weakref
 
 import epyqlib.utils.general
@@ -1049,7 +1050,7 @@ def pyqtify_passthrough_properties(original, field_names):
             @property
             def property_(self, name=name):
                 original_ = getattr(self, original)
-                if original_ is None:
+                if original_ is None or isinstance(original_, uuid.UUID):
                     return pyqtify_get(self, name)
 
                 return getattr(original_, name)
@@ -1254,7 +1255,7 @@ class UserRoles(epyqlib.utils.general.AutoNumberIntEnum):
     column_index = None
 
 
-def from_index(index, model):
+def child_text_list_from_index(index, model, recurse=True):
     row_count = model.rowCount(index)
     if row_count == 0:
         return []
@@ -1263,7 +1264,8 @@ def from_index(index, model):
     for i in range(row_count):
         child = model.index(i, 0, index)
         lines.append(child.data())
-        lines.append(from_index(index=child, model=model))
+        if recurse:
+            lines.append(child_text_list_from_index(index=child, model=model))
 
     return lines
 
@@ -1272,7 +1274,11 @@ def indented_text_from_model(model, index=None):
     if index is None:
         index = QtCore.QModelIndex()
 
-    lines = from_index(index=index, model=model)
+    lines = child_text_list_from_index(
+        index=index,
+        model=model,
+        recurse=True,
+    )
     lines = [
         'Root',
         lines,

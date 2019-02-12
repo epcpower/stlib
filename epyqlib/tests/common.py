@@ -126,7 +126,10 @@ def use_locale(*s):
     if len(s) == 0:
         s = ('',)
 
-    old = locale.getlocale(locale.LC_ALL)
+    #use setlocale() to get present settings because reasons:
+    #https://docs.python.org/3/library/locale.html#locale.getlocale
+    #https://docs.python.org/3/library/locale.html#locale.setlocale
+    old = locale.setlocale(locale.LC_ALL)
 
     for name in s:
         try:

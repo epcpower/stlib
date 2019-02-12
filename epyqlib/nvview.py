@@ -799,14 +799,17 @@ class NvView(UiBase):
         d.callback(None)
 
         if action in copy_to_columns:
-            column = copy_to_columns[action]
+            destination_column = copy_to_columns[action]
             model.start_transaction()
+
             for index in selected_indexes:
-                model.setData(
-                    index=index.siblingAtColumn(column),
-                    data=model.data(index=index, role=Qt.EditRole),
-                    role=Qt.EditRole,
+                maybe_copy(
+                    source_column=index.column(),
+                    destination_column=destination_column,
+                    index=index,
+                    model=model,
                 )
+
             model.submit_transaction()
         else:
             for meta, nodes in selected_by_meta.items():
@@ -884,16 +887,17 @@ class NvView(UiBase):
         action = menu.exec(self.ui.tree_view.mapToGlobal(pos))
 
         if action in copy_to_columns:
-            column = copy_to_columns[action]
+            destination_column = copy_to_columns[action]
             model.start_transaction()
             for node in model.all_nv():
                 index = model.index_from_node(node)
-                index = index.siblingAtColumn(source_column)
-                model.setData(
-                    index=index.siblingAtColumn(column),
-                    data=model.data(index=index, role=Qt.EditRole),
-                    role=Qt.EditRole,
+                maybe_copy(
+                    source_column=source_column,
+                    destination_column=destination_column,
+                    index=index,
+                    model=model,
                 )
+
             model.submit_transaction()
 
     # TODO: CAMPid 0347987975t427567139419439349
@@ -922,6 +926,25 @@ class NvView(UiBase):
                 signal,
                 columns=(getattr(epyqlib.nv.Columns.indexes, meta.name),)
             )
+
+
+def maybe_copy(source_column, destination_column, index, model):
+    data = index.siblingAtColumn(source_column).data(role=Qt.EditRole)
+
+    skip = (
+        data is None
+        or data == ''
+        or model.node_from_index(index).secret
+    )
+
+    if skip:
+        return
+
+    model.setData(
+        index=index.siblingAtColumn(destination_column),
+        data=data,
+        role=Qt.EditRole,
+    )
 
 
 if __name__ == '__main__':

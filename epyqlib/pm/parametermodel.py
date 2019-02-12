@@ -119,6 +119,21 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.Boolean(),
         ),
     )
+
+    embedded_getter = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+
+    embedded_setter = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+
     read_only = attr.ib(
         default=False,
         converter=epyqlib.attrsmodel.two_state_checkbox,
@@ -216,6 +231,9 @@ class Parameter(epyqlib.treenode.TreeNode):
                 self.minimum = value
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+    internal_move = epyqlib.attrsmodel.default_internal_move
 
 
 @graham.schemify(tag='group', register=True)
@@ -264,6 +282,10 @@ class Group(epyqlib.treenode.TreeNode):
 
         return True
 
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+    internal_move = epyqlib.attrsmodel.default_internal_move
+
 
 @graham.schemify(tag='enumerations')
 @epyqlib.attrsmodel.ify()
@@ -301,6 +323,10 @@ class Enumerations(epyqlib.treenode.TreeNode):
             return self.tree_parent.can_delete(node=self)
 
         return True
+
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+    internal_move = epyqlib.attrsmodel.default_internal_move
 
 
 @graham.schemify(tag='array_parameter_element')
@@ -444,6 +470,9 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
         return False
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+    internal_move = epyqlib.attrsmodel.default_internal_move
 
 
 @graham.schemify(tag='array_group_element')
@@ -476,6 +505,9 @@ class ArrayGroupElement(epyqlib.treenode.TreeNode):
         return False
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+    internal_move = epyqlib.attrsmodel.default_internal_move
 
 
 class InvalidArrayLength(Exception):
@@ -596,6 +628,10 @@ class Array(epyqlib.treenode.TreeNode):
             return False
 
         return True
+
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+    internal_move = epyqlib.attrsmodel.default_internal_move
 
 
 @graham.schemify(tag='table_array_element', register=True)
@@ -741,6 +777,18 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
         ),
     )
 
+    index = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Integer(allow_none=False),
+        )
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=index,
+        editable=False,
+        no_column=True,
+    )
+
     uuid = epyqlib.attrsmodel.attr_uuid()
 
     original = attr.ib(
@@ -759,6 +807,9 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
         return False
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+    internal_move = epyqlib.attrsmodel.default_internal_move
 
 
 @graham.schemify(tag='table_group_element', register=True)
@@ -802,6 +853,30 @@ class TableGroupElement(epyqlib.treenode.TreeNode):
         ),
     )
 
+    axis = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        )
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=axis,
+        editable=False,
+        no_column=True,
+    )
+
+    curve_index = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Integer(allow_none=True),
+        )
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=curve_index,
+        editable=False,
+        no_column=True,
+    )
+
     uuid = epyqlib.attrsmodel.attr_uuid()
 
     original = attr.ib(default=None)
@@ -818,6 +893,10 @@ class TableGroupElement(epyqlib.treenode.TreeNode):
 
     def can_delete(self, node=None):
         return False
+
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+    internal_move = epyqlib.attrsmodel.default_internal_move
 
 
 @graham.schemify(tag='table_enumeration_reference')
@@ -853,6 +932,10 @@ class TableEnumerationReference(epyqlib.treenode.TreeNode):
     def link(self, enumeration):
         self.enumeration_uuid = enumeration.uuid
 
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+    internal_move = epyqlib.attrsmodel.default_internal_move
+
 
 @graham.schemify(tag='table', register=True)
 @epyqlib.attrsmodel.ify()
@@ -863,6 +946,34 @@ class Table(epyqlib.treenode.TreeNode):
         default='New Table',
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
+        ),
+    )
+
+    embedded_getter = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+
+    embedded_setter = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+
+    active_curve_getter = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+
+    active_curve_setter = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
         ),
     )
 
@@ -888,6 +999,30 @@ class Table(epyqlib.treenode.TreeNode):
     group = attr.ib(default=None)
     epyqlib.attrsmodel.attrib(
         attribute=group,
+        no_column=True,
+    )
+
+    combinations = attr.ib(default=None)
+    epyqlib.attrsmodel.attrib(
+        attribute=combinations,
+        no_column=True,
+    )
+
+    arrays = attr.ib(default=None)
+    epyqlib.attrsmodel.attrib(
+        attribute=arrays,
+        no_column=True,
+    )
+
+    arrays_and_groups = attr.ib(default=None)
+    epyqlib.attrsmodel.attrib(
+        attribute=arrays_and_groups,
+        no_column=True,
+    )
+
+    curve_group_combinations = attr.ib(default=None)
+    epyqlib.attrsmodel.attrib(
+        attribute=curve_group_combinations,
         no_column=True,
     )
 
@@ -969,10 +1104,7 @@ class Table(epyqlib.treenode.TreeNode):
             if child.enumeration_uuid is None:
                 continue
 
-            enumeration, = root.nodes_by_attribute(
-                attribute_value=child.enumeration_uuid,
-                attribute_name='uuid',
-            )
+            enumeration = root.model.node_from_uuid(child.enumeration_uuid)
 
             enumerations.append(enumeration.children)
 
@@ -980,6 +1112,17 @@ class Table(epyqlib.treenode.TreeNode):
             child
             for child in self.children
             if isinstance(child, (Array, Group))
+        ]
+        self.arrays_and_groups = arrays
+        self.arrays = [
+            child
+            for child in self.children
+            if isinstance(child, Array)
+        ]
+        self.groups = [
+            child
+            for child in self.children
+            if isinstance(child, Group)
         ]
 
         with self._ignore_children():
@@ -999,6 +1142,21 @@ class Table(epyqlib.treenode.TreeNode):
             }
 
         product = list(itertools.product(*enumerations))
+
+        self.combinations = product
+
+        self.curve_group_combinations = tuple(
+            epyqlib.utils.general.ordered_unique(
+                tuple(
+                    x
+                    for x in itertools.takewhile(
+                        lambda y: y.tree_parent.name != 'Curves',
+                        combination,
+                    )
+                )
+                for combination in self.combinations
+            )
+        )
 
         model = self.find_root().model
 
@@ -1024,13 +1182,24 @@ class Table(epyqlib.treenode.TreeNode):
                     if isinstance(current.original, uuid.UUID):
                         current.original = model.node_from_uuid(current.original)
 
+                if layer.tree_parent.name == 'Curves':
+                    current.curve_index = int(layer.value)
+
                 if current.tree_parent is None:
                     present.append_child(current)
 
                 present = current
 
-            # for array in (*arrays, *groups):
+            axes = ['x', 'y', 'z']
+            axes_iterator = iter(axes)
             for array in arrays:
+                if isinstance(array, Array):
+                    try:
+                        axis = next(axes_iterator)
+                    except StopIteration:
+                        raise
+                else:
+                    axis = None
                 array_path = path + (array.uuid,)
                 previous = old_by_path.get(array_path)
                 if previous is None:
@@ -1048,10 +1217,12 @@ class Table(epyqlib.treenode.TreeNode):
                             current.original
                         )
 
+                current.axis = axis
+
                 if current.tree_parent is None:
                     present.append_child(current)
 
-                for element in array.children:
+                for index, element in enumerate(array.children):
                     element_path = array_path + (element.uuid,)
                     previous_element = old_by_path.get(element_path)
                     if previous_element is None:
@@ -1068,6 +1239,8 @@ class Table(epyqlib.treenode.TreeNode):
                             current_element.original = model.node_from_uuid(
                                 current_element.original
                             )
+
+                    current_element.index = index
 
                     if current_element.tree_parent is None:
                         current.append_child(current_element)
@@ -1102,6 +1275,22 @@ class Table(epyqlib.treenode.TreeNode):
 
         return not isinstance(node, TableGroupElement)
 
+    def internal_move(self, node, node_to_insert_before):
+        with self._ignore_children():
+            self.remove_child(child=node)
+            if node_to_insert_before is None:
+                self.append_child(node)
+            else:
+                self.insert_child(
+                    i=self.children.index(node_to_insert_before),
+                    child=node,
+                )
+
+        return True
+
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+
 
 @graham.schemify(tag='enumerator')
 @epyqlib.attrsmodel.ify()
@@ -1130,6 +1319,9 @@ class Enumerator(epyqlib.treenode.TreeNode):
         return False
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+    internal_move = epyqlib.attrsmodel.default_internal_move
 
 
 @graham.schemify(tag='sunspec_enumerator')
@@ -1145,8 +1337,9 @@ class SunSpecEnumerator(epyqlib.treenode.TreeNode):
     )
     label = attr.ib(
         default='',
+        convert=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
-            field=marshmallow.fields.String(),
+            field=marshmallow.fields.String(allow_none=True),
         ),
     )
     description = attr.ib(
@@ -1183,6 +1376,9 @@ class SunSpecEnumerator(epyqlib.treenode.TreeNode):
         return False
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+    internal_move = epyqlib.attrsmodel.default_internal_move
 
 
 @graham.schemify(tag='enumeration', register=True)
@@ -1237,6 +1433,10 @@ class Enumeration(epyqlib.treenode.TreeNode):
 
         return True
 
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+    internal_move = epyqlib.attrsmodel.default_internal_move
+
 
 @graham.schemify(tag='access_level')
 @epyqlib.attrsmodel.ify()
@@ -1265,6 +1465,9 @@ class AccessLevel(epyqlib.treenode.TreeNode):
         return False
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+    internal_move = epyqlib.attrsmodel.default_internal_move
 
 
 @graham.schemify(tag='access_levels', register=True)
@@ -1321,6 +1524,10 @@ class AccessLevels(epyqlib.treenode.TreeNode):
 
     def default(self):
         return min(self.children, key=lambda x: x.value)
+
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+    internal_move = epyqlib.attrsmodel.default_internal_move
 
 
 Root = epyqlib.attrsmodel.Root(
@@ -1401,6 +1608,10 @@ columns = epyqlib.attrsmodel.columns(
 
     merge('label', SunSpecEnumerator),
 
+    merge('embedded_getter', Table, Parameter),
+    merge('embedded_setter', Table, Parameter),
+    merge('active_curve_getter', Table),
+    merge('active_curve_setter', Table),
     merge(
         'nv_format',
         Parameter,

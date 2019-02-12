@@ -634,6 +634,62 @@ def test_array_update_children_length():
         assert len(array.children) == n
 
 
+def test_move_enumeration_in_table(sample):
+    uuids_before = {
+        node.uuid
+        for node in sample.table.nodes_by_filter(lambda node: True)
+    }
+
+    table_index = sample.model.index_from_node(sample.table)
+    names_before = epyqlib.utils.qt.child_text_list_from_index(
+        model=sample.model.model,
+        index=table_index,
+        recurse=False,
+    )
+
+    sample.table.update()
+    uuids_after = {
+        node.uuid
+        for node in sample.table.nodes_by_filter(lambda node: True)
+    }
+
+    assert len(uuids_after) == len(uuids_before)
+    assert uuids_after == uuids_before
+
+    node_to_move = sample.table.children[1]
+
+    mime_data = sample.model.mimeData(
+        (sample.model.index_from_node(node_to_move),),
+    )
+
+    sample.model.dropMimeData(
+        data=mime_data,
+        action=QtCore.Qt.MoveAction,
+        row=-1,
+        column=0,
+        parent=sample.model.index_from_node(sample.table),
+    )
+
+    sample.table.update()
+    uuids_after = {
+        node.uuid
+        for node in sample.table.nodes_by_filter(lambda node: True)
+    }
+
+    assert len(uuids_after) == len(uuids_before)
+    assert uuids_after == uuids_before
+
+    names_after = epyqlib.utils.qt.child_text_list_from_index(
+        model=sample.model.model,
+        index=table_index,
+        recurse=False,
+    )
+
+    assert set(names_before) == set(names_after)
+    assert len(names_before) == len(names_after)
+    assert names_before != names_after
+
+
 TestAttrsModel = epyqlib.attrsmodel.build_tests(
     types=epyqlib.pm.parametermodel.types,
     root_type=epyqlib.pm.parametermodel.Root,

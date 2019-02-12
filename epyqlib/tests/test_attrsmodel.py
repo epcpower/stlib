@@ -37,6 +37,14 @@ class Parameter(epyqlib.treenode.TreeNode):
     def __attrs_post_init__(self):
         super().__init__()
 
+    def can_drop_on(self, node):
+        return False
+
+    can_delete = epyqlib.attrsmodel.childless_can_delete
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+    internal_move = epyqlib.attrsmodel.default_internal_move
+
 
 @graham.schemify(tag='group')
 @epyqlib.attrsmodel.ify()
@@ -58,11 +66,34 @@ class Group(epyqlib.treenode.TreeNode):
     def can_drop_on(self, node):
         return isinstance(node, tuple(self.addable_types().values()))
 
+    def can_delete(self, node=None):
+        if node is None:
+            return self.tree_parent.can_delete(node=self)
+
+        return True
+
+    remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
+    child_from = epyqlib.attrsmodel.default_child_from
+    internal_move = epyqlib.attrsmodel.default_internal_move
+
 
 Root = epyqlib.attrsmodel.Root(
     default_name='Parameters',
     valid_types=(Parameter, Group)
 )
+
+types = epyqlib.attrsmodel.Types(
+    types=(
+        Root,
+        Parameter,
+        Group,
+    ),
+)
+
+# TODO: CAMPid 943896754217967154269254167
+def merge(name, *types):
+    return tuple((x, name) for x in types)
+
 
 columns = epyqlib.attrsmodel.columns(
     (
@@ -70,6 +101,14 @@ columns = epyqlib.attrsmodel.columns(
         (Group, 'name'),
     ),
     ((Parameter, 'value'),),
+    merge('uuid', *types.types.values()),
+)
+
+
+TestAttrsModel = epyqlib.attrsmodel.build_tests(
+    types=types,
+    root_type=Root,
+    columns=columns,
 )
 
 

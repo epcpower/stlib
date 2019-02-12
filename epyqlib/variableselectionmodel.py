@@ -314,8 +314,15 @@ class CacheAndRawChunks:
 class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
     binary_loaded = pyqtSignal()
 
-    def __init__(self, nvs, bus, tx_id=0x1FFFFFFF, rx_id=0x1FFFFFF7,
-                 parent=None):
+    def __init__(
+            self,
+            nvs,
+            nv_model,
+            bus,
+            tx_id=0x1FFFFFFF,
+            rx_id=0x1FFFFFF7,
+            parent=None,
+    ):
         checkbox_columns = Columns.fill(False)
         checkbox_columns.name = True
 
@@ -336,6 +343,7 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         )
 
         self.nvs = nvs
+        self.nv_model = nv_model
         self.bus = bus
 
         self.git_hash = None
@@ -601,6 +609,10 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 icon=QMessageBox.Warning,
             )
 
+        destination_column = epyqlib.nv.Columns.indexes.value
+
+        self.nv_model.start_transaction()
+
         for chunk, frame in itertools.zip_longest(
                 chunks, set_frames, fillvalue=cache.new_chunk(0, 0)):
             print('{address}+{size}'.format(
@@ -611,9 +623,21 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             address_signal = frame.signal_by_name('Address')
             bytes_signal = frame.signal_by_name('Bytes')
 
-            address_signal.set_value(chunk._address)
-            bytes_signal.set_value(
-                len(chunk._bytes) // (self.bits_per_byte // 8))
+            index = self.nv_model.index_from_node(address_signal)
+            self.nv_model.setData(
+                index=index.siblingAtColumn(destination_column),
+                data=chunk._address,
+                role=Qt.EditRole,
+            )
+
+            index = self.nv_model.index_from_node(bytes_signal)
+            self.nv_model.setData(
+                index=index.siblingAtColumn(destination_column),
+                data=len(chunk._bytes) // (self.bits_per_byte // 8),
+                role=Qt.EditRole,
+            )
+
+        self.nv_model.submit_transaction()
 
     def record_header_length(self):
         [x] = self.names['DataLogger_RecordHeader']
