@@ -11,7 +11,7 @@ from epyqlib.tabs.files.activity_syncer import ActivitySyncer
 from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
 from epyqlib.tabs.files.bucket_manager import BucketManager
 from epyqlib.tabs.files.files_manager import FilesManager
-from epyqlib.tabs.files.configuration import Configuration, Vars
+from epyqlib.tabs.files.sync_config import SyncConfig, Vars
 from epyqlib.tabs.files.filesview import Cols, Relationships, get_values, FilesView
 from epyqlib.tabs.files.log_manager import LogManager
 from .graphql import API, InverterNotFoundException
@@ -36,9 +36,9 @@ class FilesController:
 
         self.aws_login_manager = AwsLoginManager.get_instance()
         self.bucket_manager = BucketManager()
-        self.configuration = Configuration.get_instance()
-        self.cache_manager = FilesManager(self.configuration.directory)
-        self.log_manager = LogManager.init(self.configuration.directory)
+        self.sync_config = SyncConfig.get_instance()
+        self.cache_manager = FilesManager(self.sync_config.directory)
+        self.log_manager = LogManager.init(self.sync_config.directory)
         self.log_rows = {}
 
         self.associations: [str, AssociationMapping] = {}
@@ -164,7 +164,7 @@ class FilesController:
     ## Lifecycle events
     def tab_selected(self):
         self.cache_manager.verify_cache()
-        if self.configuration.get(Vars.auto_sync):
+        if self.sync_config.get(Vars.auto_sync):
             ensureDeferred(self.sync_now())
 
     ## UI Events
@@ -233,7 +233,6 @@ class FilesController:
         if (action == 'deleted'):
             self.view.remove_row(self.associations[key].row)
             del(self.associations[key])
-
 
 
     def file_item_clicked(self, item: QTreeWidgetItem, column: int):

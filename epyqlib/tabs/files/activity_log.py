@@ -8,7 +8,7 @@ from typing import Union
 
 import attr
 
-from epyqlib.tabs.files.configuration import Configuration
+from epyqlib.tabs.files.sync_config import SyncConfig
 
 @attr.s(slots=True, auto_attribs=True)
 class Event():
@@ -66,7 +66,7 @@ class ActivityLog:
     _instance = None
 
     def __init__(self, file_dir=None):
-        file_dir = file_dir or Configuration.get_instance().directory
+        file_dir = file_dir or SyncConfig.get_instance().directory
 
         self._cache_file = path.join(file_dir, "activity-cache.json")
 

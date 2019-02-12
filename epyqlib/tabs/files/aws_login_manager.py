@@ -5,7 +5,7 @@ from typing import Callable, Coroutine
 
 from twisted.internet.defer import ensureDeferred
 
-from epyqlib.tabs.files.configuration import Configuration, Vars
+from epyqlib.tabs.files.sync_config import SyncConfig, Vars
 
 
 ## Async function that takes a bool whether or not the user was just logged in
@@ -38,7 +38,7 @@ class AwsLoginManager():
         self._notify_listeners()
 
         # Enable auto-sync when the user logs in
-        Configuration.get_instance().set(Vars.auto_sync, True)
+        SyncConfig.get_instance().set(Vars.auto_sync, True)
 
     def log_user_out(self):
         self._logged_in = False

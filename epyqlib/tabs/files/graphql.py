@@ -10,7 +10,7 @@ from twisted.python.failure import Failure
 from twisted.web.iweb import IResponse
 
 from epyqlib.tabs.files.activity_log import Event
-from epyqlib.tabs.files.configuration import Configuration, Vars
+from epyqlib.tabs.files.sync_config import SyncConfig, Vars
 from epyqlib.tabs.files.websocket_handler import WebSocketHandler
 from epyqlib.utils.general import safe_get
 
@@ -24,7 +24,7 @@ class InverterNotFoundException(Exception):
 
 class API:
     ws_handler = WebSocketHandler()
-    is_offline = Configuration.get_instance().get(Vars.offline_mode) or False
+    is_offline = SyncConfig.get_instance().get(Vars.offline_mode) or False
 
     server_info = {
         "url": "https://b3oofrroujeutdd4zclqlwedhm.appsync-api.us-west-2.amazonaws.com/graphql",

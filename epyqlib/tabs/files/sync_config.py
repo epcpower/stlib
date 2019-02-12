@@ -2,7 +2,7 @@ import json
 import os
 
 
-class Configuration:
+class SyncConfig:
     _instance = None
 
     def __init__(self, directory=None, filename='epyq-config.json'):
@@ -23,10 +23,10 @@ class Configuration:
 
     @staticmethod
     def get_instance():
-        if Configuration._instance is None:
-            Configuration._instance = Configuration()
+        if SyncConfig._instance is None:
+            SyncConfig._instance = SyncConfig()
 
-        return Configuration._instance
+        return SyncConfig._instance
 
     def _read_file(self):
         with open(self.filename, 'r') as infile:
@@ -70,5 +70,6 @@ class Vars:
     auto_sync = "auto_sync"
     offline_mode = "offline_mode"
     provided_serial_number = "provided_serial_number"
+    refresh_token = "refresh_token"
     unique_inverters = "unique_inverters"
     username = "username"

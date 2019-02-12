@@ -4,7 +4,7 @@ import time
 
 import pytest
 
-from epyqlib.tabs.files.configuration import Configuration, ConfigurationError, Vars
+from epyqlib.tabs.files.sync_config import SyncConfig, ConfigurationError, Vars
 
 tempdir = tempfile.gettempdir()
 filename = f'test-{int(time.time()) % 100000}.json'
@@ -12,7 +12,7 @@ full_path = os.path.join(tempdir, filename)
 
 def load_configuration():
     print(f'Using temp dir {full_path}')
-    return Configuration(tempdir, filename)
+    return SyncConfig(tempdir, filename)
 
 def cleanup():
     os.unlink(full_path)
