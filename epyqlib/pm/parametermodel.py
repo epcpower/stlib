@@ -26,16 +26,6 @@ def create_abbreviation_attribute():
     )
 
 
-def create_notes_attribute():
-    return attr.ib(
-        default=None,
-        convert=epyqlib.attrsmodel.to_str_or_none,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
-        ),
-    )
-
-
 def create_read_only_attribute():
     return attr.ib(
         default=False,
@@ -44,6 +34,18 @@ def create_read_only_attribute():
             field=marshmallow.fields.Boolean(),
         ),
     )
+
+
+def create_str_or_none_attribute(default=None):
+    return attr.ib(
+        default=default,
+        convert=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+
+create_notes_attribute = create_str_or_none_attribute
 
 
 @graham.schemify(tag='parameter')
@@ -144,19 +146,8 @@ class Parameter(epyqlib.treenode.TreeNode):
         ),
     )
 
-    embedded_getter = attr.ib(
-        default=None,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
-        ),
-    )
-
-    embedded_setter = attr.ib(
-        default=None,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
-        ),
-    )
+    embedded_getter = create_str_or_none_attribute()
+    embedded_setter = create_str_or_none_attribute()
 
     read_only = create_read_only_attribute()
 

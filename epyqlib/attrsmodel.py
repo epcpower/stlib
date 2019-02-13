@@ -41,6 +41,21 @@ class MultipleFoundError(Exception):
     pass
 
 
+def create_reference_attribute():
+    attribute = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=epyqlib.attrsmodel.Reference(allow_none=True),
+        ),
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=attribute,
+        no_column=True,
+    )
+
+    return attribute
+
+
 # TODO: CAMPid 8695426542167924656654271657917491654
 def name_from_uuid(node, value, model):
     if value is None:
@@ -590,6 +605,15 @@ def default_child_from(node):
 
 def default_internal_move(self, node, node_to_insert_before):
     return False
+
+
+@classmethod
+def empty_all_addable_types(cls):
+    return epyqlib.attrsmodel.create_addable_types(())
+
+
+def empty_addable_types(self):
+    return {}
 
 
 def to_source_model(index):
