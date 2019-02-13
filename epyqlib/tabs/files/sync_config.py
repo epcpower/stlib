@@ -1,9 +1,9 @@
 import json
 import os
 
-
 class SyncConfig:
     _instance = None
+    _tag = f'[{__name__}]'
 
     def __init__(self, directory=None, filename='epyq-config.json'):
         self.required_keys = [key for key in Vars.__dict__.keys() if not key.startswith("__")]
@@ -36,8 +36,8 @@ class SyncConfig:
             raise ConfigurationError('Configuration file is not a valid configuration JSON object.')
         for key in self.required_keys:
             if key not in contents.keys():
-                self.file_error = True
-                raise ConfigurationError(f'Required key {key} is missing from configuration file.')
+                print(f'{self._tag} Required key {key} is missing from configuration file. Setting to None.')
+                contents[key] = None
         self.config = contents
 
     def _write_file(self):

@@ -1,6 +1,6 @@
 import shutil
 from datetime import datetime
-from typing import Coroutine, Callable
+from typing import Coroutine
 
 import attr
 from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
@@ -11,9 +11,10 @@ from epyqlib.tabs.files.activity_syncer import ActivitySyncer
 from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
 from epyqlib.tabs.files.bucket_manager import BucketManager
 from epyqlib.tabs.files.files_manager import FilesManager
-from epyqlib.tabs.files.sync_config import SyncConfig, Vars
 from epyqlib.tabs.files.filesview import Cols, Relationships, get_values, FilesView
 from epyqlib.tabs.files.log_manager import LogManager
+from epyqlib.tabs.files.sync_config import SyncConfig, Vars
+from epyqlib.utils.twisted import errbackhook
 from .graphql import API, InverterNotFoundException
 
 
@@ -108,10 +109,10 @@ class FilesController:
             print("All files already hashed locally.")
             return
 
-        coroutines = [self.sync_file(hash) for hash in missing_hashes]
-
-        for coro in coroutines:
-            await coro
+        #TODO: Figure out how to download multiple files at a time
+        # Just trying to wrap in asyncio task fails.
+        for hash in missing_hashes:
+            await self.sync_file(hash)
 
     async def sync_file(self, hash):
         await self.download_file(hash)
@@ -165,7 +166,8 @@ class FilesController:
     def tab_selected(self):
         self.cache_manager.verify_cache()
         if self.sync_config.get(Vars.auto_sync):
-            ensureDeferred(self.sync_now())
+            sync_def = ensureDeferred(self.sync_now())
+            sync_def.addErrback(errbackhook)
 
     ## UI Events
     async def login_clicked(self):
