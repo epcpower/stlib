@@ -4,7 +4,7 @@ import versioneer
 
 
 setuptools.setup(
-    name="epyqlib",
+    name="stlib",
     author="EPC Power Corp.",
     classifiers=[
         ("License :: OSI Approved :: "

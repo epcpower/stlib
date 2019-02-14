@@ -1,19 +1,11 @@
 image: Visual Studio 2017
 
-environment:
-  global:
-    PYTHON: "C:\\Python37"
-
 # https://www.appveyor.com/docs/how-to/rdp-to-build-worker/
 init:
   - ps: if (Get-ChildItem Env:ENABLE_RDP -ErrorAction SilentlyContinue) {iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))} else {echo RDP not enabled}
 
 build_script:
-  - "%PYTHON%\\python -m venv venv"
-  - venv\\Scripts\\pip install -r requirements.txt
-  - venv\\Scripts\\pip install -e .[test]
-  - venv\\Scripts\\pip freeze
-
+  - python create_venv.py create --group test
   - venv\\Scripts\\genbuildinfo "epyqlib\\_build.py"
   - ps: Update-AppveyorBuild -Version "v$(venv\\Scripts\\python -c 'import epyqlib; print(epyqlib.__version__, end=\"\")') b$Env:APPVEYOR_BUILD_NUMBER"
 

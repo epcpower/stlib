@@ -1,0 +1,9 @@
+--requirement base.in
+
+pytest==4.0.1
+pytest-qt==3.2.1
+pytest-rerunfailures==5.0
+pytest-xvfb==1.1.0
+pytest-twisted==1.9
+
+-e git+https://github.com/altendky/pytest-twisted@6f04ba3ad806b3b40602999e71c28633c36d81f9#egg=pytest-twisted
