@@ -108,24 +108,6 @@ class API:
             }
         }
 
-    _ping_query = """
-        query {
-            __schema {
-                 types {
-                     name
-                 }
-            }
-        }
-    """
-
-    def _get_ping_query(self):
-        return {
-            "query": self._ping_query,
-            "variables": {}
-        }
-
-
-
     #   createActivity(inverterId: String!, timestamp: String!, type: String!, customerId: String, siteId: String, actionJson: String!): Activity!
     _create_activity = """
         mutation Name (
@@ -207,14 +189,6 @@ class API:
         print("[Graphql] Sending create activity request: " + json.dumps(request_body))
         response = await self._make_request(request_body)
         print(json.dumps(response))
-
-    async def test_connection(self):
-        try:
-            response = await self._make_request(self._get_ping_query())
-            print("[Graphql] Connection test succeeded.")
-        except DNSLookupError:
-            print("[Graphql] Connection test failed. Setting offline mode to true.")
-            self.is_offline = True
 
     def awai(self, coroutine):
         # Or `async.run(coroutine)`

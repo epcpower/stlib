@@ -5,12 +5,14 @@ from enum import Enum
 import PyQt5.uic
 import attr
 from PyQt5.QtCore import Qt, QPoint
-from PyQt5.QtGui import QColor, QBrush, QTextCursor
+from PyQt5.QtGui import QColor, QBrush, QTextCursor, QFont
 from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QLabel, \
     QPlainTextEdit, QGridLayout, QMenu, QTextEdit
 from twisted.internet.defer import ensureDeferred
 
 # noinspection PyUnreachableCode
+from epyqlib.utils.twisted import errbackhook as open_error_dialog
+
 if False:  # Tell the editor about the type, but don't invoke a cyclic depedency
     from epyqlib.device import DeviceInterface
 
@@ -62,6 +64,15 @@ class FilesView(UiBase):
     gray_brush = QBrush(QColor(22, 22, 22, 22))
     check_icon = u'✅'
     question_icon = u'❓'
+    fa_check = u''
+    fa_wifi = u''
+    fa_question = u''
+
+    fontawesome = QFont('fontawesome')
+    color_green = QColor('green')
+    color_gray = QColor('gray')
+    color_red = QColor('red')
+
 
     _log_text = ""
 
@@ -212,7 +223,9 @@ class FilesView(UiBase):
         }
 
         parent = parents[type]
-        row = QTreeWidgetItem(parent, [filename, self.question_icon, self.check_icon])
+        row = QTreeWidgetItem(parent, [filename, self.fa_question, self.fa_check])
+        row.setFont(Cols.local, self.fontawesome)
+        row.setFont(Cols.web, self.fontawesome)
         row.setTextAlignment(Cols.local, Qt.AlignRight)
         return row
 
@@ -225,13 +238,17 @@ class FilesView(UiBase):
 
     ### Action
     def _sync_now_clicked(self):
-        ensureDeferred(self.controller.sync_now())
+        sync_def = ensureDeferred(self.controller.sync_now())
+        sync_def.addErrback(open_error_dialog)
 
     def _login_clicked(self):
-        ensureDeferred(self.controller.login_clicked())
+        ensureDeferred(self.controller.login_clicked()) \
+            .addErrback(open_error_dialog)
+
 
     def _notes_changed(self):
-        ensureDeferred(self._disable_notes_buttons())
+        ensureDeferred(self._disable_notes_buttons()) \
+            .addErrback(open_error_dialog)
 
     def _reset_notes(self):
         self.notes.setPlainText(self.controller.old_notes)

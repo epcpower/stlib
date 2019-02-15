@@ -1278,16 +1278,25 @@ class DeviceInterface:
             'SerialNumber',
         )
 
-        serial_number_response = await self.device.nvs.read_all_from_device(
-            only_these=(serial_number_signal,),
+        return await self._read_single_param(serial_number_signal)
+
+    async def get_build_hash(self) -> str:
+        serial_number_signal = self.device.nvs.signal_from_names(
+            'SoftwareHash',
+            'SoftwareHash',
+        )
+
+        return await self._read_single_param(serial_number_signal)
+
+    async def _read_single_param(self, param_signal):
+        param_response = await self.device.nvs.read_all_from_device(
+            only_these=(param_signal,),
             meta=(epyqlib.nv.MetaEnum.value,),
         )
-
-        serial_number = str(
-            serial_number_response[0][serial_number_signal.status_signal],
+        param = str(
+            param_response[0][param_signal.status_signal],
         )
-
-        return serial_number
+        return param
 
     def get_connected_status(self) -> TransmitStatus:
         return DeviceInterface.TransmitStatus(connected=self.device.bus_online, transmitting=self.device.bus_tx)

@@ -14,7 +14,6 @@ from boto3_type_annotations.s3 import ServiceResource as S3Resource
 LoginListener = Callable[[bool], Coroutine]
 
 class AwsLoginManager():
-### TODO: Wire up this stub
     _instance = None
 
     def __init__(self):
@@ -51,6 +50,9 @@ class AwsLoginManager():
     ## Get Resources
     def get_s3_resource(self) -> S3Resource:
         return self._cognito_helper.get_s3_resource()
+
+    def refresh(self):
+        self._cognito_helper._refresh()
 
     ## Manage Listeners
     def _notify_listeners(self):

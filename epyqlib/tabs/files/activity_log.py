@@ -10,6 +10,7 @@ import attr
 
 from epyqlib.tabs.files.sync_config import SyncConfig
 
+
 @attr.s(slots=True, auto_attribs=True)
 class Event():
     class Type():
@@ -58,8 +59,8 @@ class Event():
         return Event(inverter_id, user_id, Event.Type.push_to_inverter, {})
 
     @staticmethod
-    def new_raw_log(inverter_id: str, user_id: str, filename: str, file_hash: str):
-        details = {"fileHash": file_hash, "filename": filename}
+    def new_raw_log(inverter_id: str, user_id: str, build_id: str, filename: str, file_hash: str):
+        details = {"buildId": build_id, "fileHash": file_hash, "filename": filename}
         return Event(inverter_id, user_id, Event.Type.new_raw_log, details)
 
 class ActivityLog:

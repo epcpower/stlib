@@ -3,7 +3,9 @@ from datetime import datetime
 from typing import Coroutine
 
 import attr
+from PyQt5.QtGui import QFont, QColor
 from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
+from botocore.exceptions import EndpointConnectionError
 from twisted.internet.defer import ensureDeferred
 
 from epyqlib.tabs.files.activity_log import ActivityLog, Event
@@ -25,6 +27,7 @@ class AssociationMapping():
 
 
 class FilesController:
+    _tag = "[Files Controller]"
     from epyqlib.tabs.files.filesview import FilesView
     def __init__(self, view: FilesView):
         self.view = view
@@ -37,10 +40,11 @@ class FilesController:
 
         self.aws_login_manager = AwsLoginManager.get_instance()
         self.bucket_manager = BucketManager()
+        self._log_rows: dict[str, QTreeWidgetItem] = {}
         self.sync_config = SyncConfig.get_instance()
         self.cache_manager = FilesManager(self.sync_config.directory)
         self.log_manager = LogManager.init(self.sync_config.directory)
-        self.log_rows = {}
+        self._log_rows = {}
 
         self.associations: [str, AssociationMapping] = {}
 
@@ -51,16 +55,22 @@ class FilesController:
         self.view.populate_tree()
         self.view.initialize_ui()
 
-        ensureDeferred(self.api.test_connection()) # May need to also register a listener to be notified if we go offline?
-
         logged_in = self.aws_login_manager.is_logged_in()
         self.view.show_logged_out_warning(not logged_in)
+        if logged_in:
+            try:
+                self.aws_login_manager.refresh()
+            except EndpointConnectionError as e:
+                print(f"{self._tag} Unable to login to AWS. Setting offline mode to true.")
+                self.api.is_offline = True
+
 
         self.activity_log.register_listener(lambda event: self.view.add_log_line(LogRenderer.render_event(event)))
         self.activity_log.register_listener(self.activity_syncer.listener)
 
-        self._show_local_logs()
+        self.log_manager.register_listener(self.log_synced)
 
+        self._show_local_logs()
 
     ## Sync Info Methods
     def _set_sync_time(self) -> None:
@@ -103,7 +113,7 @@ class FilesController:
             if(not self.cache_manager.has_hash(hash)):
                 missing_hashes.add(hash)
             else:
-                mapping.row.setText(Cols.local, FilesView.check_icon)
+                mapping.row.setText(Cols.local, FilesView.fa_check)
 
         if len(missing_hashes) == 0:
             print("All files already hashed locally.")
@@ -119,7 +129,7 @@ class FilesController:
 
         mapping: AssociationMapping
         for mapping in self._get_mapping_for_hash(hash):
-            mapping.row.setText(Cols.local, FilesView.check_icon)
+            mapping.row.setText(Cols.local, FilesView.fa_check)
 
     def _get_key_for_hash(self, hash: str):
         value: AssociationMapping
@@ -171,7 +181,11 @@ class FilesController:
 
     ## UI Events
     async def login_clicked(self):
-        self.aws_login_manager.show_login_window(self.view.files_grid)
+        try:
+            self.aws_login_manager.show_login_window(self.view.files_grid)
+        except EndpointConnectionError:
+            print(f"{self._tag} Unable to login to AWS. Setting offline mode to true.")
+            self.api.is_offline = True
 
     async def save_file_as_clicked(self, item: QTreeWidgetItem = None):
         if item is None:
@@ -205,6 +219,7 @@ class FilesController:
 
             self.view.serial_number.setText(serial_number)
 
+        await self.log_manager.sync_logs_to_server()
 
         unsubscribe: Coroutine = self.api.unsubscribe()
 
@@ -288,15 +303,36 @@ class FilesController:
     def _show_local_logs(self):
         for hash, filename in self.log_manager.items():
             row = self.view.attach_row_to_parent('log', filename)
-            self.log_rows[filename] = row
+            self._log_rows[filename] = row
 
-            row.setText(Cols.local, self.view.check_icon)
-            row.setText(Cols.web, self.view.question_icon)
+            row.setFont(Cols.local, self.view.fontawesome)
+            row.setFont(Cols.web, self.view.fontawesome)
+
+            row.setText(Cols.local, self.view.fa_check)
+            row.setForeground(Cols.local, self.view.color_green)
+
+            row.setText(Cols.web, self.view.fa_question)
+            row.setForeground(Cols.web, self.view.color_gray)
 
             # ctime = self.log_manager.stat(filename).st_ctime
             ctime = self.log_manager.stat(hash).st_ctime
             ctime = datetime.fromtimestamp(ctime)
             row.setText(Cols.created_at, ctime.strftime(self.view.time_format))
+
+            self._log_rows[hash] = row
+
+    def log_synced(self, event: LogManager.EventType, hash: str):
+        if event == LogManager.EventType.log_synced:
+            row: QTreeWidgetItem = self._log_rows.get(hash)
+            if row is not None:
+                row.setForeground(Cols.web, self.view.color_gray)
+                row.setText(Cols.web, self.view.fa_check)
+
+        if event == LogManager.EventType.log_generated:
+            # Try to sync it to the server
+            # Try to log event with inverterId and build hash that log was generated
+            # Try to show it as a row
+            pass
 
 
 class LogRenderer():
