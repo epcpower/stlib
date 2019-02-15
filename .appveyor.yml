@@ -12,6 +12,9 @@ build_script:
 test_script:
   - venv\\Scripts\\pytest -vvvv -s --no-qt-log --run-factory epyqlib.tests --pyargs
 
+deploy_script:
+  - python create_venv.py publish
+
 # https://www.appveyor.com/docs/how-to/rdp-to-build-worker/
 on_finish:
   - ps: if (Get-ChildItem Env:ENABLE_RDP -ErrorAction SilentlyContinue) {$blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))} else {echo RDP not enabled}
