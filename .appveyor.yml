@@ -5,7 +5,7 @@ init:
   - ps: if (Get-ChildItem Env:ENABLE_RDP -ErrorAction SilentlyContinue) {iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))} else {echo RDP not enabled}
 
 build_script:
-  - python create_venv.py create --group test
+  - python create_venv.py create --group package
   - venv\\Scripts\\genbuildinfo "epyqlib\\_build.py"
   - ps: Update-AppveyorBuild -Version "v$(venv\\Scripts\\python -c 'import epyqlib; print(epyqlib.__version__, end=\"\")') b$Env:APPVEYOR_BUILD_NUMBER"
   - python create_venv.py build
