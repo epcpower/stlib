@@ -8,9 +8,8 @@ build_script:
   - python create_venv.py create --group test
   - venv\\Scripts\\genbuildinfo "epyqlib\\_build.py"
   - ps: Update-AppveyorBuild -Version "v$(venv\\Scripts\\python -c 'import epyqlib; print(epyqlib.__version__, end=\"\")') b$Env:APPVEYOR_BUILD_NUMBER"
-
-artifacts:
-  - path: 'dist/*'
+  - python create_venv.py build
+  - ps: Get-ChildItem dist\* | % { Push-AppveyorArtifact $_.FullName }
 
 test_script:
   - venv\\Scripts\\pytest -vvvv -s --no-qt-log --run-factory epyqlib.tests --pyargs
@@ -21,3 +20,6 @@ deploy_script:
 # https://www.appveyor.com/docs/how-to/rdp-to-build-worker/
 on_finish:
   - ps: if (Get-ChildItem Env:ENABLE_RDP -ErrorAction SilentlyContinue) {$blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))} else {echo RDP not enabled}
+
+artifacts:
+  - path: 'dist/*'
