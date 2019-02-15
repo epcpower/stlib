@@ -1,4 +1,4 @@
-epyqlib/_build.py
+epyqlib/_build_generated.py
 .idea
 /epyqlib/resources/code
 /epyqlib/resources/*.py
