@@ -1,4 +1,6 @@
 venv
+epyqlib/_build.py
+dist
 *.out
 .idea
 /epyqlib/resources/code
