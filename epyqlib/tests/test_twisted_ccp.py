@@ -1,6 +1,7 @@
 import logging
 import can
 import epyqlib.busproxy
+import epyqlib.device
 import epyqlib.twisted.busproxy
 import epyqlib.twisted.cancalibrationprotocol as ccp
 import pytest
