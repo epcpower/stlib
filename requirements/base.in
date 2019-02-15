@@ -22,8 +22,6 @@ Twisted==18.9.0
 Twisted[osx_platform]==18.9.0; platform_system == "Darwin"
 Twisted[windows_platform]==18.9.0; platform_system == "Windows"
 
--e git+https://github.com/altendky/pm@v2019.2.1#egg=epcpm
-
 -e git+https://github.com/altendky/graham@89f3b3e6aad3b98bafa83f28fbbc11bb92df6ad8#egg=graham
 -e git+https://github.com/ebroecker/canmatrix@8f63047c18dcb65f7904d298cbf603d2e6325b85#egg=canmatrix
 -e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec
