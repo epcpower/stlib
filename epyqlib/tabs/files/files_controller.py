@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
 from botocore.exceptions import EndpointConnectionError
 from twisted.internet.defer import ensureDeferred
 
+from epyqlib.device import DeviceInterface
 from epyqlib.tabs.files.activity_log import ActivityLog, Event
 from epyqlib.tabs.files.activity_syncer import ActivitySyncer
 from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
@@ -46,6 +47,10 @@ class FilesController:
         self.log_manager = LogManager.init(self.sync_config.directory)
         self._log_rows = {}
 
+        self._is_connected = False
+        self._serial_number = ""
+        self._build_hash = ""
+
         self.associations: [str, AssociationMapping] = {}
 
     def setup(self):
@@ -72,6 +77,13 @@ class FilesController:
 
         self._show_local_logs()
 
+    async def device_interface_set(self, device_interface: DeviceInterface):
+        self._is_connected = device_interface.get_connected_status()
+        if self._is_connected.connected: # Appears you can never be "connected" in offline mode?
+            self._serial_number = await device_interface.get_serial_number()
+            self._build_hash = await device_interface.get_build_hash()
+            # TODO: If we have serial number, fetch inverterId for this serial
+
     ## Sync Info Methods
     def _set_sync_time(self) -> None:
         self._last_sync = datetime.now()
@@ -95,6 +107,8 @@ class FilesController:
                 self.associations[key].association = association # Update the association in case it's changed
             else:
                 row = self.view.attach_row_to_parent(type, association['file']['filename'])
+                self.view.show_sync_status_icon(row, Cols.local, self.view.fa_question, self.view.color_red)
+                self.view.show_sync_status_icon(row, Cols.web, self.view.fa_check, self.view.color_green)
                 self.associations[association['id'] + association['file']['id']] = AssociationMapping(association, row)
 
             # Render either the new or updated association
@@ -113,7 +127,7 @@ class FilesController:
             if(not self.cache_manager.has_hash(hash)):
                 missing_hashes.add(hash)
             else:
-                mapping.row.setText(Cols.local, FilesView.fa_check)
+                self.view.show_sync_status_icon(mapping.row, Cols.local, self.view.fa_check, self.view.color_green)
 
         if len(missing_hashes) == 0:
             print("All files already hashed locally.")
@@ -129,7 +143,7 @@ class FilesController:
 
         mapping: AssociationMapping
         for mapping in self._get_mapping_for_hash(hash):
-            mapping.row.setText(Cols.local, FilesView.fa_check)
+            self.view.show_sync_status_icon(mapping.row, Cols.local, self.view.fa_check, self.view.color_green)
 
     def _get_key_for_hash(self, hash: str):
         value: AssociationMapping
@@ -302,36 +316,47 @@ class FilesController:
 
     def _show_local_logs(self):
         for hash, filename in self.log_manager.items():
-            row = self.view.attach_row_to_parent('log', filename)
-            self._log_rows[filename] = row
+            row = self._create_local_log_row(filename, hash)
 
-            row.setFont(Cols.local, self.view.fontawesome)
-            row.setFont(Cols.web, self.view.fontawesome)
-
-            row.setText(Cols.local, self.view.fa_check)
-            row.setForeground(Cols.local, self.view.color_green)
-
-            row.setText(Cols.web, self.view.fa_question)
-            row.setForeground(Cols.web, self.view.color_gray)
+            self.view.show_sync_status_icon(row, Cols.local, self.view.fa_check, self.view.color_green)
+            self.view.show_sync_status_icon(row, Cols.web, self.view.fa_question, self.view.color_red)
 
             # ctime = self.log_manager.stat(filename).st_ctime
             ctime = self.log_manager.stat(hash).st_ctime
             ctime = datetime.fromtimestamp(ctime)
             row.setText(Cols.created_at, ctime.strftime(self.view.time_format))
 
-            self._log_rows[hash] = row
+    def _create_local_log_row(self, filename, hash):
+        row = self.view.attach_row_to_parent('log', filename)
+        self._log_rows[hash] = row
+        row.setFont(Cols.local, self.view.fontawesome)
+        row.setFont(Cols.web, self.view.fontawesome)
 
-    def log_synced(self, event: LogManager.EventType, hash: str):
+        self.view.show_sync_status_icon(row, Cols.local, self.view.fa_check, self.view.color_green)
+        self.view.show_sync_status_icon(row, Cols.web, self.view.fa_question, self.view.color_red)
+        return row
+
+    async def log_synced(self, event: LogManager.EventType, hash: str, filename: str):
         if event == LogManager.EventType.log_synced:
             row: QTreeWidgetItem = self._log_rows.get(hash)
             if row is not None:
-                row.setForeground(Cols.web, self.view.color_gray)
-                row.setText(Cols.web, self.view.fa_check)
+                self.view.show_sync_status_icon(row, Cols.web, self.view.fa_check, self.view.color_green)
 
         if event == LogManager.EventType.log_generated:
+            new_row = self._create_local_log_row(filename, hash)
+            ctime = self.log_manager.stat(hash).st_ctime
+            ctime = datetime.fromtimestamp(ctime)
+            new_row.setText(Cols.created_at, ctime.strftime(self.view.time_format))
+
             # Try to sync it to the server
+            await self.log_manager.sync_single_log(hash)
+
             # Try to log event with inverterId and build hash that log was generated
-            # Try to show it as a row
+            event = Event.new_raw_log("testInvId", "testUserId", self._build_hash, filename, hash)
+            await self.activity_log.add(event)
+
+            # Show it synced correctly
+            self.view.show_sync_status_icon(new_row, Cols.web, self.view.fa_check, self.view.color_green)
             pass
 
 

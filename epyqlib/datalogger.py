@@ -57,7 +57,7 @@ class DataLogger:
         # d = self._pull_raw_log()
         d = twisted.internet.defer.execute(self._pull_raw_log_fake)
         d.addCallback(write_to_file, path=path)
-        d.addCallback(lambda _: LogManager.get_instance().copy_into_cache(path))
+        d.addCallback(lambda _: twisted.internet.defer.ensureDeferred(LogManager.get_instance().copy_into_cache(path)))
 
         d.addErrback(epyqlib.utils.twisted.detour_result,
                      self.progress.fail)

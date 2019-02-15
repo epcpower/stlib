@@ -10,10 +10,11 @@ from typing import Tuple, Callable, Coroutine
 
 from epyqlib.tabs.files.bucket_manager import BucketManager
 
-LogSyncedListener = Callable[[str], Coroutine]
+LogSyncedListener = Callable[[str, str], Coroutine]
 
 class LogManager:
     _instance: 'LogManager' = None
+    _tag = "[Log Manager]"
 
     class EventType(Enum):
         log_generated = 1
@@ -28,8 +29,8 @@ class LogManager:
         self._ensure_dir(self._cache_dir)
         self._listeners: list[LogSyncedListener] = []
 
-        # self._hashes: set[Tuple[str, str]] = set()
-        self._hashes: dict[str, str] = {}
+
+        self._hashes: dict[str, str] = {} # Key = hash, value = filename
 
         self._read_hashes_files()
 
@@ -48,14 +49,14 @@ class LogManager:
         LogManager._instance = LogManager(files_dir)
         return LogManager._instance
 
-    def copy_into_cache(self, file_path: str):
+    async def copy_into_cache(self, file_path: str):
         basename = os.path.basename(file_path)
         hash = self._md5(file_path)
         shutil.copy2(file_path, path.join(self._cache_dir, hash))
         self._hashes[hash] = basename
         self._save_hashes_file()
 
-        self._notify_listeners(LogManager.EventType.log_generated, hash)
+        await self._notify_listeners(LogManager.EventType.log_generated, hash, basename)
 
     def _save_hashes_file(self):
         with open(self._hashes_file, 'w') as file:
@@ -107,10 +108,12 @@ class LogManager:
             if hash not in uploaded_logs:
                 await self._bucket_manager.upload_log(path.join(self._cache_dir, hash), hash)
 
-            for listener in self._listeners:
-                result = listener(LogManager.EventType.log_synced, hash)
-                if inspect.iscoroutine(result):
-                    await result
+            await self._notify_listeners(LogManager.EventType.log_synced, hash, filename)
+
+    async def sync_single_log(self, hash: str):
+        await self._bucket_manager.upload_log(path.join(self._cache_dir, hash), hash)
+        filename = self._hashes[hash]
+        await self._notify_listeners(LogManager.EventType.log_synced, hash, filename)
 
     def items(self):
         return self._hashes.items()
@@ -131,8 +134,8 @@ class LogManager:
     def register_listener(self, listener: Callable):
         self._listeners.append(listener)
 
-    async def _notify_listeners(self, event_type: EventType, hash: str):
+    async def _notify_listeners(self, event_type: EventType, hash: str, filename: str):
         for listener in self._listeners:
-            result = listener(event_type, hash)
+            result = listener(event_type, hash, filename)
             if inspect.iscoroutine(result):
                 await result

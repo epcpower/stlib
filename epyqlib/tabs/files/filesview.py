@@ -109,6 +109,9 @@ class FilesView(UiBase):
 
     def set_device_interface(self, device_interface):
         self.device_interface = device_interface
+        ensureDeferred(self.controller.device_interface_set(device_interface))\
+            .addErrback(open_error_dialog)
+
 
     def tab_selected(self):
         self.controller.tab_selected()
@@ -223,10 +226,10 @@ class FilesView(UiBase):
         }
 
         parent = parents[type]
-        row = QTreeWidgetItem(parent, [filename, self.fa_question, self.fa_check])
+        row = QTreeWidgetItem(parent, [filename])
         row.setFont(Cols.local, self.fontawesome)
         row.setFont(Cols.web, self.fontawesome)
-        row.setTextAlignment(Cols.local, Qt.AlignRight)
+
         return row
 
     def remove_row(self, row: QTreeWidgetItem):
@@ -282,6 +285,10 @@ class FilesView(UiBase):
             print("[Files View] Scratch menu item clicked")
         elif action is save_as:
             ensureDeferred(self.controller.save_file_as_clicked(item))
+
+    def show_sync_status_icon(self, row: QTreeWidgetItem, col: int, icon: str, color: QColor):
+        row.setText(col, icon)
+        row.setForeground(col, color)
 
 
 
