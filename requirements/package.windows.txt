@@ -6,9 +6,6 @@
 #
 --extra-index-url http://fstab.net/pypi/simple
 
--e git+https://github.com/ebroecker/canmatrix@8f63047c18dcb65f7904d298cbf603d2e6325b85#egg=canmatrix
--e git+https://github.com/altendky/pm@v2019.2.1#egg=epcpm
--e git+https://github.com/altendky/graham@89f3b3e6aad3b98bafa83f28fbbc11bb92df6ad8#egg=graham
 -e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec
 -e git+https://github.com/altendky/pytest-twisted@0560511d0954c75cac43a47c685287ba93e01ba7#egg=pytest-twisted
 -e git+https://github.com/altendky/qt5reactor@ce3ea2dad6d71adb10cde79b64bc0c7d27e9139c#egg=qt5reactor
@@ -20,6 +17,7 @@ attrs==18.2.0
 automat==0.7.0            # via twisted
 bitstruct==6.0.0
 bleach==3.1.0             # via readme-renderer
+canmatrix==0.7
 certifi==2018.11.29       # via requests
 cffi==1.12.0              # via cryptography
 chardet==3.0.4            # via requests
@@ -31,10 +29,10 @@ decorator==4.3.2
 defusedxml==0.5.0         # via soappy
 docutils==0.14            # via readme-renderer
 easyprocess==0.2.5        # via pyvirtualdisplay
-et-xmlfile==1.0.1         # via openpyxl
-future==0.17.1
+future==0.17.1            # via canmatrix
 gitdb2==2.0.5             # via gitpython
 gitpython==2.1.11
+graham==0.1.10
 greenlet==0.4.15
 h2==3.1.0                 # via twisted
 hpack==3.0.0              # via h2
@@ -42,13 +40,11 @@ hyperframe==5.2.0         # via h2
 hyperlink==18.0.0         # via twisted
 idna==2.8                 # via hyperlink, requests, twisted
 incremental==17.5.0       # via twisted
-jdcal==1.4                # via openpyxl
-lxml==4.3.1               # via python-docx, xmldiff
+lxml==4.3.1               # via python-docx
 marshmallow==2.16.3
 more-itertools==6.0.0     # via pytest
 natsort==5.5.0
-openpyxl==2.6.0
-pathlib2==2.3.3
+pathlib2==2.3.3           # via canmatrix
 pbr==5.1.2                # via wstools
 pint==0.8.1
 pip-tools==3.3.2
@@ -81,12 +77,12 @@ readme-renderer==24.0     # via twine
 requests-toolbelt==0.9.1  # via twine
 requests==2.21.0          # via requests-toolbelt, twine
 service-identity==18.1.0  # via twisted
-six==1.12.0               # via automat, bleach, cryptography, pathlib2, pip-tools, pyhamcrest, pyopenssl, pytest, python-dateutil, readme-renderer, wstools, xmldiff
+six==1.12.0               # via automat, bleach, cryptography, pathlib2, pip-tools, pyhamcrest, pyopenssl, pytest, python-dateutil, readme-renderer, wstools
 smmap2==2.0.5             # via gitdb2
 soappy==0.12.22           # via twisted
 tqdm==4.31.1              # via twine
 twine==1.13.0
-twisted==18.9.0 ; platform_system == "Windows"
+twisted[windows_platform]==18.9.0 ; platform_system == "Windows"
 typing==3.6.6             # via python-can
 urllib3==1.24.1           # via requests
 webencodings==0.5.1       # via bleach
@@ -94,7 +90,6 @@ wheel==0.33.0
 windows-curses==1.0       # via python-can
 wrapt==1.11.1             # via python-can
 wstools==0.4.8            # via soappy
-xmldiff==2.2
 zope.interface==4.6.0     # via twisted
 
 # The following packages are considered to be unsafe in a requirements file:

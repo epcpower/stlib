@@ -6,9 +6,6 @@
 #
 --extra-index-url http://fstab.net/pypi/simple
 
--e git+https://github.com/ebroecker/canmatrix@8f63047c18dcb65f7904d298cbf603d2e6325b85#egg=canmatrix
--e git+https://github.com/altendky/pm@v2019.2.1#egg=epcpm
--e git+https://github.com/altendky/graham@89f3b3e6aad3b98bafa83f28fbbc11bb92df6ad8#egg=graham
 -e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec
 -e git+https://github.com/altendky/qt5reactor@ce3ea2dad6d71adb10cde79b64bc0c7d27e9139c#egg=qt5reactor
 appdirs==1.4.3            # via twisted
@@ -17,27 +14,26 @@ asn1crypto==0.24.0        # via cryptography
 attrs==18.2.0
 automat==0.7.0            # via twisted
 bitstruct==6.0.0
+canmatrix==0.7
 cffi==1.12.0              # via cryptography
 click==7.0
 constantly==15.1.0        # via twisted
 cryptography==2.5         # via pyopenssl, service-identity, twisted
 defusedxml==0.5.0         # via soappy
-et-xmlfile==1.0.1         # via openpyxl
-future==0.17.1
+future==0.17.1            # via canmatrix
 gitdb2==2.0.5             # via gitpython
 gitpython==2.1.11
+graham==0.1.10
 h2==3.1.0                 # via twisted
 hpack==3.0.0              # via h2
 hyperframe==5.2.0         # via h2
 hyperlink==18.0.0         # via twisted
 idna==2.8                 # via hyperlink, twisted
 incremental==17.5.0       # via twisted
-jdcal==1.4                # via openpyxl
-lxml==4.3.1               # via python-docx, xmldiff
+lxml==4.3.1               # via python-docx
 marshmallow==2.16.3
 natsort==5.5.0
-openpyxl==2.6.0
-pathlib2==2.3.3
+pathlib2==2.3.3           # via canmatrix
 pbr==5.1.2                # via wstools
 pint==0.8.1
 pip-tools==3.3.2
@@ -58,15 +54,14 @@ python-docx==0.8.7
 python-dotenv==0.9.1
 pywin32==224              # via twisted
 service-identity==18.1.0  # via twisted
-six==1.12.0               # via automat, cryptography, pathlib2, pip-tools, pyhamcrest, pyopenssl, python-dateutil, wstools, xmldiff
+six==1.12.0               # via automat, cryptography, pathlib2, pip-tools, pyhamcrest, pyopenssl, python-dateutil, wstools
 smmap2==2.0.5             # via gitdb2
 soappy==0.12.22           # via twisted
-twisted[windows_platform]==18.9.0 ; platform_system == "Windows"
+twisted==18.9.0 ; platform_system == "Windows"
 typing==3.6.6             # via python-can
 windows-curses==1.0       # via python-can
 wrapt==1.11.1             # via python-can
 wstools==0.4.8            # via soappy
-xmldiff==2.2
 zope.interface==4.6.0     # via twisted
 
 # The following packages are considered to be unsafe in a requirements file:

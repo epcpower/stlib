@@ -6,8 +6,10 @@
 arrow==0.12.1
 attrs==18.2.0
 bitstruct==6.0.0
+canmatrix==0.7
 Click==7.0
 GitPython==2.1.11
+graham==0.1.10
 marshmallow==2.16.3
 natsort==5.5.0
 Pint==0.8.1
@@ -22,8 +24,6 @@ Twisted==18.9.0
 Twisted[osx_platform]==18.9.0; platform_system == "Darwin"
 Twisted[windows_platform]==18.9.0; platform_system == "Windows"
 
--e git+https://github.com/altendky/graham@89f3b3e6aad3b98bafa83f28fbbc11bb92df6ad8#egg=graham
--e git+https://github.com/ebroecker/canmatrix@8f63047c18dcb65f7904d298cbf603d2e6325b85#egg=canmatrix
 -e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec
 
 -e git+https://github.com/altendky/qt5reactor@ce3ea2dad6d71adb10cde79b64bc0c7d27e9139c#egg=qt5reactor
