@@ -15,6 +15,7 @@ natsort==5.5.0
 Pint==0.8.1
 pyelftools==0.25
 PyQt5==5.11.3
+qt5reactor==0.5
 python-can==3.0.0
 python-dateutil==2.7.5
 python-docx==0.8.7
@@ -25,7 +26,5 @@ Twisted[osx_platform]==18.9.0; platform_system == "Darwin"
 Twisted[windows_platform]==18.9.0; platform_system == "Windows"
 
 -e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec
-
--e git+https://github.com/altendky/qt5reactor@ce3ea2dad6d71adb10cde79b64bc0c7d27e9139c#egg=qt5reactor
 
 pyqt5-tools==5.11.3.1.5rc0; platform_system == 'Windows'
