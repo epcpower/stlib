@@ -19,9 +19,10 @@ __license__ = 'GPLv2+'
 
 def create_abbreviation_attribute():
     return attr.ib(
-        default='',
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
-            field=marshmallow.fields.String(),
+            field=marshmallow.fields.String(allow_none=True),
         ),
     )
 
