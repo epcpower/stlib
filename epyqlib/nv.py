@@ -1637,6 +1637,10 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
     def setData(self, index, data, role=None):
         column = index.column()
+
+        if data == '':
+            data = None
+
         if column == Columns.indexes.scratch:
             if role == Qt.EditRole:
                 node = self.node_from_index(index)

@@ -9,6 +9,7 @@ import canmatrix
 import twisted.internet.defer
 
 import epyqlib.canneo
+import epyqlib.device
 import epyqlib.nv
 import epyqlib.utils.twisted
 

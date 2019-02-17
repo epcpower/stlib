@@ -821,6 +821,7 @@ class Device:
         if Elements.variables in self.elements:
             variable_model = epyqlib.variableselectionmodel.VariableModel(
                 nvs=self.nvs,
+                nv_model=nv_model,
                 bus=self.bus,
                 tx_id=self.neo_frames.frame_by_name('CCP').id,
                 rx_id=self.neo_frames.frame_by_name('CCPResponse').id
