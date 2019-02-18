@@ -30,7 +30,7 @@ class _Sections:
     params: QTreeWidgetItem
     pvms: QTreeWidgetItem
     firmware: QTreeWidgetItem
-    fault_logs: QTreeWidgetItem
+    raw_logs: QTreeWidgetItem
     other: QTreeWidgetItem
 
 
@@ -182,7 +182,7 @@ class FilesView(UiBase):
         self.section_headers.params = make_entry("Parameter Sets")
         self.section_headers.pvms = make_entry("Value Sets")
         self.section_headers.firmware = make_entry("Firmware")
-        self.section_headers.fault_logs = make_entry("Fault Logs")
+        self.section_headers.raw_logs = make_entry("Fault Logs")
         self.section_headers.other = make_entry("Other files")
 
 
@@ -219,7 +219,7 @@ class FilesView(UiBase):
     def attach_row_to_parent(self, type: str, filename):
         parents = {
             'firmware': self.section_headers.firmware,
-            'log': self.section_headers.fault_logs,
+            'log': self.section_headers.raw_logs,
             'other': self.section_headers.other,
             'parameter': self.section_headers.params,
             'pvms': self.section_headers.pvms
@@ -265,15 +265,23 @@ class FilesView(UiBase):
 
     def _render_context_menu(self, position: QPoint):
         item = self.files_grid.itemAt(position)
+        parent = item.parent()
 
+        menu_pos = self.files_grid.viewport().mapToGlobal(position)
+
+        if parent is self.section_headers.raw_logs:
+            self._render_raw_log_menu(menu_pos, item)
+        else:
+            self._render_param_file_menu(menu_pos, item)
+
+    def _render_param_file_menu(self, menu_pos: QPoint, item: QTreeWidgetItem):
         menu = QMenu(self.files_grid)
-
         scratch = menu.addAction("Send to scratch")
         active = menu.addAction("Send to active")
         inverter = menu.addAction("Send to inverter")
         save_as = menu.addAction("Save file as...")
 
-        action = menu.exec(self.files_grid.viewport().mapToGlobal(position))
+        action = menu.exec(menu_pos)
 
         if action is None:
             pass
@@ -285,6 +293,17 @@ class FilesView(UiBase):
             print("[Files View] Scratch menu item clicked")
         elif action is save_as:
             ensureDeferred(self.controller.save_file_as_clicked(item))
+
+    def _render_raw_log_menu(self, menu_pos: QPoint, item: QTreeWidgetItem):
+        menu = QMenu(self.files_grid)
+        delete_local = menu.addAction("Delete local copy")
+
+        action = menu.exec(menu_pos)
+
+        if action is None:
+            pass
+        elif action is delete_local:
+            self.controller.delete_local_log(item)
 
     def show_sync_status_icon(self, row: QTreeWidgetItem, col: int, icon: str, color: QColor):
         row.setText(col, icon)

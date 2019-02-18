@@ -25,7 +25,8 @@ class BucketManager():
             bucket.put_object(Key=self._logs_path + dest_filename, Body=source_file)
 
         print(f"{self._tag} Finished upload of log {dest_filename}")
-        self._uploaded_logs.add(dest_filename) # Assuming dest_filename is the file's hash
+        if self._uploaded_logs is not None:
+            self._uploaded_logs.add(dest_filename) # Assuming dest_filename is the file's hash
 
     def fetch_uploaded_log_names(self):
         if self._uploaded_logs is None:

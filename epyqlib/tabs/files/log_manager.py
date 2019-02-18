@@ -115,6 +115,11 @@ class LogManager:
         filename = self._hashes[hash]
         await self._notify_listeners(LogManager.EventType.log_synced, hash, filename)
 
+    def delete_local(self, hash: str):
+        os.unlink(path.join(self._cache_dir, hash))
+        del(self._hashes[hash])
+        self._save_hashes_file()
+
     def items(self):
         return self._hashes.items()
 

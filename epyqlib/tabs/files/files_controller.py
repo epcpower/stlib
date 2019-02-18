@@ -341,6 +341,12 @@ class FilesController:
         self.view.show_sync_status_icon(row, Cols.web, self.view.fa_question, self.view.color_red)
         return row
 
+    def delete_local_log(self, row: QTreeWidgetItem):
+        hash = next(key for key, value in self._log_rows.items() if value == row)
+        self.log_manager.delete_local(hash)
+        del(self._log_rows[hash])
+        row.parent().removeChild(row)
+
     async def log_synced(self, event: LogManager.EventType, hash: str, filename: str):
         if event == LogManager.EventType.log_synced:
             row: QTreeWidgetItem = self._log_rows.get(hash)
