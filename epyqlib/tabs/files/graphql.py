@@ -1,5 +1,6 @@
 import asyncio
 import json
+from enum import Enum
 from typing import Callable
 
 import treq
@@ -142,6 +143,81 @@ class API:
             }
         }
 
+    _create_file_mutation = """
+        mutation CreateFile (
+            $filename: String!,
+            $hash: String!,
+            $notes: String,
+            $type: FileType
+            
+        ){
+            createFile(
+                filename: $filename,
+                hash: $hash,
+                notes: $notes,
+                type: $type 
+            ) {
+                id
+                createdAt
+                updatedAt
+                updatedBy
+                association {id}
+                description
+                filename
+                hash
+                notes
+                version
+                type
+                uploadPath
+            }
+        }
+    """
+
+    class FileType(Enum):
+        Firmware = "Firmware"
+        Log = "Log"
+        Other = "Other"
+        Parameter = "Parameter"
+
+
+    def _get_create_file_mutation(self, type: FileType, filename: str, hash: str, notes: str):
+        return {
+            "query": self._create_file_mutation,
+            "variables": {
+                "type": type.value,
+                "filename": filename,
+                "hash": hash,
+                "notes": notes
+            }
+        }
+
+    _create_association_mutation = """
+        mutation (
+            $fileId: ID!,
+            $inverterId: ID
+        ){
+            createAssociation (
+                fileId: $fileId,
+                inverterId: $inverterId
+            ) {
+                id
+                file { filename, notes, createdAt }
+                inverter { id, serialNumber }
+            }
+        }
+    """
+
+    def _get_create_association_mutation(self, inverterId: str, fileId: str):
+        return {
+            "query": self._create_association_mutation,
+            "variables": {
+                "fileId": fileId,
+                "inverterId": inverterId
+            }
+        }
+
+
+
     async def _make_request(self, body):
         url = self.server_info["url"]
         headers = self.server_info["headers"]
@@ -187,6 +263,14 @@ class API:
         print("[Graphql] Sending create activity request: " + json.dumps(request_body))
         response = await self._make_request(request_body)
         print(json.dumps(response))
+
+    async def create_file(self, type: FileType, filename: str, hash: str, notes: str = None):
+        response = await self._make_request(self._get_create_file_mutation(type, filename, hash, notes))
+        return response['data']['createFile']
+
+    async def create_association(self, inverterId: str, fileId: str):
+        response = await self._make_request(self._get_create_association_mutation(inverterId, fileId))
+        return response['data']['createAssociation']
 
     def awai(self, coroutine):
         # Or `async.run(coroutine)`
@@ -253,7 +337,9 @@ if __name__ == "__main__":
     # react(main)
 
     api = API()
-    d = ensureDeferred(api.subscribe())
+    # d = ensureDeferred(api.subscribe())
+    # d = ensureDeferred(api.create_file(API.FileType.Log, "testlog.log", "testhash"))
+    d = ensureDeferred(api.create_association("TestInv", "TestFile"))
     d.addCallback(succ)
     d.addErrback(err)
     # ensureDeferred(api.test_connection())
