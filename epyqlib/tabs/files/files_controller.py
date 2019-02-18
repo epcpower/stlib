@@ -202,6 +202,17 @@ class FilesController:
             print(f"{self._tag} Unable to login to AWS. Setting offline mode to true.")
             self.set_offline(True)
 
+    def open_file(self, row: QTreeWidgetItem):
+        file_hash = self._get_mapping_for_row(row).association['file']['hash']
+        file_path = self.cache_manager.get_file_path(file_hash)
+        import subprocess, os, sys
+        if sys.platform.startswith('darwin'):
+            subprocess.call(('open', file_path))
+        elif os.name == 'nt':  # For Windows
+            os.startfile(file_path)
+        elif os.name == 'posix':  # For Linux, Mac, etc.
+            subprocess.call(('xdg-open', file_path))
+
     async def save_file_as_clicked(self, item: QTreeWidgetItem = None):
         if item is None:
             item = self.view.files_grid.currentItem()

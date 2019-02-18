@@ -1,3 +1,4 @@
+import os
 import pathlib
 from datetime import datetime
 from enum import Enum
@@ -271,8 +272,40 @@ class FilesView(UiBase):
 
         if parent is self.section_headers.raw_logs:
             self._render_raw_log_menu(menu_pos, item)
+        elif parent is self.section_headers.other:
+            self._render_other_file_menu(menu_pos, item)
+        elif parent is self.section_headers.firmware:
+            self._render_firmware_menu(menu_pos, item)
         else:
             self._render_param_file_menu(menu_pos, item)
+
+    def _render_other_file_menu(self, menu_pos: QPoint, item: QTreeWidgetItem):
+        menu = QMenu(self.files_grid)
+        send_to_inverter = menu.addAction("Flash to inverter")
+        send_to_inverter.setDisabled(True)
+
+        action = menu.exec(menu_pos)
+
+        if action is None:
+            pass
+        elif action is send_to_inverter:
+            pass # TODO: Implement this
+
+    def _render_other_file_menu(self, menu_pos: QPoint, item: QTreeWidgetItem):
+        menu = QMenu(self.files_grid)
+        open = menu.addAction("Open file")
+        save_as = menu.addAction("Save file as...")
+
+
+        action = menu.exec(menu_pos)
+
+        if action is None:
+            pass
+        elif action is open:
+            self.controller.open_file(item)
+        elif action is save_as:
+            ensureDeferred(self.controller.save_file_as_clicked(item))
+
 
     def _render_param_file_menu(self, menu_pos: QPoint, item: QTreeWidgetItem):
         menu = QMenu(self.files_grid)
