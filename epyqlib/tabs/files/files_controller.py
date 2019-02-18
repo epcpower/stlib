@@ -6,6 +6,7 @@ import attr
 from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
 from botocore.exceptions import EndpointConnectionError
 from twisted.internet.defer import ensureDeferred
+from twisted.internet.error import DNSLookupError
 
 from epyqlib.device import DeviceInterface
 from epyqlib.tabs.files.activity_log import ActivityLog, Event
@@ -45,7 +46,6 @@ class FilesController:
         self.sync_config = SyncConfig.get_instance()
         self.cache_manager = FilesManager(self.sync_config.directory)
         self.log_manager = LogManager.init(self.sync_config.directory)
-        self._log_rows = {}
 
         self._is_offline = self.sync_config.get(Vars.offline_mode) or False
         self._is_connected = False
@@ -95,7 +95,6 @@ class FilesController:
         :raises InverterNotFoundException
         """
         associations = await self.api.get_associations(serial_number)
-        self.view.enable_grid_sorting(False)
         for association in associations:
             if association['file'] is None:
                 print(f"[Files Controller] WARNING: Association {association['id']} returned with null file associated")
@@ -115,7 +114,7 @@ class FilesController:
             # Render either the new or updated association
             self.render_association_to_row(association, row)
 
-        self.view.enable_grid_sorting(True)
+        self.view.sort_grid_items()
         self._set_sync_time()
         self.view.show_sync_time(self._last_sync)
 
@@ -155,7 +154,10 @@ class FilesController:
         return [map for map in self.associations.values() if map.association['file']['hash'] == hash]
 
     def _get_mapping_for_row(self, row: QTreeWidgetItem) -> AssociationMapping:
-        return next(map for map in self.associations.values() if map.row == row)
+        try:
+            return next(map for map in self.associations.values() if map.row == row)
+        except StopIteration:
+            return None
 
 
     def render_association_to_row(self, association, row: QTreeWidgetItem):
@@ -285,9 +287,15 @@ class FilesController:
     def file_item_clicked(self, item: QTreeWidgetItem, column: int):
         if (item in get_values(self.view.section_headers)):
             self.view.show_file_details(None)
-        else:
-            mapping: AssociationMapping = next(a for a in self.associations.values() if a.row == item)
-            self.view.show_file_details(mapping.association)
+            return
+
+        file_mapping: AssociationMapping = self._get_mapping_for_row(item)
+        if file_mapping is not None:
+            self.view.show_file_details(file_mapping.association)
+
+        if item in self._log_rows.values():
+            hash = next(key for key, value in self._log_rows.items() if value == item)
+
 
     async def send_to_inverter(self, row: QTreeWidgetItem):
         map = self._get_mapping_for_row(row)
@@ -335,7 +343,10 @@ class FilesController:
             row = self._create_local_log_row(filename, hash)
 
             self.view.show_sync_status_icon(row, Cols.local, self.view.fa_check, self.view.color_green)
-            self.view.show_sync_status_icon(row, Cols.web, self.view.fa_question, self.view.color_red)
+            if hash in self.log_manager.uploaded_hashes:
+                self.view.show_sync_status_icon(row, Cols.web, self.view.fa_check, self.view.color_green)
+            else:
+                self.view.show_sync_status_icon(row, Cols.web, self.view.fa_question, self.view.color_red)
 
             # ctime = self.log_manager.stat(filename).st_ctime
             ctime = self.log_manager.stat(hash).st_ctime
@@ -350,6 +361,7 @@ class FilesController:
 
         self.view.show_sync_status_icon(row, Cols.local, self.view.fa_check, self.view.color_green)
         self.view.show_sync_status_icon(row, Cols.web, self.view.fa_question, self.view.color_red)
+
         return row
 
     def delete_local_log(self, row: QTreeWidgetItem):
@@ -372,7 +384,10 @@ class FilesController:
 
             # Try to log event with inverterId and build hash that log was generated
             event = Event.new_raw_log("testInvId", "testUserId", self._build_hash, filename, hash)
-            await self.activity_log.add(event)
+            try:
+                await self.activity_log.add(event)
+            except DNSLookupError:
+                self.set_offline(True)
 
             # Try to sync the file to the server
             if not self._is_offline:

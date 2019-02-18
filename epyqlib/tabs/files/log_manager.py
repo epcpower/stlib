@@ -25,6 +25,7 @@ class LogManager:
         #     raise Exception("LogManager being created instead of using singleton")
 
         self._hashes_file = path.join(files_dir, "log-hashes.json")
+        self.uploaded_hashes: set[str] = set()
         self._cache_dir = path.join(files_dir, "raw")
         self._ensure_dir(self._cache_dir)
         self._listeners: list[LogSyncedListener] = []
@@ -36,7 +37,6 @@ class LogManager:
 
         self._bucket_manager = BucketManager() # Does not necessarily need to be singleton?
 
-        # self._verify_hashes()
 
     @staticmethod
     def get_instance():
@@ -60,31 +60,15 @@ class LogManager:
 
     def _save_hashes_file(self):
         with open(self._hashes_file, 'w') as file:
-            json.dump(self._hashes, file, indent=2)
+            data = {'files': self._hashes, 'uploaded': list(self.uploaded_hashes)}
+            json.dump(data, file, indent=2)
 
     def _read_hashes_files(self):
         if path.exists(self._hashes_file):
             with open(self._hashes_file, 'r') as hashes:
-                self._hashes = json.load(hashes)
-
-
-    def _verify_hashes(self):
-        to_remove = set()
-        # Clear out files that are gone
-        for item in self._hashes.items():
-            hash, filename = item
-            if not path.exists(path.join(self._cache_dir, filename)):
-                to_remove.add(hash)
-
-        for item in to_remove:
-            del(self._hashes[item])
-
-        # Make sure every file on disk is in our hashes
-        for filename in os.listdir(self._cache_dir):
-            full_path = path.join(self._cache_dir, filename)
-            self._hashes[self._md5(full_path)] = filename
-
-        self._save_hashes_file()
+                data = json.load(hashes)
+                self._hashes = data.get('files') or {}
+                self.uploaded_hashes = set(data.get('uploaded') or [])
 
     def _md5(self, filename: str) -> str:
         md5 = hashlib.md5()
@@ -108,7 +92,10 @@ class LogManager:
             if hash not in uploaded_logs:
                 await self._bucket_manager.upload_log(path.join(self._cache_dir, hash), hash)
 
+            self.uploaded_hashes.add(hash)
             await self._notify_listeners(LogManager.EventType.log_synced, hash, filename)
+
+        self._save_hashes_file()
 
     async def sync_single_log(self, hash: str):
         await self._bucket_manager.upload_log(path.join(self._cache_dir, hash), hash)
@@ -118,6 +105,7 @@ class LogManager:
     def delete_local(self, hash: str):
         os.unlink(path.join(self._cache_dir, hash))
         del(self._hashes[hash])
+        self.uploaded_hashes.remove(hash)
         self._save_hashes_file()
 
     def items(self):

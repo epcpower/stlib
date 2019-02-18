@@ -79,7 +79,7 @@ class FilesView(UiBase):
 
     device_interface: 'DeviceInterface' = attr.ib(init=False)
 
-    time_format = '%l:%M%p %m/%d'
+    time_format = '%m/%d %I:%M%p '
 
     ui = attr.ib(factory=Ui)
 
@@ -174,13 +174,14 @@ class FilesView(UiBase):
         self.files_grid.setColumnWidth(Cols.web, 30)
         self.files_grid.setColumnWidth(Cols.association, 150)
         self.files_grid.setColumnWidth(Cols.description, 500)
+        self.files_grid.setColumnWidth(Cols.created_at, 125)
 
         def make_entry(caption):
             val = QTreeWidgetItem(self.files_grid, [caption])
             val.setExpanded(True)
             return val
 
-        self.section_headers.params = make_entry("Parameter Sets")
+        self.section_headers.params = make_entry("Parameter Files")
         self.section_headers.pvms = make_entry("Value Sets")
         self.section_headers.firmware = make_entry("Firmware")
         self.section_headers.raw_logs = make_entry("Fault Logs")
@@ -201,11 +202,10 @@ class FilesView(UiBase):
         while parent.childCount() > 0:
             parent.removeChild(parent.child(0))
 
-    def enable_grid_sorting(self, enable: bool):
-        self.files_grid.setSortingEnabled(enable)
-
-        if enable is True:
-            self.files_grid.sortByColumn(Cols.filename, Qt.SortOrder.AscendingOrder)
+    def sort_grid_items(self):
+        self.section_headers.raw_logs.sortChildren(Cols.created_at, Qt.SortOrder.AscendingOrder)
+        self.section_headers.params.sortChildren(Cols.filename, Qt.SortOrder.AscendingOrder)
+        self.section_headers.other.sortChildren(Cols.filename, Qt.SortOrder.AscendingOrder)
 
     def set_serial_number(self, serial_number: str):
         self.serial_number.setText(serial_number)
@@ -276,7 +276,7 @@ class FilesView(UiBase):
             self._render_other_file_menu(menu_pos, item)
         elif parent is self.section_headers.firmware:
             self._render_firmware_menu(menu_pos, item)
-        else:
+        elif parent is self.section_headers.params:
             self._render_param_file_menu(menu_pos, item)
 
     def _render_other_file_menu(self, menu_pos: QPoint, item: QTreeWidgetItem):
@@ -342,8 +342,6 @@ class FilesView(UiBase):
         row.setText(col, icon)
         row.setForeground(col, color)
 
-
-
     ### UI Update methods
     def show_logged_out_warning(self, enabled):
         self.lbl_not_logged_in.setHidden(not enabled)
@@ -376,7 +374,7 @@ class FilesView(UiBase):
             self.inverter_error.setText(f"<font color='red'>{error}</font>")
 
     def show_sync_time(self, time: datetime):
-        self.lbl_last_sync.setText(f'Last sync at:{time.strftime(self.time_format)}')
+        self.lbl_last_sync.setText(f'Last sync at: {time.strftime(self.time_format)}')
 
     def add_log_line(self, message: str):
         timestamp = datetime.now()
