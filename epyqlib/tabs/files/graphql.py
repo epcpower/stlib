@@ -5,7 +5,6 @@ from typing import Callable
 import treq
 from twisted.internet import reactor
 from twisted.internet.defer import ensureDeferred
-from twisted.internet.error import DNSLookupError
 from twisted.python.failure import Failure
 from twisted.web.iweb import IResponse
 
@@ -24,7 +23,6 @@ class InverterNotFoundException(Exception):
 
 class API:
     ws_handler = WebSocketHandler()
-    is_offline = SyncConfig.get_instance().get(Vars.offline_mode) or False
 
     server_info = {
         "url": "https://b3oofrroujeutdd4zclqlwedhm.appsync-api.us-west-2.amazonaws.com/graphql",

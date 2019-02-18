@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import Coroutine
 
 import attr
-from PyQt5.QtGui import QFont, QColor
 from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
 from botocore.exceptions import EndpointConnectionError
 from twisted.internet.defer import ensureDeferred
@@ -14,7 +13,7 @@ from epyqlib.tabs.files.activity_syncer import ActivitySyncer
 from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
 from epyqlib.tabs.files.bucket_manager import BucketManager
 from epyqlib.tabs.files.files_manager import FilesManager
-from epyqlib.tabs.files.filesview import Cols, Relationships, get_values, FilesView
+from epyqlib.tabs.files.filesview import Cols, Relationships, get_values
 from epyqlib.tabs.files.log_manager import LogManager
 from epyqlib.tabs.files.sync_config import SyncConfig, Vars
 from epyqlib.utils.twisted import errbackhook
@@ -35,6 +34,7 @@ class FilesController:
         self.old_notes: str = None
         self._last_sync: datetime = None
 
+
         self.activity_log = ActivityLog()
         self.api = API()
         self.activity_syncer = ActivitySyncer(self.activity_log, self.api)
@@ -47,6 +47,7 @@ class FilesController:
         self.log_manager = LogManager.init(self.sync_config.directory)
         self._log_rows = {}
 
+        self._is_offline = self.sync_config.get(Vars.offline_mode) or False
         self._is_connected = False
         self._serial_number = ""
         self._build_hash = ""
@@ -67,7 +68,7 @@ class FilesController:
                 self.aws_login_manager.refresh()
             except EndpointConnectionError as e:
                 print(f"{self._tag} Unable to login to AWS. Setting offline mode to true.")
-                self.api.is_offline = True
+                self.set_offline(True)
 
 
         self.activity_log.register_listener(lambda event: self.view.add_log_line(LogRenderer.render_event(event)))
@@ -199,7 +200,7 @@ class FilesController:
             self.aws_login_manager.show_login_window(self.view.files_grid)
         except EndpointConnectionError:
             print(f"{self._tag} Unable to login to AWS. Setting offline mode to true.")
-            self.api.is_offline = True
+            self.set_offline(True)
 
     async def save_file_as_clicked(self, item: QTreeWidgetItem = None):
         if item is None:
@@ -349,7 +350,11 @@ class FilesController:
             new_row.setText(Cols.created_at, ctime.strftime(self.view.time_format))
 
             # Try to sync it to the server
-            await self.log_manager.sync_single_log(hash)
+            try:
+                await self.log_manager.sync_single_log(hash)
+            except EndpointConnectionError:
+                self.set_offline(True)
+
 
             # Try to log event with inverterId and build hash that log was generated
             event = Event.new_raw_log("testInvId", "testUserId", self._build_hash, filename, hash)
@@ -358,6 +363,12 @@ class FilesController:
             # Show it synced correctly
             self.view.show_sync_status_icon(new_row, Cols.web, self.view.fa_check, self.view.color_green)
             pass
+
+    def set_offline(self, is_offline):
+        self.activity_syncer.set_offline(is_offline)
+        if is_offline:
+            # TODO: Display offline warning in UI
+            self._is_offline = True
 
 
 class LogRenderer():
