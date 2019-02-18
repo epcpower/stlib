@@ -234,19 +234,23 @@ class FilesController:
 
             self.view.serial_number.setText(serial_number)
 
-        await self.log_manager.sync_logs_to_server()
-
-        unsubscribe: Coroutine = self.api.unsubscribe()
-
         try:
-            await self._fetch_files(self.view.serial_number.text())
-        except InverterNotFoundException:
-            self.view.show_inverter_error("Error: Inverter ID not found.")
-            return
-        finally:
-            await unsubscribe
+            await self.log_manager.sync_logs_to_server()
+        except EndpointConnectionError:
+            self.set_offline(True)
 
-        await self.api.subscribe(self.file_updated)
+        if not self._is_offline:
+            unsubscribe: Coroutine = self.api.unsubscribe()
+
+            try:
+                await self._fetch_files(self.view.serial_number.text())
+            except InverterNotFoundException:
+                self.view.show_inverter_error("Error: Inverter ID not found.")
+                return
+            finally:
+                await unsubscribe
+
+            await self.api.subscribe(self.file_updated)
 
     def file_updated(self, action, payload):
         if (action == 'created'):
@@ -349,20 +353,19 @@ class FilesController:
             ctime = datetime.fromtimestamp(ctime)
             new_row.setText(Cols.created_at, ctime.strftime(self.view.time_format))
 
-            # Try to sync it to the server
-            try:
-                await self.log_manager.sync_single_log(hash)
-            except EndpointConnectionError:
-                self.set_offline(True)
-
-
             # Try to log event with inverterId and build hash that log was generated
             event = Event.new_raw_log("testInvId", "testUserId", self._build_hash, filename, hash)
             await self.activity_log.add(event)
 
-            # Show it synced correctly
-            self.view.show_sync_status_icon(new_row, Cols.web, self.view.fa_check, self.view.color_green)
-            pass
+            # Try to sync the file to the server
+            if not self._is_offline:
+                try:
+                    await self.log_manager.sync_single_log(hash)
+                    # Show it synced correctly
+                    self.view.show_sync_status_icon(new_row, Cols.web, self.view.fa_check, self.view.color_green)
+                except EndpointConnectionError:
+                    self.set_offline(True)
+
 
     def set_offline(self, is_offline):
         self.activity_syncer.set_offline(is_offline)
