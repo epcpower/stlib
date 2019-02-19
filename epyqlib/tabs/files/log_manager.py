@@ -29,7 +29,7 @@ class LogManager:
         self._cache_dir = path.join(files_dir, "raw")
         self._ensure_dir(self._cache_dir)
         self._listeners: list[LogSyncedListener] = []
-
+        self._current_inverter_id: str
 
         self._hashes: dict[str, str] = {} # Key = hash, value = filename
 

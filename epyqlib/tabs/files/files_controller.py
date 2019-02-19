@@ -50,7 +50,10 @@ class FilesController:
         self._is_offline = self.sync_config.get(Vars.offline_mode) or False
         self._is_connected = False
         self._serial_number = ""
+        self._inverter_id = ""
         self._build_hash = ""
+
+        self._device_interface = None
 
         self.associations: [str, AssociationMapping] = {}
 
@@ -78,12 +81,26 @@ class FilesController:
 
         self._show_local_logs()
 
-    async def device_interface_set(self, device_interface: DeviceInterface):
-        self._is_connected = device_interface.get_connected_status()
-        if self._is_connected.connected: # Appears you can never be "connected" in offline mode?
-            self._serial_number = await device_interface.get_serial_number()
-            self._build_hash = await device_interface.get_build_hash()
-            # TODO: If we have serial number, fetch inverterId for this serial
+    def device_interface_set(self, device_interface: DeviceInterface):
+        self._device_interface = device_interface
+
+    async def _read_info_from_inverter(self, online: bool, transmit: bool):
+        # Appears you can never be "connected" in offline mode?
+        if not transmit:
+            return
+
+        # Don't do this if we already have this information
+        if self._serial_number != "":
+            return
+
+        self._serial_number = await self._device_interface.get_serial_number()
+        self._build_hash = await self._device_interface.get_build_hash()
+
+        # TODO: If we have serial number, fetch inverterId for this serial
+        inverter_info = await self.api.get_inverter_by_serial(self._serial_number)
+
+        self._inverter_id = inverter_info['id']
+        self.log_manager.current_inverter_id = self._inverter_id
 
     ## Sync Info Methods
     def _set_sync_time(self) -> None:
@@ -196,6 +213,9 @@ class FilesController:
             sync_def = ensureDeferred(self.sync_now())
             sync_def.addErrback(errbackhook)
 
+    async def on_bus_status_changed(self, online: bool, transmit: bool):
+        await self._read_info_from_inverter(online, transmit)
+
     ## UI Events
     async def login_clicked(self):
         try:
@@ -240,10 +260,10 @@ class FilesController:
         serial_number = self.view.serial_number.text()
         # If InverterId is not set and we're connected, get inverter serial #
         if serial_number == '':
-            if not self.view.device_interface.get_connected_status().connected:
+            if not self._device_interface.get_connected_status().connected:
                 self.view.show_inverter_error('Bus is disconnected. Unable to get Inverter Serial Number')
                 return
-            serial_number = await self.view.device_interface.get_serial_number()
+            serial_number = await self._device_interface.get_serial_number()
 
             self.view.serial_number.setText(serial_number)
 

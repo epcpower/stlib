@@ -50,14 +50,12 @@ class API:
         "variables": {}
     }
 
-    get_inverter_string = """
-        query ($inverterId: ID!) { 
-            getInverter(id: $inverterId) { 
+    _all_inverter_fields = """
                 createdAt 
                 deploymentDate 
                 id 
                 manufactureDate 
-                model { name revision partNumber codes id __typename } 
+                model { name revision partNumber id __typename } 
                 notes 
                 serialNumber 
                 site { 
@@ -70,6 +68,13 @@ class API:
                 updatedAt 
                 updatedBy 
                 __typename 
+    """
+
+    get_inverter_string = """
+        query ($inverterId: ID!) { 
+            getInverter(id: $inverterId) {""" + \
+                _all_inverter_fields + \
+        """
             }
         } 
     """
@@ -79,6 +84,23 @@ class API:
             "query": self.get_inverter_string,
             "variables": {
                 "inverterId": inverter_id
+            }
+        }
+
+    _get_inverter_by_sn_string = """
+        query ($serialNumber: String!) { 
+            getInverterBySN(serialNumber: $serialNumber) {""" + \
+                _all_inverter_fields + \
+        """
+            }
+        } 
+    """
+
+    def _get_inverter_by_sn_query(self, serial_number: str):
+        return {
+            "query": self._get_inverter_by_sn_string,
+            "variables": {
+                "serialNumber": serial_number
             }
         }
 
@@ -239,12 +261,14 @@ class API:
 
         return response['data']['listInverters']['items']
 
-    async def get_inverter_test(self):
-        return await self.get_inverter("d2ea61cf-50f1-4ece-9caa-8b5fd250036d")
 
     async def get_inverter(self, inverter_id: str):
         response = await self._make_request(self._get_inverter_query(inverter_id))
         return response['data']['getInverter']
+
+    async def get_inverter_by_serial(self, serial_number: str):
+        response = await self._make_request(self._get_inverter_by_sn_query(serial_number))
+        return response['data']['getInverterBySN']
 
     async def get_associations(self, serial_number: str):
         """

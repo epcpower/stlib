@@ -109,13 +109,14 @@ class FilesView(UiBase):
         self.controller.setup()
 
     def set_device_interface(self, device_interface):
-        self.device_interface = device_interface
-        ensureDeferred(self.controller.device_interface_set(device_interface))\
-            .addErrback(open_error_dialog)
-
+        self.controller.device_interface_set(device_interface)
 
     def tab_selected(self):
         self.controller.tab_selected()
+
+    def on_bus_status_changed(self, online: bool, transmit: bool):
+        ensureDeferred(self.controller.on_bus_status_changed(online, transmit))\
+            .addErrback(open_error_dialog)
 
     ### Setup methods
     # noinspection PyAttributeOutsideInit

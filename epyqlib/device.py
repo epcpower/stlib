@@ -1171,6 +1171,10 @@ class Device:
             if not online:
                 self.nvs.set_stale()
 
+        if self.ui.tabs.indexOf(self.ui.files) > 0:
+            self.ui.files_view.on_bus_status_changed(online, transmit)
+
+
     def read_nv_widget_min_max(self):
         if not self.auto_read_nv_widget_min_max:
             return
