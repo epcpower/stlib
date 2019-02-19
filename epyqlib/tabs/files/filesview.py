@@ -25,8 +25,6 @@ Ui, UiBase = PyQt5.uic.loadUiType(
 )
 
 
-# TODO: what about `in_designer=False`
-
 class _Sections:
     params: QTreeWidgetItem
     pvms: QTreeWidgetItem
@@ -78,6 +76,7 @@ class FilesView(UiBase):
     _log_text = ""
 
     device_interface: 'DeviceInterface' = attr.ib(init=False)
+    pending_log_rows: dict[str, QTreeWidgetItem] = {} # Hash -> Row
 
     time_format = '%m/%d %I:%M%p '
 
@@ -290,7 +289,7 @@ class FilesView(UiBase):
         if action is None:
             pass
         elif action is send_to_inverter:
-            pass # TODO: Implement this
+            pass # TODO: [EPC] Implement this
 
     def _render_other_file_menu(self, menu_pos: QPoint, item: QTreeWidgetItem):
         menu = QMenu(self.files_grid)
@@ -342,6 +341,12 @@ class FilesView(UiBase):
     def show_sync_status_icon(self, row: QTreeWidgetItem, col: int, icon: str, color: QColor):
         row.setText(col, icon)
         row.setForeground(col, color)
+
+    def show_check_icon(self, row: QTreeWidgetItem, col: int):
+        self.show_sync_status_icon(row, col, self.fa_check, self.color_green)
+
+    def show_question_icon(self, row: QTreeWidgetItem, col: int):
+        self.show_sync_status_icon(row, col, self.fa_question, self.color_red)
 
     ### UI Update methods
     def show_logged_out_warning(self, enabled):

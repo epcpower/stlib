@@ -96,11 +96,11 @@ class FilesController:
         self._serial_number = await self._device_interface.get_serial_number()
         self._build_hash = await self._device_interface.get_build_hash()
 
-        # TODO: If we have serial number, fetch inverterId for this serial
         inverter_info = await self.api.get_inverter_by_serial(self._serial_number)
 
         self._inverter_id = inverter_info['id']
-        self.log_manager.current_inverter_id = self._inverter_id
+        self.log_manager.inverter_id = self._inverter_id
+        self.log_manager.build_id = self._build_hash
 
     ## Sync Info Methods
     def _set_sync_time(self) -> None:
@@ -357,6 +357,53 @@ class FilesController:
             return False
 
         return (len(self.old_notes) != len(new_notes)) or self.old_notes != new_notes
+
+
+    ## Raw Log Syncing
+    async def _sync_pending_logs(self):
+        if self._is_offline:
+            return
+
+        log = self.log_manager.get_next_pending_log()
+        while log is not None:
+            file_path = self.log_manager.get_path_to_log(log.hash)
+            await self.bucket_manager.upload_log(file_path, log.hash)
+
+            # ?: Where do we want to store the timestamp and build_id that the log was generated?
+            notes = f"BuildId: {log.build_id}\nLog Captured At: {log.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+            create_file_response = await self.api.create_file(API.FileType.Log, log.filename, log.hash, notes)
+            new_file_id = create_file_response['id']
+
+            new_association = await self.api.create_association(self._inverter_id, new_file_id)
+
+            await self.activity_log.add(Event.new_raw_log(self._inverter_id, "Testuser", self._build_hash, log.filename, log.hash))
+
+            ## Move UI row from pending to current
+            row = self.view.pending_log_rows.pop(log.hash)
+            map = AssociationMapping(new_association, row)
+            key = new_association['id'] + new_association['file']['id']
+
+            self.associations[key] = map
+
+            # Done processing. Remove pending and get next (if present)
+            self.log_manager.remove_pending(log)
+            log = self.log_manager.get_next_pending_log()
+
+    async def _show_pending_logs(self):
+        for log in self.log_manager.get_pending_logs():
+            row = self.view.attach_row_to_parent('log', log.filename)
+            self.view.show_check_icon(row, Cols.local)
+            self.view.show_question_icon(row, Cols.web)
+
+            ctime = self.log_manager.stat(hash).st_ctime
+            ctime = datetime.fromtimestamp(ctime)
+            row.setText(Cols.created_at, ctime.strftime(self.view.time_format))
+
+            row.setText(Cols.creator, log.username)
+
+            self.view.pending_log_rows[log.hash] = row
+
+
 
     def _show_local_logs(self):
         for hash, filename in self.log_manager.items():

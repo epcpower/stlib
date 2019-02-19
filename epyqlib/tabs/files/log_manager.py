@@ -1,3 +1,6 @@
+from datetime import datetime
+
+import attr
 import hashlib
 import inspect
 import json
@@ -6,11 +9,22 @@ import shutil
 from enum import Enum
 from os import path
 
-from typing import Tuple, Callable, Coroutine
+from typing import Tuple, Callable, Coroutine, Union
 
 from epyqlib.tabs.files.bucket_manager import BucketManager
 
 LogSyncedListener = Callable[[str, str], Coroutine]
+
+
+@attr.s(slots=True, auto_attribs=True)
+class PendingLog:
+    hash: str
+    filename: str
+    build_id: str
+    inverter_id: str
+    username = "Current User"
+    notes = ""
+    timestamp = datetime.now()
 
 class LogManager:
     _instance: 'LogManager' = None
@@ -29,7 +43,12 @@ class LogManager:
         self._cache_dir = path.join(files_dir, "raw")
         self._ensure_dir(self._cache_dir)
         self._listeners: list[LogSyncedListener] = []
-        self._current_inverter_id: str
+        self.inverter_id: str = None
+        self.build_id: str = None
+
+        self._pending_logs_file = path.join(files_dir, "pending-logs.json")
+        self._pending_logs: list['PendingLog'] = []
+
 
         self._hashes: dict[str, str] = {} # Key = hash, value = filename
 
@@ -48,6 +67,59 @@ class LogManager:
     def init(files_dir: str):
         LogManager._instance = LogManager(files_dir)
         return LogManager._instance
+
+
+    async def add_pending_log(self, file_path: str):
+        basename = os.path.basename(file_path)
+        hash = self._md5(file_path)
+        shutil.copy2(file_path, path.join(self._cache_dir, hash))
+
+        new_log = PendingLog(hash, basename, self.build_id, self.inverter_id)
+        self._pending_logs.append(new_log)
+
+    def _save_pending_log_file(self):
+        with open(self._pending_logs_file, 'w') as file:
+            data = [attr.asdict(log) for log in self._pending_logs]
+            json.dump(data, file, indent=2)
+
+    def _read_pending_log_file(self):
+        if not path.exists(self._pending_logs_file):
+            return
+
+        with open(self._pending_logs_file, 'r') as file:
+            data: list[dict] = json.load(file)
+            for log in data:
+                self._pending_logs.append(PendingLog(**log))
+
+    def sync_pending_logs(self):
+        for log in self._pending_logs:
+            # Sync log itself
+            self._bucket_manager.upload_log(path.join(self._cache_dir, log.hash), log.hash)
+
+            # Create file
+            self.
+            # Create association
+            # Convert pending log to association in files_controller???
+            pass
+
+    def get_path_to_log(self, hash: str):
+        return path.join(self._cache_dir, hash)
+
+    def get_pending_logs(self) -> list[PendingLog]:
+
+    def get_next_pending_log(self) -> Union[PendingLog, None]:
+        if len(self._pending_logs) > 0:
+            return self._pending_logs[0]
+        else:
+            return None
+
+    def remove_pending(self, log: PendingLog):
+        self._pending_logs.remove(log)
+
+
+    ##################
+    #       Old      #
+    ##################
 
     async def copy_into_cache(self, file_path: str):
         basename = os.path.basename(file_path)
