@@ -19,6 +19,7 @@ class BucketManager():
     async def upload_log(self, source_path: str, dest_filename: str):
         print(f"{self._tag} Starting to upload log {dest_filename}")
 
+        # TODO: Figure out if logs should really be uploaded to their own folder
         with open(source_path, "rb") as source_file:
             s3_resource = self._aws.get_s3_resource()
             bucket = s3_resource.Bucket(self._bucket_name)

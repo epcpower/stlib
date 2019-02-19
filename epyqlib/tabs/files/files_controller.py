@@ -1,12 +1,11 @@
 import shutil
 from datetime import datetime
-from typing import Coroutine
+from typing import Coroutine, Dict
 
 import attr
 from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
 from botocore.exceptions import EndpointConnectionError
 from twisted.internet.defer import ensureDeferred
-from twisted.internet.error import DNSLookupError
 
 from epyqlib.device import DeviceInterface
 from epyqlib.tabs.files.activity_log import ActivityLog, Event
@@ -15,7 +14,7 @@ from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
 from epyqlib.tabs.files.bucket_manager import BucketManager
 from epyqlib.tabs.files.files_manager import FilesManager
 from epyqlib.tabs.files.filesview import Cols, Relationships, get_values
-from epyqlib.tabs.files.log_manager import LogManager
+from epyqlib.tabs.files.log_manager import LogManager, PendingLog
 from epyqlib.tabs.files.sync_config import SyncConfig, Vars
 from epyqlib.utils.twisted import errbackhook
 from .graphql import API, InverterNotFoundException
@@ -42,18 +41,20 @@ class FilesController:
 
         self.aws_login_manager = AwsLoginManager.get_instance()
         self.bucket_manager = BucketManager()
-        self._log_rows: dict[str, QTreeWidgetItem] = {}
+        self._log_rows: Dict[str, QTreeWidgetItem] = {}
         self.sync_config = SyncConfig.get_instance()
         self.cache_manager = FilesManager(self.sync_config.directory)
         self.log_manager = LogManager.init(self.sync_config.directory)
 
         self._is_offline = self.sync_config.get(Vars.offline_mode) or False
         self._is_connected = False
-        self._serial_number = ""
-        self._inverter_id = ""
-        self._build_hash = ""
+        self._serial_number = None
+        self._inverter_id = None
+        self._build_hash = None
 
         self._device_interface = None
+
+        self._inverter_id_lookup: Dict[str, str] = {} # serial -> inverter_id
 
         self.associations: [str, AssociationMapping] = {}
 
@@ -77,30 +78,37 @@ class FilesController:
         self.activity_log.register_listener(lambda event: self.view.add_log_line(LogRenderer.render_event(event)))
         self.activity_log.register_listener(self.activity_syncer.listener)
 
-        self.log_manager.register_listener(self.log_synced)
+        self.log_manager.add_listener(self._on_new_pending_log)
 
-        self._show_local_logs()
+        self._show_pending_logs()
 
     def device_interface_set(self, device_interface: DeviceInterface):
         self._device_interface = device_interface
 
-    async def _read_info_from_inverter(self, online: bool, transmit: bool):
-        # Appears you can never be "connected" in offline mode?
-        if not transmit:
+    async def _read_info_from_inverter(self, online: bool = None, transmit: bool = None):
+        # Hasn't been set yet
+        if self._device_interface is None:
             return
 
         # Don't do this if we already have this information
-        if self._serial_number != "":
+        if self._inverter_id is not None:
             return
 
-        self._serial_number = await self._device_interface.get_serial_number()
-        self._build_hash = await self._device_interface.get_build_hash()
+        bus_status: DeviceInterface.TransmitStatus = self._device_interface.get_connected_status()
+        # Appears you can never be "connected" in offline mode?
+        if not (bus_status.connected and bus_status.transmitting):
+            return
 
-        inverter_info = await self.api.get_inverter_by_serial(self._serial_number)
+        # Only read serial number if it wasn't set through the UI (Will this ever happen if transmit is true?)
+        if self._serial_number is None:
+            self._serial_number = await self._device_interface.get_serial_number()
+            self._build_hash = await self._device_interface.get_build_hash()
 
-        self._inverter_id = inverter_info['id']
-        self.log_manager.inverter_id = self._inverter_id
-        self.log_manager.build_id = self._build_hash
+            self.log_manager.build_id = self._build_hash
+
+
+        #inverter_info = await self.api.get_inverter_by_serial(self._serial_number)
+        await self._get_id_for_serial_number(self._serial_number)
 
     ## Sync Info Methods
     def _set_sync_time(self) -> None:
@@ -138,20 +146,25 @@ class FilesController:
 
     async def _sync_files(self):
         missing_hashes = set()
+
+        mapping: AssociationMapping
         for key, mapping in self.associations.items():
-            # mapping is of type AssociationMapping
+
             hash = mapping.association['file']['hash']
-            if(not self.cache_manager.has_hash(hash)):
-                missing_hashes.add(hash)
-            else:
+            if self.cache_manager.has_hash(hash):
                 self.view.show_sync_status_icon(mapping.row, Cols.local, self.view.fa_check, self.view.color_green)
+            else:
+                # Don't proactively cache raw log files
+                if mapping.association['file']['type'].lower() == 'log':
+                    continue
+                missing_hashes.add(hash)
+
 
         if len(missing_hashes) == 0:
             print("All files already hashed locally.")
             return
 
-        #TODO: Figure out how to download multiple files at a time
-        # Just trying to wrap in asyncio task fails.
+        # TODO: Figure out how to download multiple files at a time. Just trying to wrap in asyncio task fails.
         for hash in missing_hashes:
             await self.sync_file(hash)
 
@@ -207,11 +220,17 @@ class FilesController:
         return hash
 
     ## Lifecycle events
-    def tab_selected(self):
+    async def tab_selected(self):
         self.cache_manager.verify_cache()
+
+        self.view.serial_number.setText(self._serial_number)
+
+        self._show_pending_logs()
+
         if self.sync_config.get(Vars.auto_sync):
             sync_def = ensureDeferred(self.sync_now())
             sync_def.addErrback(errbackhook)
+
 
     async def on_bus_status_changed(self, online: bool, transmit: bool):
         await self._read_info_from_inverter(online, transmit)
@@ -257,9 +276,10 @@ class FilesController:
         self.view.show_inverter_error(None)
 
 
-        serial_number = self.view.serial_number.text()
         # If InverterId is not set and we're connected, get inverter serial #
-        if serial_number == '':
+        if self._serial_number is None:
+            await self._read_info_from_inverter()
+
             if not self._device_interface.get_connected_status().connected:
                 self.view.show_inverter_error('Bus is disconnected. Unable to get Inverter Serial Number')
                 return
@@ -268,7 +288,7 @@ class FilesController:
             self.view.serial_number.setText(serial_number)
 
         try:
-            await self.log_manager.sync_logs_to_server()
+            await self._sync_pending_logs()
         except EndpointConnectionError:
             self.set_offline(True)
 
@@ -276,7 +296,7 @@ class FilesController:
             unsubscribe: Coroutine = self.api.unsubscribe()
 
             try:
-                await self._fetch_files(self.view.serial_number.text())
+                await self._fetch_files(self._serial_number)
             except InverterNotFoundException:
                 self.view.show_inverter_error("Error: Inverter ID not found.")
                 return
@@ -374,97 +394,52 @@ class FilesController:
             create_file_response = await self.api.create_file(API.FileType.Log, log.filename, log.hash, notes)
             new_file_id = create_file_response['id']
 
-            new_association = await self.api.create_association(self._inverter_id, new_file_id)
+            inverter_id = await self._get_id_for_serial_number(log.serial_number)
 
-            await self.activity_log.add(Event.new_raw_log(self._inverter_id, "Testuser", self._build_hash, log.filename, log.hash))
+            new_association = await self.api.create_association(inverter_id, new_file_id)
+
+            # TODO: Get unique user ID in place of username
+            await self.activity_log.add(Event.new_raw_log(inverter_id, log.username, log.build_id, log.filename, log.hash))
 
             ## Move UI row from pending to current
             row = self.view.pending_log_rows.pop(log.hash)
+            self.view.show_check_icon(row, Cols.web)
             map = AssociationMapping(new_association, row)
             key = new_association['id'] + new_association['file']['id']
 
+
             self.associations[key] = map
+
+            self.cache_manager.move_into_cache(self.log_manager.get_path_to_log(log.hash))
 
             # Done processing. Remove pending and get next (if present)
             self.log_manager.remove_pending(log)
             log = self.log_manager.get_next_pending_log()
 
-    async def _show_pending_logs(self):
+    async def _on_new_pending_log(self, log: PendingLog):
+        self._add_new_pending_log_row(log)
+        await self._sync_pending_logs()
+
+    def _show_pending_logs(self):
         for log in self.log_manager.get_pending_logs():
-            row = self.view.attach_row_to_parent('log', log.filename)
-            self.view.show_check_icon(row, Cols.local)
-            self.view.show_question_icon(row, Cols.web)
+            if log.hash not in self.view.pending_log_rows:
+                self._add_new_pending_log_row(log)
 
-            ctime = self.log_manager.stat(hash).st_ctime
-            ctime = datetime.fromtimestamp(ctime)
-            row.setText(Cols.created_at, ctime.strftime(self.view.time_format))
+    def _add_new_pending_log_row(self, log: PendingLog):
+        row = self.view.attach_row_to_parent('log', log.filename)
 
-            row.setText(Cols.creator, log.username)
+        self.view.show_check_icon(row, Cols.local)
+        self.view.show_question_icon(row, Cols.web)
 
-            self.view.pending_log_rows[log.hash] = row
+        self.view.show_relationship(row, Relationships.inverter, f"SN: {log.serial_number}")
 
+        ctime = self.log_manager.stat(log.hash).st_ctime
+        ctime = datetime.fromtimestamp(ctime)
+        row.setText(Cols.created_at, ctime.strftime(self.view.time_format))
 
+        row.setText(Cols.creator, log.username)
 
-    def _show_local_logs(self):
-        for hash, filename in self.log_manager.items():
-            row = self._create_local_log_row(filename, hash)
-
-            self.view.show_sync_status_icon(row, Cols.local, self.view.fa_check, self.view.color_green)
-            if hash in self.log_manager.uploaded_hashes:
-                self.view.show_sync_status_icon(row, Cols.web, self.view.fa_check, self.view.color_green)
-            else:
-                self.view.show_sync_status_icon(row, Cols.web, self.view.fa_question, self.view.color_red)
-
-            # ctime = self.log_manager.stat(filename).st_ctime
-            ctime = self.log_manager.stat(hash).st_ctime
-            ctime = datetime.fromtimestamp(ctime)
-            row.setText(Cols.created_at, ctime.strftime(self.view.time_format))
-
-    def _create_local_log_row(self, filename, hash):
-        row = self.view.attach_row_to_parent('log', filename)
-        self._log_rows[hash] = row
-        row.setFont(Cols.local, self.view.fontawesome)
-        row.setFont(Cols.web, self.view.fontawesome)
-
-        self.view.show_sync_status_icon(row, Cols.local, self.view.fa_check, self.view.color_green)
-        self.view.show_sync_status_icon(row, Cols.web, self.view.fa_question, self.view.color_red)
-
-        return row
-
-    def delete_local_log(self, row: QTreeWidgetItem):
-        hash = next(key for key, value in self._log_rows.items() if value == row)
-        self.log_manager.delete_local(hash)
-        del(self._log_rows[hash])
-        row.parent().removeChild(row)
-
-    async def log_synced(self, event: LogManager.EventType, hash: str, filename: str):
-        if event == LogManager.EventType.log_synced:
-            row: QTreeWidgetItem = self._log_rows.get(hash)
-            if row is not None:
-                self.view.show_sync_status_icon(row, Cols.web, self.view.fa_check, self.view.color_green)
-
-        if event == LogManager.EventType.log_generated:
-            new_row = self._create_local_log_row(filename, hash)
-            ctime = self.log_manager.stat(hash).st_ctime
-            ctime = datetime.fromtimestamp(ctime)
-            new_row.setText(Cols.created_at, ctime.strftime(self.view.time_format))
-
-            # Try to log event with inverterId and build hash that log was generated
-            event = Event.new_raw_log("testInvId", "testUserId", self._build_hash, filename, hash)
-            try:
-                await self.activity_log.add(event)
-            except DNSLookupError:
-                self.set_offline(True)
-
-            # Try to sync the file to the server
-            if not self._is_offline:
-                try:
-                    await self.log_manager.sync_single_log(hash)
-                    # Show it synced correctly
-                    self.view.show_sync_status_icon(new_row, Cols.web, self.view.fa_check, self.view.color_green)
-                except EndpointConnectionError:
-                    self.set_offline(True)
-
+        self.view.pending_log_rows[log.hash] = row
 
     def set_offline(self, is_offline):
         self.activity_syncer.set_offline(is_offline)
@@ -472,6 +447,12 @@ class FilesController:
             # TODO: Display offline warning in UI
             self._is_offline = True
 
+    async def _get_id_for_serial_number(self, serial_number: str):
+        if serial_number not in self._inverter_id_lookup:
+            inverter = await self.api.get_inverter_by_serial(serial_number)
+            self._inverter_id_lookup[serial_number] = inverter['id']
+
+        return self._inverter_id_lookup[serial_number]
 
 class LogRenderer():
     @staticmethod

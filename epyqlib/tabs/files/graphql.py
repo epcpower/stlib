@@ -223,7 +223,7 @@ class API:
                 inverterId: $inverterId
             ) {
                 id
-                file { filename, notes, createdAt }
+                file { id filename notes createdAt }
                 inverter { id, serialNumber }
             }
         }

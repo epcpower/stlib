@@ -57,7 +57,7 @@ class DataLogger:
         # d = self._pull_raw_log()
         d = twisted.internet.defer.execute(self._pull_raw_log_fake)
         d.addCallback(write_to_file, path=path)
-        d.addCallback(lambda _: twisted.internet.defer.ensureDeferred(LogManager.get_instance().copy_into_cache(path)))
+        d.addCallback(lambda _: twisted.internet.defer.ensureDeferred(self._notify_new_raw_log(path)))
 
         d.addErrback(epyqlib.utils.twisted.detour_result,
                      self.progress.fail)
@@ -72,6 +72,22 @@ class DataLogger:
         from time import time
         return bytes(str(time()), "utf-8")
 
+    async def _notify_new_raw_log(self, path: str):
+        build_hash_signal = self.nvs.signal_from_names('SoftwareHash', 'SoftwareHash')
+        serial_number_signal = self.nvs.signal_from_names('SN', 'SerialNumber')
+
+        build_hash = await self.nv_protocol.read(
+                nv_signal=build_hash_signal,
+                meta=epyqlib.nv.MetaEnum.value,
+            )
+        build_hash = str(build_hash[0])
+        serial_number = await self.nv_protocol.read(
+            nv_signal=serial_number_signal,
+            meta=epyqlib.nv.MetaEnum.value,
+        )
+        serial_number = str(serial_number[0])
+
+        await LogManager.get_instance().add_pending_log(path, build_hash, serial_number)
 
     @twisted.internet.defer.inlineCallbacks
     def _pull_raw_log(self):

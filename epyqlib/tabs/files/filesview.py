@@ -1,7 +1,7 @@
-import os
 import pathlib
 from datetime import datetime
 from enum import Enum
+from typing import Dict
 
 import PyQt5.uic
 import attr
@@ -11,9 +11,9 @@ from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit
     QPlainTextEdit, QGridLayout, QMenu, QTextEdit
 from twisted.internet.defer import ensureDeferred
 
-# noinspection PyUnreachableCode
 from epyqlib.utils.twisted import errbackhook as open_error_dialog
 
+# noinspection PyUnreachableCode
 if False:  # Tell the editor about the type, but don't invoke a cyclic depedency
     from epyqlib.device import DeviceInterface
 
@@ -76,7 +76,7 @@ class FilesView(UiBase):
     _log_text = ""
 
     device_interface: 'DeviceInterface' = attr.ib(init=False)
-    pending_log_rows: dict[str, QTreeWidgetItem] = {} # Hash -> Row
+    pending_log_rows: Dict[str, QTreeWidgetItem] = {} # Hash -> Row
 
     time_format = '%m/%d %I:%M%p '
 
@@ -111,7 +111,7 @@ class FilesView(UiBase):
         self.controller.device_interface_set(device_interface)
 
     def tab_selected(self):
-        self.controller.tab_selected()
+        ensureDeferred(self.controller.tab_selected())
 
     def on_bus_status_changed(self, online: bool, transmit: bool):
         ensureDeferred(self.controller.on_bus_status_changed(online, transmit))\
@@ -151,7 +151,7 @@ class FilesView(UiBase):
 
         # Bind click events
         self.btn_login.clicked.connect(self._login_clicked)
-        self.serial_number.returnPressed.connect(self._sync_now_clicked)
+        self.serial_number.returnPressed.connect(self._serial_number_entered)
 
         self.files_grid.itemClicked.connect(self.controller.file_item_clicked)
 
@@ -241,6 +241,12 @@ class FilesView(UiBase):
         row.setText(Cols.association, rel_text)
 
     ### Action
+    def _serial_number_entered(self):
+        self.controller._serial_number = self.serial_number.text()
+        ensureDeferred(self.controller._read_info_from_inverter()) \
+            .addCallback(lambda _: ensureDeferred(self.controller.sync_now())) \
+            .addErrback(open_error_dialog)
+
     def _sync_now_clicked(self):
         sync_def = ensureDeferred(self.controller.sync_now())
         sync_def.addErrback(open_error_dialog)
@@ -329,14 +335,19 @@ class FilesView(UiBase):
 
     def _render_raw_log_menu(self, menu_pos: QPoint, item: QTreeWidgetItem):
         menu = QMenu(self.files_grid)
+        download_local = menu.addAction("Download local copy")
         delete_local = menu.addAction("Delete local copy")
 
         action = menu.exec(menu_pos)
 
+        # TODO: Figure out lifecycle of local logs
         if action is None:
             pass
+        elif action is download_local:
+            pass
         elif action is delete_local:
-            self.controller.delete_local_log(item)
+            # self.controller.delete_local_log(item)
+            pass
 
     def show_sync_status_icon(self, row: QTreeWidgetItem, col: int, icon: str, color: QColor):
         row.setText(col, icon)
