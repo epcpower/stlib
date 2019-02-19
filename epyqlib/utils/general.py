@@ -437,3 +437,26 @@ def ordered_unique(iterable):
         if item not in seen:
             seen.add(item)
             yield item
+
+
+@attr.s
+class Orderer:
+    ordered = attr.ib()
+    indexes = attr.ib()
+    key = attr.ib()
+
+    @classmethod
+    def build(cls, ordered, key=lambda item: item):
+        indexes = {
+            item: index
+            for index, item in enumerate(ordered)
+        }
+
+        return cls(
+            ordered=ordered,
+            indexes=indexes,
+            key=key,
+        )
+
+    def __call__(self, value):
+        return self.indexes.get(self.key(value), math.inf)
