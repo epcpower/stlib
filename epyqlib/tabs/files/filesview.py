@@ -358,6 +358,7 @@ class FilesView(UiBase):
                 .addErrback(open_error_dialog) \
                 .addCallback(lambda _: self.show_check_icon(item, Cols.local))
         elif action is process_log:
+            pass
             # TODO: Implement this
         elif action is save_as:
             ensureDeferred(self.controller.save_file_as_clicked(item))
