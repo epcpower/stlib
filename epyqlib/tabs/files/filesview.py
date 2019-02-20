@@ -60,10 +60,8 @@ def get_values(obj):
 
 @attr.s
 class FilesView(UiBase):
-    gray_brush = QBrush(QColor(22, 22, 22, 22))
-    check_icon = u'✅'
-    question_icon = u'❓'
     fa_check = u''
+    fa_cross = u''
     fa_wifi = u''
     fa_question = u''
 
@@ -231,6 +229,9 @@ class FilesView(UiBase):
         row.setFont(Cols.local, self.fontawesome)
         row.setFont(Cols.web, self.fontawesome)
 
+        row.setTextAlignment(Cols.local, Qt.AlignCenter)
+        row.setTextAlignment(Cols.web, Qt.AlignCenter)
+
         return row
 
     def remove_row(self, row: QTreeWidgetItem):
@@ -285,7 +286,7 @@ class FilesView(UiBase):
         elif parent is self.section_headers.params:
             self._render_param_file_menu(menu_pos, item)
 
-    def _render_other_file_menu(self, menu_pos: QPoint, item: QTreeWidgetItem):
+    def _render_firmware_menu(self, menu_pos: QPoint, item: QTreeWidgetItem):
         menu = QMenu(self.files_grid)
         send_to_inverter = menu.addAction("Flash to inverter")
         send_to_inverter.setDisabled(True)
@@ -301,7 +302,6 @@ class FilesView(UiBase):
         menu = QMenu(self.files_grid)
         open = menu.addAction("Open file")
         save_as = menu.addAction("Save file as...")
-
 
         action = menu.exec(menu_pos)
 
@@ -334,30 +334,51 @@ class FilesView(UiBase):
             ensureDeferred(self.controller.save_file_as_clicked(item))
 
     def _render_raw_log_menu(self, menu_pos: QPoint, item: QTreeWidgetItem):
+        # item_hash = next(hash for hash, row in self.pending_log_rows.items() if row == item)
+        cached = self.controller.is_file_cached_locally(item)
+
         menu = QMenu(self.files_grid)
         download_local = menu.addAction("Download local copy")
+        process_log = menu.addAction("Process raw log")
+        save_as = menu.addAction("Save file as...")
         delete_local = menu.addAction("Delete local copy")
+
+        download_local.setDisabled(cached)
+        process_log.setDisabled(True and not cached) # Disable until implemented
+        save_as.setDisabled(not cached)
+        delete_local.setDisabled(not cached)
 
         action = menu.exec(menu_pos)
 
-        # TODO: Figure out lifecycle of local logs
         if action is None:
             pass
         elif action is download_local:
-            pass
+            file_hash = self.controller.get_hash_for_row(item)
+            ensureDeferred(self.controller.download_log(file_hash)) \
+                .addErrback(open_error_dialog) \
+                .addCallback(lambda _: self.show_check_icon(item, Cols.local))
+        elif action is process_log:
+            # TODO: Implement this
+        elif action is save_as:
+            ensureDeferred(self.controller.save_file_as_clicked(item))
         elif action is delete_local:
-            # self.controller.delete_local_log(item)
+            file_hash = self.controller.get_hash_for_row(item)
+            self.controller.cache_manager.delete_from_cache(file_hash)
+            self.show_cross_status_icon(item, Cols.local)
             pass
 
-    def show_sync_status_icon(self, row: QTreeWidgetItem, col: int, icon: str, color: QColor):
+    def _show_sync_status_icon(self, row: QTreeWidgetItem, col: int, icon: str, color: QColor):
         row.setText(col, icon)
         row.setForeground(col, color)
 
     def show_check_icon(self, row: QTreeWidgetItem, col: int):
-        self.show_sync_status_icon(row, col, self.fa_check, self.color_green)
+        self._show_sync_status_icon(row, col, self.fa_check, self.color_green)
 
     def show_question_icon(self, row: QTreeWidgetItem, col: int):
-        self.show_sync_status_icon(row, col, self.fa_question, self.color_red)
+        self._show_sync_status_icon(row, col, self.fa_question, self.color_red)
+
+    def show_cross_status_icon(self, row: QTreeWidgetItem, col: int):
+        self._show_sync_status_icon(row, col, self.fa_cross, self.color_gray)
 
     ### UI Update methods
     def show_logged_out_warning(self, enabled):

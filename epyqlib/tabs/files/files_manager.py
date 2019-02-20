@@ -48,3 +48,6 @@ class FilesManager:
     def move_into_cache(self, file_path: str):
         basename = os.path.basename(file_path)
         return os.rename(file_path, path.join(self._cache_dir, basename))
+
+    def delete_from_cache(self, hash: str):
+        os.unlink(path.join(self._cache_dir, hash))

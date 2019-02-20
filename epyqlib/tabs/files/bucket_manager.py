@@ -12,9 +12,16 @@ class BucketManager():
         self._uploaded_logs: set[str] = None
 
     async def download_file(self, hash: str, filename: str):
+        return await self._download(filename, 'files/' + hash)
+
+    async def download_log(self, hash: str, filename: str):
+        # Is it really worth it to have logs in a separate folder...?
+        return await self._download(filename, 'logs/' + hash)
+
+    async def _download(self, filename: str, key: str):
         bucket = self._aws.get_s3_resource().Bucket(self._bucket_name)
-        bucket.download_file(Filename=filename, Key='files/' + hash)
-        print(f"{self._tag} Finished downloading {hash}")
+        bucket.download_file(Filename=filename, Key=key)
+        print(f"{self._tag} Finished downloading {key}")
 
     async def upload_log(self, source_path: str, dest_filename: str):
         print(f"{self._tag} Starting to upload log {dest_filename}")

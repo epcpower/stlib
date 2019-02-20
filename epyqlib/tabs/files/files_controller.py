@@ -132,8 +132,8 @@ class FilesController:
                 self.associations[key].association = association # Update the association in case it's changed
             else:
                 row = self.view.attach_row_to_parent(type, association['file']['filename'])
-                self.view.show_sync_status_icon(row, Cols.local, self.view.fa_question, self.view.color_red)
-                self.view.show_sync_status_icon(row, Cols.web, self.view.fa_check, self.view.color_green)
+                self.view.show_question_icon(row, Cols.local)
+                self.view.show_check_icon(row, Cols.web)
                 self.associations[association['id'] + association['file']['id']] = AssociationMapping(association, row)
 
             # Render either the new or updated association
@@ -152,10 +152,11 @@ class FilesController:
 
             hash = mapping.association['file']['hash']
             if self.cache_manager.has_hash(hash):
-                self.view.show_sync_status_icon(mapping.row, Cols.local, self.view.fa_check, self.view.color_green)
+                self.view.show_check_icon(mapping.row, Cols.local)
             else:
                 # Don't proactively cache raw log files
                 if mapping.association['file']['type'].lower() == 'log':
+                    self.view.show_cross_status_icon(mapping.row, Cols.local)
                     continue
                 missing_hashes.add(hash)
 
@@ -173,7 +174,7 @@ class FilesController:
 
         mapping: AssociationMapping
         for mapping in self._get_mapping_for_hash(hash):
-            self.view.show_sync_status_icon(mapping.row, Cols.local, self.view.fa_check, self.view.color_green)
+            self.view.show_check_icon(mapping.row, Cols.local)
 
     def _get_key_for_hash(self, hash: str):
         value: AssociationMapping
@@ -182,6 +183,9 @@ class FilesController:
     def _get_mapping_for_hash(self, hash: str) -> [AssociationMapping]:
         map: AssociationMapping
         return [map for map in self.associations.values() if map.association['file']['hash'] == hash]
+
+    def get_hash_for_row(self, row: QTreeWidgetItem):
+        return self._get_mapping_for_row(row).association['file']['hash']
 
     def _get_mapping_for_row(self, row: QTreeWidgetItem) -> AssociationMapping:
         try:
@@ -213,10 +217,23 @@ class FilesController:
 
         self.view.show_relationship(row, relationship, rel_text)
 
+    def is_file_cached_locally(self, item: QTreeWidgetItem):
+        hash = self._get_mapping_for_row(item).association['file']['hash']
+        return self.cache_manager.has_hash(hash)
+
+    async def download_file_for_row(self, row: QTreeWidgetItem):
+        await self.download_file(self._get_mapping_for_row(row).association['file']['hash'])
+
     async def download_file(self, hash: str):
         print(f"[Files Controller] Downloading missing file hash {hash}")
         filename = self.cache_manager.get_file_path(hash)
         await self.bucket_manager.download_file(hash, filename)
+        return hash
+
+    async def download_log(self, hash: str):
+        print(f"[Files Controller] Downloading missing log hash {hash}")
+        filename = self.cache_manager.get_file_path(hash)
+        await self.bucket_manager.download_log(hash, filename)
         return hash
 
     ## Lifecycle events
