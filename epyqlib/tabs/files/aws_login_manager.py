@@ -1,14 +1,14 @@
 import inspect
-
-from PyQt5.QtCore import QObject
 from typing import Callable, Coroutine
 
+from PyQt5.QtCore import QObject
+from PyQt5.QtWidgets import QDialog
+from boto3_type_annotations.s3 import ServiceResource as S3Resource
 from twisted.internet.defer import ensureDeferred
 
 from epyqlib.tabs.files.cognito import CognitoHelper
+from epyqlib.tabs.files.login_dialog import LoginDialog
 from epyqlib.tabs.files.sync_config import SyncConfig, Vars
-from boto3_type_annotations.s3 import ServiceResource as S3Resource
-
 
 ## Async function that takes a bool whether or not the user was just logged in
 LoginListener = Callable[[bool], Coroutine]
@@ -34,13 +34,18 @@ class AwsLoginManager():
 
     def show_login_window(self, parent: QObject = None):
 
-        self._cognito_helper.authenticate("tester", "...")
+        dialog: QDialog = LoginDialog(self)
 
-        self._notify_listeners()
+        code = dialog.exec()
 
-        # Enable auto-sync when the user logs in
-        SyncConfig.get_instance().set(Vars.auto_sync, True)
+        if code == QDialog.Accepted:
+            self._notify_listeners()
 
+            # Enable auto-sync when the user logs in
+            SyncConfig.get_instance().set(Vars.auto_sync, True)
+
+    def authenticate(self, username: str, password: str):
+        self._cognito_helper.authenticate(username, password)
 
     def log_user_out(self):
         self._cognito_helper.log_out()
@@ -53,6 +58,7 @@ class AwsLoginManager():
 
     def refresh(self):
         self._cognito_helper._refresh()
+
 
     ## Manage Listeners
     def _notify_listeners(self):

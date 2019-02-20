@@ -1,9 +1,10 @@
 import logging
 from datetime import datetime, timedelta
 
+import botocore
 from boto3 import Session
 from boto3_type_annotations.s3 import ServiceResource as S3Resource
-
+import attr
 
 import boto3
 from boto3_type_annotations.cognito_identity import Client as CognitoIdentityClient
@@ -14,7 +15,12 @@ from epyqlib.tabs.files.sync_config import SyncConfig, Vars
 logger = logging.getLogger("CognitoHelper")
 
 
+@attr.s(slots=True, auto_attribs=True)
+class CognitoException(Exception):
+    message: str
+
 class CognitoHelper:
+
     _tag = '[CognitoHelper]'
     _identity_pool_id = 'us-west-2:b953611b-23f3-4f76-b463-cfb6c4e75b56'
     _client_id = '416gq4mdpos55cjir1h5u8g3sl'
@@ -48,15 +54,17 @@ class CognitoHelper:
         print(f"{self._tag} Beginning authentication for user {username}")
         client: CognitoIdpClient = self.get_anonymous_client('cognito-idp')
 
-        response = client.initiate_auth(
-            ClientId=self._client_id,
-            AuthFlow='USER_PASSWORD_AUTH',
-            AuthParameters={
-                'USERNAME': username,
-                'PASSWORD': password
-            }
-        )
-
+        try:
+            response = client.initiate_auth(
+                ClientId=self._client_id,
+                AuthFlow='USER_PASSWORD_AUTH',
+                AuthParameters={
+                    'USERNAME': username,
+                    'PASSWORD': password
+                }
+            )
+        except Exception:
+            raise CognitoException("Invalid credentials.")
 
         result = response['AuthenticationResult']
         self._access_token = result['AccessToken']
