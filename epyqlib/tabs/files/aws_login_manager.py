@@ -51,6 +51,8 @@ class AwsLoginManager():
         self._cognito_helper.log_out()
         self._notify_listeners()
 
+    def get_id_token(self) -> str:
+        return self._cognito_helper._id_token
 
     ## Get Resources
     def get_s3_resource(self) -> S3Resource:

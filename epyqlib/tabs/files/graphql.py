@@ -10,7 +10,6 @@ from twisted.python.failure import Failure
 from twisted.web.iweb import IResponse
 
 from epyqlib.tabs.files.activity_log import Event
-from epyqlib.tabs.files.sync_config import SyncConfig, Vars
 from epyqlib.tabs.files.websocket_handler import WebSocketHandler
 from epyqlib.utils.general import safe_get
 
@@ -333,6 +332,9 @@ class API:
     async def unsubscribe(self):
         if self.ws_handler.is_subscribed():
             self.ws_handler.disconnect()
+
+    def set_id_token(self, id_token: str):
+        self.server_info['headers']['Authorization'] = id_token
 
 
 def main(reactor):

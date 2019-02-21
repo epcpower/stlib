@@ -70,6 +70,7 @@ class FilesController:
         if logged_in:
             try:
                 self.aws_login_manager.refresh()
+                self.api.set_id_token(self.aws_login_manager.get_id_token())
             except EndpointConnectionError as e:
                 print(f"{self._tag} Unable to login to AWS. Setting offline mode to true.")
                 self.set_offline(True)
@@ -381,6 +382,7 @@ class FilesController:
         self.view.btn_sync_now.setDisabled(not logged_in)
 
         if logged_in:
+            self.api.set_id_token(self.aws_login_manager.get_id_token())
             await self.sync_now()
         else:
             await self.api.unsubscribe()
