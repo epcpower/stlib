@@ -198,6 +198,7 @@ class FilesController:
     def render_association_to_row(self, association, row: QTreeWidgetItem):
         row.setText(Cols.filename, association['file']['filename'])
         row.setText(Cols.version, association['file']['version'])
+        row.setText(Cols.creator, association['file'].get('createdBy'))
         row.setText(Cols.description, association['file']['description'])
 
         if(association.get('model')):
