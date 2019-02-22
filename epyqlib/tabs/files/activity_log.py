@@ -59,8 +59,8 @@ class Event():
         return Event(inverter_id, user_id, Event.Type.push_to_inverter, {})
 
     @staticmethod
-    def new_raw_log(inverter_id: str, user_id: str, build_id: str, filename: str, file_hash: str):
-        details = {"buildId": build_id, "fileHash": file_hash, "filename": filename}
+    def new_raw_log(inverter_id: str, user_id: str, build_id: str, serial_number: str, filename: str, file_hash: str):
+        details = {"buildId": build_id, "fileHash": file_hash, "filename": filename, "serialNumber": serial_number}
         return Event(inverter_id, user_id, Event.Type.new_raw_log, details)
 
 class ActivityLog:

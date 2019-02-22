@@ -1,3 +1,4 @@
+import json
 import shutil
 from datetime import datetime
 from typing import Coroutine, Dict
@@ -418,9 +419,6 @@ class FilesController:
 
             new_association = await self.api.create_association(inverter_id, new_file_id)
 
-            # TODO: Get unique user ID in place of username
-            await self.activity_log.add(Event.new_raw_log(inverter_id, log.username, log.build_id, log.filename, log.hash))
-
             ## Move UI row from pending to current
             row = self.view.pending_log_rows.pop(log.hash)
             self.view.show_check_icon(row, Cols.web)
@@ -437,6 +435,11 @@ class FilesController:
             log = self.log_manager.get_next_pending_log()
 
     async def _on_new_pending_log(self, log: PendingLog):
+        inverter_id = await self._get_id_for_serial_number(log.serial_number)
+
+        event = Event.new_raw_log(inverter_id, log.username, log.build_id, log.serial_number, log.filename, log.hash)
+        await self.activity_log.add(event)
+
         self._add_new_pending_log_row(log)
         await self._sync_pending_logs()
 
@@ -474,14 +477,17 @@ class FilesController:
 
         return self._inverter_id_lookup[serial_number]
 
+
 class LogRenderer():
     @staticmethod
     def render_event(event: Event) -> str:
-        if (event.type == Event.Type.load_param_file):
+        if event.type == Event.Type.load_param_file:
             return f"Param file {event.details['filename']} loaded."  # (Hash: {event.details['fileHash'][:8]})"
-        elif (event.type == Event.Type.param_set):
+        elif event.type == Event.Type.new_raw_log:
+            return f"New raw log generated. ({json.dumps(event.details)})"
+        elif event.type == Event.Type.param_set:
             return f"Parameter \"{event.details['paramName']}\" set to \"{event.details['paramValue']}\"."
-        elif (event.type == Event.Type.push_to_inverter):
+        elif event.type == Event.Type.push_to_inverter:
             return "All settings pushed to inverter."
         else:
             return f"Unknown event type: {event.type}. Details: {event.details}"

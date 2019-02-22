@@ -128,36 +128,36 @@ class API:
             }
         }
 
-    #   createActivity(inverterId: String!, timestamp: String!, type: String!, customerId: String, siteId: String, actionJson: String!): Activity!
     _create_activity = """
         mutation Name (
             $inverterId: String!,
             $timestamp: String!,
             $type: String!,
-            $actionJson: String!
+            $details: AWSJSON
         ){
             createActivity(
                 inverterId: $inverterId,
                 timestamp: $timestamp,
                 type: $type,
-                actionJson: $actionJson
+                details: $details
             ) {
                   inverterId
                   customerId
+                  details
                   siteId
                   timestamp
-                  actionJson
                   type
+                  
                   createdBy
             }
         }
     """
 
-    def _get_create_activity_mutation(self, inverter_id: str, timestamp: str, type: str, action_json: str):
+    def _get_create_activity_mutation(self, inverter_id: str, timestamp: str, type: str, details: dict):
         return {
             "query": self._create_activity,
             "variables": {
-                "actionJson": action_json,
+                "details": json.dumps(details),
                 "inverterId": inverter_id,
                 "timestamp": timestamp,
                 "type": type
@@ -281,8 +281,8 @@ class API:
         return response['data']['getInverterAssociations']['items']
 
     async def create_activity(self, event: Event):
-        details_json = json.dumps(event.details)
-        request_body = self._get_create_activity_mutation(event.inverter_id, event.timestamp, event.type, details_json)
+        # details_json = json.dumps(event.details)
+        request_body = self._get_create_activity_mutation(event.inverter_id, event.timestamp, event.type, event.details)
         print("[Graphql] Sending create activity request: " + json.dumps(request_body))
         response = await self._make_request(request_body)
         print(json.dumps(response))
