@@ -237,6 +237,25 @@ class API:
             }
         }
 
+    _update_file_notes = """        
+        mutation ($fileId: ID!, $notes: String) {
+            updateFile(id: $fileId, notes: $notes) {
+                id
+                hash
+                notes
+            }
+        }
+    """
+
+    def _get_update_file_notes_mutation(self, file_id: str, notes: str):
+        return {
+            "query": self._update_file_notes,
+            "variables": {
+                "fileId": file_id,
+                "notes": notes
+            }
+        }
+
 
 
     async def _make_request(self, body):
@@ -294,6 +313,10 @@ class API:
     async def create_association(self, inverterId: str, fileId: str):
         response = await self._make_request(self._get_create_association_mutation(inverterId, fileId))
         return response['data']['createAssociation']
+
+    async def set_file_notes(self, file_id: str, notes: str):
+        response = await self._make_request(self._get_update_file_notes_mutation(file_id, notes))
+        return response['data']['updateFile']
 
     def awai(self, coroutine):
         # Or `async.run(coroutine)`
@@ -365,7 +388,9 @@ if __name__ == "__main__":
     api = API()
     # d = ensureDeferred(api.subscribe())
     # d = ensureDeferred(api.create_file(API.FileType.Log, "testlog.log", "testhash"))
-    d = ensureDeferred(api.create_association("TestInv", "TestFile"))
+    # d = ensureDeferred(api.create_association("TestInv", "TestFile"))
+    api.set_id_token("eyJraWQiOiJweldEOXl5WFdNOW82MGdLWVMxREdXZWFGc2lNcWNGM3BcL1ZTZnNuVU5ZVT0iLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiIzZTA2OGQ4Yi01NTJmLTQ4YmYtYjVhZi1kZGViMDlhOTc3OWMiLCJjb2duaXRvOmdyb3VwcyI6WyJlcGMiXSwiZW1haWxfdmVyaWZpZWQiOnRydWUsImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC51cy13ZXN0LTIuYW1hem9uYXdzLmNvbVwvdXMtd2VzdC0yXzhyelNSRFBHNiIsInBob25lX251bWJlcl92ZXJpZmllZCI6dHJ1ZSwiY29nbml0bzp1c2VybmFtZSI6InRlc3RlciIsImNvZ25pdG86cm9sZXMiOlsiYXJuOmF3czppYW06OjY3NDQ3NTI1NTY2Njpyb2xlXC9Db2duaXRvX2VwY0F1dGhfUm9sZSJdLCJhdWQiOiI0MTZncTRtZHBvczU1Y2ppcjFoNXU4ZzNzbCIsImV2ZW50X2lkIjoiZjA1ZDZhYmYtMmZiOS0xMWU5LTg1YzMtZGY4OWE3YzZjMDM1IiwidG9rZW5fdXNlIjoiaWQiLCJhdXRoX3RpbWUiOjE1NTAwODExMjYsInBob25lX251bWJlciI6IisxMTExMjIyMzM0NCIsImV4cCI6MTU1MDk3NzQzMCwiaWF0IjoxNTUwOTczODMwLCJlbWFpbCI6ImJlbi5iZXJyeUBjcm9zc2NvbW0uY29tIn0.YkraNARQaWnWrfBs2NZ76efgy9oBTocg5Wscj_nA12Q4EKr8iryusw6tDVmJp0vIA5MwD5YwUbS0WHDfNWDg275dJPFXenwwnQNkQDm0B4DOJ4tHGY1wF580wkZdXXf8r4tcJVv7SGndD35ifxj8pEyrTdVY2gu1eg2O6Tb5H20WIqkBMttyUXp8VmnQBHXmpBdXf9KT5HBBDB7uqxcgSY_WoTN_ZorgLegkwJigt5xLTFBiEXDDfchcDwcEDFqp6IUbbAY8MHoNaf7yLRYXPCoYsnF37FAVTn_T4zynbPPi2d2qf2fcMtZH1u-pP-IrIBRldRuI_VFj36BvT8YIOw")
+    d = ensureDeferred(api.set_file_notes("a5ef9c19-6592-47a7-ab2d-f3c7bafef51c", "Python notes"))
     d.addCallback(succ)
     d.addErrback(err)
     # ensureDeferred(api.test_connection())

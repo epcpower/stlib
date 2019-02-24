@@ -9,7 +9,7 @@ from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QColor, QBrush, QTextCursor, QFont
 from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QLabel, \
     QPlainTextEdit, QGridLayout, QMenu, QTextEdit
-from twisted.internet.defer import ensureDeferred
+from twisted.internet.defer import ensureDeferred, inlineCallbacks
 
 from epyqlib.utils.twisted import errbackhook as open_error_dialog
 
@@ -71,8 +71,6 @@ class FilesView(UiBase):
     color_red = QColor('red')
 
 
-    _log_text = ""
-
     device_interface: 'DeviceInterface' = attr.ib(init=False)
     pending_log_rows: Dict[str, QTreeWidgetItem] = {} # Hash -> Row
 
@@ -118,6 +116,9 @@ class FilesView(UiBase):
     ### Setup methods
     # noinspection PyAttributeOutsideInit
     def bind(self):
+        self._log_text = ""
+        self._current_file_id: str = None
+
         self.section_headers = _Sections()
 
         self.root: QGridLayout = self.ui.gridLayout
@@ -156,6 +157,7 @@ class FilesView(UiBase):
         self.btn_sync_now.clicked.connect(self._sync_now_clicked)
 
         self.notes.textChanged.connect(self._notes_changed)
+        self.btn_save_notes.clicked.connect(self._save_notes_clicked)
         self.btn_reset_notes.clicked.connect(self._reset_notes)
 
         # Set initial state
@@ -256,9 +258,14 @@ class FilesView(UiBase):
         ensureDeferred(self.controller.login_clicked()) \
             .addErrback(open_error_dialog)
 
-
     def _notes_changed(self):
         ensureDeferred(self._disable_notes_buttons()) \
+            .addErrback(open_error_dialog)
+
+    def _save_notes_clicked(self):
+        new_text = self.notes.toPlainText()
+        ensureDeferred(self.controller.save_notes(self._current_file_id, new_text)) \
+            .addCallback(lambda _: ensureDeferred(self._disable_notes_buttons())) \
             .addErrback(open_error_dialog)
 
     def _reset_notes(self):
@@ -392,6 +399,7 @@ class FilesView(UiBase):
 
     def show_file_details(self, association):
         if association is not None:
+            self._current_file_id = association['file']['id']
             self.add_log_line(f"Clicked on {association['file']['filename']}")
             self.filename.setText(association['file']['filename'])
             self.version.setText(association['file']['version'])

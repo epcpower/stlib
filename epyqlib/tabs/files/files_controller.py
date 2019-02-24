@@ -182,6 +182,10 @@ class FilesController:
         value: AssociationMapping
         return next(key for key, value in self.associations.items() if value.association['file']['hash'] == hash)
 
+    def _get_key_for_file_id(self, file_id: str):
+        value: AssociationMapping
+        return next(key for key, value in self.associations.items() if value.association['file']['id'] == file_id)
+
     def _get_mapping_for_hash(self, hash: str) -> [AssociationMapping]:
         map: AssociationMapping
         return [map for map in self.associations.values() if map.association['file']['hash'] == hash]
@@ -331,8 +335,14 @@ class FilesController:
             # Get file info including association
             # Create row for info
             # Add info and row to self.associations
+        if 'hash' in payload:
+            key = self._get_key_for_hash(payload['hash'])
+        elif 'id' in payload:
+            key = self._get_key_for_file_id(payload['id'])
+        else:
+            raise Exception(f"ERROR: Unable to handle file subscription message."
+                  f"Payload doesn't contain file id or hash.\n{json.dumps(payload, indent=2)}")
 
-        key = self._get_key_for_hash(payload['hash'])
 
         if (action == 'updated'):
             map: AssociationMapping = self.associations[key]
@@ -398,6 +408,11 @@ class FilesController:
             return False
 
         return (len(self.old_notes) != len(new_notes)) or self.old_notes != new_notes
+
+    async def save_notes(self, file_id: str, notes: str):
+        print(f"{self._tag} Saving updated notes for file {file_id}")
+        await self.api.set_file_notes(file_id, notes)
+        self.old_notes = notes
 
 
     ## Raw Log Syncing
