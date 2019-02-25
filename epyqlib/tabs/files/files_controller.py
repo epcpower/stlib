@@ -6,11 +6,14 @@ from typing import Coroutine, Dict
 import attr
 from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
 from botocore.exceptions import EndpointConnectionError
+from twisted.internet import reactor
 from twisted.internet.defer import ensureDeferred
+from twisted.internet.task import deferLater
 
 from epyqlib.device import DeviceInterface
 from epyqlib.tabs.files.activity_log import ActivityLog, Event
 from epyqlib.tabs.files.activity_syncer import ActivitySyncer
+from epyqlib.tabs.files.association_cache import AssociationCache
 from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
 from epyqlib.tabs.files.bucket_manager import BucketManager
 from epyqlib.tabs.files.files_manager import FilesManager
@@ -42,8 +45,9 @@ class FilesController:
 
         self.aws_login_manager = AwsLoginManager.get_instance()
         self.bucket_manager = BucketManager()
-        self._log_rows: Dict[str, QTreeWidgetItem] = {}
         self.sync_config = SyncConfig.get_instance()
+
+        self.association_cache = AssociationCache.init(self.sync_config.directory)
         self.cache_manager = FilesManager(self.sync_config.directory)
         self.log_manager = LogManager.init(self.sync_config.directory)
 
@@ -58,6 +62,7 @@ class FilesController:
         self._inverter_id_lookup: Dict[str, str] = {} # serial -> inverter_id
 
         self.associations: [str, AssociationMapping] = {}
+        self._log_rows: Dict[str, QTreeWidgetItem] = {}
 
     def setup(self):
         self.aws_login_manager.register_listener(self.login_status_changed)
@@ -122,7 +127,13 @@ class FilesController:
         """
         :raises InverterNotFoundException
         """
-        associations = await self.api.get_associations(serial_number)
+
+        if self._is_offline:
+            associations = self.association_cache.get_associations(serial_number) or []
+        else:
+            associations = await self.api.get_associations(serial_number)
+            self.association_cache.put_associations(serial_number, associations)
+
         for association in associations:
             if association['file'] is None:
                 print(f"[Files Controller] WARNING: Association {association['id']} returned with null file associated")
@@ -141,6 +152,19 @@ class FilesController:
 
             # Render either the new or updated association
             self.render_association_to_row(association, row)
+
+
+
+        # to_remove = [key for key, value in self.associations.items() if (value.association not in associations)]
+        to_remove = []
+        for key, mapping in self.associations.items():
+            if mapping.association not in associations:
+                to_remove.append(key)
+        for key in to_remove:
+            map: AssociationMapping = self.associations[key]
+            map.row.parent().removeChild(map.row)
+            del self.associations[key]
+
 
         self.view.sort_grid_items()
         self._set_sync_time()
@@ -165,8 +189,11 @@ class FilesController:
 
 
         if len(missing_hashes) == 0:
-            print("All files already hashed locally.")
+            print(f"{self._tag} All files already hashed locally.")
             return
+
+        if self._is_offline:
+            print(f"{self._tag} Not syncing missing files because we are currently offline.")
 
         # TODO: Figure out how to download multiple files at a time. Just trying to wrap in asyncio task fails.
         for hash in missing_hashes:
@@ -275,6 +302,7 @@ class FilesController:
         if sys.platform.startswith('darwin'):
             subprocess.call(('open', file_path))
         elif os.name == 'nt':  # For Windows
+            # noinspection PyUnresolvedReferences
             os.startfile(file_path)
         elif os.name == 'posix':  # For Linux, Mac, etc.
             subprocess.call(('xdg-open', file_path))
@@ -317,17 +345,17 @@ class FilesController:
         except EndpointConnectionError:
             self.set_offline(True)
 
+
+        try:
+            await self.get_inverter_associations(self._serial_number)
+        except InverterNotFoundException:
+            self.view.show_inverter_error("Error: Inverter ID not found.")
+            return
+
+        await self._sync_files()
+
         if not self._is_offline:
-            unsubscribe: Coroutine = self.api.unsubscribe()
-
-            try:
-                await self._fetch_files(self._serial_number)
-            except InverterNotFoundException:
-                self.view.show_inverter_error("Error: Inverter ID not found.")
-                return
-            finally:
-                await unsubscribe
-
+            await self.api.unsubscribe()
             await self.api.subscribe(self.file_updated)
 
     def file_updated(self, action, payload):
@@ -380,14 +408,6 @@ class FilesController:
             file['filename']
         )
         await self.activity_log.add(event)
-
-    async def _fetch_files(self, serial_number):
-        """
-        :raises InverterNotFoundException
-        """
-        await self.get_inverter_associations(serial_number)
-        await self._sync_files()
-
 
     ## Application events
     async def login_status_changed(self, logged_in: bool):
@@ -498,7 +518,7 @@ class FilesController:
             self._is_offline = True
 
     async def _get_id_for_serial_number(self, serial_number: str):
-        if serial_number not in self._inverter_id_lookup:
+        if serial_number not in self._inverter_id_lookup and not self._is_offline:
             inverter = await self.api.get_inverter_by_serial(serial_number)
             self._inverter_id_lookup[serial_number] = inverter['id']
 
