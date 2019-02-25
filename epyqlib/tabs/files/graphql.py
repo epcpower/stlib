@@ -22,8 +22,6 @@ class InverterNotFoundException(Exception):
 
 
 class API:
-    ws_handler = WebSocketHandler()
-
     server_info = {
         "url": "https://b3oofrroujeutdd4zclqlwedhm.appsync-api.us-west-2.amazonaws.com/graphql",
         "headers": {
@@ -257,6 +255,8 @@ class API:
         }
 
 
+    def __init__(self):
+        self.ws_handler = WebSocketHandler()
 
     async def _make_request(self, body):
         url = self.server_info["url"]

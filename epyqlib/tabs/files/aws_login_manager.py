@@ -54,12 +54,18 @@ class AwsLoginManager():
     def get_id_token(self) -> str:
         return self._cognito_helper._id_token
 
+    def get_valid_id_token(self) -> str:
+        if not self._cognito_helper.is_session_valid():
+            self.refresh()
+
+        return self.get_id_token()
+
     ## Get Resources
     def get_s3_resource(self) -> S3Resource:
         return self._cognito_helper.get_s3_resource()
 
-    def refresh(self):
-        self._cognito_helper._refresh()
+    def refresh(self, force=False):
+        self._cognito_helper._refresh(force=force)
 
 
     ## Manage Listeners

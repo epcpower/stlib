@@ -52,7 +52,7 @@ class CognitoHelper:
         :raises botocore.errorfactory.NotAuthorizedException If password is wrong
         """
         print(f"{self._tag} Beginning authentication for user {username}")
-        client: CognitoIdpClient = self.get_anonymous_client('cognito-idp')
+        client: CognitoIdpClient = self._get_anonymous_client('cognito-idp')
 
         try:
             response = client.initiate_auth(
@@ -118,7 +118,7 @@ class CognitoHelper:
                                               aws_secret_access_key=credentials['SecretKey'],
                                               aws_session_token=credentials['SessionToken'])
 
-    def get_anonymous_client(self, type: str):
+    def _get_anonymous_client(self, type: str):
         return boto3.client(
             type,
             region_name=self._region,
@@ -128,7 +128,7 @@ class CognitoHelper:
         )
 
     def get_s3_resource(self):
-        if not self._is_session_valid():
+        if not self.is_session_valid():
             self._refresh()
 
         return self._s3_resource
@@ -144,7 +144,7 @@ class CognitoHelper:
     def _get_resource(self, service_name: str):
         return self._session.resource(service_name)
 
-    def _is_session_valid(self):
+    def is_session_valid(self):
         return datetime.now() < self._expires_time
 
     def _get_refresh_token_pref(self):
@@ -154,13 +154,13 @@ class CognitoHelper:
         token = self._get_refresh_token_pref()
         return token is not None and token != ""
 
-    def _refresh(self, refresh_token: str = None):
-        if self._is_session_valid():
-            # If have credentials that haven't expired yet, bail out
+    def _refresh(self, refresh_token: str = None, force=False):
+        if self.is_session_valid() and not force:
+            # If we have credentials that haven't expired yet, bail out
             return
 
         refresh_token = refresh_token or self._get_refresh_token_pref()
-        client: CognitoIdpClient = self.get_anonymous_client('cognito-idp')
+        client: CognitoIdpClient = self._get_anonymous_client('cognito-idp')
 
         response = client.initiate_auth(
             ClientId=self._client_id,
@@ -193,7 +193,8 @@ class CognitoHelper:
 
 
 if __name__ == '__main__':
-    refresh_token = "eyJjdHkiOiJKV1QiLCJlbmMiOiJBMjU2R0NNIiwiYWxnIjoiUlNBLU9BRVAifQ.VEjQ-DcDlH1qBjKJofIT7MV1iPom5kQN0WvEMSrYOOs2ZW8OImaLuKRIhf-4IvxP4pzXKrcl1dTcF-nlmNcdwbWuFQ8b1R8YoW_wf-RO37gQTiMLSVS0p9EADUl6tf-R6AN6tGG51D8g7ec6DQvDxPdQpZUPSX250OZtczM9kD1H_it3Y9FbFtYXc5TqQoviDa8Rq06MCnr0WAq0Ea_rGNU2EvnWsX5xWO17l4uOEziKJB68khm75UgeRJ0jCWVw1yviUf8A4ZP2ZPQuUpAHj_V-Bohltn8RyfeJZbHybAcf-6FkcSLrMoicz5ZrjzDMv1HHqFcGi7KoI9-BVLFzOg.c5k8d5nTvsIiIiKi.SmS9u8q5CClnW47Zi2r3ShrTJPLYX77FUfRPatvJYSx-0PnjgzyeGXK8SLFMttbCd2cU8IQZ_-b0040l30aqaiLqoEni7AbtlxRu6wBoPDpjORRYA3UW630nPPbZwQh2F9FfIt1FEONx3GucQMS0tBYUoU3w3lEACmmJPTUcLoxI1RgJZveom2u8jYGKLIcL6Szj9fZCIRX4OmD1-Z6Q9Nz4m22vAYqlqarhW7BuHMSDecNIk2Vt0Zk9Yn0W3H7IXqErp-k1C_0TbYhrsuUqS23owl3ZHei_ootbEkw3lhGleFQx7g8f8BCW4Bfw4R8Mkt3SE0cRAuDM9-mm9ZofjvFwrv-YiIZrRMgwRt_bQtTDZgjKh4kcX2Zlp81cCfTNaCjfn0Sm1EyI4po2lS9bjHiY49VjJETcoFm-nkqLlAD5Hq5iySSC5vtGg_cezXTc1GQvgDKc7tUa0CxJirgMQrkJifShWeY1k6Mk5L821L9gbBEdKFBDfPBczSrzUt3yP6LzzvCQljQWovO96Ou34j07ac-nnVTT5mpIcDRux_gZxZ5gjGEHTsR3MhdgSjK2waMnPPZWeXzv1WlpxU9zCULNy6gcRHHp7jzunsDdShxJPy0o46NXEOuQq-CEVNV_xzMt0UE9Tz_34bR-niI795H14kFzTXMXbrZQxgT3roKlbFf7IDb2jF2IOxwZTFDIDnj5-CFD2M_L3D-HyYWfiOUMJkIIKTvtW_NiF6mjm16kzTZE_iaVSzt8cvxm2mX2VCapVdSVWLWcHFahRrJMHmpVb-XgX9v6uyOCvfIZQCC5KZYB1XMFfw3rONhPDlhL4O7HlliJilFXK_xts1FmlIlMRQ1-zWqM1Y8yMoEd9JWL8qaYGuAMxy-7X6EjnhLgZvHjFs0G8CV3WWinRzYMkaRxj3J1hg5THJ7Suu8x2XsCKE9036HpMwZ69nYzJV-SAlKfyAuIdSOE_Le_tW6bvxiCybFQvFEGcp6InyJINQhUq-kdcioQoel2V7YaiwWT-SIfes2ZXOPHljIvUGxmrHAebR5SgFwBYrCAY84Fc5Rx-zBAK66jCFxl4P9NMjIssLliF83eCOVTuVrEeHCxSBUMcYTKEeetWfFEbhw9tEtbfuOtH9T4CQk5Cthtqid2sXNm84MKT82QOyq0OlBlR6ni2ismcyeQibJTtW6KBFCSRQaAMeb5Aj4sxP7BfK0WS22GqU-pfbDisN6A6MNiaBJTGLNCthyOLRrZRpIbZprc8gVWR1Tut5zaILjkotbgF9YR.0wiNQMzyTEBG5EB7KqR9iQ"
+    # refresh_token = "..."
+    config = SyncConfig.get_instance()
     helper = CognitoHelper()
-    helper._refresh(refresh_token)
+    helper._refresh(config.get(Vars.refresh_token))
     print(helper._id_token)

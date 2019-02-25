@@ -72,6 +72,7 @@ class FilesController:
             try:
                 self.aws_login_manager.refresh()
                 self.api.set_id_token(self.aws_login_manager.get_id_token())
+                self.periodically_refresh_token()
             except EndpointConnectionError as e:
                 print(f"{self._tag} Unable to login to AWS. Setting offline mode to true.")
                 self.set_offline(True)
@@ -109,7 +110,7 @@ class FilesController:
             self.log_manager.build_id = self._build_hash
 
 
-        #inverter_info = await self.api.get_inverter_by_serial(self._serial_number)
+
         await self._get_id_for_serial_number(self._serial_number)
 
     ## Sync Info Methods
@@ -395,9 +396,20 @@ class FilesController:
 
         if logged_in:
             self.api.set_id_token(self.aws_login_manager.get_id_token())
+            self.periodically_refresh_token()
             await self.sync_now()
         else:
+            self.association_cache.clear()
             await self.api.unsubscribe()
+
+    def periodically_refresh_token(self):
+        def _refresh():
+            print(f"{self._tag} Refreshing access token.")
+            self.aws_login_manager.refresh(force=True)
+            self.api.set_id_token(self.aws_login_manager.get_id_token())
+            deferLater(reactor, self.aws_login_manager._cognito_helper._expires_in, _refresh)
+
+        _refresh()
 
     ## Notes
     def set_original_notes(self, notes: str):
