@@ -2,12 +2,14 @@ import hashlib
 import os
 from os import path
 
+from epyqlib.tabs.files.files_utils import ensure_dir
+
 
 class FilesManager:
 
     def __init__(self, files_dir):
         cache_dir = path.join(files_dir, "files")
-        self._ensure_dir(cache_dir)
+        ensure_dir(cache_dir)
         self._cache_dir = cache_dir
 
     def verify_cache(self):
@@ -23,15 +25,6 @@ class FilesManager:
             for chunk in iter(lambda: file.read(4096), b""):
                 md5.update(chunk)
         return md5.hexdigest()
-
-    def _ensure_dir(self, dir_name):
-        if path.exists(dir_name):
-            if path.isdir(dir_name):
-                return
-            else:
-                raise NotADirectoryError(f"Files cache dir {dir_name} already exists but is not a directory")
-
-        os.mkdir(dir_name)
 
     def hashes(self):
         return os.listdir(self._cache_dir)

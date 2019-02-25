@@ -1,6 +1,9 @@
 import json
 import os
 
+from epyqlib.tabs.files.files_utils import ensure_dir
+
+
 class SyncConfig:
     _instance = None
     _tag = f'[{__name__}]'
@@ -9,8 +12,7 @@ class SyncConfig:
         self.required_keys = [key for key in Vars.__dict__.keys() if not key.startswith("__")]
 
         self.directory = directory or os.path.join(os.getcwd(), 'sync')
-        if not os.path.lexists(self.directory):
-            os.mkdir(self.directory)
+        ensure_dir(self.directory)
 
         self.filename = os.path.join(self.directory, filename)
         self.file_error = False
