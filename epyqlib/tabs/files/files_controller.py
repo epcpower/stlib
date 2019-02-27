@@ -67,13 +67,17 @@ class FilesController:
     def setup(self):
         self.aws_login_manager.register_listener(self.login_status_changed)
 
+        if (self.sync_config.get(Vars.offline_mode)):
+            print(f"{self._tag} 'offline_mode' flag set to true. Simulating offline mode.")
+            self.set_offline(True)
+
         self.view.bind()
         self.view.populate_tree()
         self.view.initialize_ui()
 
         logged_in = self.aws_login_manager.is_logged_in()
         self.view.show_logged_out_warning(not logged_in)
-        if logged_in:
+        if logged_in and not self._is_offline:
             try:
                 self.aws_login_manager.refresh()
                 self.api.set_id_token(self.aws_login_manager.get_id_token())
@@ -382,6 +386,11 @@ class FilesController:
             self.view.remove_row(self.associations[key].row)
             del(self.associations[key])
 
+        value: AssociationMapping
+        new_associations = [value.association for key, value in self.associations.items()]
+
+        self.association_cache.put_associations(self._serial_number, new_associations)
+
 
     def file_item_clicked(self, item: QTreeWidgetItem, column: int):
         if (item in get_values(self.view.section_headers)):
@@ -391,6 +400,10 @@ class FilesController:
         file_mapping: AssociationMapping = self._get_mapping_for_row(item)
         if file_mapping is not None:
             self.view.show_file_details(file_mapping.association)
+
+            if self._is_offline:
+                self.view.description.setReadOnly(True)
+                self.view.notes.setReadOnly(True)
 
         if item in self._log_rows.values():
             hash = next(key for key, value in self._log_rows.items() if value == item)
