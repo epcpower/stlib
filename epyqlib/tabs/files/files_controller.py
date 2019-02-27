@@ -233,9 +233,13 @@ class FilesController:
 
 
     def render_association_to_row(self, association, row: QTreeWidgetItem):
+        uploaded = association['file']['createdAt'][:-1] # Trim trailing "Z"
+        uploaded = datetime.fromisoformat(uploaded)
+
         row.setText(Cols.filename, association['file']['filename'])
         row.setText(Cols.version, association['file']['version'])
         row.setText(Cols.creator, association['file'].get('createdBy'))
+        row.setText(Cols.uploaded_at, uploaded.strftime(self.view.time_format))
         row.setText(Cols.description, association['file']['description'])
 
         if(association.get('model')):
@@ -519,7 +523,7 @@ class FilesController:
 
         ctime = self.log_manager.stat(log.hash).st_ctime
         ctime = datetime.fromtimestamp(ctime)
-        row.setText(Cols.created_at, ctime.strftime(self.view.time_format))
+        row.setText(Cols.uploaded_at, ctime.strftime(self.view.time_format))
 
         row.setText(Cols.creator, log.username)
 

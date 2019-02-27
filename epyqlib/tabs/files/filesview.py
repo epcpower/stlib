@@ -39,7 +39,7 @@ class Cols:
     web = 2
     association = 3
     creator = 4
-    created_at = 5
+    uploaded_at = 5
     version = 6
     description = 7
 
@@ -175,7 +175,7 @@ class FilesView(UiBase):
         self.files_grid.setColumnWidth(Cols.web, 30)
         self.files_grid.setColumnWidth(Cols.association, 150)
         self.files_grid.setColumnWidth(Cols.description, 500)
-        self.files_grid.setColumnWidth(Cols.created_at, 125)
+        self.files_grid.setColumnWidth(Cols.uploaded_at, 125)
 
         def make_entry(caption):
             val = QTreeWidgetItem(self.files_grid, [caption])
@@ -204,7 +204,7 @@ class FilesView(UiBase):
             parent.removeChild(parent.child(0))
 
     def sort_grid_items(self):
-        self.section_headers.raw_logs.sortChildren(Cols.created_at, Qt.SortOrder.AscendingOrder)
+        self.section_headers.raw_logs.sortChildren(Cols.uploaded_at, Qt.SortOrder.AscendingOrder)
         self.section_headers.params.sortChildren(Cols.filename, Qt.SortOrder.AscendingOrder)
         self.section_headers.other.sortChildren(Cols.filename, Qt.SortOrder.AscendingOrder)
 

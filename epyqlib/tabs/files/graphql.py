@@ -107,7 +107,7 @@ class API:
                 items {
                     id
                     customer { name }
-                    file {id, createdBy, description, filename, hash, notes, type, uploadPath, version}
+                    file {id, createdBy, createdAt, description, filename, hash, notes, type, uploadPath, version}
                     model {name}
                     inverter {id, serialNumber}
                     site {name}
