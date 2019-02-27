@@ -35,7 +35,7 @@ class FilesController:
     from epyqlib.tabs.files.filesview import FilesView
     def __init__(self, view: FilesView):
         self.view = view
-        self.old_notes: str = None
+        self.old_notes: str = ''
         self._last_sync: datetime = None
 
 
@@ -432,19 +432,20 @@ class FilesController:
         _refresh()
 
     ## Notes
-    def set_original_notes(self, notes: str):
-        self.old_notes = notes or ''
+    def set_original_notes(self, description: str, notes: str):
+        description = description or ''
+        notes = notes or ''
+        self.old_notes = notes + description
 
-    def notes_modified(self, new_notes):
-        if self.old_notes is None:
-            return False
+    def notes_modified(self, new_desc: str, new_notes: str):
+        new_notes = new_notes + new_desc
 
         return (len(self.old_notes) != len(new_notes)) or self.old_notes != new_notes
 
-    async def save_notes(self, file_id: str, notes: str):
+    async def save_notes(self, file_id: str, description: str, notes: str):
         print(f"{self._tag} Saving updated notes for file {file_id}")
-        await self.api.set_file_notes(file_id, notes)
-        self.old_notes = notes
+        await self.api.set_file_notes(file_id, description, notes)
+        self.set_original_notes(description, notes)
 
 
     ## Raw Log Syncing

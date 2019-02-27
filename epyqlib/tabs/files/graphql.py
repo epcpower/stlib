@@ -236,19 +236,21 @@ class API:
         }
 
     _update_file_notes = """        
-        mutation ($fileId: ID!, $notes: String) {
-            updateFile(id: $fileId, notes: $notes) {
+        mutation ($fileId: ID!, $description: String, $notes: String) {
+            updateFile(id: $fileId, description: $description, notes: $notes) {
                 id
                 hash
+                description
                 notes
             }
         }
     """
 
-    def _get_update_file_notes_mutation(self, file_id: str, notes: str):
+    def _get_update_file_notes_mutation(self, file_id: str, description: str, notes: str):
         return {
             "query": self._update_file_notes,
             "variables": {
+                "description": description,
                 "fileId": file_id,
                 "notes": notes
             }
@@ -314,8 +316,8 @@ class API:
         response = await self._make_request(self._get_create_association_mutation(inverterId, fileId))
         return response['data']['createAssociation']
 
-    async def set_file_notes(self, file_id: str, notes: str):
-        response = await self._make_request(self._get_update_file_notes_mutation(file_id, notes))
+    async def set_file_notes(self, file_id: str, description: str, notes: str):
+        response = await self._make_request(self._get_update_file_notes_mutation(file_id, description, notes))
         return response['data']['updateFile']
 
     def awai(self, coroutine):

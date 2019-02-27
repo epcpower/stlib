@@ -157,6 +157,7 @@ class FilesView(UiBase):
         self.btn_sync_now.clicked.connect(self._sync_now_clicked)
 
         self.notes.textChanged.connect(self._notes_changed)
+        self.description.textChanged.connect(self._notes_changed)
         self.btn_save_notes.clicked.connect(self._save_notes_clicked)
         self.btn_reset_notes.clicked.connect(self._reset_notes)
 
@@ -263,8 +264,9 @@ class FilesView(UiBase):
             .addErrback(open_error_dialog)
 
     def _save_notes_clicked(self):
+        new_desc = self.description.text()
         new_text = self.notes.toPlainText()
-        ensureDeferred(self.controller.save_notes(self._current_file_id, new_text)) \
+        ensureDeferred(self.controller.save_notes(self._current_file_id, new_desc, new_text)) \
             .addCallback(lambda _: ensureDeferred(self._disable_notes_buttons())) \
             .addErrback(open_error_dialog)
 
@@ -273,7 +275,7 @@ class FilesView(UiBase):
         self.notes.moveCursor(QTextCursor.End)
 
     async def _disable_notes_buttons(self):
-        changed = self.controller.notes_modified(self.notes.toPlainText())
+        changed = self.controller.notes_modified(self.description.text(), self.notes.toPlainText())
 
         self.btn_save_notes.setDisabled(not changed)
         self.btn_reset_notes.setDisabled(not changed)
@@ -404,7 +406,7 @@ class FilesView(UiBase):
             self.filename.setText(association['file']['filename'])
             self.version.setText(association['file']['version'])
             self.description.setText(association['file']['description'])
-            self.controller.set_original_notes(association['file']['notes'])
+            self.controller.set_original_notes(association['file']['description'], association['file']['notes'])
             self.notes.setPlainText(association['file']['notes'])
             self.notes.setReadOnly(False)
         else:
