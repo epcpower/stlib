@@ -238,6 +238,7 @@ class Parameter(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='group', register=True)
@@ -289,6 +290,7 @@ class Group(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='enumerations')
@@ -331,6 +333,7 @@ class Enumerations(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='array_parameter_element')
@@ -482,6 +485,7 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='array_group_element')
@@ -517,6 +521,7 @@ class ArrayGroupElement(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 class InvalidArrayLength(Exception):
@@ -641,6 +646,7 @@ class Array(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='table_array_element', register=True)
@@ -826,6 +832,7 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='table_group_element', register=True)
@@ -913,6 +920,7 @@ class TableGroupElement(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='table_enumeration_reference')
@@ -951,6 +959,7 @@ class TableEnumerationReference(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='table', register=True)
@@ -1306,6 +1315,7 @@ class Table(epyqlib.treenode.TreeNode):
 
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='enumerator')
@@ -1338,6 +1348,7 @@ class Enumerator(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='sunspec_enumerator')
@@ -1390,6 +1401,7 @@ class SunSpecEnumerator(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='enumeration', register=True)
@@ -1447,6 +1459,7 @@ class Enumeration(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='access_level')
@@ -1479,6 +1492,7 @@ class AccessLevel(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='access_levels', register=True)
@@ -1539,6 +1553,7 @@ class AccessLevels(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 Root = epyqlib.attrsmodel.Root(
