@@ -370,8 +370,7 @@ class FilesController:
         self.view.add_log_line("Starting to sync all associations for organization.")
 
         # Pull associations
-        # TODO: Remove manually setting customer ID
-        all_associations = await self.api.get_associations_for_customer("f6b817f4-73a3-4296-8512-54e2102a41ca")
+        all_associations = await self.api.get_associations_for_customer()
 
         # Write fresh associations to cache
         for serial, association_list in all_associations.items():
