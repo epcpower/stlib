@@ -31,7 +31,7 @@ class Node(epyqlib.treenode.TreeNode):
         default=attr.Factory(list),
     )
 
-    uuid = epyqlib.attrsmodel.attr_uuid()
+    uuid = epyqlib.attrsmodel.attr_uuid(no_column=True)
 
     def __attrs_post_init__(self):
         super().__init__()
@@ -59,6 +59,9 @@ class Node(epyqlib.treenode.TreeNode):
     def check(self):
         return None
 
+    def can_drop_on(self, node):
+        return False
+
     all_addable_types = epyqlib.attrsmodel.empty_all_addable_types
     addable_types = epyqlib.attrsmodel.empty_addable_types
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
@@ -83,7 +86,7 @@ class Result(epyqlib.treenode.TreeNode):
         default=attr.Factory(list),
     )
 
-    uuid = epyqlib.attrsmodel.attr_uuid()
+    uuid = epyqlib.attrsmodel.attr_uuid(no_column=True)
 
     def __attrs_post_init__(self):
         super().__init__()
@@ -93,6 +96,9 @@ class Result(epyqlib.treenode.TreeNode):
 
     def check(self):
         return None
+
+    def can_drop_on(self, node):
+        return False
 
     all_addable_types = epyqlib.attrsmodel.empty_all_addable_types
     addable_types = epyqlib.attrsmodel.empty_addable_types

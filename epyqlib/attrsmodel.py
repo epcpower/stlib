@@ -550,6 +550,7 @@ def attr_uuid(
         no_graham=False,
         default=attr.Factory(uuid.uuid4),
         editable=True,
+        no_column=False,
         **field_options,
 ):
     if metadata is None:
@@ -581,6 +582,7 @@ def attr_uuid(
                     override_delegate=override_delegate,
                 ),
                 editable=editable,
+                no_column=no_column,
             )
     else:
         attrib(
@@ -591,6 +593,7 @@ def attr_uuid(
                 list_selection_root=list_selection_root
             ),
             editable=editable,
+            no_column=no_column,
         )
 
     return attribute
