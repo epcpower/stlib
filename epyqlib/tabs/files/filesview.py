@@ -145,6 +145,7 @@ class FilesView(UiBase):
 
         self.lbl_last_sync: QLabel = self.ui.last_sync
         self.btn_sync_now: QPushButton = self.ui.sync_now
+        self.btn_sync_all: QPushButton = self.ui.sync_all
 
         self.event_log: QTextEdit = self.ui.event_log
 
@@ -155,6 +156,7 @@ class FilesView(UiBase):
         self.files_grid.itemClicked.connect(self.controller.file_item_clicked)
 
         self.btn_sync_now.clicked.connect(self._sync_now_clicked)
+        self.btn_sync_all.clicked.connect(self._sync_all_clicked)
 
         self.notes.textChanged.connect(self._notes_changed)
         self.description.textChanged.connect(self._notes_changed)
@@ -253,6 +255,10 @@ class FilesView(UiBase):
 
     def _sync_now_clicked(self):
         sync_def = ensureDeferred(self.controller.sync_now())
+        sync_def.addErrback(open_error_dialog)
+
+    def _sync_all_clicked(self):
+        sync_def = ensureDeferred(self.controller.sync_all())
         sync_def.addErrback(open_error_dialog)
 
     def _login_clicked(self):

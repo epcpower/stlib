@@ -1,7 +1,7 @@
 import asyncio
 import json
 from enum import Enum
-from typing import Callable
+from typing import Callable, Dict
 
 import treq
 from twisted.internet import reactor
@@ -84,6 +84,7 @@ class API:
             }
         }
 
+
     _get_inverter_by_sn_string = """
         query ($serialNumber: String!) { 
             getInverterBySN(serialNumber: $serialNumber) {""" + \
@@ -93,6 +94,7 @@ class API:
         } 
     """
 
+
     def _get_inverter_by_sn_query(self, serial_number: str):
         return {
             "query": self._get_inverter_by_sn_string,
@@ -101,28 +103,55 @@ class API:
             }
         }
 
-    get_association_str = """
-        query ($serialNumber: String) {
-            getInverterAssociations(serialNumber: $serialNumber) {
-                items {
-                    id
-                    customer { name }
-                    file {id, createdBy, createdAt, description, filename, hash, notes, type, uploadPath, version}
-                    model {name}
-                    inverter {id, serialNumber}
-                    site {name}
-                    
-                    # updatedAt
-                }
-            }
-        }
-    """
+    _frag_associations_field = """
+            fragment associationFields on Association {
+                id
+                customer { name }
+                file {id, createdBy, createdAt, description, filename, hash, notes, type, uploadPath, version}
+                model {name}
+                inverter {id, serialNumber}
+                site {name}
 
-    def _get_association_query(self, serial_number: str):
+                # updatedAt
+            }
+        """
+
+    _get_associations_str = _frag_associations_field + \
+            """
+                query ($serialNumber: String) {
+                    getInverterAssociations(serialNumber: $serialNumber) {
+                        items {
+                           ...associationFields
+                        }
+                    }
+                }
+            """
+
+    def _get_associations_query(self, serial_number: str):
         return {
-            "query": self.get_association_str,
+            "query": self._get_associations_str,
             "variables": {
                 "serialNumber": serial_number
+            }
+        }
+
+    _get_associations_for_customer_str = _frag_associations_field + \
+        """
+           query ($customerId: ID) {
+                getAssociationsForCustomer(customerId: $customerId) {
+                    serialNumber,
+                    associations {
+                        ...associationFields
+                    }
+                }
+            }
+        """
+
+    def _get_association_for_customer_query(self, customer_id: str):
+        return {
+            "query": self._get_associations_for_customer_str,
+            "variables": {
+                "customerId": customer_id
             }
         }
 
@@ -294,12 +323,20 @@ class API:
         """
         :raises InverterNotFoundException
         """
-        response = await self._make_request(self._get_association_query(serial_number))
+        response = await self._make_request(self._get_associations_query(serial_number))
         message = safe_get(response, ['errors', 0, 'message']) or ''
         if ('Unable to find inverter' in message):
             raise InverterNotFoundException(message)
 
         return response['data']['getInverterAssociations']['items']
+
+    async def get_associations_for_customer(self, customer_id: str) -> Dict[str, Dict]:
+        """
+        :return: Dict of serialNumber -> association
+        """
+        response = await self._make_request(self._get_association_for_customer_query(customer_id))
+        items = response['data']['getAssociationsForCustomer']
+        return {item['serialNumber']: item['associations'] for item in items}
 
     async def create_activity(self, event: Event):
         # details_json = json.dumps(event.details)
@@ -392,7 +429,9 @@ if __name__ == "__main__":
     # d = ensureDeferred(api.create_file(API.FileType.Log, "testlog.log", "testhash"))
     # d = ensureDeferred(api.create_association("TestInv", "TestFile"))
     api.set_id_token("eyJraWQiOiJweldEOXl5WFdNOW82MGdLWVMxREdXZWFGc2lNcWNGM3BcL1ZTZnNuVU5ZVT0iLCJhbGciOiJSUzI1NiJ9.eyJzdWIiOiIzZTA2OGQ4Yi01NTJmLTQ4YmYtYjVhZi1kZGViMDlhOTc3OWMiLCJjb2duaXRvOmdyb3VwcyI6WyJlcGMiXSwiZW1haWxfdmVyaWZpZWQiOnRydWUsImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC51cy13ZXN0LTIuYW1hem9uYXdzLmNvbVwvdXMtd2VzdC0yXzhyelNSRFBHNiIsInBob25lX251bWJlcl92ZXJpZmllZCI6dHJ1ZSwiY29nbml0bzp1c2VybmFtZSI6InRlc3RlciIsImNvZ25pdG86cm9sZXMiOlsiYXJuOmF3czppYW06OjY3NDQ3NTI1NTY2Njpyb2xlXC9Db2duaXRvX2VwY0F1dGhfUm9sZSJdLCJhdWQiOiI0MTZncTRtZHBvczU1Y2ppcjFoNXU4ZzNzbCIsImV2ZW50X2lkIjoiZjA1ZDZhYmYtMmZiOS0xMWU5LTg1YzMtZGY4OWE3YzZjMDM1IiwidG9rZW5fdXNlIjoiaWQiLCJhdXRoX3RpbWUiOjE1NTAwODExMjYsInBob25lX251bWJlciI6IisxMTExMjIyMzM0NCIsImV4cCI6MTU1MDk3NzQzMCwiaWF0IjoxNTUwOTczODMwLCJlbWFpbCI6ImJlbi5iZXJyeUBjcm9zc2NvbW0uY29tIn0.YkraNARQaWnWrfBs2NZ76efgy9oBTocg5Wscj_nA12Q4EKr8iryusw6tDVmJp0vIA5MwD5YwUbS0WHDfNWDg275dJPFXenwwnQNkQDm0B4DOJ4tHGY1wF580wkZdXXf8r4tcJVv7SGndD35ifxj8pEyrTdVY2gu1eg2O6Tb5H20WIqkBMttyUXp8VmnQBHXmpBdXf9KT5HBBDB7uqxcgSY_WoTN_ZorgLegkwJigt5xLTFBiEXDDfchcDwcEDFqp6IUbbAY8MHoNaf7yLRYXPCoYsnF37FAVTn_T4zynbPPi2d2qf2fcMtZH1u-pP-IrIBRldRuI_VFj36BvT8YIOw")
-    d = ensureDeferred(api.set_file_notes("a5ef9c19-6592-47a7-ab2d-f3c7bafef51c", "Python notes"))
+    # d = ensureDeferred(api.set_file_notes("a5ef9c19-6592-47a7-ab2d-f3c7bafef51c", "Python notes"))
+    # d = ensureDeferred(api.get_associations("0"))
+    d = ensureDeferred(api.get)
     d.addCallback(succ)
     d.addErrback(err)
     # ensureDeferred(api.test_connection())

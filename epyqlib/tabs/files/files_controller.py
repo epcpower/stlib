@@ -366,6 +366,24 @@ class FilesController:
             await self.api.unsubscribe()
             await self.api.subscribe(self.file_updated)
 
+    async def sync_all(self):
+        self.view.add_log_line("Starting to sync all associations for organization.")
+
+        # Pull associations
+        # TODO: Remove manually setting customer ID
+        all_associations = await self.api.get_associations_for_customer("f6b817f4-73a3-4296-8512-54e2102a41ca")
+
+        # Write fresh associations to cache
+        for serial, association_list in all_associations.items():
+            self.association_cache.put_associations(serial, association_list)
+
+        # Fetch missing files
+        for hash in self.association_cache.get_all_known_hashes():
+            if not self.cache_manager.has_hash(hash):
+                await self.download_file(hash)
+
+        self.view.add_log_line("Completed syncing all associations for organization.")
+
     def file_updated(self, action, payload):
         if (action == 'created'):
             pass

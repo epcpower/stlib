@@ -1,7 +1,7 @@
 import json
 import os
 
-from typing import List, Dict
+from typing import List, Dict, Set
 
 from epyqlib.tabs.files.files_utils import ensure_dir
 
@@ -53,4 +53,13 @@ class AssociationCache:
     def put_associations(self, serial_number: str, associations: List):
         self._associations[serial_number] = associations
         self._write_file()
+
+    def get_all_known_hashes(self) -> Set[str]:
+        hashes = set()
+
+        for serial, association_list in self._associations.items():
+            for association in association_list:
+                hashes.add(association['file']['hash'])
+
+        return hashes
 
