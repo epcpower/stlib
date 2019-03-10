@@ -1,3 +1,4 @@
+import decimal
 import logging
 import time
 
@@ -144,6 +145,9 @@ def sleep(seconds=None):
     d = twisted.internet.defer.Deferred()
 
     if seconds is not None:
+        if isinstance(seconds, decimal.Decimal):
+            seconds = float(seconds)
+
         twisted.internet.reactor.callLater(seconds, d.callback, None)
 
     return d

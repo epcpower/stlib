@@ -16,6 +16,7 @@ import attr
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 import PyQt5.uic
+import twisted.internet.defer
 
 __copyright__ = 'Copyright 2017, EPC Power Corp.'
 __license__ = 'GPLv2+'
@@ -1285,3 +1286,53 @@ def indented_text_from_model(model, index=None):
     ]
 
     return epyqlib.utils.general.format_nested_lists(lines, indent="'   ")
+
+
+@attr.s
+class DeferredForSignal:
+    signal = attr.ib()
+    deferred = attr.ib(
+        default=attr.Factory(
+            factory=lambda self: twisted.internet.defer.Deferred(
+                canceller=self.cancelled,
+            ),
+            takes_self=True,
+        ),
+    )
+    timeout_call = attr.ib(default=None)
+
+    def connect(self, timeout=None):
+        self.signal.connect(self.slot)
+
+        if timeout is not None:
+            import twisted.internet.reactor
+            self.timeout_call = twisted.internet.reactor.callLater(
+                timeout,
+                self.time_out,
+            )
+
+    def time_out(self):
+        self.signal.disconnect(self.slot)
+        self.deferred.errback(epyqlib.utils.twisted.RequestTimeoutError())
+
+    def disconnect(self):
+        self.signal.disconnect(self.slot)
+        if self.timeout_call is not None:
+            self.timeout_call.cancel()
+
+    def cancelled(self, deferred):
+        self.disconnect()
+
+    def slot(self, *args):
+        self.disconnect()
+        self.deferred.callback(args)
+
+
+def signal_as_deferred(signal, timeout=None, f=None, *args, **kwargs):
+    dfs = DeferredForSignal(signal=signal)
+    dfs.connect(timeout=timeout)
+
+    if f is not None:
+        f(*args, **kwargs)
+
+    return dfs.deferred
