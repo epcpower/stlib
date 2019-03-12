@@ -1,7 +1,7 @@
 import asyncio
 import json
 from enum import Enum
-from typing import Callable, Dict
+from typing import Callable, Dict, List
 
 import treq
 from twisted.internet import reactor
@@ -22,6 +22,8 @@ class InverterNotFoundException(Exception):
 
 
 class API:
+    _tag = "[Graphql API]"
+
     server_info = {
         "url": "https://b3oofrroujeutdd4zclqlwedhm.appsync-api.us-west-2.amazonaws.com/graphql",
         "headers": {
@@ -292,15 +294,22 @@ class API:
         headers = self.server_info["headers"]
         response: IResponse = await treq.post(url, headers=headers, json=body)
         if response.code >= 400:
-            raise GraphQLException(f"{response.code} {response.phrase.decode('ascii')}")
+            raise GraphQLException([f"{response.code} {response.phrase.decode('ascii')}"])
 
         # content = await treq.content(response)
-        body = await treq.json_content(response)
+        response = await treq.json_content(response)
 
-        if (body.get('data') is None and body.get('errors') is not None):
-            raise GraphQLException(body['errors'])
+        if (response.get('errors') is not None):
+            print(f"{self._tag} Errors encountered making graphQL request:")
+            print(f"{self._tag} Outgoing query: {body['query']}")
+            print(f"{self._tag} Outgoing variables: {json.dumps(body['variables'], indent=2)}")
+            for error in response['errors']:
+                print(f"{self._tag} Error encountered: {json.dumps(error, indent=2)}")
+            messages = [f"{e['errorType']}: {e['message']}" for e in response['errors']]
 
-        return body
+            raise GraphQLException(messages)
+
+        return response
 
 
     async def fetch_inverter_list(self):
@@ -321,12 +330,19 @@ class API:
         """
         :raises InverterNotFoundException
         """
-        response = await self._make_request(self._get_associations_query(serial_number))
-        message = safe_get(response, ['errors', 0, 'message']) or ''
-        if ('Unable to find inverter' in message):
-            raise InverterNotFoundException(message)
+        try:
+            response = await self._make_request(self._get_associations_query(serial_number))
+            return response['data']['getInverterAssociations']['items']
+        except GraphQLException as e:
+            args: List[str] = e.args
+            # message = safe_get(response, ['errors', 0, 'message']) or ''
+            # if ('Unable to find inverter' in message):
+            for message in args:
+                if 'Unable to find inverter' in message:
+                    raise InverterNotFoundException(message)
+            raise e
 
-        return response['data']['getInverterAssociations']['items']
+
 
     async def get_associations_for_customer(self) -> Dict[str, Dict]:
         """
