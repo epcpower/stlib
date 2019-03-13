@@ -14,6 +14,7 @@ import epyqlib.device
 import epyqlib.nv
 import epyqlib.utils.qt
 import epyqlib.utils.twisted
+import epyqlib.utils.units
 
 
 class FormatVersionError(Exception):
