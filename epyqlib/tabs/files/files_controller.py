@@ -38,17 +38,14 @@ class FilesController:
         self.old_notes: str = ''
         self._last_sync: datetime = None
 
+        self.sync_config = SyncConfig.get_instance()
+        self.api = API(self.sync_config.get(Vars.server_url))
 
         self.activity_log = ActivityLog()
         self.activity_syncer = ActivitySyncer(self.activity_log, self.api)
-
+        self.association_cache = AssociationCache.init(self.sync_config.directory)
         self.aws_login_manager = AwsLoginManager.get_instance()
         self.bucket_manager = BucketManager()
-        self.sync_config = SyncConfig.get_instance()
-
-        self.api = API(self.sync_config.get(Vars.server_url))
-
-        self.association_cache = AssociationCache.init(self.sync_config.directory)
         self.cache_manager = FilesManager(self.sync_config.directory)
         self.log_manager = LogManager.init(self.sync_config.directory)
 

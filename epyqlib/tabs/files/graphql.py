@@ -300,7 +300,7 @@ class API:
             print(f"{self._tag} Outgoing variables: {json.dumps(body['variables'], indent=2)}")
             for error in response['errors']:
                 print(f"{self._tag} Error encountered: {json.dumps(error, indent=2)}")
-            messages = [f"{e['errorType']}: {e['message']}" for e in response['errors']]
+            messages = [f"{e.get('errorType') or 'Error'}: {e['message']}" for e in response['errors']]
 
             raise GraphQLException(messages)
 

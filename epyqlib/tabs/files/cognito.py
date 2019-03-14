@@ -1,14 +1,12 @@
 import logging
 from datetime import datetime, timedelta
 
-import botocore
-from boto3 import Session
-from boto3_type_annotations.s3 import ServiceResource as S3Resource
 import attr
-
 import boto3
+from boto3 import Session
 from boto3_type_annotations.cognito_identity import Client as CognitoIdentityClient
 from boto3_type_annotations.cognito_idp import Client as CognitoIdpClient
+from boto3_type_annotations.s3 import ServiceResource as S3Resource
 
 from epyqlib.tabs.files.sync_config import SyncConfig, Vars
 
