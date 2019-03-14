@@ -11,6 +11,7 @@ import time
 
 from collections import OrderedDict
 from epyqlib.abstractcolumns import AbstractColumns
+import epyqlib.device
 from epyqlib.treenode import TreeNode
 from PyQt5.QtCore import (Qt, QVariant, QModelIndex, pyqtSignal, pyqtSlot,
                           QPersistentModelIndex)

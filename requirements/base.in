@@ -1,0 +1,33 @@
+--extra-index-url http://fstab.net/pypi/simple
+--trusted-host fstab.net
+
+--requirement pre.in
+
+arrow==0.12.1
+attrs==18.2.0
+bitstruct==6.0.0
+boto3==1.9.83
+canmatrix==0.7
+certitude==1.0.1
+Click==7.0
+GitPython==2.1.11
+graham==0.1.10
+marshmallow==2.16.3
+natsort==5.5.0
+paho-mqtt=1.4.0
+Pint==0.8.1
+pyelftools==0.25
+PyQt5==5.11.3
+python-can==3.0.0
+python-dateutil==2.7.5
+python-docx==0.8.7
+python-dotenv==0.9.1
+qt5reactor==0.5
+treq==18.6.0
+Twisted[tls]==18.9.0
+Twisted[osx_platform,tls]==18.9.0; platform_system == "Darwin"
+Twisted[windows_platform,tls]==18.9.0; platform_system == "Windows"
+
+-e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec
+
+pyqt5-tools==5.11.3.1.5rc0; platform_system == 'Windows'

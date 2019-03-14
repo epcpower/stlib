@@ -17,6 +17,38 @@ __copyright__ = 'Copyright 2017, EPC Power Corp.'
 __license__ = 'GPLv2+'
 
 
+def create_abbreviation_attribute():
+    return attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+
+
+def create_read_only_attribute():
+    return attr.ib(
+        default=False,
+        converter=epyqlib.attrsmodel.two_state_checkbox,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Boolean(),
+        ),
+    )
+
+
+def create_str_or_none_attribute(default=None):
+    return attr.ib(
+        default=default,
+        convert=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+
+create_notes_attribute = create_str_or_none_attribute
+
+
 @graham.schemify(tag='parameter')
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
@@ -28,12 +60,7 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
-    abbreviation = attr.ib(
-        default='',
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(),
-        ),
-    )
+    abbreviation = create_abbreviation_attribute()
     type_name = attr.ib(
         default=None,
         converter=epyqlib.attrsmodel.to_str_or_none,
@@ -120,27 +147,10 @@ class Parameter(epyqlib.treenode.TreeNode):
         ),
     )
 
-    embedded_getter = attr.ib(
-        default=None,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
-        ),
-    )
+    embedded_getter = create_str_or_none_attribute()
+    embedded_setter = create_str_or_none_attribute()
 
-    embedded_setter = attr.ib(
-        default=None,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
-        ),
-    )
-
-    read_only = attr.ib(
-        default=False,
-        converter=epyqlib.attrsmodel.two_state_checkbox,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.Boolean(),
-        ),
-    )
+    read_only = create_read_only_attribute()
 
     access_level_uuid = epyqlib.attrsmodel.attr_uuid(
         default=None,
@@ -161,13 +171,7 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
-    notes = attr.ib(
-        default=None,
-        convert=epyqlib.attrsmodel.to_str_or_none,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
-        ),
-    )
+    notes = create_notes_attribute()
     original_frame_name = attr.ib(
         default=None,
         metadata=graham.create_metadata(
@@ -234,6 +238,7 @@ class Parameter(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='group', register=True)
@@ -285,6 +290,7 @@ class Group(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='enumerations')
@@ -327,6 +333,7 @@ class Enumerations(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='array_parameter_element')
@@ -355,6 +362,11 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(),
         ),
     )
+
+    abbreviation = create_abbreviation_attribute()
+    notes = create_notes_attribute()
+    read_only = create_read_only_attribute()
+
     # TODO: CAMPid 1342975467516679768543165421
     default = attr.ib(
         default=None,
@@ -473,6 +485,7 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='array_group_element')
@@ -508,6 +521,7 @@ class ArrayGroupElement(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 class InvalidArrayLength(Exception):
@@ -632,6 +646,7 @@ class Array(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='table_array_element', register=True)
@@ -641,6 +656,9 @@ class Array(epyqlib.treenode.TreeNode):
     original='original',
     field_names=(
         'name',
+        'abbreviation',
+        'notes',
+        'read_only',
         'access_level_uuid',
         'enumeration_uuid',
         'minimum',
@@ -665,6 +683,10 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(allow_none=True)
         ),
     )
+
+    abbreviation = create_abbreviation_attribute()
+    notes = create_notes_attribute()
+    read_only = create_read_only_attribute()
 
     path = attr.ib(
         factory=tuple,
@@ -810,6 +832,7 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='table_group_element', register=True)
@@ -897,6 +920,7 @@ class TableGroupElement(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='table_enumeration_reference')
@@ -935,6 +959,7 @@ class TableEnumerationReference(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='table', register=True)
@@ -1290,6 +1315,7 @@ class Table(epyqlib.treenode.TreeNode):
 
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='enumerator')
@@ -1322,6 +1348,7 @@ class Enumerator(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='sunspec_enumerator')
@@ -1348,12 +1375,7 @@ class SunSpecEnumerator(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(),
         ),
     )
-    notes = attr.ib(
-        default='',
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(),
-        ),
-    )
+    notes = create_notes_attribute()
     value = attr.ib(
         default=None,
         converter=epyqlib.attrsmodel.to_decimal_or_none,
@@ -1379,6 +1401,7 @@ class SunSpecEnumerator(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='enumeration', register=True)
@@ -1436,6 +1459,7 @@ class Enumeration(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='access_level')
@@ -1468,6 +1492,7 @@ class AccessLevel(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='access_levels', register=True)
@@ -1528,6 +1553,7 @@ class AccessLevels(epyqlib.treenode.TreeNode):
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
+    check = epyqlib.attrsmodel.check_just_children
 
 
 Root = epyqlib.attrsmodel.Root(
@@ -1565,7 +1591,7 @@ def merge(name, *types):
 
 columns = epyqlib.attrsmodel.columns(
     merge('name', *types.types.values()),
-    merge('abbreviation', Parameter),
+    merge('abbreviation', Parameter, ArrayParameterElement, TableArrayElement),
     (
         merge('type_name', Parameter, Group)
         + merge('type', SunSpecEnumerator)
@@ -1630,7 +1656,7 @@ columns = epyqlib.attrsmodel.columns(
         TableArrayElement,
         ArrayParameterElement,
     ),
-    merge('read_only', Parameter),
+    merge('read_only', Parameter, ArrayParameterElement, TableArrayElement),
     merge(
         'access_level_uuid',
         Parameter,
@@ -1668,7 +1694,13 @@ columns = epyqlib.attrsmodel.columns(
         merge('description', SunSpecEnumerator)
     ),
 
-    merge('notes', Parameter, SunSpecEnumerator),
+    merge(
+        'notes',
+        Parameter,
+        SunSpecEnumerator,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
 
     merge('original_frame_name', Parameter),
     merge('original_multiplexer_name', Parameter),

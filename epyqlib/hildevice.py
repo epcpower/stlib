@@ -2,6 +2,7 @@ import functools
 import json
 import operator
 import pathlib
+import time
 import uuid
 
 import attr
@@ -9,8 +10,11 @@ import canmatrix
 import twisted.internet.defer
 
 import epyqlib.canneo
+import epyqlib.device
 import epyqlib.nv
+import epyqlib.utils.qt
 import epyqlib.utils.twisted
+import epyqlib.utils.units
 
 
 class FormatVersionError(Exception):
@@ -120,7 +124,18 @@ class Signal:
     signal = attr.ib()
     device = attr.ib()
 
-    def get(self):
+    @twisted.internet.defer.inlineCallbacks
+    def get(self, stale_after=0.1, timeout=1):
+        start = time.time()
+
+        last_received = self.signal.last_received()
+
+        if last_received is None or last_received <= start - stale_after:
+            yield epyqlib.utils.qt.signal_as_deferred(
+                self.signal.value_set,
+                timeout=timeout,
+            )
+
         value = self.signal.to_human(self.signal.value)
 
         if value in self.signal.enumeration:
@@ -150,7 +165,8 @@ class Signal:
         operator_string = reverse_operator_map.get(op, str(op))
 
         def check():
-            return op(self.get(), value)
+            present_value = yield self.get()
+            return op(present_value, value)
 
         yield epyqlib.utils.twisted.wait_for(
             check=check,

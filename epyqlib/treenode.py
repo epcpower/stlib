@@ -188,10 +188,12 @@ class TreeNode:
         return nodes
 
     def child_by_name(self, name):
+        sentinel = object()
+
         children = [
             child
             for child in self.children
-            if child.name == name
+            if getattr(child, 'name', sentinel) == name
         ]
 
         if len(children) == 0:

@@ -1,6 +1,7 @@
 import collections
 import contextlib
 import decimal
+import functools
 import inspect
 import itertools
 import json
@@ -39,6 +40,41 @@ class NotFoundError(Exception):
 
 class MultipleFoundError(Exception):
     pass
+
+
+def create_str_attribute(default=''):
+    return attr.ib(
+        default=default,
+        convert=str,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(),
+        ),
+    )
+
+
+def create_name_attribute(default=None):
+    return attr.ib(
+        default=default,
+        convert=to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+
+
+def create_reference_attribute():
+    attribute = attr.ib(
+        default=None,
+        metadata=graham.create_metadata(
+            field=epyqlib.attrsmodel.Reference(allow_none=True),
+        ),
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=attribute,
+        no_column=True,
+    )
+
+    return attribute
 
 
 # TODO: CAMPid 8695426542167924656654271657917491654
@@ -326,9 +362,59 @@ def add_addable_types(cls, attribute_name='children', types=None):
     return cls
 
 
+def check_just_children(self):
+    # TODO: ugh, circular dependencies
+    import epyqlib.checkresultmodel
+
+    if len(self.children) == 0:
+        return None
+
+    child_results = [
+        child.check()
+        for child in self.children
+    ]
+    child_results = [
+        results
+        for results in child_results
+        if results is not None
+    ]
+
+    if len(child_results) == 0:
+        return None
+
+    return epyqlib.checkresultmodel.Node.build(
+        name=self.name,
+        node=self,
+        child_results=child_results,
+    )
+
+
+def check_children(f):
+    def wrapper(self):
+        # TODO: ugh, circular dependencies
+        import epyqlib.checkresultmodel
+
+        result = check_just_children(self)
+
+        if result is None:
+            result = epyqlib.checkresultmodel.Node.build(
+                name=self.name,
+                node=self,
+            )
+
+        result = f(self=self, result=result)
+
+        if len(result.children) == 0:
+            return None
+
+        return result
+
+    return wrapper
+
+
 def Root(default_name, valid_types):
     @graham.schemify(tag='root')
-    @epyqlib.attrsmodel.ify()
+    @ify()
     @epyqlib.utils.qt.pyqtify()
     @attr.s(hash=False)
     class Root(epyqlib.treenode.TreeNode):
@@ -366,6 +452,24 @@ def Root(default_name, valid_types):
         remove_old_on_drop = default_remove_old_on_drop
         child_from = default_child_from
         internal_move = default_internal_move
+
+        def check_and_append(self, parent=None):
+            # TODO: ugh, circular dependencies
+            import epyqlib.checkresultmodel
+
+            if parent is None:
+                parent = epyqlib.checkresultmodel.Root()
+
+            for child in self.children:
+                result = child.check()
+
+                if result is not None:
+                    parent.append_child(result)
+
+            return parent
+
+        def check(self):
+            return self.check_and_append()
 
         @staticmethod
         def can_delete(node=None):
@@ -446,6 +550,7 @@ def attr_uuid(
         no_graham=False,
         default=attr.Factory(uuid.uuid4),
         editable=True,
+        no_column=False,
         **field_options,
 ):
     if metadata is None:
@@ -472,21 +577,23 @@ def attr_uuid(
                 attribute=attribute,
                 human_name=human_name,
                 data_display=data_display,
-                delegate=epyqlib.attrsmodel.CustomDelegate(
+                delegate=CustomDelegate(
                     list_selection_path=list_selection_path,
                     override_delegate=override_delegate,
                 ),
                 editable=editable,
+                no_column=no_column,
             )
     else:
         attrib(
             attribute=attribute,
             human_name=human_name,
             data_display=data_display,
-            delegate=epyqlib.attrsmodel.RootDelegateCache(
+            delegate=RootDelegateCache(
                 list_selection_root=list_selection_root
             ),
             editable=editable,
+            no_column=no_column,
         )
 
     return attribute
@@ -590,6 +697,15 @@ def default_child_from(node):
 
 def default_internal_move(self, node, node_to_insert_before):
     return False
+
+
+@classmethod
+def empty_all_addable_types(cls):
+    return epyqlib.attrsmodel.create_addable_types(())
+
+
+def empty_addable_types(self):
+    return {}
 
 
 def to_source_model(index):
@@ -1412,6 +1528,12 @@ class Tests:
         self.assert_incomplete_types(
             name='internal_move',
             signature=['node', 'node_to_insert_before'],
+        )
+
+    def test_all_have_check(self):
+        self.assert_incomplete_types(
+            name='check',
+            signature=[],
         )
 
     def test_all_addable_also_in_types(self):

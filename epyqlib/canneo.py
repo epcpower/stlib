@@ -14,6 +14,7 @@ import struct
 import sys
 
 import epyqlib.utils.qt
+import epyqlib.utils.units
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -158,6 +159,7 @@ def signals_to_bytes(length, signals, data):
 class Signal:
     # TODO: but some (progress bar, etc) require an int!
     value_changed = epyqlib.utils.qt.Signal(float)
+    value_set = epyqlib.utils.qt.Signal(float)
 
     def __init__(self, signal, frame, connect=None, parent=None):
         # self.attributes = signal._attributes # {dict} {'GenSigStartValue': '0.0', 'LongName': 'Enable'}
@@ -247,6 +249,9 @@ class Signal:
             ordering_start_bit=getattr(self, 'ordering_start_bit', '-'),
             length=self.signal_size
         )
+
+    def last_received(self):
+        return self.frame.last_received
 
     def to_human(self, value):
         return self.offset + (value * self.factor)
@@ -412,6 +417,9 @@ class Signal:
             else:
                 self.value_changed.emit(value)
 
+        if value is not None:
+            self.value_set.emit(value)
+
     def format_strings(self, value):
         if value is None or (type(value) is float and math.isnan(value)):
             full_string = '-'
@@ -574,6 +582,7 @@ class Frame(QtCanListener):
 
         self.format_str = None
         self.data = None
+        self.last_received = None
 
         self.signals = []
         for signal in frame.signals:
@@ -745,6 +754,9 @@ class Frame(QtCanListener):
             else:
                 self.unpack(msg.data)
                 unpacked = True
+
+        if unpacked:
+            self.last_received = msg.timestamp
 
         return unpacked
 
