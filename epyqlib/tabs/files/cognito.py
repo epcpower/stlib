@@ -23,7 +23,7 @@ class CognitoHelper:
 
     _tag = '[CognitoHelper]'
     _identity_pool_id = 'us-west-2:b953611b-23f3-4f76-b463-cfb6c4e75b56'
-    _client_id = '416gq4mdpos55cjir1h5u8g3sl'
+    _client_id = '544t83vhj0ubcqcroo9sf77i04'
     _region = "us-west-2"
 
     _user_pool_id = 'cognito-idp.us-west-2.amazonaws.com/us-west-2_8rzSRDPG6'

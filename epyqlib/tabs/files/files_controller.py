@@ -40,12 +40,13 @@ class FilesController:
 
 
         self.activity_log = ActivityLog()
-        self.api = API()
         self.activity_syncer = ActivitySyncer(self.activity_log, self.api)
 
         self.aws_login_manager = AwsLoginManager.get_instance()
         self.bucket_manager = BucketManager()
         self.sync_config = SyncConfig.get_instance()
+
+        self.api = API(self.sync_config.get(Vars.server_url))
 
         self.association_cache = AssociationCache.init(self.sync_config.directory)
         self.cache_manager = FilesManager(self.sync_config.directory)

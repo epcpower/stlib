@@ -24,12 +24,7 @@ class InverterNotFoundException(Exception):
 class API:
     _tag = "[Graphql API]"
 
-    server_info = {
-        "url": "https://b3oofrroujeutdd4zclqlwedhm.appsync-api.us-west-2.amazonaws.com/graphql",
-        "headers": {
-          "x-api-key": "da2-77ph5d7dlnghhnlufivpbn3cri"
-        }
-    }
+
 
     list_inverters_query = """
         query {
@@ -286,13 +281,13 @@ class API:
         }
 
 
-    def __init__(self):
+    def __init__(self, server_url: str):
         self.ws_handler = WebSocketHandler()
+        self.server_url = server_url
+        self.headers = {}
 
     async def _make_request(self, body):
-        url = self.server_info["url"]
-        headers = self.server_info["headers"]
-        response: IResponse = await treq.post(url, headers=headers, json=body)
+        response: IResponse = await treq.post(self.server_url, headers=(self.headers), json=body)
         if response.code >= 400:
             raise GraphQLException([f"{response.code} {response.phrase.decode('ascii')}"])
 
@@ -410,7 +405,7 @@ class API:
             self.ws_handler.disconnect()
 
     def set_id_token(self, id_token: str):
-        self.server_info['headers']['Authorization'] = id_token
+        self.headers['Authorization'] = id_token
 
 
 def main(reactor):

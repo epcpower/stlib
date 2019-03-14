@@ -57,12 +57,6 @@ class SyncConfig:
         self.config[key] = value
         self._write_file()
 
-    def log_serial_number(self, serial_number: str):
-        if self.config[Vars.unique_inverters] is None:
-            self.set(Vars.unique_inverters, [serial_number])
-        elif serial_number not in self.config[Vars.unique_inverters]:
-            self.set(Vars.unique_inverters, self.config[Vars.unique_inverters] + [serial_number])
-
 
 class ConfigurationError(Exception):
     pass
@@ -73,5 +67,4 @@ class Vars:
     offline_mode = "offline_mode"
     provided_serial_number = "provided_serial_number"
     refresh_token = "refresh_token"
-    unique_inverters = "unique_inverters"
-    username = "username"
+    server_url = "server_url"
