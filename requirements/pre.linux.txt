@@ -4,10 +4,22 @@
 #
 #    python boots.py lock
 #
-click==7.0                # via pip-tools
-pip-tools==3.3.2
-six==1.12.0               # via pip-tools
+click==7.0 \
+    --hash=sha256:2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925bdc622b13 \
+    --hash=sha256:5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7 \
+    # via pip-tools
+pip-tools==3.3.2 \
+    --hash=sha256:100496b15463155f4da3df04c2ca0068677e1ee74d346ebade2d85eef4de8cda \
+    --hash=sha256:8a170214f8f1f362ed4ba7c51dae3c7d334d88e2643c02da39c9654c71ab5b33
+six==1.12.0 \
+    --hash=sha256:3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c \
+    --hash=sha256:d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73 \
+    # via pip-tools
 
 # The following packages are considered to be unsafe in a requirements file:
-pip==18.1
-setuptools==40.6.3
+pip==18.1 \
+    --hash=sha256:7909d0a0932e88ea53a7014dfd14522ffef91a464daaaf5c573343852ef98550 \
+    --hash=sha256:c0a292bd977ef590379a3f05d7b7f65135487b67470f6281289a94e015650ea1
+setuptools==40.6.3 \
+    --hash=sha256:3b474dad69c49f0d2d86696b68105f3a6f195f7ab655af12ef9a9c326d2b08f8 \
+    --hash=sha256:e2c1ce9a832f34cf7a31ed010aabcab5008eb65ce8f2aadc04622232c14bdd0b
