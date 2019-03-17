@@ -287,7 +287,12 @@ class API:
         self.headers = {}
 
     async def _make_request(self, body):
-        response: IResponse = await treq.post(self.server_url, headers=(self.headers), json=body)
+        try:
+            response: IResponse = await treq.post(self.server_url, headers=(self.headers), json=body)
+        except Exception as e:
+            print(f"{self._tag} Error during outgoing query: {body['query']}")
+            raise e
+
         if response.code >= 400:
             raise GraphQLException([f"{response.code} {response.phrase.decode('ascii')}"])
 
