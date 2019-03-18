@@ -3,10 +3,22 @@ import os
 
 from epyqlib.tabs.files.files_utils import ensure_dir
 
+class Vars:
+    auto_sync = "auto_sync"
+    offline_mode = "offline_mode"
+    provided_serial_number = "provided_serial_number"
+    refresh_token = "refresh_token"
+    server_url = "server_url"
 
 class SyncConfig:
     _instance = None
     _tag = f'[{__name__}]'
+
+    default_values = {
+        Vars.auto_sync: True,
+        Vars.server_url: "https://b3oofrroujeutdd4zclqlwedhm.appsync-api.us-west-2.amazonaws.com/graphql",
+        Vars.offline_mode: False
+    }
 
     def __init__(self, directory=None, filename='epyq-config.json'):
         self.required_keys = [key for key in Vars.__dict__.keys() if not key.startswith("__")]
@@ -21,7 +33,9 @@ class SyncConfig:
         else:
             self.config = dict()
             for key in self.required_keys:
-                self.config[key] = None
+                self.config[key] = self.default_values.get(key)
+
+        self._write_file()
 
     @staticmethod
     def get_instance():
@@ -38,8 +52,7 @@ class SyncConfig:
             raise ConfigurationError('Configuration file is not a valid configuration JSON object.')
         for key in self.required_keys:
             if key not in contents.keys():
-                print(f'{self._tag} Required key {key} is missing from configuration file. Setting to None.')
-                contents[key] = None
+                contents[key] = self.default_values.get(key)
         self.config = contents
 
     def _write_file(self):
@@ -62,9 +75,3 @@ class ConfigurationError(Exception):
     pass
 
 
-class Vars:
-    auto_sync = "auto_sync"
-    offline_mode = "offline_mode"
-    provided_serial_number = "provided_serial_number"
-    refresh_token = "refresh_token"
-    server_url = "server_url"
