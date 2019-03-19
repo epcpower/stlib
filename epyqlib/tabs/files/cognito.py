@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 
 import attr
 import boto3
+import botocore
 from boto3 import Session
 from boto3_type_annotations.cognito_identity import Client as CognitoIdentityClient
 from boto3_type_annotations.cognito_idp import Client as CognitoIdpClient
@@ -20,23 +21,33 @@ class CognitoException(Exception):
 class CognitoHelper:
 
     _tag = '[CognitoHelper]'
-    _identity_pool_id = 'us-west-2:b953611b-23f3-4f76-b463-cfb6c4e75b56'
-    _client_id = '544t83vhj0ubcqcroo9sf77i04'
-    _region = "us-west-2"
+    
+    dev_config = {
+        'identity_pool_id': 'us-west-2:b953611b-23f3-4f76-b463-cfb6c4e75b56',
+        'client_id': '544t83vhj0ubcqcroo9sf77i04',
+        'region': "us-west-2",
+        'user_pool_id': 'cognito-idp.us-west-2.amazonaws.com/us-west-2_8rzSRDPG6'
+    }
 
-    _user_pool_id = 'cognito-idp.us-west-2.amazonaws.com/us-west-2_8rzSRDPG6'
+    beta_config = {
+        'identity_pool_id': 'us-west-2:339ba726-2c24-41fe-afb6-d62a7587f623',
+        'client_id': '3re7n0ht3oh2cem8548e0eoh81',
+        'region': "us-west-2",
+        'user_pool_id': 'cognito-idp.us-west-2.amazonaws.com/us-west-2_RyqpR9o3w'
+    }
 
-    def __init__(self):
+    def __init__(self, config=beta_config):
         self._access_token = ""
         self._expires_in = 0
         self._expires_time = datetime.min
         self._id_token = ""
         self._refresh_token = ""
         self._token_type = ""
+        self.config = config
 
         self._s3_resource: S3Resource = None
 
-        self._session: Session = boto3.session.Session(region_name=self._region,
+        self._session: Session = boto3.session.Session(region_name=self.config['region'],
                                                        aws_access_key_id="",
                                                        aws_secret_access_key="",
                                                        aws_session_token=""
@@ -54,7 +65,7 @@ class CognitoHelper:
 
         try:
             response = client.initiate_auth(
-                ClientId=self._client_id,
+                ClientId=self.config['client_id'],
                 AuthFlow='USER_PASSWORD_AUTH',
                 AuthParameters={
                     'USERNAME': username,
@@ -82,21 +93,21 @@ class CognitoHelper:
 
 
     def _init_auth_session(self):
-        cognito: CognitoIdentityClient = boto3.client('cognito-identity', region_name=self._region)
+        cognito: CognitoIdentityClient = boto3.client('cognito-identity', region_name=self.config['region'])
 
         id = cognito.get_id(
             AccountId="674475255666",
-            IdentityPoolId=self._identity_pool_id,
-            Logins={self._user_pool_id: self._id_token}
+            IdentityPoolId=self.config['identity_pool_id'],
+            Logins={self.config['user_pool_id']: self._id_token}
         )
 
         response = cognito.get_credentials_for_identity(
             IdentityId=id['IdentityId'],
-            Logins={self._user_pool_id: self._id_token}
+            Logins={self.config['user_pool_id']: self._id_token}
         )
         credentials = response['Credentials']
 
-        self._session = boto3.session.Session(region_name=self._region,
+        self._session = boto3.session.Session(region_name=self.config['region'],
                                               aws_access_key_id=credentials['AccessKeyId'],
                                               aws_secret_access_key=credentials['SecretKey'],
                                               aws_session_token=credentials['SessionToken'])
@@ -104,14 +115,14 @@ class CognitoHelper:
 
     def _init_unauth_session(self):
         ### DEPRECATED: Should not be needed anymore
-        cognito: CognitoIdentityClient = boto3.client('cognito-identity', region_name=self._region)
+        cognito: CognitoIdentityClient = boto3.client('cognito-identity', region_name=self.config['region'])
 
-        id = cognito.get_id(IdentityPoolId=self._identity_pool_id)
+        id = cognito.get_id(IdentityPoolId=self.config['identity_pool_id'])
 
         response = cognito.get_credentials_for_identity(IdentityId=id['IdentityId'])
         credentials = response['Credentials']
 
-        self._session = boto3.session.Session(region_name=self._region,
+        self._session = boto3.session.Session(region_name=self.config['region'],
                                               aws_access_key_id=credentials['AccessKeyId'],
                                               aws_secret_access_key=credentials['SecretKey'],
                                               aws_session_token=credentials['SessionToken'])
@@ -119,7 +130,7 @@ class CognitoHelper:
     def _get_anonymous_client(self, type: str):
         return boto3.client(
             type,
-            region_name=self._region,
+            region_name=self.config['region'],
             aws_access_key_id = "",
             aws_secret_access_key = "",
             aws_session_token = ""
@@ -148,6 +159,9 @@ class CognitoHelper:
     def _get_refresh_token_pref(self):
         return self._sync_config.get(Vars.refresh_token)
 
+    def _clear_refresh_token_pref(self):
+        self._sync_config.set(Vars.refresh_token, None)
+
     def is_user_logged_in(self) -> bool:
         token = self._get_refresh_token_pref()
         return token is not None and token != ""
@@ -160,13 +174,18 @@ class CognitoHelper:
         refresh_token = refresh_token or self._get_refresh_token_pref()
         client: CognitoIdpClient = self._get_anonymous_client('cognito-idp')
 
-        response = client.initiate_auth(
-            ClientId=self._client_id,
-            AuthFlow='REFRESH_TOKEN',
-            AuthParameters={
-                'REFRESH_TOKEN': refresh_token,
-            }
-        )
+        try:
+            response = client.initiate_auth(
+                ClientId=self.config['client_id'],
+                AuthFlow='REFRESH_TOKEN',
+                AuthParameters={
+                    'REFRESH_TOKEN': refresh_token,
+                }
+            )
+        except client.exceptions.NotAuthorizedException:
+            print(f"{self._tag} Previous refresh token invalid. Clearing and forcing user to log in again.")
+            self._clear_refresh_token_pref()
+            return
 
         # auth result has the keys: AccessToken, ExpiresIn, IdToken, TokenType
         result = response['AuthenticationResult']

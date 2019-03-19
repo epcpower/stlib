@@ -305,11 +305,15 @@ class FilesView(UiBase):
         menu = QMenu(self.files_grid)
         send_to_inverter = menu.addAction("Flash to inverter")
         send_to_inverter.setDisabled(True)
+        save_as = menu.addAction("Save firmware as...")
+
 
         action = menu.exec(menu_pos)
 
         if action is None:
             pass
+        elif action is save_as:
+            ensureDeferred(self.controller.save_file_as_clicked(item))
         elif action is send_to_inverter:
             pass # TODO: [EPC] Implement this
 

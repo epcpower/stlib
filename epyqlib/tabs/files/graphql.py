@@ -1,17 +1,15 @@
 import asyncio
 import json
 from enum import Enum
-from typing import Callable, Dict, List
 
 import treq
+from epyqlib.tabs.files.activity_log import Event
+from epyqlib.tabs.files.websocket_handler import WebSocketHandler
 from twisted.internet import reactor
 from twisted.internet.defer import ensureDeferred
 from twisted.python.failure import Failure
 from twisted.web.iweb import IResponse
-
-from epyqlib.tabs.files.activity_log import Event
-from epyqlib.tabs.files.websocket_handler import WebSocketHandler
-from epyqlib.utils.general import safe_get
+from typing import Callable, Dict, List
 
 
 class GraphQLException(Exception):
@@ -335,8 +333,6 @@ class API:
             return response['data']['getInverterAssociations']['items']
         except GraphQLException as e:
             args: List[str] = e.args
-            # message = safe_get(response, ['errors', 0, 'message']) or ''
-            # if ('Unable to find inverter' in message):
             for message in args:
                 if 'Unable to find inverter' in message:
                     raise InverterNotFoundException(message)

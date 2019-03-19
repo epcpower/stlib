@@ -73,17 +73,19 @@ class FilesController:
         self.view.populate_tree()
         self.view.initialize_ui()
 
-        logged_in = self.aws_login_manager.is_logged_in()
-        self.view.show_logged_out_warning(not logged_in)
-        if logged_in and not self._is_offline:
+        if self.aws_login_manager.is_logged_in() and not self._is_offline:
             try:
                 self.aws_login_manager.refresh()
-                self.api.set_id_token(self.aws_login_manager.get_id_token())
-                self.periodically_refresh_token()
+
+                # Make sure that using the refresh token worked
+                if self.aws_login_manager.is_logged_in():
+                    self.api.set_id_token(self.aws_login_manager.get_id_token())
+                    self.periodically_refresh_token()
             except EndpointConnectionError as e:
                 print(f"{self._tag} Unable to login to AWS. Setting offline mode to true.")
                 self.set_offline(True)
 
+        self.view.show_logged_out_warning(not self.aws_login_manager.is_logged_in())
 
         self.activity_log.register_listener(lambda event: self.view.add_log_line(LogRenderer.render_event(event)))
         self.activity_log.register_listener(self.activity_syncer.listener)

@@ -14,9 +14,12 @@ class SyncConfig:
     _instance = None
     _tag = f'[{__name__}]'
 
+    _dev_url = "https://b3oofrroujeutdd4zclqlwedhm.appsync-api.us-west-2.amazonaws.com/graphql"
+    _beta_url = "https://sayn4ej53bbxbjfbtrnoeda5ia.appsync-api.us-west-2.amazonaws.com/graphql"
+
     default_values = {
         Vars.auto_sync: True,
-        Vars.server_url: "https://b3oofrroujeutdd4zclqlwedhm.appsync-api.us-west-2.amazonaws.com/graphql",
+        Vars.server_url: _beta_url,
         Vars.offline_mode: False
     }
 
@@ -51,7 +54,7 @@ class SyncConfig:
             self.file_error = True
             raise ConfigurationError('Configuration file is not a valid configuration JSON object.')
         for key in self.required_keys:
-            if key not in contents.keys():
+            if key not in contents.keys() or contents[key] is None:
                 contents[key] = self.default_values.get(key)
         self.config = contents
 
