@@ -37,16 +37,7 @@ def create_read_only_attribute():
     )
 
 
-def create_str_or_none_attribute(default=None):
-    return attr.ib(
-        default=default,
-        convert=epyqlib.attrsmodel.to_str_or_none,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
-        ),
-    )
-
-create_notes_attribute = create_str_or_none_attribute
+create_notes_attribute = epyqlib.attrsmodel.create_str_or_none_attribute
 
 
 @graham.schemify(tag='parameter')
@@ -147,8 +138,8 @@ class Parameter(epyqlib.treenode.TreeNode):
         ),
     )
 
-    embedded_getter = create_str_or_none_attribute()
-    embedded_setter = create_str_or_none_attribute()
+    embedded_getter = epyqlib.attrsmodel.create_str_or_none_attribute()
+    embedded_setter = epyqlib.attrsmodel.create_str_or_none_attribute()
 
     read_only = create_read_only_attribute()
 

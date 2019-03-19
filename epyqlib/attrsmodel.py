@@ -52,6 +52,16 @@ def create_str_attribute(default=''):
     )
 
 
+def create_str_or_none_attribute(default=None):
+    return attr.ib(
+        default=default,
+        convert=to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+
+
 def create_name_attribute(default=None):
     return attr.ib(
         default=default,
