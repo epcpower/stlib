@@ -17,6 +17,7 @@ import sys
 sys.path[0:0] = ['.', '..']
 
 import collections
+from elftools.dwarf.dwarf_expr import GenericExprVisitor
 from elftools.dwarf.dwarfinfo import DebugSectionDescriptor
 from elftools.dwarf.descriptions import describe_attr_value
 import elftools.common.exceptions
@@ -77,6 +78,13 @@ class BytesProxy:
 
 def bytearray_to_bits(data):
     return ''.join(['{:08b}'.format(b) for b in data])
+
+
+def process_expression(expression, dwarf_info):
+    generic_expression_visitor = GenericExprVisitor(dwarf_info.structs)
+    generic_expression_visitor.process_expr(expression)
+    result, = generic_expression_visitor._cur_args
+    return result
 
 
 @attr.s
@@ -799,7 +807,9 @@ def process_file(filename):
             stream=stream,
             name=name,
             global_offset=0,
-            size=length)
+            size=length,
+            address=0,
+        )
         for name, (stream, length) in section_bytes.items()
     }
 
@@ -823,7 +833,10 @@ def process_file(filename):
         debug_str_sec=debug_sections.get('.debug_str', None),
         debug_loc_sec=debug_sections.get('.debug_loc', None),
         debug_ranges_sec=debug_sections.get('.debug_ranges', None),
-        debug_line_sec=debug_sections.get('.debug_line', None))
+        debug_line_sec=debug_sections.get('.debug_line', None),
+        debug_pubtypes_sec=debug_sections.get('.pubtypes_sec', None),
+        debug_pubnames_sec=debug_sections.get('.pubnames_sec', None),
+    )
 
     objects = collections.OrderedDict((tag, []) for tag in [
         'DW_TAG_subprogram',
@@ -917,8 +930,10 @@ def process_file(filename):
         # TODO: check this better
         if len(location) != 5:
             continue
-        address = int.from_bytes(bytes(location[1:5]),
-                                 'little')
+        address = process_expression(
+            expression=location,
+            dwarf_info=dwarfinfo,
+        )
 
         variable = Variable(
             name=die.attributes['DW_AT_name'].value.decode('utf-8'),
@@ -1080,10 +1095,16 @@ def process_file(filename):
                 bit_size = bit_size.value
             # TODO: location[1] is just based on observation
             name = a['DW_AT_name'].value.decode('utf-8')
+
+            parsed_location = process_expression(
+                expression=a['DW_AT_data_member_location'].value,
+                dwarf_info=dwarfinfo
+            )
+
             struct.members[name] = StructMember(
                 name=name,
                 type=a['DW_AT_type'].value,
-                location=a['DW_AT_data_member_location'].value[1],
+                location=parsed_location,
                 bit_offset=bit_offset,
                 bit_size=bit_size
             )
