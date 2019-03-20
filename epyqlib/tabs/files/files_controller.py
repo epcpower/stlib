@@ -344,9 +344,9 @@ class FilesController:
             if not self._device_interface.get_connected_status().connected:
                 self.view.show_inverter_error('Bus is disconnected. Unable to get Inverter Serial Number')
                 return
-            serial_number = await self._device_interface.get_serial_number()
+            self._serial_number = await self._device_interface.get_serial_number()
 
-            self.view.serial_number.setText(serial_number)
+            self.view.serial_number.setText(self._serial_number)
 
         try:
             await self._sync_pending_logs()
@@ -433,10 +433,12 @@ class FilesController:
     async def send_to_inverter(self, row: QTreeWidgetItem):
         map = self._get_mapping_for_row(row)
 
+        inverter_id = await self._get_id_for_serial_number(self._serial_number)
+
         file = map.association['file']
         event = Event.new_load_param_file(
-            self.view.serial_number.text(),
-            'FakeUser',
+            inverter_id,
+            'PlaceholderUser',
             file['id'],
             file['hash'],
             file['filename']

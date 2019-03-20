@@ -412,7 +412,7 @@ class FilesView(UiBase):
     def show_file_details(self, association):
         if association is not None:
             self._current_file_id = association['file']['id']
-            self.add_log_line(f"Clicked on {association['file']['filename']}")
+            # self.add_log_line(f"Clicked on {association['file']['filename']}")
             self.filename.setText(association['file']['filename'])
             self.version.setText(association['file']['version'])
             self.description.setText(association['file']['description'])
@@ -420,7 +420,7 @@ class FilesView(UiBase):
             self.notes.setPlainText(association['file']['notes'])
             self.notes.setReadOnly(False)
         else:
-            self.add_log_line(f"Clicked on section header")
+            # self.add_log_line(f"Clicked on section header")
             self.filename.clear()
             self.version.clear()
             self.notes.setReadOnly(True)

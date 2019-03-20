@@ -43,9 +43,9 @@ class API:
     }
 
     _all_inverter_fields = """
-                createdAt 
-                deploymentDate 
                 id 
+                
+                deploymentDate 
                 manufactureDate 
                 model { name revision partNumber id __typename } 
                 notes 
@@ -57,8 +57,6 @@ class API:
                     __typename 
                 } 
                 testDate 
-                updatedAt 
-                updatedBy 
                 __typename 
     """
 

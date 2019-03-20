@@ -4,8 +4,6 @@ class BucketManager():
     _bucket_name_dev = 'epc-files-dev'
     _bucket_name_beta = 'epc-files-beta'
     _bucket_name = _bucket_name_beta
-    _bucket_url = 'https://s3-us-west-2.amazonaws.com/' + _bucket_name + '/'
-    _files_url = _bucket_url + 'files/'
     _logs_path = 'logs/'
     _tag = "[Bucket Manager]"
 
