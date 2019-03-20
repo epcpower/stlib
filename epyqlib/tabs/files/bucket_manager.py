@@ -19,9 +19,16 @@ class BucketManager():
         return await self._download(filename, 'logs/' + hash)
 
     async def _download(self, filename: str, key: str):
-        bucket = self._aws.get_s3_resource().Bucket(self._bucket_name)
-        bucket.download_file(Filename=filename, Key=key)
-        print(f"{self._tag} Finished downloading {key}")
+        try:
+            bucket = self._aws.get_s3_resource().Bucket(self._bucket_name)
+            bucket.download_file(Filename=filename, Key=key)
+            print(f"{self._tag} Finished downloading {key}")
+        except Exception as ex:
+            import sys
+            error_message = f'{self._tag} Error downloading Key: {key} from Bucket: {self._bucket_name}.\n' \
+                + f'{str(ex)}\n'
+            sys.stderr.write(error_message)
+            raise Exception(error_message)
 
     async def upload_log(self, source_path: str, dest_filename: str):
         print(f"{self._tag} Starting to upload log {dest_filename}")

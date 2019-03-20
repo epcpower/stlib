@@ -435,6 +435,9 @@ class FilesView(UiBase):
     def show_sync_time(self, time: datetime):
         self.lbl_last_sync.setText(f'Last sync at: {time.strftime(self.time_format)}')
 
+    def add_log_error_line(self, message: str):
+        self.add_log_line(f'<font color=\'#cc0000\'>{message}</font>')
+
     def add_log_line(self, message: str):
         timestamp = datetime.now()
         new_text = f"<font color='lightGray'>[{timestamp.strftime(self.time_format).strip()}]</font> {message}<br/>"

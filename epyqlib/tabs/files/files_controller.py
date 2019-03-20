@@ -287,7 +287,7 @@ class FilesController:
 
         self._show_pending_logs()
 
-        if self.sync_config.get(Vars.auto_sync):
+        if self.aws_login_manager.is_logged_in() and self.sync_config.get(Vars.auto_sync):
             sync_def = ensureDeferred(self.sync_now())
             sync_def.addErrback(errbackhook)
 
@@ -377,9 +377,13 @@ class FilesController:
             self.association_cache.put_associations(serial, association_list)
 
         # Fetch missing files
-        for hash in self.association_cache.get_all_known_hashes():
+        for hash in self.association_cache.get_all_known_file_hashes():
             if not self.cache_manager.has_hash(hash):
-                await self.download_file(hash)
+                try:
+                    await self.download_file(hash)
+                except Exception:
+                    self.view.add_log_error_line(f"Error caching file {hash}. See epyq.log for details.")
+
 
         self.view.add_log_line("Completed syncing all associations for organization.")
 
