@@ -1,6 +1,8 @@
 import pathlib
 from datetime import datetime
 from enum import Enum
+
+from epyqlib.tabs.files.log_manager import PendingLog
 from typing import Dict
 
 import PyQt5.uic
@@ -284,6 +286,18 @@ class FilesView(UiBase):
 
         self.show_relationship(row, relationship, rel_text)
 
+    def add_new_pending_log_row(self, log: PendingLog, ctime: datetime):
+        row = self.attach_row_to_parent('log', log.filename)
+
+        self.show_check_icon(row, Cols.local)
+        self.show_question_icon(row, Cols.web)
+
+        self.show_relationship(row, Relationships.inverter, f"SN: {log.serial_number}")
+        row.setText(Cols.uploaded_at, ctime.strftime(self.time_format))
+        row.setText(Cols.creator, log.username)
+
+        self.pending_log_rows[log.hash] = row
+
     def show_relationship(self, row: QTreeWidgetItem, relationship: Relationships, rel_text: str):
         row.setBackground(Cols.association, relationship.value)
         row.setText(Cols.association, rel_text)
@@ -308,25 +322,24 @@ class FilesView(UiBase):
             .addErrback(open_error_dialog)
 
     def _notes_changed(self):
-        ensureDeferred(self._disable_notes_buttons()) \
+        changed = self.controller.notes_modified(self.description.text(), self.notes.toPlainText())
+        ensureDeferred(self._disable_notes_buttons(not changed)) \
             .addErrback(open_error_dialog)
 
     def _save_notes_clicked(self):
         new_desc = self.description.text()
         new_text = self.notes.toPlainText()
         ensureDeferred(self.controller.save_notes(self._current_file_id, new_desc, new_text)) \
-            .addCallback(lambda _: ensureDeferred(self._disable_notes_buttons())) \
+            .addCallback(lambda _: ensureDeferred(self._disable_notes_buttons(True))) \
             .addErrback(open_error_dialog)
 
     def _reset_notes(self):
         self.notes.setPlainText(self.controller.old_notes)
         self.notes.moveCursor(QTextCursor.End)
 
-    async def _disable_notes_buttons(self):
-        changed = self.controller.notes_modified(self.description.text(), self.notes.toPlainText())
-
-        self.btn_save_notes.setDisabled(not changed)
-        self.btn_reset_notes.setDisabled(not changed)
+    async def _disable_notes_buttons(self, disabled: bool):
+        self.btn_save_notes.setDisabled(disabled)
+        self.btn_reset_notes.setDisabled(disabled)
 
     def _render_context_menu(self, position: QPoint):
         item = self.files_grid.itemAt(position)
@@ -451,11 +464,12 @@ class FilesView(UiBase):
         self.serial_number.setHidden(enabled)
         self.inverter_error.setHidden(enabled)
 
-    def show_file_details(self, association):
+    def show_file_details(self, association, readonly_description=False):
         if association is None:
             # Clicked on a section header
             self.filename.clear()
             self.version.clear()
+            self.controller.set_original_notes('', '');
             self.description.clear()
             self.description.setReadOnly(True)
             self.notes.clear()
@@ -468,9 +482,9 @@ class FilesView(UiBase):
         self.filename.setText(association['file']['filename'])
         self.version.setText(association['file']['version'])
         self.description.setText(association['file']['description'])
-        self.description.setReadOnly(association['file']['ownedByEpc'] or False)
+        self.description.setReadOnly(readonly_description)
         self.notes.setPlainText(association['file']['notes'])
-        self.notes.setReadOnly(association['file']['ownedByEpc'] or False)
+        self.notes.setReadOnly(readonly_description)
 
     def show_inverter_error(self, error):
         if error is None:

@@ -394,8 +394,14 @@ class FilesController:
             return
 
         file_mapping: AssociationMapping = self._get_mapping_for_row(item)
+
+        association = file_mapping.association
+
+        readonly_description = association['file']['ownedByEpc'] and not self.aws_login_manager._cognito_helper.is_user_epc()
+        readonly_description = readonly_description or self._is_offline
+
         if file_mapping is not None:
-            self.view.show_file_details(file_mapping.association)
+            self.view.show_file_details(file_mapping.association, readonly_description)
 
             if self._is_offline:
                 self.view.description.setReadOnly(True)
@@ -508,20 +514,11 @@ class FilesController:
                 self._add_new_pending_log_row(log)
 
     def _add_new_pending_log_row(self, log: PendingLog):
-        row = self.view.attach_row_to_parent('log', log.filename)
-
-        self.view.show_check_icon(row, Cols.local)
-        self.view.show_question_icon(row, Cols.web)
-
-        self.view.show_relationship(row, Relationships.inverter, f"SN: {log.serial_number}")
-
         ctime = self.log_manager.stat(log.hash).st_ctime
         ctime = datetime.fromtimestamp(ctime)
-        row.setText(Cols.uploaded_at, ctime.strftime(self.view.time_format))
 
-        row.setText(Cols.creator, log.username)
+        self.view.add_new_pending_log_row(log, ctime)
 
-        self.view.pending_log_rows[log.hash] = row
 
     def set_offline(self, is_offline):
         self.activity_syncer.set_offline(is_offline)

@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import attr
 import boto3
 import botocore
+import jwt
 from boto3 import Session
 from boto3_type_annotations.cognito_identity import Client as CognitoIdentityClient
 from boto3_type_annotations.cognito_idp import Client as CognitoIdpClient
@@ -36,11 +37,12 @@ class CognitoHelper:
         'user_pool_id': 'cognito-idp.us-west-2.amazonaws.com/us-west-2_RyqpR9o3w'
     }
 
-    def __init__(self, config=beta_config):
+    def __init__(self, config=dev_config):
         self._access_token = ""
         self._expires_in = 0
         self._expires_time = datetime.min
         self._id_token = ""
+        self._decoded_id_token = ""
         self._refresh_token = ""
         self._token_type = ""
         self.config = config
@@ -80,6 +82,7 @@ class CognitoHelper:
         self._expires_in = result['ExpiresIn']
         self._expires_time = datetime.now() + timedelta(seconds=self._expires_in)
         self._id_token = result['IdToken']
+        self._decoded_id_token = jwt.decode(self._id_token, verify=False)
         self._refresh_token = result['RefreshToken']
         self._token_type = result['TokenType']
 
@@ -166,6 +169,9 @@ class CognitoHelper:
         token = self._get_refresh_token_pref()
         return token is not None and token != ""
 
+    def is_user_epc(self) -> bool:
+        return self._decoded_id_token.get("custom:customer") == "epc"
+
     def _refresh(self, refresh_token: str = None, force=False):
         if self.is_session_valid() and not force:
             # If we have credentials that haven't expired yet, bail out
@@ -193,6 +199,7 @@ class CognitoHelper:
         self._expires_in = result['ExpiresIn']
         self._expires_time = datetime.now() + timedelta(seconds=self._expires_in)
         self._id_token = result['IdToken']
+        self._decoded_id_token = jwt.decode(self._id_token, verify=False)
         self._token_type = result['TokenType']
 
         self._init_auth_session()
@@ -203,6 +210,7 @@ class CognitoHelper:
         self._expires_in = ""
         self._expires_time = datetime.min
         self._id_token = ""
+        self._decoded_id_token = ""
         self._token_type = ""
 
         self._s3_resource = None
@@ -212,6 +220,8 @@ class CognitoHelper:
 if __name__ == '__main__':
     # refresh_token = "..."
     config = SyncConfig.get_instance()
-    helper = CognitoHelper()
-    helper._refresh(config.get(Vars.refresh_token))
+    # helper = CognitoHelper(CognitoHelper.beta_config)
+    # helper.authenticate("epc_admin", "Zxv3m_*&y7r")
+    helper = CognitoHelper(CognitoHelper.dev_config)
+    helper.authenticate("crosscomm_benberry1", "70zo0_Pb")
     print(helper._id_token)
