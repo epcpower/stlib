@@ -1,15 +1,10 @@
 import json
 import shutil
 from datetime import datetime
-from typing import Coroutine, Dict
 
 import attr
 from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
 from botocore.exceptions import EndpointConnectionError
-from twisted.internet import reactor
-from twisted.internet.defer import ensureDeferred
-from twisted.internet.task import deferLater
-
 from epyqlib.device import DeviceInterface
 from epyqlib.tabs.files.activity_log import ActivityLog, Event
 from epyqlib.tabs.files.activity_syncer import ActivitySyncer
@@ -21,6 +16,11 @@ from epyqlib.tabs.files.filesview import Cols, Relationships, get_values
 from epyqlib.tabs.files.log_manager import LogManager, PendingLog
 from epyqlib.tabs.files.sync_config import SyncConfig, Vars
 from epyqlib.utils.twisted import errbackhook
+from twisted.internet import reactor
+from twisted.internet.defer import ensureDeferred
+from twisted.internet.task import deferLater
+from typing import Dict
+
 from .graphql import API, InverterNotFoundException
 
 
@@ -155,9 +155,7 @@ class FilesController:
                 self.associations[association['id'] + association['file']['id']] = AssociationMapping(association, row)
 
             # Render either the new or updated association
-            self.render_association_to_row(association, row)
-
-
+            self.view.render_association_to_row(association, row)
 
         # to_remove = [key for key, value in self.associations.items() if (value.association not in associations)]
         to_remove = []
@@ -232,33 +230,6 @@ class FilesController:
             return None
 
 
-    def render_association_to_row(self, association, row: QTreeWidgetItem):
-        uploaded = association['file']['createdAt'][:-1] # Trim trailing "Z"
-        uploaded = datetime.fromisoformat(uploaded)
-
-        row.setText(Cols.filename, association['file']['filename'])
-        row.setText(Cols.version, association['file']['version'])
-        row.setText(Cols.creator, association['file'].get('createdBy'))
-        row.setText(Cols.uploaded_at, uploaded.strftime(self.view.time_format))
-        row.setText(Cols.description, association['file']['description'])
-
-        if(association.get('model')):
-            model_name = " " + association['model']['name']
-
-            if association.get('customer'):
-                relationship = Relationships.customer
-                rel_text = association['customer']['name'] + "," + model_name
-            elif association.get('site'):
-                relationship = Relationships.site
-                rel_text = association['site']['name'] + "," + model_name
-            else:
-                relationship = Relationships.model
-                rel_text = "All" + model_name
-        else:
-            relationship = Relationships.inverter
-            rel_text = "SN: " + association['inverter']['serialNumber']
-
-        self.view.show_relationship(row, relationship, rel_text)
 
     def is_file_cached_locally(self, item: QTreeWidgetItem):
         hash = self._get_mapping_for_row(item).association['file']['hash']
@@ -405,7 +376,7 @@ class FilesController:
         if (action == 'updated'):
             map: AssociationMapping = self.associations[key]
             map.association['file'].update(payload)
-            self.render_association_to_row(map.association, map.row)
+            self.view.render_association_to_row(map.association, map.row)
 
         if (action == 'deleted'):
             self.view.remove_row(self.associations[key].row)

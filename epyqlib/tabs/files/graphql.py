@@ -100,7 +100,7 @@ class API:
             fragment associationFields on Association {
                 id
                 customer { name }
-                file {id, createdBy, createdAt, description, filename, hash, notes, type, uploadPath, version}
+                file {id, createdBy, createdAt, description, filename, hash, notes, ownedByEpc, type, uploadPath, version}
                 model {name}
                 inverter {id, serialNumber}
                 site {name}
@@ -182,7 +182,25 @@ class API:
             }
         }
 
-    _create_file_mutation = """
+    _frag_files_fields = """
+        fragment fileFields on File {
+                id
+                createdAt
+                createdBy
+                updatedAt
+                updatedBy
+                association {id}
+                description
+                filename
+                hash
+                notes
+                ownedByEpc
+                version
+                type
+        }
+    """
+
+    _create_file_mutation = _frag_files_fields + """
         mutation CreateFile (
             $filename: String!,
             $hash: String!,
@@ -196,18 +214,7 @@ class API:
                 notes: $notes,
                 type: $type 
             ) {
-                id
-                createdAt
-                updatedAt
-                updatedBy
-                association {id}
-                description
-                filename
-                hash
-                notes
-                version
-                type
-                uploadPath
+                ...fileFields
             }
         }
     """
@@ -240,7 +247,7 @@ class API:
                 inverterId: $inverterId
             ) {
                 id
-                file { id filename notes createdAt }
+                file { id filename notes hash createdAt }
                 inverter { id, serialNumber }
             }
         }

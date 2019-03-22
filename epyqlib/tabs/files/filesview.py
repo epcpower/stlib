@@ -66,6 +66,8 @@ class FilesView(UiBase):
     fa_question = u''
 
     fontawesome = QFont('fontawesome')
+    color_black = QColor('black')
+    color_blue = QColor('#1E93F6')
     color_green = QColor('green')
     color_gray = QColor('gray')
     color_red = QColor('red')
@@ -241,6 +243,46 @@ class FilesView(UiBase):
 
     def remove_row(self, row: QTreeWidgetItem):
         self.files_grid.removeItemWidget(row)
+
+
+    def render_association_to_row(self, association, row: QTreeWidgetItem):
+        uploaded = association['file']['createdAt'][:-1] # Trim trailing "Z"
+        uploaded = datetime.fromisoformat(uploaded)
+
+        row.setText(Cols.filename, association['file']['filename'])
+        row.setText(Cols.version, association['file']['version'])
+        row.setText(Cols.uploaded_at, uploaded.strftime(self.time_format))
+        row.setText(Cols.description, association['file']['description'])
+
+        if association['file']['ownedByEpc']:
+            font: QFont = row.font(Cols.creator)
+            font.setBold(True)
+            row.setFont(Cols.creator, font)
+            row.setForeground(Cols.creator, self.color_blue)
+            row.setFont(Cols.creator, row.font(Cols.creator))
+            row.setText(Cols.creator, "EPC Power")
+        else:
+            row.setFont(Cols.creator, row.font(Cols.uploaded_at))
+            row.setForeground(Cols.creator, self.color_black)
+            row.setText(Cols.creator, association['file'].get('createdBy'))
+
+        if(association.get('model')):
+            model_name = " " + association['model']['name']
+
+            if association.get('customer'):
+                relationship = Relationships.customer
+                rel_text = association['customer']['name'] + "," + model_name
+            elif association.get('site'):
+                relationship = Relationships.site
+                rel_text = association['site']['name'] + "," + model_name
+            else:
+                relationship = Relationships.model
+                rel_text = "All" + model_name
+        else:
+            relationship = Relationships.inverter
+            rel_text = "SN: " + association['inverter']['serialNumber']
+
+        self.show_relationship(row, relationship, rel_text)
 
     def show_relationship(self, row: QTreeWidgetItem, relationship: Relationships, rel_text: str):
         row.setBackground(Cols.association, relationship.value)
