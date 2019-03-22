@@ -23,10 +23,10 @@ class CognitoHelper:
     _tag = '[CognitoHelper]'
     
     dev_config = {
-        'identity_pool_id': 'us-west-2:b953611b-23f3-4f76-b463-cfb6c4e75b56',
-        'client_id': '544t83vhj0ubcqcroo9sf77i04',
+        'identity_pool_id': 'us-west-2:3f24de0e-c97c-46ad-841a-9611371e4b6c',
+        'client_id': '4eqpagdediq79a16ebg37c410a',
         'region': "us-west-2",
-        'user_pool_id': 'cognito-idp.us-west-2.amazonaws.com/us-west-2_8rzSRDPG6'
+        'user_pool_id': 'cognito-idp.us-west-2.amazonaws.com/us-west-2_4Q2Ug5I8S'
     }
 
     beta_config = {

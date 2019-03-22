@@ -14,7 +14,7 @@ class SyncConfig:
     _instance = None
     _tag = f'[{__name__}]'
 
-    _dev_url = "https://b3oofrroujeutdd4zclqlwedhm.appsync-api.us-west-2.amazonaws.com/graphql"
+    _dev_url = "https://u62ugr52vbfcliv4x5tvjlo5dq.appsync-api.us-west-2.amazonaws.com/graphql"
     _beta_url = "https://sayn4ej53bbxbjfbtrnoeda5ia.appsync-api.us-west-2.amazonaws.com/graphql"
 
     default_values = {
