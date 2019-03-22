@@ -16,6 +16,7 @@ setuptools.setup(
     cmdclass=versioneer.get_cmdclass(),
     entry_points={
         'console_scripts': [
+            'outparsecheck = epyqlib.outparsecheck:main [dss]',
             'collectdevices = epyqlib.collectdevices:main',
             'contiguouscommits = epyqlib.utils.contiguouscommits:_entry_point [dulwich]',
             'epyqflash = epyqlib.flash:_entry_point',
@@ -35,6 +36,7 @@ setuptools.setup(
         'arrow',
         'bitstruct',
         'canmatrix',
+        'click>=7',
         'python-dotenv',
         'natsort',
         'pint',
@@ -43,7 +45,6 @@ setuptools.setup(
         'gitpython',
         'graham',
         'PyQt5',
-        'click',
         'python-docx',
         'python-can',
         'twisted>=18.9.0rc1',
@@ -52,6 +53,9 @@ setuptools.setup(
         'deploy': [
             'gitpython',
             'requests',
+        ],
+        'dss': [
+            'ccstudiodss>=0.2.7',
         ],
         'dulwich': [
             'dulwich',

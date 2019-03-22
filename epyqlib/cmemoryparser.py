@@ -22,6 +22,7 @@ from elftools.dwarf.dwarfinfo import DebugSectionDescriptor
 from elftools.dwarf.descriptions import describe_attr_value
 import elftools.common.exceptions
 import io
+import itertools
 import os
 import epyqlib.ticoff
 import traceback
@@ -259,16 +260,22 @@ class VolatileType(BytesProxy):
 class ArrayType:
     type = attr.ib()
     bytes = attr.ib()
+    dimensions = attr.ib()
     name = attr.ib(default=None)
-
-    def length(self):
-        return self.bytes // base_type(self.type).bytes
 
     def array_markup(self):
         return '[{}]'.format(self.length())
 
-    def offset_of(self, index):
-        return index * self.type.bytes
+    def offset_of(self, *indexes):
+        offset = 0
+        overall_multiplier = self.type.bytes
+        x = itertools.zip_longest(indexes, self.dimensions, fillvalue=0)
+        x = reversed(list(x))
+        for index, multiplier in x:
+            offset += overall_multiplier * index
+            overall_multiplier *= multiplier
+
+        return offset
 
     def unpack(self, data):
         # TODO: CAMPid 078587996542145215432667431535465465421
@@ -294,6 +301,7 @@ class ArrayType:
             raise Exception('wrong amount of data for array')
 
         return values
+
 
 @attr.s
 class ConstType(BytesProxy):
@@ -1034,14 +1042,28 @@ def process_file(filename):
         byte_size = die.attributes.get('DW_AT_byte_size', None)
         if byte_size is not None:
             byte_size = byte_size.value
+
+        dimensions = []
+        for child in die.iter_children():
+            if child.tag != 'DW_TAG_subrange_type':
+                continue
+
+            dimensions.append(child.attributes['DW_AT_upper_bound'].value + 1)
+
         array_type = ArrayType(
             name=name,
             bytes=byte_size,
+            dimensions=dimensions,
             type=die.attributes['DW_AT_type'].value
         )
         array_types.append(array_type)
         offsets[die.offset] = array_type
         logging.debug('{: 10d} {}'.format(die.offset, array_type))
+        tags = ('DW_AT_stride_size',)
+        for tag_name in tags:
+            tag = die.attributes.get(tag_name)
+            if tag is not None:
+                logging.debug(' found a {}: {}'.format(tag_name, tag))
 
     const_types = []
     for die in objects['DW_TAG_const_type']:
