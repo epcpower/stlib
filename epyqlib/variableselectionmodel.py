@@ -207,9 +207,15 @@ class VariableNode(epyqlib.treenode.TreeNode):
             )
 
         for child in self.children:
+            base_type = epyqlib.cmemoryparser.base_type(child.variable)
+            address = child.address()
+            if self.child_is_multidimensional_array_inner_node():
+                base_type = epyqlib.cmemoryparser.base_type(self.variable)
+                address = self.address()
+
             new_members.extend(child.add_members(
-                base_type=epyqlib.cmemoryparser.base_type(child.variable),
-                address=child.address()
+                base_type=base_type,
+                address=address,
                 # do not expand child pointers since we won't have their values
             ))
 
@@ -230,31 +236,51 @@ class VariableNode(epyqlib.treenode.TreeNode):
 
         return new_members
 
-    def add_array_members(self, base_type, address, indexes=(), sender=None):
+    def child_is_multidimensional_array_inner_node(self):
+        if isinstance(self.variable.type, epyqlib.cmemoryparser.ArrayType):
+            indexes = self.array_indexes()
+            if len(indexes) + 1 < len(self.variable.type.dimensions):
+                return True
+
+        return False
+
+    def array_indexes(self):
+        indexes = ()
+        parent = self
+        while (
+                parent.tree_parent is not None
+                and parent.fields.name.startswith('[')
+        ):
+            indexes += (int(parent.fields.name[1:-1]),)
+            parent = parent.tree_parent
+
+        return indexes
+
+    def add_array_members(self, base_type, address, sender=None):
+        indexes = self.array_indexes()
+
         new_members = []
         digits = len(str(base_type.dimensions[len(indexes)]))
         format = '[{{:0{}}}]'.format(digits)
 
         maximum_children = 256
 
-        for index in range(base_type.dimensions[len(indexes)]):
+        if self.child_is_multidimensional_array_inner_node():
+            child_type = base_type
+        else:
+            child_type = base_type.type
+
+        for index in range(min(base_type.dimensions[len(indexes)], maximum_children)):
             child_address = address + base_type.offset_of(*(indexes + (index,)))
             variable = epyqlib.cmemoryparser.Variable(
                 name=format.format(index),
-                type=base_type.type,
+                type=child_type,
                 address=child_address,
             )
             child_node = VariableNode(variable=variable,
                                       comparison_value=index)
             self.append_child(child_node)
             new_members.append(child_node)
-
-            if len(indexes) + 1 < len(base_type.dimensions):
-                child_node.add_array_members(
-                    base_type=base_type,
-                    address=address,
-                    indexes=indexes + (index,),
-                )
 
         if base_type.dimensions[len(indexes)] > maximum_children:
             if sender is not None:

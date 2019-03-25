@@ -1,3 +1,5 @@
+import json
+
 import attr
 import ccstudiodss.api
 import ccstudiodss.cli
@@ -11,11 +13,16 @@ import epyqlib.variableselectionmodel
 project_name = 'epyqlib'
 
 
-@click.command()
+@click.group()
+def main():
+    pass
+
+
+@main.command()
 @ccstudiodss.cli.create_binary_option(project_name=project_name)
 @ccstudiodss.cli.create_ccxml_option(project_name=project_name)
 @ccstudiodss.cli.ccs_base_path_option
-def main(binary, ccxml, ccs_base_path):
+def dss(binary, ccxml, ccs_base_path):
     ccstudiodss.api.add_jars(base_path=ccs_base_path)
 
     model = epyqlib.variableselectionmodel.VariableModel(
@@ -29,7 +36,7 @@ def main(binary, ccxml, ccs_base_path):
 
     try:
         with ccstudiodss.api.Session(ccxml=ccxml) as session:
-            session.load(binary=binary)
+            session.load(binary=binary, timeout=10000)
             session.run()
 
             traverser = Traverser(session=session)
@@ -45,13 +52,37 @@ def main(binary, ccxml, ccs_base_path):
             print()
     except Exception as e:
         print()
-    # unmatched_top_level = [
-    #     (node, node.name, compare(node=node, session=session))
-    #     for node in model.root.children
-    #     if not compare(node=node, session=session)[2]
-    # ]
-    # for unmatched in unmatched_top_level:
-    #     print(unmatched)
+
+
+@main.command(name='json')
+@ccstudiodss.cli.create_binary_option(project_name=project_name)
+@click.option('--json', 'json_file', type=click.File('r'), required=True)
+def json_command(binary, json_file):
+    model = epyqlib.variableselectionmodel.VariableModel(
+        nvs=None,
+        nv_model=None,
+        bus=None,
+    )
+
+    binary_info = epyqlib.cmemoryparser.process_file(binary)
+    model.update_from_loaded_binary_without_threads(binary_info=binary_info)
+
+    loaded = json.load(json_file)
+
+    try:
+        traverser = JsonTraverser(name_to_addresses=dict(loaded))
+
+        try:
+            model.root.traverse(call_this=traverser, internal_nodes=True)
+        except Exception as e:
+            print()
+
+        for comparison in traverser.failures():
+            print('FAILED:', comparison.node.qualified_name(), comparison)
+
+        print()
+    except Exception as e:
+        print()
 
 
 @attr.s
@@ -107,19 +138,32 @@ class Traverser:
         ]
 
 
-# def compare(node, session):
-#     try:
-#         dss_address = session.debug_session.expression.evaluate(
-#             '&' + node.fields.name
-#         )
-#     except javabridge.JavaException as e:
-#         return e
-#
-#     addresses = (
-#         dss_address,
-#         node.variable.address,
-#     )
-#     return (
-#         *addresses,
-#         addresses[0] == addresses[1],
-#     )
+@attr.s
+class JsonTraverser:
+    name_to_addresses = attr.ib()
+    collected = attr.ib(factory=list)
+
+    def __call__(self, node, payload):
+        if node.tree_parent is None:
+            return
+
+        # if node.tree_parent.tree_parent is not None:
+        #     print()
+
+        print(node.qualified_name())
+
+        try:
+            dss_address = self.name_to_addresses[node.qualified_name()]
+        except KeyError as e:
+            comparison = Comparison(node=node, exception=e)
+        else:
+            comparison = Comparison(node=node, dss_address=dss_address)
+
+        self.collected.append(comparison)
+
+    def failures(self):
+        return [
+            comparison
+            for comparison in self.collected
+            if not comparison.matches()
+        ]
