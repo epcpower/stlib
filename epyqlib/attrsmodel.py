@@ -393,7 +393,7 @@ def check_just_children(self):
         return None
 
     return epyqlib.checkresultmodel.Node.build(
-        name=self.name,
+        name=getattr(self, 'name', ''),
         node=self,
         child_results=child_results,
     )
@@ -408,7 +408,7 @@ def check_children(f):
 
         if result is None:
             result = epyqlib.checkresultmodel.Node.build(
-                name=self.name,
+                name=getattr(self, 'name', ''),
                 node=self,
             )
 

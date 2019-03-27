@@ -7,12 +7,6 @@ import epyqlib.attrsmodel
 @graham.schemify(tag='node')
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
-@epyqlib.utils.qt.pyqtify_passthrough_properties(
-    original='node',
-    field_names=(
-        'name',
-    ),
-)
 @attr.s(hash=False)
 class Node(epyqlib.treenode.TreeNode):
     name = epyqlib.attrsmodel.create_name_attribute()
