@@ -169,8 +169,11 @@ class CognitoHelper:
         token = self._get_refresh_token_pref()
         return token is not None and token != ""
 
+    def get_user_customer(self) -> str:
+        return self._decoded_id_token.get("custom:customer")
+
     def is_user_epc(self) -> bool:
-        return self._decoded_id_token.get("custom:customer") == "epc"
+        return self.get_user_customer() == "epc"
 
     def _refresh(self, refresh_token: str = None, force=False):
         if self.is_session_valid() and not force:

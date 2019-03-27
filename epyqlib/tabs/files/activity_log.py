@@ -26,7 +26,8 @@ class Event():
     user_id: str
     type: str
     details: dict
-    timestamp: str = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+    timestamp: str = attr.ib(factory=lambda: datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"))
+
 
     @staticmethod
     def new_fault_cleared(inverter_id: str, user_id: str, fault_code: Union[str, int]):

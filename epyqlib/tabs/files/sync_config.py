@@ -19,7 +19,7 @@ class SyncConfig:
 
     default_values = {
         Vars.auto_sync: True,
-        Vars.server_url: _beta_url,
+        Vars.server_url: _dev_url,
         Vars.offline_mode: False
     }
 

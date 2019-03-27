@@ -3,7 +3,7 @@ from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
 class BucketManager():
     _bucket_name_dev = 'epc-files-dev'
     _bucket_name_beta = 'epc-files-beta'
-    _bucket_name = _bucket_name_beta
+    _bucket_name = _bucket_name_dev
     _logs_path = 'logs/'
     _tag = "[Bucket Manager]"
 
