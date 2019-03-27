@@ -10,7 +10,7 @@ import attr
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QColor, QBrush, QTextCursor, QFont
 from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QLabel, \
-    QPlainTextEdit, QGridLayout, QMenu, QTextEdit
+    QPlainTextEdit, QGridLayout, QMenu, QTextEdit, QAction
 from twisted.internet.defer import ensureDeferred, inlineCallbacks
 
 from epyqlib.utils.twisted import errbackhook as open_error_dialog
@@ -362,7 +362,6 @@ class FilesView(UiBase):
         send_to_inverter.setDisabled(True)
         save_as = menu.addAction("Save firmware as...")
 
-
         action = menu.exec(menu_pos)
 
         if action is None:
@@ -389,21 +388,27 @@ class FilesView(UiBase):
 
     def _render_param_file_menu(self, menu_pos: QPoint, item: QTreeWidgetItem):
         menu = QMenu(self.files_grid)
+        dummy = menu.addAction("Send dummy File Loaded event to web tool")
         scratch = menu.addAction("Send to scratch")
         active = menu.addAction("Send to active")
         inverter = menu.addAction("Send to inverter")
         save_as = menu.addAction("Save file as...")
 
+        btn: QAction
+        [btn.setDisabled(True) for btn in [scratch, active, inverter]]
+
         action = menu.exec(menu_pos)
 
         if action is None:
             pass
+        elif action is dummy:
+            ensureDeferred(self.controller.send_dummy_param_event(item))
+        elif action is scratch:
+            pass
         elif action is active:
             pass
         elif action is inverter:
-            ensureDeferred(self.controller.send_to_inverter(item))
-        elif action is scratch:
-            print("[Files View] Scratch menu item clicked")
+            pass
         elif action is save_as:
             ensureDeferred(self.controller.save_file_as_clicked(item))
 

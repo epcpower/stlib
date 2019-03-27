@@ -411,7 +411,7 @@ class FilesController:
             hash = next(key for key, value in self._log_rows.items() if value == item)
 
 
-    async def send_to_inverter(self, row: QTreeWidgetItem):
+    async def send_dummy_param_event(self, row: QTreeWidgetItem):
         map = self._get_mapping_for_row(row)
 
         inverter_id = await self._get_id_for_serial_number(self._serial_number)
