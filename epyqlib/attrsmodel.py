@@ -946,9 +946,10 @@ class EnumerationDelegateMulti(QtWidgets.QStyledItemDelegate):
             it = PyQt5.QtWidgets.QListWidgetItem(editor)
             it.setText(node.name)
             it.uuid = node.uuid
-            for r in raw:
-                if r == it.uuid:
-                    it.setSelected(True)
+            if raw is not None:
+                for r in raw:
+                    if r == it.uuid:
+                        it.setSelected(True)
 
         editor.setMinimumHeight(editor.sizeHint().height())
         editor.show()
