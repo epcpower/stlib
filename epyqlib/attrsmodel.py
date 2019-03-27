@@ -87,6 +87,16 @@ def create_reference_attribute():
     return attribute
 
 
+def create_checkbox_attribute(default=False):
+    return attr.ib(
+        default=default,
+        converter=epyqlib.attrsmodel.two_state_checkbox,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Boolean(),
+        ),
+    )
+
+
 # TODO: CAMPid 8695426542167924656654271657917491654
 def name_from_uuid(node, value, model):
     if value is None:
