@@ -256,7 +256,7 @@ class FilesView(UiBase):
         row.setText(Cols.uploaded_at, uploaded.strftime(self.time_format))
         row.setText(Cols.description, association['file']['description'])
 
-        if association['file']['ownedByEpc']:
+        if association['file']['owner'] == "epc":
             font: QFont = row.font(Cols.creator)
             font.setBold(True)
             row.setFont(Cols.creator, font)

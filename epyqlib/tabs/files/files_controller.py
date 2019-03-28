@@ -335,7 +335,7 @@ class FilesController:
 
         if not self._is_offline:
             await self.api.unsubscribe()
-            await self.api.subscribe(self.file_updated)
+            await self.api.subscribe(self.aws_login_manager._cognito_helper.get_user_customer(), self.file_updated)
 
     async def sync_all(self):
         self.view.add_log_line("Starting to sync all associations for organization.")
@@ -359,11 +359,10 @@ class FilesController:
         self.view.add_log_line("Completed syncing all associations for organization.")
 
     def file_updated(self, action, payload):
-        if (action == 'created'):
+        if (action == 'orgFileCreated'):
             pass
-            # Get file info including association
-            # Create row for info
-            # Add info and row to self.associations
+            # TODO: Get file info including association, create row for info, and
+            # TODO: Add info and row to self.associations
         if 'hash' in payload:
             key = self._get_key_for_hash(payload['hash'])
         elif 'id' in payload:
@@ -373,12 +372,12 @@ class FilesController:
                   f"Payload doesn't contain file id or hash.\n{json.dumps(payload, indent=2)}")
 
 
-        if (action == 'updated'):
+        if (action == 'orgFileUpdated'):
             map: AssociationMapping = self.associations[key]
             map.association['file'].update(payload)
             self.view.render_association_to_row(map.association, map.row)
 
-        if (action == 'deleted'):
+        if (action == 'orgFileDeleted'):
             self.view.remove_row(self.associations[key].row)
             del(self.associations[key])
 
@@ -397,7 +396,7 @@ class FilesController:
 
         association = file_mapping.association
 
-        readonly_description = association['file']['ownedByEpc'] and not self.aws_login_manager._cognito_helper.is_user_epc()
+        readonly_description = association['file']['owner'] == "epc" and not self.aws_login_manager._cognito_helper.is_user_epc()
         readonly_description = readonly_description or self._is_offline
 
         if file_mapping is not None:
