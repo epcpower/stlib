@@ -8,11 +8,9 @@ from typing import Callable
 
 class WebSocketHandler():
     def __init__(self):
-        self.topics: {str: str}
         self._callback: Callable[[str, dict], None] = None
         self.loopingCall: LoopingCall = None
         self.clients: list[mqtt.Client] = []
-        self.topics: {str: str} = None
 
     def connect(self, response: dict, on_message: Callable[[str, dict], None]) -> None:
         """
@@ -26,7 +24,8 @@ class WebSocketHandler():
         new_subscriptions = response['extensions']['subscription']['newSubscriptions']
         mqtt_connections = response['extensions']['subscription']['mqttConnections']
 
-
+        # TODO: Group multiple topics that share a URL into one client. It appears that having two clients
+        # subscribe to the same URL and then listen on different topics causes one to be disconnected
         # connections = {}
         #
         # for newSubscription in newSubscriptions:
@@ -43,7 +42,7 @@ class WebSocketHandler():
             headers = {"Host": "{0:s}".format(urlparts.netloc)}
 
             client = mqtt.Client(client_id=client_id, transport="websockets")
-            client.user_data_set({"topic": details['topic'], "name": name})
+            client.user_data_set({"topic": details['topic']})
             client.on_connect = self._on_connect
             client.on_message = self._on_message
             client.on_socket_close = self._on_socket_close
@@ -57,7 +56,6 @@ class WebSocketHandler():
             client.connect(urlparts.netloc, port=443)
             self.clients.append(client)
 
-        # self.topics = {new_subscriptions[f]['topic']: f for f in new_subscriptions}
         self.loopingCall: LoopingCall = LoopingCall(self.loop)
         self.loopingCall.start(1)
 
@@ -90,19 +88,23 @@ class WebSocketHandler():
         print(f"[Graphql Websocket]  Log {level} {buf}")
 
     def _on_message(self, client, userdata, msg):
-        # action = self.topics.get(msg.topic)
-
-        action = userdata.get('name')
-        if action is None:
+        try:
+            payload = msg.payload.decode('ascii')
+            payload_json = json.loads(payload)
+            print(f"[Graphql Websocket] Message received: {payload}")
+        except Exception as e:
+            print(f"[Graphql Websocket] Error converting payload to JSON: " + msg.payload.decode('ascii'))
+            print(e)
             return
 
-        payload = msg.payload.decode('ascii')
-        payload_json = json.loads(payload)
-        print(f"[Graphql Websocket] Message received: {payload} -> {action}")
 
         # We *should* only get one payload, but just in case...
-        for payload in payload_json['data'].values():
-            self._callback(action, payload)
+        try:
+            for action, payload in payload_json['data'].items():
+                self._callback(action, payload)
+        except Exception as e:
+            print(f"[Graphql Websocket] Error iterating over payload: " + json.dumps(payload_json))
+            print(e)
 
     def _on_socket_close(self, client: mqtt.Client, userdata: dict, socket):
         print(f"Connection to topic ${userdata.get('topic')} closed.")

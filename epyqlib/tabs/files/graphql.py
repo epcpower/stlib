@@ -385,20 +385,23 @@ class API:
 
     async def subscribe(self, customer_id: str, message_handler: Callable[[str, dict], None]):
         print(f"{self._tag} Subscribing to events for public events and events for context {customer_id}")
-        gql = """subscription($customerId: String) {
-                    orgFileCreated: fileCreated(owner: $customerId) { id }
+
+        ### WARNING: Enabling too many of these will leads to those that share a common wss url to be closed prematurely.
+        ### See TODO in websocket_handler.py about a possible way to fix
+        gql = """subscription($customerId: String!) {
+                    # orgFileCreated: fileCreated(owner: $customerId) { id }
                     orgFileUpdated: fileUpdated(owner: $customerId) { id }
                     orgFileDeleted: fileDeleted(owner: $customerId) { id }
                     
-                    # publicFileCreated: fileCreated(securityContext: "public") { id }
-                    # publicFileUpdated: fileUpdated(securityContext: "public") { id }
-                    # publicFileDeleted: fileDeleted(securityContext: "public") { id }
+                    # publicFileCreated: fileCreated(owner: "public") { id }
+                    # publicFileUpdated: fileUpdated(owner: "public") { id }
+                    # publicFileDeleted: fileDeleted(owner: "public") { id }
                     
-                    # orgAssociationCreated: associationCreated(securityContext: $customerId) { id }
-                    # orgAssociationDeleted: associationDeleted(securityContext: $customerId) { id }
+                    orgAssociationCreated: associationCreated(owner: $customerId) { id }
+                    orgAssociationDeleted: associationDeleted(owner: $customerId) { id }
                     
-                    # publicAssociationCreated: associationCreated(securityContext: "public") { id }
-                    # publicAssociationDeleted: associationDeleted(securityContext: "public") { id }
+                    # publicAssociationCreated: associationCreated(owner: "public") { id }
+                    # publicAssociationDeleted: associationDeleted(owner: "public") { id }
                 }"""
 
         query = {

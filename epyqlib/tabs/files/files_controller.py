@@ -359,7 +359,11 @@ class FilesController:
         self.view.add_log_line("Completed syncing all associations for organization.")
 
     def file_updated(self, action, payload):
-        if (action == 'orgFileCreated'):
+        if (action == 'associationCreated' or action == 'associationDeleted'):
+            print(f"{self._tag} Received association action {action}: {json.dumps(payload)}")
+            return
+
+        if (action == 'fileCreated'):
             pass
             # TODO: Get file info including association, create row for info, and
             # TODO: Add info and row to self.associations
@@ -372,14 +376,15 @@ class FilesController:
                   f"Payload doesn't contain file id or hash.\n{json.dumps(payload, indent=2)}")
 
 
-        if (action == 'orgFileUpdated'):
+        if (action == 'fileUpdated'):
             map: AssociationMapping = self.associations[key]
             map.association['file'].update(payload)
             self.view.render_association_to_row(map.association, map.row)
 
-        if (action == 'orgFileDeleted'):
+        if (action == 'fileDeleted'):
             self.view.remove_row(self.associations[key].row)
             del(self.associations[key])
+
 
         value: AssociationMapping
         new_associations = [value.association for key, value in self.associations.items()]
