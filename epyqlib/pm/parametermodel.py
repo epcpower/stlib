@@ -12,6 +12,8 @@ import epyqlib.treenode
 import epyqlib.utils.general
 import epyqlib.utils.qt
 
+from natsort import natsorted
+
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2017, EPC Power Corp.'
 __license__ = 'GPLv2+'
@@ -35,6 +37,10 @@ def create_read_only_attribute():
             field=marshmallow.fields.Boolean(),
         ),
     )
+
+def sort_multiselect(node):
+    if node.visibility is not None:
+        node.visibility = natsorted(node.visibility, key=lambda uuid: epyqlib.attrsmodel.name_from_uuid(node, uuid, node.find_root().model))
 
 
 create_notes_attribute = epyqlib.attrsmodel.create_str_or_none_attribute
@@ -224,6 +230,9 @@ class Parameter(epyqlib.treenode.TreeNode):
         if None not in (value, self.minimum):
             if value < self.minimum:
                 self.minimum = value
+
+    def update(self):
+        sort_multiselect(self)
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
@@ -471,6 +480,9 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
 
     def can_drop_on(self, node):
         return False
+
+    def update(self):
+        sort_multiselect(self)
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
@@ -818,6 +830,9 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
 
     def can_drop_on(self, node):
         return False
+
+    def update(self):
+        sort_multiselect(self)
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop

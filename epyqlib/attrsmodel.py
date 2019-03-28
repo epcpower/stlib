@@ -10,6 +10,7 @@ import logging
 import sys
 import uuid
 import weakref
+from natsort import natsorted
 
 import attr
 import graham
@@ -958,7 +959,7 @@ class EnumerationDelegateMulti(QtWidgets.QStyledItemDelegate):
         index = epyqlib.utils.qt.resolve_index_to_model(index)
         model = index.model()
 
-        selected_items = editor.selectedItems()
+        selected_items = natsorted(editor.selectedItems())
         model.setData(index, selected_items)
 
 
