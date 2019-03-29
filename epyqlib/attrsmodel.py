@@ -98,6 +98,16 @@ def create_checkbox_attribute(default=False):
     )
 
 
+def create_integer_attribute(default=0):
+    return attr.ib(
+        default=default,
+        converter=int,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Integer(),
+        ),
+    )
+
+
 # TODO: CAMPid 8695426542167924656654271657917491654
 def name_from_uuid(node, value, model):
     if value is None:
