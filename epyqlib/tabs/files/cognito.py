@@ -37,7 +37,7 @@ class CognitoHelper:
         'user_pool_id': 'cognito-idp.us-west-2.amazonaws.com/us-west-2_RyqpR9o3w'
     }
 
-    def __init__(self, config=dev_config):
+    def __init__(self, config=beta_config):
         self._access_token = ""
         self._expires_in = 0
         self._expires_time = datetime.min
