@@ -1088,7 +1088,11 @@ class Model:
             if field_metadata.converter == two_state_checkbox:
                 datum = item.data(QtCore.Qt.CheckStateRole)
 
-            datum = field_metadata.converter(datum)
+            try:
+                datum = field_metadata.converter(datum)
+            except:
+                item.setData(getattr(node, field_name), QtCore.Qt.DisplayRole)
+                raise
 
         setattr(node, field_name, datum)
 
