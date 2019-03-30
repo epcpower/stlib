@@ -7,6 +7,7 @@ import itertools
 import json
 import locale
 import logging
+import string
 import sys
 import uuid
 import weakref
@@ -105,6 +106,106 @@ def create_integer_attribute(default=0):
         metadata=graham.create_metadata(
             field=marshmallow.fields.Integer(),
         ),
+    )
+
+
+class NotAllowedCharacterError(Exception):
+    @classmethod
+    def build(cls, value, allowed):
+        not_allowed = set(value) - set(allowed)
+
+        return cls(
+            'Characters {!r} from {!r} are not in allowed set {!r}'.format(
+                ''.join(sorted(not_allowed)),
+                value,
+                ''.join(sorted(allowed)),
+            )
+        )
+
+
+class NotAllowedFirstCharacterError(Exception):
+    @classmethod
+    def build(cls, first_character, allowed):
+        return cls(
+            'First character {!r} not allowed, must be one of {!r}'.format(
+                first_character,
+                ''.join(sorted(allowed)),
+            )
+        )
+
+
+@attr.s
+class LimitedStringConverter:
+    allowed = attr.ib()
+    allowed_first_character = attr.ib()
+
+    @classmethod
+    def build(cls, allowed, not_allowed_first):
+        allowed = set(allowed)
+        not_allowed_first = set(not_allowed_first)
+
+        return cls(
+            allowed=allowed,
+            allowed_first_character=allowed - not_allowed_first,
+        )
+
+    def __call__(self, value):
+        value = str(value)
+        value_set = set(value)
+
+        first_character = value[0]
+
+        if first_character not in self.allowed_first_character:
+            raise NotAllowedFirstCharacterError.build(
+                first_character=first_character,
+                allowed=self.allowed_first_character,
+            )
+
+        if not value_set.issubset(self.allowed):
+            raise NotAllowedCharacterError.build(
+                value=value,
+                allowed=self.allowed
+            )
+
+        return value
+
+    def suggest(self, value):
+        suggestion = ''.join(
+            character
+            for character in value
+            if character in self.allowed
+        )
+
+        if suggestion[:1] not in self.allowed_first_character:
+            if '_' in self.allowed_first_character:
+                suggestion = '_' + suggestion
+            else:
+                while suggestion[:1] not in self.allowed_first_character:
+                    suggestion = suggestion[1:]
+                    if len(suggestion) == 0:
+                        break
+
+        return suggestion
+
+
+def create_limited_string_attribute(default, allowed, not_allowed_first):
+    return attr.ib(
+        default=default,
+        convert=LimitedStringConverter.build(
+            allowed=allowed,
+            not_allowed_first=not_allowed_first,
+        ),
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(),
+        ),
+    )
+
+
+def create_code_identifier_string_attribute(default):
+    return create_limited_string_attribute(
+        default=default,
+        allowed=string.ascii_letters + string.digits + '_',
+        not_allowed_first=string.digits,
     )
 
 
