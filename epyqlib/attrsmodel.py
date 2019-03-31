@@ -973,6 +973,7 @@ class CustomMulti(PyQt5.QtWidgets.QListWidget):
         hide_popup(self)
 
 
+# TODO: CAMPid 05470876451650542168542
 class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
     def __init__(self, text_column_name, root, parent):
         super().__init__(parent)
@@ -981,7 +982,7 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
         self.root = root
 
     def createEditor(self, parent, option, index):
-        return CustomCombo(parent=parent)
+        return CustomMulti(parent=parent)
 
     def setEditorData(self, editor, index):
         super().setEditorData(editor, index)
@@ -989,53 +990,35 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
         model_index = to_source_model(index)
         model = model_index.model()
 
-        item = model.itemFromIndex(model_index)
-        attrs_model = item.data(epyqlib.utils.qt.UserRoles.attrs_model)
-        column = attrs_model.columns.index_of(self.text_column_name)
-        root_index = attrs_model.index_from_node(self.root)
+        raw = model.data(model_index, epyqlib.utils.qt.UserRoles.raw)
+        editor.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        for node in self.root.children:
+            it = PyQt5.QtWidgets.QListWidgetItem(editor)
+            it.setText(node.name)
+            it.setData(epyqlib.utils.qt.UserRoles.raw, node.uuid)
+            if raw == node.uuid:
+                it.setSelected(True)
 
-        editor.setModel(root_index.model())
-        editor.setModelColumn(column)
-        editor.setRootModelIndex(root_index)
-
-        target_uuid = model_index.data(epyqlib.utils.qt.UserRoles.raw)
-
-        if target_uuid is not None:
-            target_node = attrs_model.node_from_uuid(target_uuid)
-            target_index = attrs_model.index_from_node(target_node)
-
-            editor.setCurrentIndex(target_index.row())
-
-        editor.showPopup()
+        editor.setMinimumHeight(editor.sizeHint().height())
+        editor.show()
 
     def setModelData(self, editor, model, index):
         index = epyqlib.utils.qt.resolve_index_to_model(index)
         model = index.model()
 
-        editor_index = editor.currentIndex()
+        selected_items = editor.selectedItems()
 
-        item = model.itemFromIndex(index)
-        attrs_model = item.data(epyqlib.utils.qt.UserRoles.attrs_model)
-        parent_index = attrs_model.index_from_node(self.root)
+        if len(selected_items) == 0:
+            selected_uuid = ''
+        else:
+            selected_item, = selected_items
+            selected_uuid = selected_item.data(epyqlib.utils.qt.UserRoles.raw)
+            selected_uuid = str(selected_uuid)
 
-        enumeration_model = parent_index.model()
-        enumeration_attrs_model = parent_index.data(
-            epyqlib.utils.qt.UserRoles.attrs_model,
-        )
-
-        selected_index = enumeration_model.index(
-            editor_index,
-            0,
-            parent_index,
-        )
-        selected_node = enumeration_attrs_model.node_from_index(
-            selected_index,
-        )
-
-        datum = str(selected_node.uuid)
-        model.setData(index, datum)
+        model.setData(index, selected_uuid)
 
 
+# TODO: CAMPid 05470876451650542168542
 class EnumerationDelegateMulti(QtWidgets.QStyledItemDelegate):
     def __init__(self, text_column_name, root, parent):
         super().__init__(parent)
