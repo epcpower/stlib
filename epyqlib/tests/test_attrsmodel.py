@@ -927,9 +927,9 @@ def test_enumeration(qtbot):
             PyQt5.QtWidgets.QAbstractItemView.AllEditTriggers,
             None,
         )
-        editor, = view.findChildren(PyQt5.QtWidgets.QComboBox)
+        editor, = view.findChildren(epyqlib.attrsmodel.CustomMulti)
 
-        editor.setCurrentIndex(row)
+        editor.setCurrentRow(row)
 
         PyQt5.QtCore.QCoreApplication.postEvent(
             editor,
