@@ -4,7 +4,14 @@ import PyQt5
 import PyQt5.uic
 
 
-from PyQt5.QtWidgets import QDialog, QLineEdit, QPushButton, QLabel
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import (
+    QDialog,
+    QLineEdit,
+    QPushButton,
+    QLabel,
+    QDialogButtonBox,
+)
 
 # noinspection PyUnreachableCode
 from epyqlib.tabs.files.cognito import CognitoException
@@ -39,7 +46,20 @@ class LoginDialog(UiBase):
         self.ui.setupUi(self)
 
         self._bind()
+        self._fiddle_title_label()
         self._clear_error_message()
+
+    def _fiddle_title_label(self):
+        self.ui.spacer_label.setText(self.ui.big_label.text())
+
+        reference_font = QFont()
+        reference_font.setPointSize(reference_font.pointSize() * 2)
+        reference_font.setWeight(QFont.Black)
+
+        self.ui.big_label.setFont(reference_font)
+
+        reference_font.setPointSize(reference_font.pointSize() * 2 / 3)
+        self.ui.spacer_label.setFont(reference_font)
 
     def _bind(self):
         # self.dialog: QDialog = self.ui.root_dialog
@@ -49,8 +69,13 @@ class LoginDialog(UiBase):
 
         self.error_message: QLabel = self.ui.lbl_error_message
 
-        self.btn_cancel: QPushButton = self.ui.btn_cancel
-        self.btn_login: QPushButton = self.ui.btn_login
+        self.btn_cancel: QPushButton = self.ui.button_box.button(
+            QDialogButtonBox.StandardButton.Cancel
+        )
+        self.btn_login: QPushButton = self.ui.button_box.button(
+            QDialogButtonBox.StandardButton.Ok
+        )
+        self.btn_login.setText('Login')
 
         self.username.textChanged.connect(self._text_changed)
         self.password.textChanged.connect(self._text_changed)
