@@ -363,10 +363,6 @@ class FilesController:
             print(f"{self._tag} Received association action {action}: {json.dumps(payload)}")
             return
 
-        if (action == 'fileCreated'):
-            pass
-            # TODO: Get file info including association, create row for info, and
-            # TODO: Add info and row to self.associations
         if 'hash' in payload:
             key = self._get_key_for_hash(payload['hash'])
         elif 'id' in payload:
