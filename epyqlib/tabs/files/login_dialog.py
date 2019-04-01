@@ -1,27 +1,19 @@
 import pathlib
-import attr
-import PyQt5
+
 import PyQt5.uic
-
-
+import attr
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import (
-    QDialog,
-    QLineEdit,
-    QPushButton,
-    QLabel,
-    QDialogButtonBox,
-)
-
-# noinspection PyUnreachableCode
+from PyQt5.QtWidgets import QLineEdit, QPushButton, QLabel, QDialogButtonBox
 from epyqlib.tabs.files.cognito import CognitoException
 
-if False:  # Tell the editor about the type, but don't invoke a cyclic depedency
+# noinspection PyUnreachableCode
+if False:  # Tell the editor about the type, but don't invoke a cyclic dependency
     from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
 
 Ui, UiBase = PyQt5.uic.loadUiType(
    pathlib.Path(__file__).with_suffix('.ui'),
 )
+
 
 @attr.s
 class LoginDialog(UiBase):
