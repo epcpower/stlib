@@ -206,7 +206,7 @@ class Coff(object):
                                     if s.name == '.stack')
         self.variables = [str(s) for s in self.symbols
                           if isinstance(s.name, str)
-                          and s.name[0] == '_'
+                          and s.name.startswith('_')
                           and s.section_number == stack_section_number]
 
         self.entry_point = self.optheader.entry_point

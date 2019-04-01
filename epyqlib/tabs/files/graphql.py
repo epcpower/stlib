@@ -1,17 +1,15 @@
 import asyncio
 import json
 from enum import Enum
-from typing import Callable, Dict, List
 
 import treq
+from epyqlib.tabs.files.activity_log import Event
+from epyqlib.tabs.files.websocket_handler import WebSocketHandler
 from twisted.internet import reactor
 from twisted.internet.defer import ensureDeferred
 from twisted.python.failure import Failure
 from twisted.web.iweb import IResponse
-
-from epyqlib.tabs.files.activity_log import Event
-from epyqlib.tabs.files.websocket_handler import WebSocketHandler
-from epyqlib.utils.general import safe_get
+from typing import Callable, Dict, List
 
 
 class GraphQLException(Exception):
@@ -45,9 +43,9 @@ class API:
     }
 
     _all_inverter_fields = """
-                createdAt 
-                deploymentDate 
                 id 
+                
+                deploymentDate 
                 manufactureDate 
                 model { name revision partNumber id __typename } 
                 notes 
@@ -59,8 +57,6 @@ class API:
                     __typename 
                 } 
                 testDate 
-                updatedAt 
-                updatedBy 
                 __typename 
     """
 
@@ -104,7 +100,7 @@ class API:
             fragment associationFields on Association {
                 id
                 customer { name }
-                file {id, createdBy, createdAt, description, filename, hash, notes, type, uploadPath, version}
+                file {id, createdBy, createdAt, description, filename, hash, notes, ownedByEpc, type, uploadPath, version}
                 model {name}
                 inverter {id, serialNumber}
                 site {name}
@@ -186,7 +182,25 @@ class API:
             }
         }
 
-    _create_file_mutation = """
+    _frag_files_fields = """
+        fragment fileFields on File {
+                id
+                createdAt
+                createdBy
+                updatedAt
+                updatedBy
+                association {id}
+                description
+                filename
+                hash
+                notes
+                ownedByEpc
+                version
+                type
+        }
+    """
+
+    _create_file_mutation = _frag_files_fields + """
         mutation CreateFile (
             $filename: String!,
             $hash: String!,
@@ -200,18 +214,7 @@ class API:
                 notes: $notes,
                 type: $type 
             ) {
-                id
-                createdAt
-                updatedAt
-                updatedBy
-                association {id}
-                description
-                filename
-                hash
-                notes
-                version
-                type
-                uploadPath
+                ...fileFields
             }
         }
     """
@@ -244,7 +247,7 @@ class API:
                 inverterId: $inverterId
             ) {
                 id
-                file { id filename notes createdAt }
+                file { id filename notes hash createdAt }
                 inverter { id, serialNumber }
             }
         }
@@ -287,7 +290,12 @@ class API:
         self.headers = {}
 
     async def _make_request(self, body):
-        response: IResponse = await treq.post(self.server_url, headers=(self.headers), json=body)
+        try:
+            response: IResponse = await treq.post(self.server_url, headers=(self.headers), json=body)
+        except Exception as e:
+            print(f"{self._tag} Error during outgoing query: {body['query']}")
+            raise e
+
         if response.code >= 400:
             raise GraphQLException([f"{response.code} {response.phrase.decode('ascii')}"])
 
@@ -330,8 +338,6 @@ class API:
             return response['data']['getInverterAssociations']['items']
         except GraphQLException as e:
             args: List[str] = e.args
-            # message = safe_get(response, ['errors', 0, 'message']) or ''
-            # if ('Unable to find inverter' in message):
             for message in args:
                 if 'Unable to find inverter' in message:
                     raise InverterNotFoundException(message)

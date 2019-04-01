@@ -1,15 +1,10 @@
 import json
 import shutil
 from datetime import datetime
-from typing import Coroutine, Dict
 
 import attr
 from PyQt5.QtWidgets import QTreeWidgetItem, QFileDialog
 from botocore.exceptions import EndpointConnectionError
-from twisted.internet import reactor
-from twisted.internet.defer import ensureDeferred
-from twisted.internet.task import deferLater
-
 from epyqlib.device import DeviceInterface
 from epyqlib.tabs.files.activity_log import ActivityLog, Event
 from epyqlib.tabs.files.activity_syncer import ActivitySyncer
@@ -21,6 +16,11 @@ from epyqlib.tabs.files.filesview import Cols, Relationships, get_values
 from epyqlib.tabs.files.log_manager import LogManager, PendingLog
 from epyqlib.tabs.files.sync_config import SyncConfig, Vars
 from epyqlib.utils.twisted import errbackhook
+from twisted.internet import reactor
+from twisted.internet.defer import ensureDeferred
+from twisted.internet.task import deferLater
+from typing import Dict
+
 from .graphql import API, InverterNotFoundException
 
 
@@ -73,17 +73,19 @@ class FilesController:
         self.view.populate_tree()
         self.view.initialize_ui()
 
-        logged_in = self.aws_login_manager.is_logged_in()
-        self.view.show_logged_out_warning(not logged_in)
-        if logged_in and not self._is_offline:
+        if self.aws_login_manager.is_logged_in() and not self._is_offline:
             try:
                 self.aws_login_manager.refresh()
-                self.api.set_id_token(self.aws_login_manager.get_id_token())
-                self.periodically_refresh_token()
+
+                # Make sure that using the refresh token worked
+                if self.aws_login_manager.is_logged_in():
+                    self.api.set_id_token(self.aws_login_manager.get_id_token())
+                    self.periodically_refresh_token()
             except EndpointConnectionError as e:
                 print(f"{self._tag} Unable to login to AWS. Setting offline mode to true.")
                 self.set_offline(True)
 
+        self.view.show_logged_out_warning(not self.aws_login_manager.is_logged_in())
 
         self.activity_log.register_listener(lambda event: self.view.add_log_line(LogRenderer.render_event(event)))
         self.activity_log.register_listener(self.activity_syncer.listener)
@@ -153,9 +155,7 @@ class FilesController:
                 self.associations[association['id'] + association['file']['id']] = AssociationMapping(association, row)
 
             # Render either the new or updated association
-            self.render_association_to_row(association, row)
-
-
+            self.view.render_association_to_row(association, row)
 
         # to_remove = [key for key, value in self.associations.items() if (value.association not in associations)]
         to_remove = []
@@ -230,33 +230,6 @@ class FilesController:
             return None
 
 
-    def render_association_to_row(self, association, row: QTreeWidgetItem):
-        uploaded = association['file']['createdAt'][:-1] # Trim trailing "Z"
-        uploaded = datetime.fromisoformat(uploaded)
-
-        row.setText(Cols.filename, association['file']['filename'])
-        row.setText(Cols.version, association['file']['version'])
-        row.setText(Cols.creator, association['file'].get('createdBy'))
-        row.setText(Cols.uploaded_at, uploaded.strftime(self.view.time_format))
-        row.setText(Cols.description, association['file']['description'])
-
-        if(association.get('model')):
-            model_name = " " + association['model']['name']
-
-            if association.get('customer'):
-                relationship = Relationships.customer
-                rel_text = association['customer']['name'] + "," + model_name
-            elif association.get('site'):
-                relationship = Relationships.site
-                rel_text = association['site']['name'] + "," + model_name
-            else:
-                relationship = Relationships.model
-                rel_text = "All" + model_name
-        else:
-            relationship = Relationships.inverter
-            rel_text = "SN: " + association['inverter']['serialNumber']
-
-        self.view.show_relationship(row, relationship, rel_text)
 
     def is_file_cached_locally(self, item: QTreeWidgetItem):
         hash = self._get_mapping_for_row(item).association['file']['hash']
@@ -285,7 +258,7 @@ class FilesController:
 
         self._show_pending_logs()
 
-        if self.sync_config.get(Vars.auto_sync):
+        if self.aws_login_manager.is_logged_in() and self.sync_config.get(Vars.auto_sync):
             sync_def = ensureDeferred(self.sync_now())
             sync_def.addErrback(errbackhook)
 
@@ -342,9 +315,9 @@ class FilesController:
             if not self._device_interface.get_connected_status().connected:
                 self.view.show_inverter_error('Bus is disconnected. Unable to get Inverter Serial Number')
                 return
-            serial_number = await self._device_interface.get_serial_number()
+            self._serial_number = await self._device_interface.get_serial_number()
 
-            self.view.serial_number.setText(serial_number)
+            self.view.serial_number.setText(self._serial_number)
 
         try:
             await self._sync_pending_logs()
@@ -375,9 +348,13 @@ class FilesController:
             self.association_cache.put_associations(serial, association_list)
 
         # Fetch missing files
-        for hash in self.association_cache.get_all_known_hashes():
+        for hash in self.association_cache.get_all_known_file_hashes():
             if not self.cache_manager.has_hash(hash):
-                await self.download_file(hash)
+                try:
+                    await self.download_file(hash)
+                except Exception:
+                    self.view.add_log_error_line(f"Error caching file {hash}. See epyq.log for details.")
+
 
         self.view.add_log_line("Completed syncing all associations for organization.")
 
@@ -399,7 +376,7 @@ class FilesController:
         if (action == 'updated'):
             map: AssociationMapping = self.associations[key]
             map.association['file'].update(payload)
-            self.render_association_to_row(map.association, map.row)
+            self.view.render_association_to_row(map.association, map.row)
 
         if (action == 'deleted'):
             self.view.remove_row(self.associations[key].row)
@@ -417,8 +394,14 @@ class FilesController:
             return
 
         file_mapping: AssociationMapping = self._get_mapping_for_row(item)
+
+        association = file_mapping.association
+
+        readonly_description = association['file']['ownedByEpc'] and not self.aws_login_manager._cognito_helper.is_user_epc()
+        readonly_description = readonly_description or self._is_offline
+
         if file_mapping is not None:
-            self.view.show_file_details(file_mapping.association)
+            self.view.show_file_details(file_mapping.association, readonly_description)
 
             if self._is_offline:
                 self.view.description.setReadOnly(True)
@@ -428,13 +411,15 @@ class FilesController:
             hash = next(key for key, value in self._log_rows.items() if value == item)
 
 
-    async def send_to_inverter(self, row: QTreeWidgetItem):
+    async def send_dummy_param_event(self, row: QTreeWidgetItem):
         map = self._get_mapping_for_row(row)
+
+        inverter_id = await self._get_id_for_serial_number(self._serial_number)
 
         file = map.association['file']
         event = Event.new_load_param_file(
-            self.view.serial_number.text(),
-            'FakeUser',
+            inverter_id,
+            'PlaceholderUser',
             file['id'],
             file['hash'],
             file['filename']
@@ -529,20 +514,11 @@ class FilesController:
                 self._add_new_pending_log_row(log)
 
     def _add_new_pending_log_row(self, log: PendingLog):
-        row = self.view.attach_row_to_parent('log', log.filename)
-
-        self.view.show_check_icon(row, Cols.local)
-        self.view.show_question_icon(row, Cols.web)
-
-        self.view.show_relationship(row, Relationships.inverter, f"SN: {log.serial_number}")
-
         ctime = self.log_manager.stat(log.hash).st_ctime
         ctime = datetime.fromtimestamp(ctime)
-        row.setText(Cols.uploaded_at, ctime.strftime(self.view.time_format))
 
-        row.setText(Cols.creator, log.username)
+        self.view.add_new_pending_log_row(log, ctime)
 
-        self.view.pending_log_rows[log.hash] = row
 
     def set_offline(self, is_offline):
         self.activity_syncer.set_offline(is_offline)

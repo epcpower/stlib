@@ -26,7 +26,8 @@ class Event():
     user_id: str
     type: str
     details: dict
-    timestamp: str = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+    timestamp: str = attr.ib(factory=lambda: datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"))
+
 
     @staticmethod
     def new_fault_cleared(inverter_id: str, user_id: str, fault_code: Union[str, int]):
@@ -60,7 +61,12 @@ class Event():
 
     @staticmethod
     def new_raw_log(inverter_id: str, user_id: str, build_id: str, serial_number: str, filename: str, file_hash: str):
-        details = {"buildId": build_id, "fileHash": file_hash, "filename": filename, "serialNumber": serial_number}
+        details = {
+            "buildId": build_id,
+            "fileHash": file_hash,
+            "filename": filename,
+            "serialNumber": serial_number
+        }
         return Event(inverter_id, user_id, Event.Type.new_raw_log, details)
 
 class ActivityLog:

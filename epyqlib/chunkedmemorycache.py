@@ -27,6 +27,7 @@ class Subscriber:
 @attr.s
 class Cache:
     _chunks = attr.ib(init=False, default=attr.Factory(list))
+    _chunks_set = attr.ib(init=False, default=attr.Factory(set), repr=False)
     _subscribers = attr.ib(init=False, default=attr.Factory(dict))
     _bits_per_byte = attr.ib(default=8)
 
@@ -40,17 +41,18 @@ class Cache:
         return object.__str__(self)
 
     def add(self, chunk):
-        if any(chunk is c for c in self._chunks):
+        if chunk in self._chunks_set:
             raise ChunkExistsError(chunk)
 
         bisect.insort_left(self._chunks, chunk)
+        self._chunks_set.add(chunk)
         self._subscribers[chunk] = set()
 
         for address in chunk.addresses():
             self.address_to_chunks[address].add(chunk)
 
     def subscribe(self, subscriber, chunk, reference=None):
-        if not any(chunk is c for c in self._chunks):
+        if chunk not in self._chunks_set:
             raise ChunkNotFoundError(chunk)
 
         s = Subscriber(callback=subscriber, reference=reference)

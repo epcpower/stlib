@@ -1,6 +1,8 @@
 import pathlib
 from datetime import datetime
 from enum import Enum
+
+from epyqlib.tabs.files.log_manager import PendingLog
 from typing import Dict
 
 import PyQt5.uic
@@ -8,7 +10,7 @@ import attr
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QColor, QBrush, QTextCursor, QFont
 from PyQt5.QtWidgets import QPushButton, QTreeWidget, QTreeWidgetItem, QLineEdit, QLabel, \
-    QPlainTextEdit, QGridLayout, QMenu, QTextEdit
+    QPlainTextEdit, QGridLayout, QMenu, QTextEdit, QAction
 from twisted.internet.defer import ensureDeferred, inlineCallbacks
 
 from epyqlib.utils.twisted import errbackhook as open_error_dialog
@@ -66,6 +68,8 @@ class FilesView(UiBase):
     fa_question = u''
 
     fontawesome = QFont('fontawesome')
+    color_black = QColor('black')
+    color_blue = QColor('#1E93F6')
     color_green = QColor('green')
     color_gray = QColor('gray')
     color_red = QColor('red')
@@ -242,6 +246,58 @@ class FilesView(UiBase):
     def remove_row(self, row: QTreeWidgetItem):
         self.files_grid.removeItemWidget(row)
 
+
+    def render_association_to_row(self, association, row: QTreeWidgetItem):
+        uploaded = association['file']['createdAt'][:-1] # Trim trailing "Z"
+        uploaded = datetime.fromisoformat(uploaded)
+
+        row.setText(Cols.filename, association['file']['filename'])
+        row.setText(Cols.version, association['file']['version'])
+        row.setText(Cols.uploaded_at, uploaded.strftime(self.time_format))
+        row.setText(Cols.description, association['file']['description'])
+
+        if association['file']['ownedByEpc']:
+            font: QFont = row.font(Cols.creator)
+            font.setBold(True)
+            row.setFont(Cols.creator, font)
+            row.setForeground(Cols.creator, self.color_blue)
+            row.setFont(Cols.creator, row.font(Cols.creator))
+            row.setText(Cols.creator, "EPC Power")
+        else:
+            row.setFont(Cols.creator, row.font(Cols.uploaded_at))
+            row.setForeground(Cols.creator, self.color_black)
+            row.setText(Cols.creator, association['file'].get('createdBy'))
+
+        if(association.get('model')):
+            model_name = " " + association['model']['name']
+
+            if association.get('customer'):
+                relationship = Relationships.customer
+                rel_text = association['customer']['name'] + "," + model_name
+            elif association.get('site'):
+                relationship = Relationships.site
+                rel_text = association['site']['name'] + "," + model_name
+            else:
+                relationship = Relationships.model
+                rel_text = "All" + model_name
+        else:
+            relationship = Relationships.inverter
+            rel_text = "SN: " + association['inverter']['serialNumber']
+
+        self.show_relationship(row, relationship, rel_text)
+
+    def add_new_pending_log_row(self, log: PendingLog, ctime: datetime):
+        row = self.attach_row_to_parent('log', log.filename)
+
+        self.show_check_icon(row, Cols.local)
+        self.show_question_icon(row, Cols.web)
+
+        self.show_relationship(row, Relationships.inverter, f"SN: {log.serial_number}")
+        row.setText(Cols.uploaded_at, ctime.strftime(self.time_format))
+        row.setText(Cols.creator, log.username)
+
+        self.pending_log_rows[log.hash] = row
+
     def show_relationship(self, row: QTreeWidgetItem, relationship: Relationships, rel_text: str):
         row.setBackground(Cols.association, relationship.value)
         row.setText(Cols.association, rel_text)
@@ -266,25 +322,24 @@ class FilesView(UiBase):
             .addErrback(open_error_dialog)
 
     def _notes_changed(self):
-        ensureDeferred(self._disable_notes_buttons()) \
+        changed = self.controller.notes_modified(self.description.text(), self.notes.toPlainText())
+        ensureDeferred(self._disable_notes_buttons(not changed)) \
             .addErrback(open_error_dialog)
 
     def _save_notes_clicked(self):
         new_desc = self.description.text()
         new_text = self.notes.toPlainText()
         ensureDeferred(self.controller.save_notes(self._current_file_id, new_desc, new_text)) \
-            .addCallback(lambda _: ensureDeferred(self._disable_notes_buttons())) \
+            .addCallback(lambda _: ensureDeferred(self._disable_notes_buttons(True))) \
             .addErrback(open_error_dialog)
 
     def _reset_notes(self):
         self.notes.setPlainText(self.controller.old_notes)
         self.notes.moveCursor(QTextCursor.End)
 
-    async def _disable_notes_buttons(self):
-        changed = self.controller.notes_modified(self.description.text(), self.notes.toPlainText())
-
-        self.btn_save_notes.setDisabled(not changed)
-        self.btn_reset_notes.setDisabled(not changed)
+    async def _disable_notes_buttons(self, disabled: bool):
+        self.btn_save_notes.setDisabled(disabled)
+        self.btn_reset_notes.setDisabled(disabled)
 
     def _render_context_menu(self, position: QPoint):
         item = self.files_grid.itemAt(position)
@@ -305,11 +360,14 @@ class FilesView(UiBase):
         menu = QMenu(self.files_grid)
         send_to_inverter = menu.addAction("Flash to inverter")
         send_to_inverter.setDisabled(True)
+        save_as = menu.addAction("Save firmware as...")
 
         action = menu.exec(menu_pos)
 
         if action is None:
             pass
+        elif action is save_as:
+            ensureDeferred(self.controller.save_file_as_clicked(item))
         elif action is send_to_inverter:
             pass # TODO: [EPC] Implement this
 
@@ -330,21 +388,27 @@ class FilesView(UiBase):
 
     def _render_param_file_menu(self, menu_pos: QPoint, item: QTreeWidgetItem):
         menu = QMenu(self.files_grid)
+        dummy = menu.addAction("Send dummy File Loaded event to web tool")
         scratch = menu.addAction("Send to scratch")
         active = menu.addAction("Send to active")
         inverter = menu.addAction("Send to inverter")
         save_as = menu.addAction("Save file as...")
 
+        btn: QAction
+        [btn.setDisabled(True) for btn in [scratch, active, inverter]]
+
         action = menu.exec(menu_pos)
 
         if action is None:
             pass
+        elif action is dummy:
+            ensureDeferred(self.controller.send_dummy_param_event(item))
+        elif action is scratch:
+            pass
         elif action is active:
             pass
         elif action is inverter:
-            ensureDeferred(self.controller.send_to_inverter(item))
-        elif action is scratch:
-            print("[Files View] Scratch menu item clicked")
+            pass
         elif action is save_as:
             ensureDeferred(self.controller.save_file_as_clicked(item))
 
@@ -405,22 +469,27 @@ class FilesView(UiBase):
         self.serial_number.setHidden(enabled)
         self.inverter_error.setHidden(enabled)
 
-    def show_file_details(self, association):
-        if association is not None:
-            self._current_file_id = association['file']['id']
-            self.add_log_line(f"Clicked on {association['file']['filename']}")
-            self.filename.setText(association['file']['filename'])
-            self.version.setText(association['file']['version'])
-            self.description.setText(association['file']['description'])
-            self.controller.set_original_notes(association['file']['description'], association['file']['notes'])
-            self.notes.setPlainText(association['file']['notes'])
-            self.notes.setReadOnly(False)
-        else:
-            self.add_log_line(f"Clicked on section header")
+    def show_file_details(self, association, readonly_description=False):
+        if association is None:
+            # Clicked on a section header
             self.filename.clear()
             self.version.clear()
-            self.notes.setReadOnly(True)
+            self.controller.set_original_notes('', '');
+            self.description.clear()
+            self.description.setReadOnly(True)
             self.notes.clear()
+            self.notes.setReadOnly(True)
+            return
+
+        self.controller.set_original_notes(association['file']['description'], association['file']['notes'])
+
+        self._current_file_id = association['file']['id']
+        self.filename.setText(association['file']['filename'])
+        self.version.setText(association['file']['version'])
+        self.description.setText(association['file']['description'])
+        self.description.setReadOnly(readonly_description)
+        self.notes.setPlainText(association['file']['notes'])
+        self.notes.setReadOnly(readonly_description)
 
     def show_inverter_error(self, error):
         if error is None:
@@ -430,6 +499,9 @@ class FilesView(UiBase):
 
     def show_sync_time(self, time: datetime):
         self.lbl_last_sync.setText(f'Last sync at: {time.strftime(self.time_format)}')
+
+    def add_log_error_line(self, message: str):
+        self.add_log_line(f'<font color=\'#cc0000\'>{message}</font>')
 
     def add_log_line(self, message: str):
         timestamp = datetime.now()

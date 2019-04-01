@@ -54,11 +54,14 @@ class AssociationCache:
         self._associations[serial_number] = associations
         self._write_file()
 
-    def get_all_known_hashes(self) -> Set[str]:
+    def get_all_known_file_hashes(self) -> Set[str]:
         hashes = set()
 
         for serial, association_list in self._associations.items():
             for association in association_list:
+                if association['file']['type'] == 'Log':
+                    continue
+
                 hashes.add(association['file']['hash'])
 
         return hashes

@@ -1,9 +1,9 @@
 from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
 
 class BucketManager():
-    _bucket_name = 'epc-files-dev'
-    _bucket_url = 'https://s3-us-west-2.amazonaws.com/' + _bucket_name + '/'
-    _files_url = _bucket_url + 'files/'
+    _bucket_name_dev = 'epc-files-dev'
+    _bucket_name_beta = 'epc-files-beta'
+    _bucket_name = _bucket_name_beta
     _logs_path = 'logs/'
     _tag = "[Bucket Manager]"
 
@@ -19,9 +19,16 @@ class BucketManager():
         return await self._download(filename, 'logs/' + hash)
 
     async def _download(self, filename: str, key: str):
-        bucket = self._aws.get_s3_resource().Bucket(self._bucket_name)
-        bucket.download_file(Filename=filename, Key=key)
-        print(f"{self._tag} Finished downloading {key}")
+        try:
+            bucket = self._aws.get_s3_resource().Bucket(self._bucket_name)
+            bucket.download_file(Filename=filename, Key=key)
+            print(f"{self._tag} Finished downloading {key}")
+        except Exception as ex:
+            import sys
+            error_message = f'{self._tag} Error downloading Key: {key} from Bucket: {self._bucket_name}.\n' \
+                + f'{str(ex)}\n'
+            sys.stderr.write(error_message)
+            raise Exception(error_message)
 
     async def upload_log(self, source_path: str, dest_filename: str):
         print(f"{self._tag} Starting to upload log {dest_filename}")
