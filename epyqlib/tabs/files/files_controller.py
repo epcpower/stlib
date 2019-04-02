@@ -230,7 +230,6 @@ class FilesController:
             return None
 
 
-
     def is_file_cached_locally(self, item: QTreeWidgetItem):
         hash = self._get_mapping_for_row(item).association['file']['hash']
         return self.cache_manager.has_hash(hash)
@@ -306,7 +305,6 @@ class FilesController:
 
     async def sync_now(self):
         self.view.show_inverter_error(None)
-
 
         # If InverterId is not set and we're connected, get inverter serial #
         if self._serial_number is None:
@@ -397,7 +395,7 @@ class FilesController:
 
         association = file_mapping.association
 
-        readonly_description = association['file']['ownedByEpc'] and not self.aws_login_manager._cognito_helper.is_user_epc()
+        readonly_description = association['file']['owner'] == 'epc' and not self.aws_login_manager._cognito_helper.is_user_epc()
         readonly_description = readonly_description or self._is_offline
 
         if file_mapping is not None:

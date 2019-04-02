@@ -22,8 +22,6 @@ class InverterNotFoundException(Exception):
 class API:
     _tag = "[Graphql API]"
 
-
-
     list_inverters_query = """
         query {
             listInverters(limit: 200) {
@@ -100,7 +98,7 @@ class API:
             fragment associationFields on Association {
                 id
                 customer { name }
-                file {id, createdBy, createdAt, description, filename, hash, notes, ownedByEpc, type, uploadPath, version}
+                file {id, createdBy, createdAt, description, filename, hash, notes, owner, type, uploadPath, version}
                 model {name}
                 inverter {id, serialNumber}
                 site {name}
@@ -194,7 +192,7 @@ class API:
                 filename
                 hash
                 notes
-                ownedByEpc
+                owner 
                 version
                 type
         }

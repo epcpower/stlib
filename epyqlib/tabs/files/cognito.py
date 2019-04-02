@@ -3,13 +3,11 @@ from datetime import datetime, timedelta
 
 import attr
 import boto3
-import botocore
-import jwt
 from boto3 import Session
 from boto3_type_annotations.cognito_identity import Client as CognitoIdentityClient
 from boto3_type_annotations.cognito_idp import Client as CognitoIdpClient
 from boto3_type_annotations.s3 import ServiceResource as S3Resource
-
+from epyqlib.tabs.files.files_utils import decode_jwt
 from epyqlib.tabs.files.sync_config import SyncConfig, Vars
 
 logger = logging.getLogger("CognitoHelper")
@@ -42,7 +40,7 @@ class CognitoHelper:
         self._expires_in = 0
         self._expires_time = datetime.min
         self._id_token = ""
-        self._decoded_id_token = ""
+        self._decoded_id_token: dict = {}
         self._refresh_token = ""
         self._token_type = ""
         self.config = config
@@ -82,7 +80,7 @@ class CognitoHelper:
         self._expires_in = result['ExpiresIn']
         self._expires_time = datetime.now() + timedelta(seconds=self._expires_in)
         self._id_token = result['IdToken']
-        self._decoded_id_token = jwt.decode(self._id_token, verify=False)
+        self._decoded_id_token = decode_jwt(self._id_token)['payload']
         self._refresh_token = result['RefreshToken']
         self._token_type = result['TokenType']
 
@@ -202,7 +200,7 @@ class CognitoHelper:
         self._expires_in = result['ExpiresIn']
         self._expires_time = datetime.now() + timedelta(seconds=self._expires_in)
         self._id_token = result['IdToken']
-        self._decoded_id_token = jwt.decode(self._id_token, verify=False)
+        self._decoded_id_token = decode_jwt(self._id_token)['payload']
         self._token_type = result['TokenType']
 
         self._init_auth_session()
