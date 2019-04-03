@@ -45,7 +45,7 @@ class API:
                 
                 deploymentDate 
                 manufactureDate 
-                model { name revision partNumber id __typename } 
+                model { name partNumber id __typename } 
                 notes 
                 serialNumber 
                 site { 
@@ -192,7 +192,7 @@ class API:
                 filename
                 hash
                 notes
-                owner 
+                owner
                 version
                 type
         }
@@ -290,12 +290,11 @@ class API:
     async def _make_request(self, body):
         try:
             response: IResponse = await treq.post(self.server_url, headers=(self.headers), json=body)
+            if response.code >= 400:
+                raise GraphQLException([f"{response.code} {response.phrase.decode('ascii')}"])
         except Exception as e:
-            print(f"{self._tag} Error during outgoing query: {body['query']}")
+            print(f"{self._tag} Error during outgoing query: {body['query']} {body['variables']}")
             raise e
-
-        if response.code >= 400:
-            raise GraphQLException([f"{response.code} {response.phrase.decode('ascii')}"])
 
         # content = await treq.content(response)
         response = await treq.json_content(response)
@@ -382,24 +381,34 @@ class API:
         return deferred
 
 
-    async def subscribe(self, message_handler: Callable[[str, dict], None]):
-        gql = """subscription {
-                    created: fileCreated { id }
-                    updated: fileUpdated { id }
-                    deleted: fileDeleted { id }
+    async def subscribe(self, customer_id: str, message_handler: Callable[[str, dict], None]):
+        print(f"{self._tag} Subscribing to events for public events and events for context {customer_id}")
+
+        ### WARNING: Enabling too many of these will leads to those that share a common wss url to be closed prematurely.
+        ### See TODO in websocket_handler.py about a possible way to fix
+        gql = """subscription($customerId: String!) {
+                    # orgFileCreated: fileCreated(owner: $customerId) { id }
+                    orgFileUpdated: fileUpdated(owner: $customerId) { id }
+                    orgFileDeleted: fileDeleted(owner: $customerId) { id }
+                    
+                    # publicFileCreated: fileCreated(owner: "public") { id }
+                    # publicFileUpdated: fileUpdated(owner: "public") { id }
+                    # publicFileDeleted: fileDeleted(owner: "public") { id }
+                    
+                    orgAssociationCreated: associationCreated(owner: $customerId) { id }
+                    orgAssociationDeleted: associationDeleted(owner: $customerId) { id }
+                    
+                    # publicAssociationCreated: associationCreated(owner: "public") { id }
+                    # publicAssociationDeleted: associationDeleted(owner: "public") { id }
                 }"""
 
         query = {
             "query": gql,
-            "variables": {}
+            "variables": {"customerId": customer_id}
         }
 
         response = await self._make_request(query)
-        mqttInfo = response['extensions']['subscription']['mqttConnections'][0]
-        topics = response['extensions']['subscription']['newSubscriptions']
-        client_id = mqttInfo['client']
-        url = mqttInfo['url']
-        self.ws_handler.connect(url, client_id, topics, message_handler)
+        self.ws_handler.connect(response, message_handler)
 
     def is_subscribed(self):
         return self.ws_handler.is_subscribed()

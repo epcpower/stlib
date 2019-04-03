@@ -7,87 +7,181 @@ from typing import Callable
 
 
 class WebSocketHandler():
-
-
     def __init__(self):
-        self.topics: {str: str}
-        self._callback: Callable[[str, dict], None]
-        self.loopingCall: LoopingCall
-        self.client: mqtt.Client = None
-        self.topics: {str: str}
+        self._callback: Callable[[str, dict], None] = None
+        self.loopingCall: LoopingCall = None
+        self.clients: list[mqtt.Client] = []
 
-
-    def connect(self, url: str, client_id: str, topics: {str: str}, on_message: Callable[[str, dict], None]) -> None:
+    def connect(self, response: dict, on_message: Callable[[str, dict], None]) -> None:
         """
         Makes WebSocket connection and starts looping
-        :param url: str Websocket URL (starting with "wss://" and including path and all query parameters)
-        :param client_id: str Client ID provided by AppSync
-        :param topics: dict formatted as "topicstring": "created|updated|deleted"
+        :param response JSON body response from a subscription call to AppSync
         :param on_message: Callable that is called on every message. The first param is the action (created/updated/deleted)
         and the second is the file json object as a dict.
         """
-
         self._callback = on_message
 
-        urlparts = urlparse(url)
+        new_subscriptions = response['extensions']['subscription']['newSubscriptions']
+        mqtt_connections = response['extensions']['subscription']['mqttConnections']
 
-        headers = {
-            "Host": "{0:s}".format(urlparts.netloc),
-        }
+        # TODO: Group multiple topics that share a URL into one client. It appears that having two clients
+        # subscribe to the same URL and then listen on different topics causes one to be disconnected
+        # connections = {}
+        #
+        # for newSubscription in newSubscriptions:
+        #     mqttEndpoint = next(c for c in mqttConnections if newSubscription in c['topics'])
 
-        self.client = mqtt.Client(client_id=client_id, transport="websockets")
-        self.client.on_connect = self._on_connect
-        self.client.on_message = self._on_message
-        self.client.ws_set_options(path="{}?{}".format(urlparts.path, urlparts.query), headers=headers)
-        self.client.tls_set()
-        self.client.on_log = self._on_log
 
-        # self.client.on_socket_open = lambda client, userdata, socket: print("Socket opened")
-        # self.client.on_socket_close = lambda client, userdata, socket: print("Socket closed")
+        for [name, details] in new_subscriptions.items():
+            mqtt_info = next(c for c in mqtt_connections if details['topic'] in c['topics'])
+            client_id = mqtt_info['client']
+            url = mqtt_info['url']
 
-        self.client.connect(urlparts.netloc, port=443)
-        self.topics = {topics[f]['topic']: f for f in topics}
+            urlparts = urlparse(url)
+
+            headers = {"Host": "{0:s}".format(urlparts.netloc)}
+
+            client = mqtt.Client(client_id=client_id, transport="websockets")
+            client.user_data_set({"topic": details['topic']})
+            client.on_connect = self._on_connect
+            client.on_message = self._on_message
+            client.on_socket_close = self._on_socket_close
+            client.ws_set_options(path="{}?{}".format(urlparts.path, urlparts.query), headers=headers)
+            client.tls_set()
+            client.on_log = self._on_log
+
+            # self.client.on_socket_open = lambda client, userdata, socket: print("Socket opened")
+            # self.client.on_socket_close = lambda client, userdata, socket: print("Socket closed")
+
+            client.connect(urlparts.netloc, port=443)
+            self.clients.append(client)
+
         self.loopingCall: LoopingCall = LoopingCall(self.loop)
         self.loopingCall.start(1)
 
     def loop(self):
-        if self.client is None:
+        if not self.is_subscribed():
             return
 
         # print("Looping")
-        self.client.loop_read(5)
-        self.client.loop_write()
-        self.client.loop_misc()
+        for client in self.clients:
+            client.loop_read()
+            client.loop_write()
+            client.loop_misc()
 
     def disconnect(self):
-        self.client.disconnect()
-        self.client = None
         self.loopingCall.stop()
 
-    def is_subscribed(self):
-        return self.client is not None
+        for client in self.clients:
+            client.disconnect()
+        self.clients = []
 
-    def _on_connect(self, client, userdata, flags, rc):
-        print("[Graphql Websocket] On connect")
-        for topic in self.topics:
-            client.subscribe(topic)
+    def is_subscribed(self):
+        return len(self.clients) > 0
+
+    def _on_connect(self, client: mqtt.Client, userdata: dict, flags, rc):
+        topic = userdata['topic']
+        print("[Graphql Websocket] On connect. Subscribing to " + topic)
+        client.subscribe(topic)
 
     def _on_log(self, client, userdata, level, buf):
         print(f"[Graphql Websocket]  Log {level} {buf}")
 
     def _on_message(self, client, userdata, msg):
-        action = self.topics.get(msg.topic)
-        if action is None:
+        try:
+            payload = msg.payload.decode('ascii')
+            payload_json = json.loads(payload)
+            print(f"[Graphql Websocket] Message received: {payload}")
+        except Exception as e:
+            print(f"[Graphql Websocket] Error converting payload to JSON: " + msg.payload.decode('ascii'))
+            print(e)
             return
 
-        payload = msg.payload.decode('ascii')
-        payload_json = json.loads(payload)
-        print(f"[Graphql Websocket] Message received: {payload} -> {action}")
 
         # We *should* only get one payload, but just in case...
-        for payload in payload_json['data'].values():
-            self._callback(action, payload)
+        try:
+            for action, payload in payload_json['data'].items():
+                self._callback(action, payload)
+        except Exception as e:
+            print(f"[Graphql Websocket] Error iterating over payload: " + json.dumps(payload_json))
+            print(e)
 
+    def _on_socket_close(self, client: mqtt.Client, userdata: dict, socket):
+        print(f"Connection to topic ${userdata.get('topic')} closed.")
 
-
-
+# Example of the format of `response`:
+# {
+#   "extensions": {
+#     "subscription": {
+#       "mqttConnections": [
+#         {
+#           "url": "wss://a1yyia7sgxh08y-ats.iot.us-west-2.amazonaws.com/mqtt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIA5..."
+#           "topics": [
+#             "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/associationCreated/ad2fc514666b327b3e79f4255329988b30bfec23428bd62f7db900ffce4744a7",
+#             "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/activityCreated/38c53ba841180e186aeaae8565e9807ddabb7becaf849cf336e24d1f23e2a12b",
+#             "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/fileCreated/ad2fc514666b327b3e79f4255329988b30bfec23428bd62f7db900ffce4744a7"
+#           ],
+#           "client": "xtsaum2eyfhaxd2scqsjnajvmq"
+#         },
+#         {
+#           "url": "wss://a1yyia7sgxh08y-ats.iot.us-west-2.amazonaws.com/mqtt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIA5..."
+#           "topics": [
+#             "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/fileUpdated/65a5e5608f9c9ce6e418848ef29015d110c059d1d02fb103288f5a7bab394e72",
+#             "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/associationDeleted/65a5e5608f9c9ce6e418848ef29015d110c059d1d02fb103288f5a7bab394e72",
+#             "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/fileUpdated/ad2fc514666b327b3e79f4255329988b30bfec23428bd62f7db900ffce4744a7"
+#           ],
+#           "client": "bqaskf7ddrfrnctwj4mf7fkwpi"
+#         },
+#         {
+#           "url": "wss://a1yyia7sgxh08y-ats.iot.us-west-2.amazonaws.com/mqtt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIA5..."
+#           "topics": [
+#             "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/fileDeleted/129baf6c447f4da79303537da82ec8e71266c21536567ded0f5d997f75e889e3",
+#             "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/fileDeleted/65a5e5608f9c9ce6e418848ef29015d110c059d1d02fb103288f5a7bab394e72",
+#             "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/associationDeleted/ad2fc514666b327b3e79f4255329988b30bfec23428bd62f7db900ffce4744a7"
+#           ],
+#           "client": "y6myssziyffsvg7e4yfjjngaqy"
+#         },
+#         {
+#           "url": "wss://a1yyia7sgxh08y-ats.iot.us-west-2.amazonaws.com/mqtt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIA5..."
+#           "topics": [
+#             "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/fileUpdated/",
+#             "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/associationCreated/65a5e5608f9c9ce6e418848ef29015d110c059d1d02fb103288f5a7bab394e72",
+#             "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/fileDeleted/"
+#           ],
+#           "client": "cbh5lbimwje2nawp42uwmp7o2e"
+#         },
+#         {
+#           "url": "wss://a1yyia7sgxh08y-ats.iot.us-west-2.amazonaws.com/mqtt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIA5..."
+#           "topics": [
+#             "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/fileCreated/129baf6c447f4da79303537da82ec8e71266c21536567ded0f5d997f75e889e3",
+#             "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/fileCreated/",
+#             "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/fileDeleted/ad2fc514666b327b3e79f4255329988b30bfec23428bd62f7db900ffce4744a7"
+#           ],
+#           "client": "ollqguz5vvfn3jmyj5tsulz7su"
+#         },
+#         {
+#           "url": "wss://a1yyia7sgxh08y-ats.iot.us-west-2.amazonaws.com/mqtt?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIA5..."
+#           "topics": [
+#             "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/fileCreated/65a5e5608f9c9ce6e418848ef29015d110c059d1d02fb103288f5a7bab394e72",
+#             "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/fileUpdated/129baf6c447f4da79303537da82ec8e71266c21536567ded0f5d997f75e889e3"
+#           ],
+#           "client": "tt7sop2eurffzhej45d4gu6ztm"
+#         }
+#       ],
+#       "newSubscriptions": {
+#         "activityCreated": {
+#           "topic": "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/activityCreated/38c53ba841180e186aeaae8565e9807ddabb7becaf849cf336e24d1f23e2a12b",
+#           "expireTime": 1553801051000
+#         },
+#         "fileUpdated": {
+#           "topic": "674475255666/hmdhwjgyuja6nfrcb65tzc42vu/fileUpdated/",
+#           "expireTime": 1553801051000
+#         }
+#       }
+#     }
+#   },
+#   "data": {
+#     "activityCreated": null,
+#     "fileUpdated": null
+#   }
+# }
