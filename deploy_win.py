@@ -266,7 +266,8 @@ with open(third_party_license, 'w', encoding='utf-8', newline='\n') as out:
         ('ASI TICOFF', ('sub', 'epyqlib', 'epyqlib', 'ticoff.asi_license.txt'), 'https://gist.github.com/eliotb/1073231', False),
         ('pyelftools', (), 'https://raw.githubusercontent.com/eliben/pyelftools/master/LICENSE', False),
         ('attrs', ('installer', 'attrs.txt'), 'https://raw.githubusercontent.com/hynek/attrs/5516d5452c76416b3fea0c9d9f2b7505fae82c2b/LICENSE', False),
-        ('FontAwesome', (), 'https://scripts.sil.org/cms/scripts/render_download.php?format=file&media_id=OFL_plaintext&filename=OFL.txt', False),
+        # ('FontAwesome', (), 'https://scripts.sil.org/cms/scripts/render_download.php?format=file&media_id=OFL_plaintext&filename=OFL.txt', False),
+        ('FontAwesome', ('sub', 'epyqlib', 'epyqlib', 'fontawesome.ofl_license.txt'), None, False),
     ]
 
     widest = max([len(name) for name, _, _, _ in licenses])
