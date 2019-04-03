@@ -1,5 +1,3 @@
-# noinspection PyUnresolvedReferences
-import os
 from os import path
 
 from epyqlib.tabs.files.files_manager import FilesManager
@@ -11,12 +9,12 @@ from epyqlib.tests.utils.test_fixtures import temp_dir
 def test_hashing(temp_dir):
     empty_file_hash = "d41d8cd98f00b204e9800998ecf8427e"
 
-    with open(path.join(temp_dir, "test"), "w") as test:
+    manager = FilesManager(temp_dir)
+    with open(path.join(manager._cache_dir, "test"), "w") as test:
         test.write("test")
 
-    open(path.join(temp_dir, empty_file_hash), "w").close()
+    open(path.join(manager._cache_dir, empty_file_hash), "w").close()
 
-    manager = FilesManager(temp_dir)
     manager.verify_cache()
 
     assert empty_file_hash in manager.hashes()

@@ -1,4 +1,5 @@
 import os
+import shutil
 import tempfile
 from os import path
 
@@ -10,9 +11,7 @@ def temp_dir(request):
     dir = tempfile.mkdtemp()
 
     def cleanup():
-        for file in os.listdir(dir):
-            os.remove(path.join(dir, file))
-        os.rmdir(dir)
+        shutil.rmtree(dir)
 
     request.addfinalizer(cleanup)
 

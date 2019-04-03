@@ -39,10 +39,3 @@ def test_invalid_json():
 
 
 
-def test_invalid_json():
-    with open(full_path, 'w') as file:
-        file.write('{"bogus": "value"}')
-    with pytest.raises(ConfigurationError):
-        load_configuration()
-    cleanup()
-
