@@ -13,12 +13,19 @@ asn1crypto==0.24.0        # via cryptography
 attrs==18.2.0
 automat==0.7.0            # via twisted
 bitstruct==6.0.0
+boto3==1.9.83
+boto3_type_annotations==0.3.0
+botocore==1.12.127        # via boto3, s3transfer
 canmatrix==0.7
-cffi==1.12.0              # via cryptography
+certifi==2019.3.9
+certitude==1.0.1
+cffi==1.12.0              # via certitude, cryptography
+chardet==3.0.4            # via requests
 click==7.0
 constantly==15.1.0        # via twisted
 cryptography==2.5         # via pyopenssl, service-identity, twisted
 defusedxml==0.5.0         # via soappy
+docutils==0.14            # via botocore
 future==0.17.1            # via canmatrix
 gitdb2==2.0.5             # via gitpython
 gitpython==2.1.11
@@ -27,11 +34,13 @@ h2==3.1.0                 # via twisted
 hpack==3.0.0              # via h2
 hyperframe==5.2.0         # via h2
 hyperlink==18.0.0         # via twisted
-idna==2.8                 # via hyperlink, twisted
-incremental==17.5.0       # via twisted
+idna==2.8                 # via hyperlink, requests, twisted
+incremental==17.5.0       # via treq, twisted
+jmespath==0.9.4           # via boto3, botocore
 lxml==4.3.1               # via python-docx
 marshmallow==2.16.3
 natsort==5.5.0
+paho-mqtt==1.4.0
 pathlib2==2.3.3           # via canmatrix
 pbr==5.1.2                # via wstools
 pint==0.8.1
@@ -53,12 +62,16 @@ python-docx==0.8.7
 python-dotenv==0.9.1
 pywin32==224              # via twisted
 qt5reactor==0.5
+requests==2.21.0          # via treq
+s3transfer==0.1.13        # via boto3
 service-identity==18.1.0  # via twisted
-six==1.12.0               # via automat, cryptography, pathlib2, pip-tools, pyhamcrest, pyopenssl, python-dateutil, wstools
+six==1.12.0               # via automat, cryptography, pathlib2, pip-tools, pyhamcrest, pyopenssl, python-dateutil, treq, wstools
 smmap2==2.0.5             # via gitdb2
 soappy==0.12.22           # via twisted
-twisted[windows_platform]==18.9.0 ; platform_system == "Windows"
+treq==18.6.0
+twisted[tls,windows_platform]==18.9.0 ; platform_system == "Windows"
 typing==3.6.6             # via python-can
+urllib3==1.24.1           # via botocore, requests
 windows-curses==1.0       # via python-can
 wrapt==1.11.1             # via python-can
 wstools==0.4.8            # via soappy
