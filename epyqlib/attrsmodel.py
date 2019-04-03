@@ -47,7 +47,7 @@ class MultipleFoundError(Exception):
 def create_str_attribute(default=''):
     return attr.ib(
         default=default,
-        convert=str,
+        converter=str,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
@@ -57,7 +57,7 @@ def create_str_attribute(default=''):
 def create_str_or_none_attribute(default=None):
     return attr.ib(
         default=default,
-        convert=to_str_or_none,
+        converter=to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
         ),
@@ -67,7 +67,7 @@ def create_str_or_none_attribute(default=None):
 def create_name_attribute(default=None):
     return attr.ib(
         default=default,
-        convert=to_str_or_none,
+        converter=to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
         ),
@@ -191,7 +191,7 @@ class LimitedStringConverter:
 def create_limited_string_attribute(default, allowed, not_allowed_first):
     return attr.ib(
         default=default,
-        convert=LimitedStringConverter.build(
+        converter=LimitedStringConverter.build(
             allowed=allowed,
             not_allowed_first=not_allowed_first,
         ),
