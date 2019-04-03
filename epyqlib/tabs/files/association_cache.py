@@ -59,6 +59,9 @@ class AssociationCache:
 
         for serial, association_list in self._associations.items():
             for association in association_list:
+                if association['file'] is None:
+                    continue
+
                 if association['file']['type'] == 'Log':
                     continue
 
