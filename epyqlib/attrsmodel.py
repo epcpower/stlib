@@ -999,7 +999,7 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
             if raw == node.uuid:
                 it.setSelected(True)
 
-        editor.setMinimumHeight(editor.sizeHint().height())
+        editor.setMinimumSize(editor.sizeHint())
         editor.show()
 
     def setModelData(self, editor, model, index):
@@ -1046,7 +1046,7 @@ class EnumerationDelegateMulti(QtWidgets.QStyledItemDelegate):
                     if r == it.uuid:
                         it.setSelected(True)
 
-        editor.setMinimumHeight(editor.sizeHint().height())
+        editor.setMinimumSize(editor.sizeHint())
         editor.show()
 
     def setModelData(self, editor, model, index):
