@@ -33,7 +33,7 @@ marshmallow==2.16.3
 more-itertools==7.0.0     # via pytest
 natsort==5.5.0
 pathlib2==2.3.3           # via canmatrix
-pint==0.8.1
+pint==0.9
 pip-tools==3.3.2
 pluggy==0.9.0             # via pytest
 py==1.8.0                 # via pytest
