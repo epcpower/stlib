@@ -225,7 +225,7 @@ class Signal:
             # TODO: put this into the frame!
             self.frame.signals.append(self)
 
-        self.enumeration_format_re = {'re': '^\[(\d+)\]',
+        self.enumeration_format_re = {'re': r'^\[(\d+)\]',
                                       'format': '[{v}] {s}',
                                       'no_value_format': '{s}'}
 

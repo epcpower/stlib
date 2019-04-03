@@ -12,7 +12,7 @@ GitPython==2.1.11
 graham==0.1.10
 marshmallow==2.16.3
 natsort==5.5.0
-Pint==0.8.1
+Pint==0.9
 pyelftools==0.25
 PyQt5==5.11.3
 qt5reactor==0.5

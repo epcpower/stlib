@@ -681,7 +681,7 @@ class Array(epyqlib.treenode.TreeNode):
 class TableArrayElement(epyqlib.treenode.TreeNode):
     name = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_str_or_none,
+        converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True)
         ),
@@ -852,7 +852,7 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
 class TableGroupElement(epyqlib.treenode.TreeNode):
     name = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_str_or_none,
+        converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True)
         ),
@@ -1370,7 +1370,7 @@ class SunSpecEnumerator(epyqlib.treenode.TreeNode):
     )
     label = attr.ib(
         default='',
-        convert=epyqlib.attrsmodel.to_str_or_none,
+        converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
         ),

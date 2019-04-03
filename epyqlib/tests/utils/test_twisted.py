@@ -3,6 +3,7 @@ import time
 
 import attr
 import pytest
+import pytest_twisted
 import twisted.internet.defer
 import twisted.logger
 
@@ -93,7 +94,7 @@ def assert_no_unhandled_errbacks():
     observer.check()
 
 
-@pytest.inlineCallbacks
+@pytest_twisted.inlineCallbacks
 def test_sequence_normal(action_logger, assert_no_unhandled_errbacks):
     sequence = epyqlib.utils.twisted.Sequence()
     t = 0
@@ -106,7 +107,7 @@ def test_sequence_normal(action_logger, assert_no_unhandled_errbacks):
     yield sequence.run()
 
 
-@pytest.inlineCallbacks
+@pytest_twisted.inlineCallbacks
 def test_sequence_cancelled(action_logger, assert_no_unhandled_errbacks):
     sequence = epyqlib.utils.twisted.Sequence()
     t = 0
@@ -127,7 +128,7 @@ def test_sequence_cancelled(action_logger, assert_no_unhandled_errbacks):
         yield deferred
 
 
-@pytest.inlineCallbacks
+@pytest_twisted.inlineCallbacks
 def test_sequence_loop(action_logger, assert_no_unhandled_errbacks):
     sequence = epyqlib.utils.twisted.Sequence()
     t = 0
@@ -150,7 +151,7 @@ def test_sequence_loop(action_logger, assert_no_unhandled_errbacks):
         yield deferred
 
 
-@pytest.inlineCallbacks
+@pytest_twisted.inlineCallbacks
 def test_sequence_pause(action_logger, assert_no_unhandled_errbacks):
     sequence = epyqlib.utils.twisted.Sequence()
     t = 0
@@ -176,7 +177,7 @@ def test_sequence_pause(action_logger, assert_no_unhandled_errbacks):
     yield deferred
 
 
-@pytest.inlineCallbacks
+@pytest_twisted.inlineCallbacks
 def test_sequence_pause_event(action_logger, assert_no_unhandled_errbacks):
     sequence = epyqlib.utils.twisted.Sequence()
     t = 0
@@ -220,7 +221,7 @@ def test_sequence_pause_event(action_logger, assert_no_unhandled_errbacks):
     yield deferred
 
 
-@pytest.inlineCallbacks
+@pytest_twisted.inlineCallbacks
 def test_sequence_stop_while_paused(action_logger, assert_no_unhandled_errbacks):
     sequence = epyqlib.utils.twisted.Sequence()
     t = 0
