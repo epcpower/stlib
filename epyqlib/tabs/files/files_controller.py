@@ -39,7 +39,7 @@ class FilesController:
         self._last_sync: datetime = None
 
         self.sync_config = SyncConfig.get_instance()
-        self.api = API(self.sync_config.get(Vars.server_url))
+        self.api = API(self.sync_config.get_env())
 
         self.activity_log = ActivityLog()
         self.activity_syncer = ActivitySyncer(self.activity_log, self.api)

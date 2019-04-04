@@ -1,9 +1,13 @@
 from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
+from epyqlib.tabs.files.sync_config import SyncConfig
+
 
 class BucketManager():
-    _bucket_name_dev = 'epc-files-dev'
-    _bucket_name_beta = 'epc-files-beta'
-    _bucket_name = _bucket_name_beta
+    _bucket_names = {
+        'dev': 'epc-files-dev',
+        'beta': 'epc-files-beta'
+    }
+    _bucket_name = _bucket_names[SyncConfig.get_env()]
     _logs_path = 'logs/'
     _tag = "[Bucket Manager]"
 

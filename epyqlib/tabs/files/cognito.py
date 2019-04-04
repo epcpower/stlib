@@ -20,22 +20,24 @@ class CognitoException(Exception):
 class CognitoHelper:
 
     _tag = '[CognitoHelper]'
-    
-    dev_config = {
-        'identity_pool_id': 'us-west-2:3f24de0e-c97c-46ad-841a-9611371e4b6c',
-        'client_id': '4eqpagdediq79a16ebg37c410a',
-        'region': "us-west-2",
-        'user_pool_id': 'cognito-idp.us-west-2.amazonaws.com/us-west-2_4Q2Ug5I8S'
+
+    configs = {
+        'dev': {
+            'identity_pool_id': 'us-west-2:3f24de0e-c97c-46ad-841a-9611371e4b6c',
+            'client_id': '4eqpagdediq79a16ebg37c410a',
+            'region': "us-west-2",
+            'user_pool_id': 'cognito-idp.us-west-2.amazonaws.com/us-west-2_4Q2Ug5I8S'
+        },
+
+        'beta': {
+            'identity_pool_id': 'us-west-2:339ba726-2c24-41fe-afb6-d62a7587f623',
+            'client_id': '3re7n0ht3oh2cem8548e0eoh81',
+            'region': "us-west-2",
+            'user_pool_id': 'cognito-idp.us-west-2.amazonaws.com/us-west-2_RyqpR9o3w'
+        }
     }
 
-    beta_config = {
-        'identity_pool_id': 'us-west-2:339ba726-2c24-41fe-afb6-d62a7587f623',
-        'client_id': '3re7n0ht3oh2cem8548e0eoh81',
-        'region': "us-west-2",
-        'user_pool_id': 'cognito-idp.us-west-2.amazonaws.com/us-west-2_RyqpR9o3w'
-    }
-
-    def __init__(self, config=beta_config):
+    def __init__(self, environment: str):
         self._access_token = ""
         self._expires_in = 0
         self._expires_time = datetime.min
@@ -43,7 +45,7 @@ class CognitoHelper:
         self._decoded_id_token: dict = {}
         self._refresh_token = ""
         self._token_type = ""
-        self.config = config
+        self.config = self.configs[environment]
 
         self._s3_resource: S3Resource = None
 
@@ -221,8 +223,8 @@ class CognitoHelper:
 if __name__ == '__main__':
     # refresh_token = "..."
     config = SyncConfig.get_instance()
-    # helper = CognitoHelper(CognitoHelper.beta_config)
-    # helper.authenticate("epc_admin", "Zxv3m_*&y7r")
-    helper = CognitoHelper(CognitoHelper.dev_config)
-    helper.authenticate("crosscomm_benberry1", "70zo0_Pb")
+    helper = CognitoHelper('beta')
+    helper.authenticate("epc_admin", "Zxv3m_*&y7r")
+    # helper = CognitoHelper('dev')
+    # helper.authenticate("crosscomm_benberry1", "70zo0_Pb")
     print(helper._id_token)

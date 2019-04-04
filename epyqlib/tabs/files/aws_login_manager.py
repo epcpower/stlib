@@ -20,7 +20,7 @@ class AwsLoginManager():
         if self._instance is not None:
             raise Exception("Tried to create another instance of AwsLoginManager although one already exists.")
         self._listeners: [LoginListener] = []
-        self._cognito_helper = CognitoHelper()
+        self._cognito_helper = CognitoHelper(SyncConfig.get_env())
 
     @staticmethod
     def get_instance():

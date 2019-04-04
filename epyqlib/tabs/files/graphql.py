@@ -282,9 +282,14 @@ class API:
         }
 
 
-    def __init__(self, server_url: str):
+    urls = {
+        'dev': "https://u62ugr52vbfcliv4x5tvjlo5dq.appsync-api.us-west-2.amazonaws.com/graphql",
+        'beta': "https://sayn4ej53bbxbjfbtrnoeda5ia.appsync-api.us-west-2.amazonaws.com/graphql"
+    }
+
+    def __init__(self, environment: str):
         self.ws_handler = WebSocketHandler()
-        self.server_url = server_url
+        self.server_url = self.urls[environment]
         self.headers = {}
 
     async def _make_request(self, body):
