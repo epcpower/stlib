@@ -24,34 +24,38 @@ class WebSocketHandler():
         new_subscriptions = response['extensions']['subscription']['newSubscriptions']
         mqtt_connections = response['extensions']['subscription']['mqttConnections']
 
-        # TODO: Group multiple topics that share a URL into one client. It appears that having two clients
-        # subscribe to the same URL and then listen on different topics causes one to be disconnected
-        # connections = {}
-        #
-        # for newSubscription in newSubscriptions:
-        #     mqttEndpoint = next(c for c in mqttConnections if newSubscription in c['topics'])
+        new_connections = {}
+        for [action, details] in new_subscriptions.items():
+            mqtt_connection = next(c for c in mqtt_connections if details['topic'] in c['topics'])
+            topic = details['topic']
+
+            if mqtt_connection['url'] not in new_connections:
+                new_connections[mqtt_connection['url']] = {
+                    'connection': mqtt_connection,
+                    'topics': set()
+                }
+
+            new_connections[mqtt_connection['url']]['topics'].add(topic)
 
 
-        for [name, details] in new_subscriptions.items():
-            mqtt_info = next(c for c in mqtt_connections if details['topic'] in c['topics'])
-            client_id = mqtt_info['client']
-            url = mqtt_info['url']
+        for new_connection in new_connections.values():
+            client_id = new_connection['connection']['client']
+            url = new_connection['connection']['url']
 
             urlparts = urlparse(url)
 
             headers = {"Host": "{0:s}".format(urlparts.netloc)}
 
             client = mqtt.Client(client_id=client_id, transport="websockets")
-            client.user_data_set({"topic": details['topic']})
             client.on_connect = self._on_connect
             client.on_message = self._on_message
+            client.on_log = self._on_log
             client.on_socket_close = self._on_socket_close
+
             client.ws_set_options(path="{}?{}".format(urlparts.path, urlparts.query), headers=headers)
             client.tls_set()
-            client.on_log = self._on_log
 
-            # self.client.on_socket_open = lambda client, userdata, socket: print("Socket opened")
-            # self.client.on_socket_close = lambda client, userdata, socket: print("Socket closed")
+            client.user_data_set({'topics': new_connection['topics']})
 
             client.connect(urlparts.netloc, port=443)
             self.clients.append(client)
@@ -80,14 +84,15 @@ class WebSocketHandler():
         return len(self.clients) > 0
 
     def _on_connect(self, client: mqtt.Client, userdata: dict, flags, rc):
-        topic = userdata['topic']
-        print("[Graphql Websocket] On connect. Subscribing to " + topic)
-        client.subscribe(topic)
+        topics: set[str] = userdata['topics']
+        sub_list = list(map(lambda topic: (topic, 1), topics))
+        print("[Graphql Websocket] On connect. Subscribing to topics: " + json.dumps(sub_list))
+        client.subscribe(sub_list)
 
     def _on_log(self, client, userdata, level, buf):
         print(f"[Graphql Websocket]  Log {level} {buf}")
 
-    def _on_message(self, client, userdata, msg):
+    def _on_message(self, client, userdata, msg: mqtt.MQTTMessage):
         try:
             payload = msg.payload.decode('ascii')
             payload_json = json.loads(payload)

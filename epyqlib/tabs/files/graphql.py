@@ -396,15 +396,15 @@ class API:
                     orgFileUpdated: fileUpdated(owner: $customerId) { id }
                     orgFileDeleted: fileDeleted(owner: $customerId) { id }
                     
-                    # publicFileCreated: fileCreated(owner: "public") { id }
-                    # publicFileUpdated: fileUpdated(owner: "public") { id }
-                    # publicFileDeleted: fileDeleted(owner: "public") { id }
+                    publicFileCreated: fileCreated(owner: "public") { id }
+                    publicFileUpdated: fileUpdated(owner: "public") { id }
+                    publicFileDeleted: fileDeleted(owner: "public") { id }
                     
                     orgAssociationCreated: associationCreated(owner: $customerId) { id }
                     orgAssociationDeleted: associationDeleted(owner: $customerId) { id }
                     
-                    # publicAssociationCreated: associationCreated(owner: "public") { id }
-                    # publicAssociationDeleted: associationDeleted(owner: "public") { id }
+                    publicAssociationCreated: associationCreated(owner: "public") { id }
+                    publicAssociationDeleted: associationDeleted(owner: "public") { id }
                 }"""
 
         query = {
