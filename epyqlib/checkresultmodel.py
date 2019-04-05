@@ -2,6 +2,7 @@ import attr
 import graham
 
 import epyqlib.attrsmodel
+import epyqlib.treenode
 
 
 @graham.schemify(tag='node')
@@ -50,7 +51,7 @@ class Node(epyqlib.treenode.TreeNode):
     def can_delete(self, node=None):
         return False
 
-    def check(self):
+    def check(self, models):
         return None
 
     def can_drop_on(self, node):
@@ -88,7 +89,7 @@ class Result(epyqlib.treenode.TreeNode):
     def can_delete(self, node=None):
         return False
 
-    def check(self):
+    def check(self, models):
         return None
 
     def can_drop_on(self, node):

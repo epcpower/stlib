@@ -234,11 +234,31 @@ class Parameter(epyqlib.treenode.TreeNode):
     def update(self):
         sort_multiselect(self)
 
+    @epyqlib.attrsmodel.check_children
+    def check(self, result, models):
+        results = []
+
+        print()
+        try:
+            models.sunspec.root.nodes_by_attribute(
+                attribute_value=self.uuid,
+                attribute_name='parameter_uuid',
+            )
+        except epyqlib.treenode.NotFoundError:
+            results.append('No linked SunSpec data point found')
+
+        for r in results:
+            result.append_child(epyqlib.checkresultmodel.Result(
+                node=self,
+                message=r,
+            ))
+
+        return result
+
     can_delete = epyqlib.attrsmodel.childless_can_delete
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
-    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='group', register=True)

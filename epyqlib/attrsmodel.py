@@ -494,7 +494,7 @@ def add_addable_types(cls, attribute_name='children', types=None):
     return cls
 
 
-def check_just_children(self):
+def check_just_children(self, models):
     # TODO: ugh, circular dependencies
     import epyqlib.checkresultmodel
 
@@ -502,7 +502,7 @@ def check_just_children(self):
         return None
 
     child_results = [
-        child.check()
+        child.check(models=models)
         for child in self.children
     ]
     child_results = [
@@ -522,11 +522,11 @@ def check_just_children(self):
 
 
 def check_children(f):
-    def wrapper(self):
+    def wrapper(self, models):
         # TODO: ugh, circular dependencies
         import epyqlib.checkresultmodel
 
-        result = check_just_children(self)
+        result = check_just_children(self, models=models)
 
         if result is None:
             result = epyqlib.checkresultmodel.Node.build(
@@ -534,7 +534,7 @@ def check_children(f):
                 node=self,
             )
 
-        result = f(self=self, result=result)
+        result = f(self=self, result=result, models=models)
 
         if len(result.children) == 0:
             return None
@@ -585,7 +585,7 @@ def Root(default_name, valid_types):
         child_from = default_child_from
         internal_move = default_internal_move
 
-        def check_and_append(self, parent=None):
+        def check_and_append(self, models, parent=None):
             # TODO: ugh, circular dependencies
             import epyqlib.checkresultmodel
 
@@ -593,15 +593,15 @@ def Root(default_name, valid_types):
                 parent = epyqlib.checkresultmodel.Root()
 
             for child in self.children:
-                result = child.check()
+                result = child.check(models=models)
 
                 if result is not None:
                     parent.append_child(result)
 
             return parent
 
-        def check(self):
-            return self.check_and_append()
+        def check(self, models):
+            return self.check_and_append(models=models)
 
         @staticmethod
         def can_delete(node=None):
@@ -1653,7 +1653,7 @@ class Tests:
     def test_all_have_check(self):
         self.assert_incomplete_types(
             name='check',
-            signature=[],
+            signature=['models'],
         )
 
     def test_all_addable_also_in_types(self):
