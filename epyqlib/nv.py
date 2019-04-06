@@ -1908,20 +1908,20 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                                 Qt.EditRole,
                             )
                         else:
-                            logger.info(not_found_format.format(meta.name))
+                            logger.warning(not_found_format.format(meta.name))
                 elif len(parameters) > 1:
-                    logger.info(
+                    logger.warning(
                         "Nv value named '{}' occurred {} times when loading "
                         "from value set".format(name, len(parameters)),
                     )
                 else:
-                    logger.info(
+                    logger.warning(
                         "Nv value named '{}' not found when loading from "
                         "value set".format(name),
                     )
 
             for name, meta in sorted(only_in_file):
-                logger.info("Unrecognized NV value named '{}' ({}) found when loading "
+                logger.warning("Unrecognized NV value named '{}' ({}) found when loading "
                       "from value set".format(name, meta.name))
 
 
