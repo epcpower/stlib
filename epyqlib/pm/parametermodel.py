@@ -144,8 +144,10 @@ class Parameter(epyqlib.treenode.TreeNode):
         ),
     )
 
-    embedded_getter = epyqlib.attrsmodel.create_str_or_none_attribute()
-    embedded_setter = epyqlib.attrsmodel.create_str_or_none_attribute()
+    can_getter = epyqlib.attrsmodel.create_str_or_none_attribute()
+    can_setter = epyqlib.attrsmodel.create_str_or_none_attribute()
+    sunspec_getter = epyqlib.attrsmodel.create_str_or_none_attribute()
+    sunspec_setter = epyqlib.attrsmodel.create_str_or_none_attribute()
 
     read_only = create_read_only_attribute()
 
@@ -1000,14 +1002,14 @@ class Table(epyqlib.treenode.TreeNode):
         ),
     )
 
-    embedded_getter = attr.ib(
+    can_getter = attr.ib(
         default=None,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
 
-    embedded_setter = attr.ib(
+    can_setter = attr.ib(
         default=None,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
@@ -1660,8 +1662,10 @@ columns = epyqlib.attrsmodel.columns(
 
     merge('label', SunSpecEnumerator),
 
-    merge('embedded_getter', Table, Parameter),
-    merge('embedded_setter', Table, Parameter),
+    merge('can_getter', Table, Parameter),
+    merge('can_setter', Table, Parameter),
+    merge('sunspec_getter', Parameter),
+    merge('sunspec_setter', Parameter),
     merge('active_curve_getter', Table),
     merge('active_curve_setter', Table),
     merge(
