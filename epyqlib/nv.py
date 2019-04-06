@@ -1579,7 +1579,11 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
     async def _submit_transaction(self):
         try:
-            for meta, actions in self.transaction_actions.items():
+            for meta in meta_limits_first:
+                actions = self.transaction_actions.get(meta, None)
+                if actions is None:
+                    continue
+
                 values = {}
                 callback = None
                 nodes = set()
