@@ -7,9 +7,11 @@ import itertools
 import json
 import locale
 import logging
+import string
 import sys
 import uuid
 import weakref
+from natsort import natsorted
 
 import attr
 import graham
@@ -45,7 +47,7 @@ class MultipleFoundError(Exception):
 def create_str_attribute(default=''):
     return attr.ib(
         default=default,
-        convert=str,
+        converter=str,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
@@ -55,7 +57,7 @@ def create_str_attribute(default=''):
 def create_str_or_none_attribute(default=None):
     return attr.ib(
         default=default,
-        convert=to_str_or_none,
+        converter=to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
         ),
@@ -65,7 +67,7 @@ def create_str_or_none_attribute(default=None):
 def create_name_attribute(default=None):
     return attr.ib(
         default=default,
-        convert=to_str_or_none,
+        converter=to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
         ),
@@ -85,6 +87,126 @@ def create_reference_attribute():
     )
 
     return attribute
+
+
+def create_checkbox_attribute(default=False):
+    return attr.ib(
+        default=default,
+        converter=epyqlib.attrsmodel.two_state_checkbox,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Boolean(),
+        ),
+    )
+
+
+def create_integer_attribute(default=0):
+    return attr.ib(
+        default=default,
+        converter=int,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Integer(),
+        ),
+    )
+
+
+class NotAllowedCharacterError(Exception):
+    @classmethod
+    def build(cls, value, allowed):
+        not_allowed = set(value) - set(allowed)
+
+        return cls(
+            'Characters {!r} from {!r} are not in allowed set {!r}'.format(
+                ''.join(sorted(not_allowed)),
+                value,
+                ''.join(sorted(allowed)),
+            )
+        )
+
+
+class NotAllowedFirstCharacterError(Exception):
+    @classmethod
+    def build(cls, first_character, allowed):
+        return cls(
+            'First character {!r} not allowed, must be one of {!r}'.format(
+                first_character,
+                ''.join(sorted(allowed)),
+            )
+        )
+
+
+@attr.s
+class LimitedStringConverter:
+    allowed = attr.ib()
+    allowed_first_character = attr.ib()
+
+    @classmethod
+    def build(cls, allowed, not_allowed_first):
+        allowed = set(allowed)
+        not_allowed_first = set(not_allowed_first)
+
+        return cls(
+            allowed=allowed,
+            allowed_first_character=allowed - not_allowed_first,
+        )
+
+    def __call__(self, value):
+        value = str(value)
+        value_set = set(value)
+
+        first_character = value[0]
+
+        if first_character not in self.allowed_first_character:
+            raise NotAllowedFirstCharacterError.build(
+                first_character=first_character,
+                allowed=self.allowed_first_character,
+            )
+
+        if not value_set.issubset(self.allowed):
+            raise NotAllowedCharacterError.build(
+                value=value,
+                allowed=self.allowed
+            )
+
+        return value
+
+    def suggest(self, value):
+        suggestion = ''.join(
+            character
+            for character in value
+            if character in self.allowed
+        )
+
+        if suggestion[:1] not in self.allowed_first_character:
+            if '_' in self.allowed_first_character:
+                suggestion = '_' + suggestion
+            else:
+                while suggestion[:1] not in self.allowed_first_character:
+                    suggestion = suggestion[1:]
+                    if len(suggestion) == 0:
+                        break
+
+        return suggestion
+
+
+def create_limited_string_attribute(default, allowed, not_allowed_first):
+    return attr.ib(
+        default=default,
+        converter=LimitedStringConverter.build(
+            allowed=allowed,
+            not_allowed_first=not_allowed_first,
+        ),
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(),
+        ),
+    )
+
+
+def create_code_identifier_string_attribute(default):
+    return create_limited_string_attribute(
+        default=default,
+        allowed=string.ascii_letters + string.digits + '_',
+        not_allowed_first=string.digits,
+    )
 
 
 # TODO: CAMPid 8695426542167924656654271657917491654
@@ -372,7 +494,7 @@ def add_addable_types(cls, attribute_name='children', types=None):
     return cls
 
 
-def check_just_children(self):
+def check_just_children(self, models):
     # TODO: ugh, circular dependencies
     import epyqlib.checkresultmodel
 
@@ -380,7 +502,7 @@ def check_just_children(self):
         return None
 
     child_results = [
-        child.check()
+        child.check(models=models)
         for child in self.children
     ]
     child_results = [
@@ -393,26 +515,26 @@ def check_just_children(self):
         return None
 
     return epyqlib.checkresultmodel.Node.build(
-        name=self.name,
+        name=getattr(self, 'name', ''),
         node=self,
         child_results=child_results,
     )
 
 
 def check_children(f):
-    def wrapper(self):
+    def wrapper(self, models):
         # TODO: ugh, circular dependencies
         import epyqlib.checkresultmodel
 
-        result = check_just_children(self)
+        result = check_just_children(self, models=models)
 
         if result is None:
             result = epyqlib.checkresultmodel.Node.build(
-                name=self.name,
+                name=getattr(self, 'name', ''),
                 node=self,
             )
 
-        result = f(self=self, result=result)
+        result = f(self=self, result=result, models=models)
 
         if len(result.children) == 0:
             return None
@@ -463,7 +585,7 @@ def Root(default_name, valid_types):
         child_from = default_child_from
         internal_move = default_internal_move
 
-        def check_and_append(self, parent=None):
+        def check_and_append(self, models, parent=None):
             # TODO: ugh, circular dependencies
             import epyqlib.checkresultmodel
 
@@ -471,15 +593,15 @@ def Root(default_name, valid_types):
                 parent = epyqlib.checkresultmodel.Root()
 
             for child in self.children:
-                result = child.check()
+                result = child.check(models=models)
 
                 if result is not None:
                     parent.append_child(result)
 
             return parent
 
-        def check(self):
-            return self.check_and_append()
+        def check(self, models):
+            return self.check_and_append(models=models)
 
         @staticmethod
         def can_delete(node=None):
@@ -851,6 +973,7 @@ class CustomMulti(PyQt5.QtWidgets.QListWidget):
         hide_popup(self)
 
 
+# TODO: CAMPid 05470876451650542168542
 class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
     def __init__(self, text_column_name, root, parent):
         super().__init__(parent)
@@ -859,7 +982,7 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
         self.root = root
 
     def createEditor(self, parent, option, index):
-        return CustomCombo(parent=parent)
+        return CustomMulti(parent=parent)
 
     def setEditorData(self, editor, index):
         super().setEditorData(editor, index)
@@ -867,53 +990,35 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
         model_index = to_source_model(index)
         model = model_index.model()
 
-        item = model.itemFromIndex(model_index)
-        attrs_model = item.data(epyqlib.utils.qt.UserRoles.attrs_model)
-        column = attrs_model.columns.index_of(self.text_column_name)
-        root_index = attrs_model.index_from_node(self.root)
+        raw = model.data(model_index, epyqlib.utils.qt.UserRoles.raw)
+        editor.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        for node in self.root.children:
+            it = PyQt5.QtWidgets.QListWidgetItem(editor)
+            it.setText(node.name)
+            it.setData(epyqlib.utils.qt.UserRoles.raw, node.uuid)
+            if raw == node.uuid:
+                it.setSelected(True)
 
-        editor.setModel(root_index.model())
-        editor.setModelColumn(column)
-        editor.setRootModelIndex(root_index)
-
-        target_uuid = model_index.data(epyqlib.utils.qt.UserRoles.raw)
-
-        if target_uuid is not None:
-            target_node = attrs_model.node_from_uuid(target_uuid)
-            target_index = attrs_model.index_from_node(target_node)
-
-            editor.setCurrentIndex(target_index.row())
-
-        editor.showPopup()
+        editor.setMinimumSize(editor.sizeHint())
+        editor.show()
 
     def setModelData(self, editor, model, index):
         index = epyqlib.utils.qt.resolve_index_to_model(index)
         model = index.model()
 
-        editor_index = editor.currentIndex()
+        selected_items = editor.selectedItems()
 
-        item = model.itemFromIndex(index)
-        attrs_model = item.data(epyqlib.utils.qt.UserRoles.attrs_model)
-        parent_index = attrs_model.index_from_node(self.root)
+        if len(selected_items) == 0:
+            selected_uuid = ''
+        else:
+            selected_item, = selected_items
+            selected_uuid = selected_item.data(epyqlib.utils.qt.UserRoles.raw)
+            selected_uuid = str(selected_uuid)
 
-        enumeration_model = parent_index.model()
-        enumeration_attrs_model = parent_index.data(
-            epyqlib.utils.qt.UserRoles.attrs_model,
-        )
-
-        selected_index = enumeration_model.index(
-            editor_index,
-            0,
-            parent_index,
-        )
-        selected_node = enumeration_attrs_model.node_from_index(
-            selected_index,
-        )
-
-        datum = str(selected_node.uuid)
-        model.setData(index, datum)
+        model.setData(index, selected_uuid)
 
 
+# TODO: CAMPid 05470876451650542168542
 class EnumerationDelegateMulti(QtWidgets.QStyledItemDelegate):
     def __init__(self, text_column_name, root, parent):
         super().__init__(parent)
@@ -936,18 +1041,19 @@ class EnumerationDelegateMulti(QtWidgets.QStyledItemDelegate):
             it = PyQt5.QtWidgets.QListWidgetItem(editor)
             it.setText(node.name)
             it.uuid = node.uuid
-            for r in raw:
-                if r == it.uuid:
-                    it.setSelected(True)
+            if raw is not None:
+                for r in raw:
+                    if r == it.uuid:
+                        it.setSelected(True)
 
-        editor.setMinimumHeight(editor.sizeHint().height())
+        editor.setMinimumSize(editor.sizeHint())
         editor.show()
 
     def setModelData(self, editor, model, index):
         index = epyqlib.utils.qt.resolve_index_to_model(index)
         model = index.model()
 
-        selected_items = editor.selectedItems()
+        selected_items = natsorted(editor.selectedItems())
         model.setData(index, selected_items)
 
 
@@ -1076,7 +1182,11 @@ class Model:
             if field_metadata.converter == two_state_checkbox:
                 datum = item.data(QtCore.Qt.CheckStateRole)
 
-            datum = field_metadata.converter(datum)
+            try:
+                datum = field_metadata.converter(datum)
+            except:
+                item.setData(getattr(node, field_name), QtCore.Qt.DisplayRole)
+                raise
 
         setattr(node, field_name, datum)
 
@@ -1543,7 +1653,7 @@ class Tests:
     def test_all_have_check(self):
         self.assert_incomplete_types(
             name='check',
-            signature=[],
+            signature=['models'],
         )
 
     def test_all_addable_also_in_types(self):

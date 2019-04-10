@@ -2,17 +2,12 @@ import attr
 import graham
 
 import epyqlib.attrsmodel
+import epyqlib.treenode
 
 
 @graham.schemify(tag='node')
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
-@epyqlib.utils.qt.pyqtify_passthrough_properties(
-    original='node',
-    field_names=(
-        'name',
-    ),
-)
 @attr.s(hash=False)
 class Node(epyqlib.treenode.TreeNode):
     name = epyqlib.attrsmodel.create_name_attribute()
@@ -56,7 +51,7 @@ class Node(epyqlib.treenode.TreeNode):
     def can_delete(self, node=None):
         return False
 
-    def check(self):
+    def check(self, models):
         return None
 
     def can_drop_on(self, node):
@@ -94,7 +89,7 @@ class Result(epyqlib.treenode.TreeNode):
     def can_delete(self, node=None):
         return False
 
-    def check(self):
+    def check(self, models):
         return None
 
     def can_drop_on(self, node):

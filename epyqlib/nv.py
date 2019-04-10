@@ -1579,7 +1579,11 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
     async def _submit_transaction(self):
         try:
-            for meta, actions in self.transaction_actions.items():
+            for meta in meta_limits_first:
+                actions = self.transaction_actions.get(meta, None)
+                if actions is None:
+                    continue
+
                 values = {}
                 callback = None
                 nodes = set()
@@ -1908,20 +1912,20 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                                 Qt.EditRole,
                             )
                         else:
-                            logger.info(not_found_format.format(meta.name))
+                            logger.warning(not_found_format.format(meta.name))
                 elif len(parameters) > 1:
-                    logger.info(
+                    logger.warning(
                         "Nv value named '{}' occurred {} times when loading "
                         "from value set".format(name, len(parameters)),
                     )
                 else:
-                    logger.info(
+                    logger.warning(
                         "Nv value named '{}' not found when loading from "
                         "value set".format(name),
                     )
 
             for name, meta in sorted(only_in_file):
-                logger.info("Unrecognized NV value named '{}' ({}) found when loading "
+                logger.warning("Unrecognized NV value named '{}' ({}) found when loading "
                       "from value set".format(name, meta.name))
 
 

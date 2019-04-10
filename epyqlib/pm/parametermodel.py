@@ -12,6 +12,8 @@ import epyqlib.treenode
 import epyqlib.utils.general
 import epyqlib.utils.qt
 
+from natsort import natsorted
+
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2017, EPC Power Corp.'
 __license__ = 'GPLv2+'
@@ -35,6 +37,10 @@ def create_read_only_attribute():
             field=marshmallow.fields.Boolean(),
         ),
     )
+
+def sort_multiselect(node):
+    if node.visibility is not None:
+        node.visibility = natsorted(node.visibility, key=lambda uuid: epyqlib.attrsmodel.name_from_uuid(node, uuid, node.find_root().model))
 
 
 create_notes_attribute = epyqlib.attrsmodel.create_str_or_none_attribute
@@ -138,8 +144,10 @@ class Parameter(epyqlib.treenode.TreeNode):
         ),
     )
 
-    embedded_getter = epyqlib.attrsmodel.create_str_or_none_attribute()
-    embedded_setter = epyqlib.attrsmodel.create_str_or_none_attribute()
+    can_getter = epyqlib.attrsmodel.create_str_or_none_attribute()
+    can_setter = epyqlib.attrsmodel.create_str_or_none_attribute()
+    sunspec_getter = epyqlib.attrsmodel.create_str_or_none_attribute()
+    sunspec_setter = epyqlib.attrsmodel.create_str_or_none_attribute()
 
     read_only = create_read_only_attribute()
 
@@ -225,11 +233,34 @@ class Parameter(epyqlib.treenode.TreeNode):
             if value < self.minimum:
                 self.minimum = value
 
+    def update(self):
+        sort_multiselect(self)
+
+    @epyqlib.attrsmodel.check_children
+    def check(self, result, models):
+        results = []
+
+        print()
+        try:
+            models.sunspec.root.nodes_by_attribute(
+                attribute_value=self.uuid,
+                attribute_name='parameter_uuid',
+            )
+        except epyqlib.treenode.NotFoundError:
+            results.append('No linked SunSpec data point found')
+
+        for r in results:
+            result.append_child(epyqlib.checkresultmodel.Result(
+                node=self,
+                message=r,
+            ))
+
+        return result
+
     can_delete = epyqlib.attrsmodel.childless_can_delete
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
     internal_move = epyqlib.attrsmodel.default_internal_move
-    check = epyqlib.attrsmodel.check_just_children
 
 
 @graham.schemify(tag='group', register=True)
@@ -472,6 +503,9 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
     def can_drop_on(self, node):
         return False
 
+    def update(self):
+        sort_multiselect(self)
+
     can_delete = epyqlib.attrsmodel.childless_can_delete
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
@@ -669,7 +703,7 @@ class Array(epyqlib.treenode.TreeNode):
 class TableArrayElement(epyqlib.treenode.TreeNode):
     name = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_str_or_none,
+        converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True)
         ),
@@ -819,6 +853,9 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
     def can_drop_on(self, node):
         return False
 
+    def update(self):
+        sort_multiselect(self)
+
     can_delete = epyqlib.attrsmodel.childless_can_delete
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
@@ -837,7 +874,7 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
 class TableGroupElement(epyqlib.treenode.TreeNode):
     name = attr.ib(
         default=None,
-        convert=epyqlib.attrsmodel.to_str_or_none,
+        converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True)
         ),
@@ -965,14 +1002,14 @@ class Table(epyqlib.treenode.TreeNode):
         ),
     )
 
-    embedded_getter = attr.ib(
+    can_getter = attr.ib(
         default=None,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
 
-    embedded_setter = attr.ib(
+    can_setter = attr.ib(
         default=None,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
@@ -1355,7 +1392,7 @@ class SunSpecEnumerator(epyqlib.treenode.TreeNode):
     )
     label = attr.ib(
         default='',
-        convert=epyqlib.attrsmodel.to_str_or_none,
+        converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
         ),
@@ -1625,8 +1662,10 @@ columns = epyqlib.attrsmodel.columns(
 
     merge('label', SunSpecEnumerator),
 
-    merge('embedded_getter', Table, Parameter),
-    merge('embedded_setter', Table, Parameter),
+    merge('can_getter', Table, Parameter),
+    merge('can_setter', Table, Parameter),
+    merge('sunspec_getter', Parameter),
+    merge('sunspec_setter', Parameter),
     merge('active_curve_getter', Table),
     merge('active_curve_setter', Table),
     merge(

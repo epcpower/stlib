@@ -166,6 +166,20 @@ class VariableNode(epyqlib.treenode.TreeNode):
 
         return path
 
+    def qualified_name(self):
+        names = iter(self.path())
+
+        qualified_name = next(names)
+
+        for name in names:
+            if name.startswith('['):
+                n = int(name[1:-1])
+                qualified_name += '[{}]'.format(n)
+            else:
+                qualified_name += '.' + name
+
+        return qualified_name
+
     def chunk_updated(self, data):
         self.fields.value = self.variable.unpack(data)
 
@@ -193,9 +207,15 @@ class VariableNode(epyqlib.treenode.TreeNode):
             )
 
         for child in self.children:
+            base_type = epyqlib.cmemoryparser.base_type(child.variable)
+            address = child.address()
+            if self.child_is_multidimensional_array_inner_node():
+                base_type = epyqlib.cmemoryparser.base_type(self.variable)
+                address = self.address()
+
             new_members.extend(child.add_members(
-                base_type=epyqlib.cmemoryparser.base_type(child.variable),
-                address=child.address()
+                base_type=base_type,
+                address=address,
                 # do not expand child pointers since we won't have their values
             ))
 
@@ -216,25 +236,53 @@ class VariableNode(epyqlib.treenode.TreeNode):
 
         return new_members
 
+    def child_is_multidimensional_array_inner_node(self):
+        if isinstance(self.variable.type, epyqlib.cmemoryparser.ArrayType):
+            indexes = self.array_indexes()
+            if len(indexes) + 1 < len(self.variable.type.dimensions):
+                return True
+
+        return False
+
+    def array_indexes(self):
+        indexes = ()
+        parent = self
+        while (
+                parent.tree_parent is not None
+                and parent.fields.name.startswith('[')
+        ):
+            indexes += (int(parent.fields.name[1:-1]),)
+            parent = parent.tree_parent
+
+        return indexes
+
     def add_array_members(self, base_type, address, sender=None):
+        indexes = self.array_indexes()
+
         new_members = []
-        format = '[{{:0{}}}]'.format(len(str(base_type.length())))
+        digits = len(str(base_type.dimensions[len(indexes)]))
+        format = '[{{:0{}}}]'.format(digits)
 
         maximum_children = 256
 
-        for index in range(base_type.length())[:maximum_children]:
-            child_address = address + base_type.offset_of(index)
+        if self.child_is_multidimensional_array_inner_node():
+            child_type = base_type
+        else:
+            child_type = base_type.type
+
+        for index in range(min(base_type.dimensions[len(indexes)], maximum_children)):
+            child_address = address + base_type.offset_of(*(indexes + (index,)))
             variable = epyqlib.cmemoryparser.Variable(
                 name=format.format(index),
-                type=base_type.type,
-                address=child_address
+                type=child_type,
+                address=child_address,
             )
             child_node = VariableNode(variable=variable,
                                       comparison_value=index)
             self.append_child(child_node)
             new_members.append(child_node)
 
-        if base_type.length() > maximum_children:
+        if base_type.dimensions[len(indexes)] > maximum_children:
             if sender is not None:
                 sender.array_truncated(
                     maximum_children, self.fields.name, base_type.length())
@@ -354,17 +402,21 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         self.pull_log_progress = epyqlib.utils.qt.Progress()
 
-        signal = self.nvs.neo.signal_by_path('CCP', 'Connect', 'CommandCounter')
-        self.protocol = ccp.Handler(
-            endianness='little' if signal.little_endian else 'big',
-            tx_id=tx_id,
-            rx_id=rx_id
-        )
-        from twisted.internet import reactor
-        self.transport = epyqlib.twisted.busproxy.BusProxy(
-            protocol=self.protocol,
-            reactor=reactor,
-            bus=self.bus)
+        if self.nvs is not None:
+            signal = self.nvs.neo.signal_by_path('CCP', 'Connect', 'CommandCounter')
+            self.protocol = ccp.Handler(
+                endianness='little' if signal.little_endian else 'big',
+                tx_id=tx_id,
+                rx_id=rx_id
+            )
+            from twisted.internet import reactor
+            self.transport = epyqlib.twisted.busproxy.BusProxy(
+                protocol=self.protocol,
+                reactor=reactor,
+                bus=self.bus)
+        else:
+            self.protocol = None
+            self.transport = None
 
         # TODO: consider using locale?  but maybe not since it's C code not
         #       raw strings
@@ -404,6 +456,7 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
                 return True
 
+    # TODO: CAMPid 0754876134967813496896843168
     @twisted.internet.defer.inlineCallbacks
     def update_from_loaded_binary(self, binary_info):
         names, variables, bits_per_byte = binary_info
@@ -439,6 +492,38 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         self.cache = cache
 
         self.binary_loaded.emit()
+
+    # TODO: CAMPid 0754876134967813496896843168
+    def update_from_loaded_binary_without_threads(self, binary_info):
+        names, variables, bits_per_byte = binary_info
+
+        self.bits_per_byte = bits_per_byte
+        self.names = names
+
+        [self.git_hash] = [v for v in variables if v.name.startswith('dataLogger_gitRev_')]
+        self.git_hash = self.git_hash.name.split('0x', 1)[1]
+        self.git_hash = int(self.git_hash, 16)
+
+        logger.debug('Updating from binary, {} variables'.format(len(variables)))
+
+        root = build_node_tree(
+            variables=variables,
+            array_truncated_slot=self.array_truncated_message
+        )
+
+        logger.debug('Creating cache')
+        cache = self.create_cache(
+            only_checked=False,
+            subscribe=True,
+            root=root
+        )
+        logger.debug('Done creating cache')
+
+        self.beginResetModel()
+        self.root = root
+        self.endResetModel()
+
+        self.cache = cache
 
     def assign_root(self, root):
         self.root = root
