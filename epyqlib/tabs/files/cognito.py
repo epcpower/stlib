@@ -9,6 +9,7 @@ from boto3_type_annotations.cognito_idp import Client as CognitoIdpClient
 from boto3_type_annotations.s3 import ServiceResource as S3Resource
 from epyqlib.tabs.files.files_utils import decode_jwt
 from epyqlib.tabs.files.sync_config import SyncConfig, Vars
+from epyqlib.utils.general import safe_get
 
 logger = logging.getLogger("CognitoHelper")
 
@@ -222,9 +223,14 @@ class CognitoHelper:
 
 if __name__ == '__main__':
     # refresh_token = "..."
-    config = SyncConfig.get_instance()
-    helper = CognitoHelper('beta')
-    helper.authenticate("epc_admin", "Zxv3m_*&y7r")
-    # helper = CognitoHelper('dev')
-    # helper.authenticate("crosscomm_benberry1", "70zo0_Pb")
+    # config = SyncConfig.get_instance()
+
+    import sys
+
+    env = sys.argv[1]
+    username = sys.argv[2]
+    password = sys.argv[3]
+
+    helper = CognitoHelper(env)
+    helper.authenticate(username, password)
     print(helper._id_token)

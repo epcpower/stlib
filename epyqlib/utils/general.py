@@ -409,10 +409,12 @@ def intersect_dicts(a, b):
 
 
 def safe_get(dct: dict, keys) -> Optional[dict]:
+    if type(keys) is not list and type(keys) is not tuple:
+        keys = [keys]
     for key in keys:
         try:
             dct = dct[key]
-        except KeyError:
+        except (KeyError, IndexError):
             return None
 
     return dct
