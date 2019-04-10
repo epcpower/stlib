@@ -12,7 +12,7 @@ from epyqlib.tabs.files.association_cache import AssociationCache
 from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
 from epyqlib.tabs.files.bucket_manager import BucketManager
 from epyqlib.tabs.files.files_manager import FilesManager
-from epyqlib.tabs.files.filesview import Cols, Relationships, get_values
+from epyqlib.tabs.files.filesview import Cols, get_values
 from epyqlib.tabs.files.log_manager import LogManager, PendingLog
 from epyqlib.tabs.files.sync_config import SyncConfig, Vars
 from epyqlib.utils.twisted import errbackhook
@@ -44,11 +44,11 @@ class FilesController:
 
         self.activity_log = ActivityLog()
         self.activity_syncer = ActivitySyncer(self.activity_log, self.api)
-        self.association_cache = AssociationCache.init(self.sync_config.directory)
+        self.association_cache = AssociationCache.init(self.sync_config.cache_dir)
         self.aws_login_manager = AwsLoginManager.get_instance()
         self.bucket_manager = BucketManager()
-        self.cache_manager = FilesManager(self.sync_config.directory)
-        self.log_manager = LogManager.init(self.sync_config.directory)
+        self.cache_manager = FilesManager(self.sync_config.cache_dir)
+        self.log_manager = LogManager.init(self.sync_config.cache_dir)
 
         self._is_offline = self.sync_config.get(Vars.offline_mode) or False
         self._is_connected = False

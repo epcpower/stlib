@@ -4,6 +4,7 @@
 --requirement pre.in
 
 arrow==0.12.1
+appdirs==1.4.3
 attrs==18.2.0
 bitstruct==6.0.0
 boto3==1.9.83

@@ -1,7 +1,9 @@
 import json
 import os
 
+import appdirs
 from epyqlib.tabs.files.files_utils import ensure_dir
+
 
 class Vars:
     auto_sync = "auto_sync"
@@ -20,10 +22,16 @@ class SyncConfig:
     def __init__(self, directory=None, filename='epyq-config.json'):
         self.required_keys = [key for key in Vars.__dict__.keys() if not key.startswith("__")]
 
-        self.directory = directory or os.path.join(os.getcwd(), 'sync')
-        ensure_dir(self.directory)
+        self.config_dir = directory or appdirs.user_config_dir("Epyq", "EPC Power")
+        self.cache_dir = directory or os.path.join(os.getcwd(), 'sync')
 
-        self.filename = os.path.join(self.directory, filename)
+        print(f"{self._tag} Using config dir: {self.config_dir}")
+        print(f"{self._tag} Using cache dir: {self.cache_dir}")
+
+        for dir in (self.config_dir, self.cache_dir):
+            ensure_dir(dir)
+
+        self.filename = os.path.join(self.config_dir, filename)
         self.file_error = False
         if os.path.exists(self.filename):
             self._read_file()

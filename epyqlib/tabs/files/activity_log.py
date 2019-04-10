@@ -73,7 +73,7 @@ class ActivityLog:
     _instance = None
 
     def __init__(self, file_dir=None):
-        file_dir = file_dir or SyncConfig.get_instance().directory
+        file_dir = file_dir or SyncConfig.get_instance().config_dir
 
         self._cache_file = path.join(file_dir, "activity-cache.json")
 
