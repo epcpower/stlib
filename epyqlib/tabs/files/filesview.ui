@@ -412,7 +412,7 @@
      <item row="0" column="0">
       <layout class="QHBoxLayout" name="horizontalLayout_4">
        <item>
-        <widget class="QLabel" name="lbl_not_logged_in">
+        <widget class="QLabel" name="lbl_login_status">
          <property name="text">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600; color:#ff0000;&quot;&gt;Warning: You are not currently logged in to EPC Sync...&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>

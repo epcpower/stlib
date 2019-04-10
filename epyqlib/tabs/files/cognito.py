@@ -173,6 +173,9 @@ class CognitoHelper:
     def get_user_customer(self) -> str:
         return self._decoded_id_token.get("custom:customer")
 
+    def get_username(self) -> str:
+        return self._decoded_id_token.get("cognito:username")
+
     def is_user_epc(self) -> bool:
         return self.get_user_customer() == "epc"
 

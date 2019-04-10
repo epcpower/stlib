@@ -18,6 +18,7 @@ from epyqlib.tabs.files.sync_config import SyncConfig, Vars
 from epyqlib.utils.twisted import errbackhook
 from twisted.internet import reactor
 from twisted.internet.defer import ensureDeferred
+from twisted.internet.error import DNSLookupError
 from twisted.internet.task import deferLater
 from typing import Dict
 
@@ -73,19 +74,8 @@ class FilesController:
         self.view.populate_tree()
         self.view.initialize_ui()
 
-        if self.aws_login_manager.is_logged_in() and not self._is_offline:
-            try:
-                self.aws_login_manager.refresh()
-
-                # Make sure that using the refresh token worked
-                if self.aws_login_manager.is_logged_in():
-                    self.api.set_id_token(self.aws_login_manager.get_id_token())
-                    self.periodically_refresh_token()
-            except EndpointConnectionError as e:
-                print(f"{self._tag} Unable to login to AWS. Setting offline mode to true.")
-                self.set_offline(True)
-
-        self.view.show_logged_out_warning(not self.aws_login_manager.is_logged_in())
+        self.view.show_logged_out_warning()
+        self._ensure_current_token()
 
         self.activity_log.register_listener(lambda event: self.view.add_log_line(LogRenderer.render_event(event)))
         self.activity_log.register_listener(self.activity_syncer.listener)
@@ -93,6 +83,21 @@ class FilesController:
         self.log_manager.add_listener(self._on_new_pending_log)
 
         self._show_pending_logs()
+
+    def _ensure_current_token(self):
+        if self.aws_login_manager.is_logged_in() and not self.aws_login_manager.is_session_valid():
+            try:
+                self.aws_login_manager.refresh()
+
+                # Make sure that using the refresh token worked
+                if self.aws_login_manager.is_logged_in():
+                    self.set_offline(False)
+                    self.api.set_id_token(self.aws_login_manager.get_id_token())
+                    self.periodically_refresh_token()
+                    self.view.show_logged_in_status(True, self.aws_login_manager.get_username())
+            except (EndpointConnectionError, DNSLookupError):
+                print(f"{self._tag} Unable to login to AWS. Setting offline mode to true.")
+                self.set_offline(True)
 
     def device_interface_set(self, device_interface: DeviceInterface):
         self._device_interface = device_interface
@@ -196,6 +201,7 @@ class FilesController:
 
         if self._is_offline:
             print(f"{self._tag} Not syncing missing files because we are currently offline.")
+            return
 
         # TODO: Figure out how to download multiple files at a time. Just trying to wrap in asyncio task fails.
         for hash in missing_hashes:
@@ -317,11 +323,9 @@ class FilesController:
 
             self.view.serial_number.setText(self._serial_number)
 
-        try:
-            await self._sync_pending_logs()
-        except EndpointConnectionError:
-            self.set_offline(True)
 
+        self._ensure_current_token()
+        # TODO: Show message if offline: "Unable to sync. Epyq is offline"
 
         try:
             await self.get_inverter_associations(self._serial_number)
@@ -329,8 +333,12 @@ class FilesController:
             self.view.show_inverter_error("Error: Inverter ID not found.")
             return
 
-        await self._sync_files()
+        try:
+            await self._sync_pending_logs()
+        except EndpointConnectionError:
+            self.set_offline(True)
 
+        await self._sync_files()
         if not self._is_offline:
             await self.api.unsubscribe()
             await self.api.subscribe(self.aws_login_manager._cognito_helper.get_user_customer(), self.file_updated)
@@ -426,14 +434,15 @@ class FilesController:
 
     ## Application events
     async def login_status_changed(self, logged_in: bool):
-        self.view.show_logged_out_warning(not logged_in)
         self.view.btn_sync_now.setDisabled(not logged_in)
 
         if logged_in:
             self.api.set_id_token(self.aws_login_manager.get_id_token())
+            self.view.show_logged_in_status(True, self.aws_login_manager.get_username())
             self.periodically_refresh_token()
             await self.sync_now()
         else:
+            self.view.show_logged_out_warning()
             self.association_cache.clear()
             await self.api.unsubscribe()
 
@@ -520,9 +529,12 @@ class FilesController:
 
     def set_offline(self, is_offline):
         self.activity_syncer.set_offline(is_offline)
+        self._is_offline = is_offline
+
         if is_offline:
-            # TODO: Display offline warning in UI
-            self._is_offline = True
+            self.view.show_logged_in_status(False)
+        else:
+            self.view.show_logged_in_status(True, self.aws_login_manager.get_username())
 
     async def _get_id_for_serial_number(self, serial_number: str):
         if serial_number not in self._inverter_id_lookup and not self._is_offline:

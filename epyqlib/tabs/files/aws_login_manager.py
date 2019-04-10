@@ -51,8 +51,14 @@ class AwsLoginManager():
         self._cognito_helper.log_out()
         self._notify_listeners()
 
+    def get_username(self):
+        return self._cognito_helper.get_username()
+
     def get_id_token(self) -> str:
         return self._cognito_helper._id_token
+
+    def is_session_valid(self) -> bool:
+        return self._cognito_helper.is_session_valid()
 
     def get_valid_id_token(self) -> str:
         if not self._cognito_helper.is_session_valid():
@@ -66,7 +72,6 @@ class AwsLoginManager():
 
     def refresh(self, force=False):
         self._cognito_helper._refresh(force=force)
-
 
     ## Manage Listeners
     def _notify_listeners(self):

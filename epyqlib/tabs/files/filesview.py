@@ -127,7 +127,7 @@ class FilesView(UiBase):
 
         self.root: QGridLayout = self.ui.gridLayout
 
-        self.lbl_not_logged_in: QLabel = self.ui.lbl_not_logged_in
+        self.lbl_login_status: QLabel = self.ui.lbl_login_status
         self.btn_login: QPushButton = self.ui.login
 
         self.lbl_serial_number: QLabel = self.ui.lbl_serial_number
@@ -168,8 +168,7 @@ class FilesView(UiBase):
         self.btn_reset_notes.clicked.connect(self._reset_notes)
 
         # Set initial state
-        self.lbl_not_logged_in.setText("<font color='red'><b>Warning: You are not currently logged in to EPC Sync. "
-                                       "To sync the latest configuration files for this inverter, login here:</b></font>")
+
 
 
     def populate_tree(self):
@@ -461,13 +460,27 @@ class FilesView(UiBase):
         self._show_sync_status_icon(row, col, self.fa_cross, self.color_gray)
 
     ### UI Update methods
-    def show_logged_out_warning(self, enabled):
-        self.lbl_not_logged_in.setHidden(not enabled)
-        self.btn_login.setHidden(not enabled)
+    def show_logged_out_warning(self):
+        error = "Warning: You are not currently logged in to EPC Sync. " + \
+            "To sync the latest configuration files for this inverter, login here:"
+        self.lbl_login_status.setText(f"<font color='red'><b>{error}</b></font>")
+        self._show_login_bar_widgets(False)
 
-        self.lbl_serial_number.setHidden(enabled)
-        self.serial_number.setHidden(enabled)
-        self.inverter_error.setHidden(enabled)
+    def show_logged_in_status(self, connected: bool, username: str = None):
+        status = "connected" if connected else "offline"
+        message = f"Internet status: {status}."
+        if connected:
+            message = f"Logged in as {username}. " + message
+
+        self.lbl_login_status.setText(message)
+        self._show_login_bar_widgets(True)
+
+    def _show_login_bar_widgets(self, enabled: bool):
+        self.btn_login.setHidden(enabled)
+
+        self.lbl_serial_number.setHidden(not enabled)
+        self.serial_number.setHidden(not enabled)
+        self.inverter_error.setHidden(not enabled)
 
     def show_file_details(self, association, readonly_description=False):
         if association is None:
