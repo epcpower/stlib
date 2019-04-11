@@ -151,8 +151,9 @@ class FilesController:
             type = association['file']['type'].lower()
             key = association['id'] + association['file']['id']
             if (key in self.associations):
-                row = self.associations[key].row
+                row: QTreeWidgetItem = self.associations[key].row
                 self.associations[key].association = association # Update the association in case it's changed
+                self.view.ensure_corrent_parent_for_row(row, type)
             else:
                 row = self.view.attach_row_to_parent(type, association['file']['filename'])
                 self.view.show_question_icon(row, Cols.local)
@@ -470,7 +471,6 @@ class FilesController:
         print(f"{self._tag} Saving updated notes for file {file_id}")
         await self.api.set_file_notes(file_id, description, notes)
         self.set_original_notes(description, notes)
-
 
     ## Raw Log Syncing
     async def _sync_pending_logs(self):

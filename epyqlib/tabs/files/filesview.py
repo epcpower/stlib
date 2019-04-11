@@ -222,8 +222,7 @@ class FilesView(UiBase):
         else:
             raise error
 
-
-    def attach_row_to_parent(self, type: str, filename):
+    def get_parent_for_association_type(self, type):
         parents = {
             'firmware': self.section_headers.firmware,
             'log': self.section_headers.raw_logs,
@@ -232,7 +231,16 @@ class FilesView(UiBase):
             'pvms': self.section_headers.pvms
         }
 
-        parent = parents[type]
+        return parents[type]
+
+    def ensure_corrent_parent_for_row(self, row: QTreeWidgetItem, type: str):
+        new_parent = self.get_parent_for_association_type(type)
+        if row.parent() is not new_parent:
+            row.parent().removeChild(row)
+            new_parent.addChild(row)
+
+    def attach_row_to_parent(self, type: str, filename):
+        parent = self.get_parent_for_association_type(type)
         row = QTreeWidgetItem(parent, [filename])
         row.setFont(Cols.local, self.fontawesome)
         row.setFont(Cols.web, self.fontawesome)
