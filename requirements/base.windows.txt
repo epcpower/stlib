@@ -7,7 +7,7 @@
 --extra-index-url http://fstab.net/pypi/simple
 
 -e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec
-appdirs==1.4.3            # via twisted
+appdirs==1.4.3
 arrow==0.12.1
 asn1crypto==0.24.0        # via cryptography
 attrs==18.2.0
