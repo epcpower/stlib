@@ -34,6 +34,7 @@ setuptools.setup(
     },
     install_requires=[
         'arrow',
+        'appdirs',
         'bitstruct',
         'canmatrix',
         'click>=7',
