@@ -7,6 +7,7 @@
 --extra-index-url http://fstab.net/pypi/simple
 
 -e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec
+appdirs==1.4.3
 arrow==0.12.1
 asn1crypto==0.24.0        # via cryptography
 attrs==18.2.0
@@ -29,7 +30,6 @@ gitdb2==2.0.5             # via gitpython
 gitpython==2.1.11
 graham==0.1.10
 hyperlink==18.0.0         # via twisted
-idna==2.8                 # via hyperlink, requests
 idna==2.8                 # via hyperlink, requests, twisted
 incremental==17.5.0       # via treq, twisted
 jmespath==0.9.4           # via boto3, botocore
