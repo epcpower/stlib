@@ -153,7 +153,7 @@ class FilesController:
             if (key in self.associations):
                 row: QTreeWidgetItem = self.associations[key].row
                 self.associations[key].association = association # Update the association in case it's changed
-                self.view.ensure_corrent_parent_for_row(row, type)
+                self.view.ensure_correct_parent_for_row(row, type)
             else:
                 row = self.view.attach_row_to_parent(type, association['file']['filename'])
                 self.view.show_question_icon(row, Cols.local)

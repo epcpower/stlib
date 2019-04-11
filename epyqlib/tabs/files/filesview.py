@@ -233,7 +233,7 @@ class FilesView(UiBase):
 
         return parents[type]
 
-    def ensure_corrent_parent_for_row(self, row: QTreeWidgetItem, type: str):
+    def ensure_correct_parent_for_row(self, row: QTreeWidgetItem, type: str):
         new_parent = self.get_parent_for_association_type(type)
         if row.parent() is not new_parent:
             row.parent().removeChild(row)
