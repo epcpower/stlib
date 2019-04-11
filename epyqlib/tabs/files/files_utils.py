@@ -10,7 +10,7 @@ def ensure_dir(dir_name: str):
         else:
             raise NotADirectoryError(f"Files cache dir {dir_name} already exists but is not a directory")
 
-    os.mkdir(dir_name)
+    os.makedirs(dir_name, exist_ok=True)
 
 
 def decode(s: str) -> str:
