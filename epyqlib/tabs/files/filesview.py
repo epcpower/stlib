@@ -222,7 +222,7 @@ class FilesView(UiBase):
         else:
             raise error
 
-    def get_parent_for_association_type(self, type):
+    def get_parent_for_association_type(self, association_type: str):
         parents = {
             'firmware': self.section_headers.firmware,
             'log': self.section_headers.raw_logs,
@@ -231,7 +231,7 @@ class FilesView(UiBase):
             'pvms': self.section_headers.pvms
         }
 
-        return parents[type]
+        return parents[association_type.lower()]
 
     def ensure_correct_parent_for_row(self, row: QTreeWidgetItem, type: str):
         new_parent = self.get_parent_for_association_type(type)
@@ -239,8 +239,8 @@ class FilesView(UiBase):
             row.parent().removeChild(row)
             new_parent.addChild(row)
 
-    def attach_row_to_parent(self, type: str, filename):
-        parent = self.get_parent_for_association_type(type)
+    def attach_row_to_parent(self, association_type: str, filename):
+        parent = self.get_parent_for_association_type(association_type)
         row = QTreeWidgetItem(parent, [filename])
         row.setFont(Cols.local, self.fontawesome)
         row.setFont(Cols.web, self.fontawesome)
@@ -251,8 +251,7 @@ class FilesView(UiBase):
         return row
 
     def remove_row(self, row: QTreeWidgetItem):
-        self.files_grid.removeItemWidget(row)
-
+        row.parent().removeChild(row)
 
     def render_association_to_row(self, association, row: QTreeWidgetItem):
         uploaded = association['file']['createdAt'][:-1] # Trim trailing "Z"

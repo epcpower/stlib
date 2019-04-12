@@ -148,14 +148,13 @@ class FilesController:
                 print(f"[Files Controller] WARNING: Association {association['id']} returned with null file associated")
                 continue
 
-            type = association['file']['type'].lower()
             key = association['id'] + association['file']['id']
             if (key in self.associations):
-                row: QTreeWidgetItem = self.associations[key].row
                 self.associations[key].association = association # Update the association in case it's changed
-                self.view.ensure_correct_parent_for_row(row, type)
+                row: QTreeWidgetItem = self.associations[key].row
+                self.view.ensure_correct_parent_for_row(row, association['file']['type'])
             else:
-                row = self.view.attach_row_to_parent(type, association['file']['filename'])
+                row = self.view.attach_row_to_parent(association['file']['type'], association['file']['filename'])
                 self.view.show_question_icon(row, Cols.local)
                 self.view.show_check_icon(row, Cols.web)
                 self.associations[association['id'] + association['file']['id']] = AssociationMapping(association, row)
@@ -342,7 +341,7 @@ class FilesController:
         await self._sync_files()
         if not self._is_offline:
             await self.api.unsubscribe()
-            await self.api.subscribe(self.aws_login_manager._cognito_helper.get_user_customer(), self.file_updated)
+            await self.api.subscribe(self.aws_login_manager._cognito_helper.get_user_customer(), self.subscription_fired)
 
     async def sync_all(self):
         self.view.add_log_line("Starting to sync all associations for organization.")
@@ -365,9 +364,15 @@ class FilesController:
 
         self.view.add_log_line("Completed syncing all associations for organization.")
 
-    def file_updated(self, action, payload):
-        if (action == 'associationCreated' or action == 'associationDeleted'):
+    def subscription_fired(self, action, payload):
+        if action == 'associationCreated':
+            ensureDeferred(self.show_new_association(payload['id'], payload['file']['id']))
             print(f"{self._tag} Received association action {action}: {json.dumps(payload)}")
+            return
+        elif action == 'associationDeleted':
+            key = self._get_key_for_file_id(payload['file']['id'])
+            self.view.remove_row(self.associations[key].row)
+            del (self.associations[key])
             return
 
         if 'hash' in payload:
@@ -394,6 +399,18 @@ class FilesController:
 
         self.association_cache.put_associations(self._serial_number, new_associations)
 
+    async def show_new_association(self, association_id: str, file_id: str):
+        association = await self.api.get_association(association_id, file_id)
+
+        row = self.view.attach_row_to_parent(association['file']['type'], association['file']['filename'])
+        self.view.show_question_icon(row, Cols.local)
+        self.view.show_check_icon(row, Cols.web)
+        self.associations[association['id'] + association['file']['id']] = AssociationMapping(association, row)
+        self.view.render_association_to_row(association, row)
+        await self.sync_file(association['file']['hash'])
+        # Get file info - Get full association information, not the file
+        # Add to association store
+        # Render new row
 
     def file_item_clicked(self, item: QTreeWidgetItem, column: int):
         if (item in get_values(self.view.section_headers)):

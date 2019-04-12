@@ -107,6 +107,24 @@ class API:
             }
         """
 
+    _get_association_str = _frag_associations_field + \
+            """
+                query ($id: ID!, $fileId: ID!) {
+                    getAssociation(id: $id, fileId: $fileId) {
+                       ...associationFields
+                    }
+                }
+            """
+
+    def _get_association_query(self, association_id: str, file_id: str):
+        return {
+            "query": self._get_association_str,
+            "variables": {
+                "id": association_id,
+                "fileId": file_id
+            }
+        }
+
     _get_associations_str = _frag_associations_field + \
             """
                 query ($serialNumber: String) {
@@ -330,6 +348,10 @@ class API:
     async def get_inverter_by_serial(self, serial_number: str):
         response = await self._make_request(self._get_inverter_by_sn_query(serial_number))
         return response['data']['getInverterBySN']
+
+    async def get_association(self, association_id: str, file_id: str):
+        response = await self._make_request(self._get_association_query(association_id, file_id))
+        return response['data']['getAssociation']
 
     async def get_associations(self, serial_number: str):
         """
