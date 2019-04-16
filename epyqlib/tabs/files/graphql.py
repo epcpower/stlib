@@ -240,6 +240,7 @@ class API:
         Log = "Log"
         Other = "Other"
         Parameter = "Parameter"
+        PMVS = "PMVS"
 
 
     def _get_create_file_mutation(self, type: FileType, filename: str, hash: str, notes: str):

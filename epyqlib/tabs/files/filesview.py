@@ -29,7 +29,7 @@ Ui, UiBase = PyQt5.uic.loadUiType(
 
 class _Sections:
     params: QTreeWidgetItem
-    pvms: QTreeWidgetItem
+    pmvs: QTreeWidgetItem
     firmware: QTreeWidgetItem
     raw_logs: QTreeWidgetItem
     other: QTreeWidgetItem
@@ -188,7 +188,7 @@ class FilesView(UiBase):
             return val
 
         self.section_headers.params = make_entry("Parameter Files")
-        self.section_headers.pvms = make_entry("Value Sets")
+        self.section_headers.pmvs = make_entry("Value Sets")
         self.section_headers.firmware = make_entry("Firmware")
         self.section_headers.raw_logs = make_entry("Fault Logs")
         self.section_headers.other = make_entry("Other files")
@@ -228,7 +228,7 @@ class FilesView(UiBase):
             'log': self.section_headers.raw_logs,
             'other': self.section_headers.other,
             'parameter': self.section_headers.params,
-            'pvms': self.section_headers.pvms
+            'pmvs': self.section_headers.pmvs
         }
 
         return parents[association_type.lower()]
