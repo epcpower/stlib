@@ -9,7 +9,7 @@ from twisted.internet import reactor
 from twisted.internet.defer import ensureDeferred
 from twisted.python.failure import Failure
 from twisted.web.iweb import IResponse
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Coroutine
 
 
 class GraphQLException(Exception):
@@ -409,7 +409,7 @@ class API:
         return deferred
 
 
-    async def subscribe(self, customer_id: str, message_handler: Callable[[str, dict], None], close_handler: Callable[[], None]):
+    async def subscribe(self, customer_id: str, on_message: Callable[[str, dict], Coroutine], on_close: Callable[[], Coroutine]):
         print(f"{self._tag} Subscribing to events for public events and events for context {customer_id}")
 
         ### WARNING: Enabling too many of these will leads to those that share a common wss url to be closed prematurely.
@@ -436,7 +436,7 @@ class API:
         }
 
         response = await self._make_request(query)
-        self.ws_handler.connect(response, message_handler, close_handler)
+        self.ws_handler.connect(response, on_message, on_close)
 
     def is_subscribed(self):
         return self.ws_handler.is_subscribed()

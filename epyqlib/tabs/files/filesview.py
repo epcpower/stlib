@@ -111,7 +111,8 @@ class FilesView(UiBase):
         self.controller.device_interface_set(device_interface)
 
     def tab_selected(self):
-        ensureDeferred(self.controller.tab_selected())
+        ensureDeferred(self.controller.tab_selected()) \
+            .addErrback(open_error_dialog)
 
     def on_bus_status_changed(self, online: bool, transmit: bool):
         ensureDeferred(self.controller.on_bus_status_changed(online, transmit))\
@@ -147,6 +148,7 @@ class FilesView(UiBase):
         self.btn_save_notes: QPushButton = self.ui.save_notes
         self.btn_reset_notes: QPushButton = self.ui.reset_notes
 
+
         self.lbl_last_sync: QLabel = self.ui.last_sync
         self.btn_sync_now: QPushButton = self.ui.sync_now
         self.btn_sync_all: QPushButton = self.ui.sync_all
@@ -166,6 +168,13 @@ class FilesView(UiBase):
         self.description.textChanged.connect(self._notes_changed)
         self.btn_save_notes.clicked.connect(self._save_notes_clicked)
         self.btn_reset_notes.clicked.connect(self._reset_notes)
+
+
+        # Debug button
+        self.btn_debug: QPushButton = self.ui.btn_debug
+        self.btn_debug.setVisible(False)
+        self.btn_debug.clicked.connect(self._debug_clicked)
+
 
         # Set initial state
 
@@ -314,6 +323,10 @@ class FilesView(UiBase):
         ensureDeferred(self.controller._read_info_from_inverter()) \
             .addCallback(lambda _: ensureDeferred(self.controller.sync_now())) \
             .addErrback(open_error_dialog)
+
+    def _debug_clicked(self):
+        sync_def = ensureDeferred(self.controller.debug())
+        sync_def.addErrback(open_error_dialog)
 
     def _sync_now_clicked(self):
         sync_def = ensureDeferred(self.controller.sync_now())

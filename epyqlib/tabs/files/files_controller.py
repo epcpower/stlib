@@ -17,7 +17,6 @@ from epyqlib.tabs.files.log_manager import LogManager, PendingLog
 from epyqlib.tabs.files.sync_config import SyncConfig, Vars
 from epyqlib.utils.twisted import errbackhook
 from twisted.internet import reactor
-from twisted.internet.defer import ensureDeferred
 from twisted.internet.error import DNSLookupError
 from twisted.internet.task import deferLater
 from typing import Dict
@@ -260,8 +259,7 @@ class FilesController:
         self._show_pending_logs()
 
         if self.aws_login_manager.is_logged_in() and self.sync_config.get(Vars.auto_sync):
-            sync_def = ensureDeferred(self.sync_now())
-            sync_def.addErrback(errbackhook)
+            await self.sync_now()
 
 
     async def on_bus_status_changed(self, online: bool, transmit: bool):
@@ -360,9 +358,9 @@ class FilesController:
 
         self.view.add_log_line("Completed syncing all associations for organization.")
 
-    def subscription_fired(self, action, payload):
+    async def subscription_fired(self, action, payload):
         if action == 'associationCreated':
-            ensureDeferred(self.show_new_association(payload['id'], payload['file']['id']))
+            await self.show_new_association(payload['id'], payload['file']['id'])
             print(f"{self._tag} Received association action {action}: {json.dumps(payload)}")
             return
         elif action == 'associationDeleted':
@@ -391,10 +389,14 @@ class FilesController:
 
         self.association_cache.put_associations(self._serial_number, new_associations)
 
-    def subscription_closed(self):
+    async def subscription_closed(self):
+        # self.api.ws_handler.set_on_socket_close(None)  #Stop us from getting further events as the rest of the clients disconnect
+        # self.api.ws_handler.disconnect()
+
         # TODO: Detect if we are offline and do not retry failed subscribes
+        print(f'{self._tag} Received subscription closed event.')
         if not self._is_offline:
-            self.api.subscribe(self.aws_login_manager.get_user_customer(), self.subscription_fired, self.subscription_closed)
+            await self.api.subscribe(self.aws_login_manager.get_user_customer(), self.subscription_fired, self.subscription_closed)
 
     async def show_new_association(self, association_id: str, file_id: str):
         association = await self.api.get_association(association_id, file_id)
@@ -405,9 +407,6 @@ class FilesController:
         self.associations[association['id'] + association['file']['id']] = AssociationMapping(association, row)
         self.view.render_association_to_row(association, row)
         await self.sync_file(association['file']['hash'])
-        # Get file info - Get full association information, not the file
-        # Add to association store
-        # Render new row
 
     def file_item_clicked(self, item: QTreeWidgetItem, column: int):
         if (item in get_values(self.view.section_headers)):
@@ -556,6 +555,10 @@ class FilesController:
             self._inverter_id_lookup[serial_number] = inverter['id']
 
         return self._inverter_id_lookup[serial_number]
+
+    async def debug(self):
+        await self.api.unsubscribe()
+        # await self.subscription_closed()
 
 
 class LogRenderer():

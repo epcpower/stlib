@@ -1,26 +1,34 @@
+import inspect
 import json
 from urllib.parse import urlparse
 
 import paho.mqtt.client as mqtt
+from twisted.internet.defer import ensureDeferred
 from twisted.internet.task import LoopingCall
-from typing import Callable
+from typing import Callable, Coroutine, List, Dict
+
+SocketCloseHandler = Callable[[], Coroutine]
+OnMessageHandler = Callable[[str, Dict], Coroutine]
 
 
 class WebSocketHandler():
     def __init__(self):
-        self._callback: Callable[[str, dict], None] = None
+        self._on_message_handler: OnMessageHandler = None
+        self._on_close_handler: SocketCloseHandler = None
         self.loopingCall: LoopingCall = None
-        self.clients: list[mqtt.Client] = []
+        self.clients: List[mqtt.Client] = []
+        self.disconnecting = False
 
-    def connect(self, response: dict, on_message: Callable[[str, dict], None], on_close: Callable[[], None]) -> None:
+    def connect(self, response: Dict, on_message: Callable[[str, Dict], Coroutine], on_close: SocketCloseHandler) -> None:
         """
         Makes WebSocket connection and starts looping
         :param response JSON body response from a subscription call to AppSync
-        :param on_message: Callable that is called on every message. The first param is the action (created/updated/deleted)
+        :param on_message: Coroutine that is called on every message. The first param is the action (created/updated/deleted)
         and the second is the file json object as a dict.
+        :param on_close: Coroutine that is called when any subscribed socket is closed.
         """
-        self._callback = on_message
-        self._on_close = on_close
+        self._on_message_handler = on_message
+        self._on_close_handler = on_close
 
         new_subscriptions = response['extensions']['subscription']['newSubscriptions']
         mqtt_connections = response['extensions']['subscription']['mqttConnections']
@@ -75,16 +83,16 @@ class WebSocketHandler():
             client.loop_misc()
 
     def disconnect(self):
-        self.loopingCall.stop()
+        if self.loopingCall.running:
+            self.loopingCall.stop()
 
         for client in self.clients:
             client.disconnect()
-        self.clients = []
 
     def is_subscribed(self):
         return len(self.clients) > 0
 
-    def _on_connect(self, client: mqtt.Client, userdata: dict, flags, rc):
+    def _on_connect(self, client: mqtt.Client, userdata: Dict, flags, rc):
         topics: set[str] = userdata['topics']
         sub_list = list(map(lambda topic: (topic, 1), topics))
         print("[Graphql Websocket] On connect. Subscribing to topics: " + json.dumps(sub_list))
@@ -103,19 +111,32 @@ class WebSocketHandler():
             print(e)
             return
 
-
         # We *should* only get one payload, but just in case...
         try:
             for action, payload in payload_json['data'].items():
-                self._callback(action, payload)
+                result = self._on_message_handler(action, payload)
+                if inspect.iscoroutine(result):
+                    ensureDeferred(result)
         except Exception as e:
             print(f"[Graphql Websocket] Error iterating over payload: " + json.dumps(payload_json))
             print(e)
 
-    def _on_socket_close(self, client: mqtt.Client, userdata: dict, socket):
+    # def set_on_socket_close(self, on_close: SocketCloseHandler):
+    #     self._on_close_handler = on_close
+
+    def _on_socket_close(self, client: mqtt.Client, userdata: Dict, socket):
         print(f"Socket closed. Connection to topics ${userdata.get('topics')} closed.")
         # todo?: Give the callback client URL and topics if it needs it.
-        self._on_close()
+        self.clients.remove(client)
+
+        # Make sure this only fires once no matter how many clients are open
+        if self.disconnecting is False:
+            self.disconnecting = True
+            self.disconnect()
+            self.disconnecting = False
+            result = self._on_close_handler()
+            if inspect.iscoroutine(result):
+                ensureDeferred(result)
 
 # Example of the format of `response`:
 # {
