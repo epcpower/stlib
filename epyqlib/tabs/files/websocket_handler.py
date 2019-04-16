@@ -12,7 +12,7 @@ class WebSocketHandler():
         self.loopingCall: LoopingCall = None
         self.clients: list[mqtt.Client] = []
 
-    def connect(self, response: dict, on_message: Callable[[str, dict], None]) -> None:
+    def connect(self, response: dict, on_message: Callable[[str, dict], None], on_close: Callable[[], None]) -> None:
         """
         Makes WebSocket connection and starts looping
         :param response JSON body response from a subscription call to AppSync
@@ -20,6 +20,7 @@ class WebSocketHandler():
         and the second is the file json object as a dict.
         """
         self._callback = on_message
+        self._on_close = on_close
 
         new_subscriptions = response['extensions']['subscription']['newSubscriptions']
         mqtt_connections = response['extensions']['subscription']['mqttConnections']
@@ -112,7 +113,9 @@ class WebSocketHandler():
             print(e)
 
     def _on_socket_close(self, client: mqtt.Client, userdata: dict, socket):
-        print(f"Connection to topic ${userdata.get('topic')} closed.")
+        print(f"Socket closed. Connection to topics ${userdata.get('topics')} closed.")
+        # todo?: Give the callback client URL and topics if it needs it.
+        self._on_close()
 
 # Example of the format of `response`:
 # {

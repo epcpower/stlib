@@ -337,7 +337,7 @@ class FilesController:
         await self._sync_files()
         if not self._is_offline:
             await self.api.unsubscribe()
-            await self.api.subscribe(self.aws_login_manager._cognito_helper.get_user_customer(), self.subscription_fired)
+            await self.api.subscribe(self.aws_login_manager.get_user_customer(), self.subscription_fired, self.subscription_closed)
 
     async def sync_all(self):
         self.view.add_log_line("Starting to sync all associations for organization.")
@@ -390,6 +390,11 @@ class FilesController:
         new_associations = [value.association for key, value in self.associations.items()]
 
         self.association_cache.put_associations(self._serial_number, new_associations)
+
+    def subscription_closed(self):
+        # TODO: Detect if we are offline and do not retry failed subscribes
+        if not self._is_offline:
+            self.api.subscribe(self.aws_login_manager.get_user_customer(), self.subscription_fired, self.subscription_closed)
 
     async def show_new_association(self, association_id: str, file_id: str):
         association = await self.api.get_association(association_id, file_id)

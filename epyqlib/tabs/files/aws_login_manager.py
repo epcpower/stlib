@@ -51,14 +51,8 @@ class AwsLoginManager():
         self._cognito_helper.log_out()
         self._notify_listeners()
 
-    def get_username(self):
-        return self._cognito_helper.get_username()
-
     def get_id_token(self) -> str:
         return self._cognito_helper._id_token
-
-    def is_session_valid(self) -> bool:
-        return self._cognito_helper.is_session_valid()
 
     def get_valid_id_token(self) -> str:
         if not self._cognito_helper.is_session_valid():
@@ -66,9 +60,17 @@ class AwsLoginManager():
 
         return self.get_id_token()
 
-    ## Get Resources
     def get_s3_resource(self) -> S3Resource:
         return self._cognito_helper.get_s3_resource()
+
+    def get_username(self):
+        return self._cognito_helper.get_username()
+
+    def get_user_customer(self):
+        return self._cognito_helper.get_user_customer()
+
+    def is_session_valid(self) -> bool:
+        return self._cognito_helper.is_session_valid()
 
     def refresh(self, force=False):
         self._cognito_helper._refresh(force=force)
