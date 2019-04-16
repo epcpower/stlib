@@ -214,10 +214,6 @@ class FilesController:
         for mapping in self._get_mapping_for_hash(hash):
             self.view.show_check_icon(mapping.row, Cols.local)
 
-    def _get_key_for_hash(self, hash: str):
-        value: AssociationMapping
-        return next(key for key, value in self.associations.items() if value.association['file']['hash'] == hash)
-
     def _get_key_for_file_id(self, file_id: str):
         value: AssociationMapping
         return next(key for key, value in self.associations.items() if value.association['file']['id'] == file_id)
@@ -375,14 +371,11 @@ class FilesController:
             del (self.associations[key])
             return
 
-        if 'hash' in payload:
-            key = self._get_key_for_hash(payload['hash'])
-        elif 'id' in payload:
-            key = self._get_key_for_file_id(payload['id'])
-        else:
+        if 'id' not in payload:
             raise Exception(f"ERROR: Unable to handle file subscription message."
-                  f"Payload doesn't contain file id or hash.\n{json.dumps(payload, indent=2)}")
+                  f"Payload doesn't contain file id.\n{json.dumps(payload, indent=2)}")
 
+        key = self._get_key_for_file_id(payload['id'])
 
         if (action == 'fileUpdated'):
             map: AssociationMapping = self.associations[key]
@@ -392,7 +385,6 @@ class FilesController:
         if (action == 'fileDeleted'):
             self.view.remove_row(self.associations[key].row)
             del(self.associations[key])
-
 
         value: AssociationMapping
         new_associations = [value.association for key, value in self.associations.items()]
