@@ -302,6 +302,8 @@ class Device:
         if tabs is None:
             tabs = Tabs.defaults()
 
+        self.on_offline_bus = False
+
         self.node_id = node_id
 
         self.elements = Elements if elements == None else elements
@@ -1305,6 +1307,8 @@ class DeviceInterface:
     def get_connected_status(self) -> TransmitStatus:
         return DeviceInterface.TransmitStatus(connected=self.device.bus_online, transmitting=self.device.bus_tx)
 
+    def on_offline_bus(self):
+        return self.device.on_offline_bus
 
 
 

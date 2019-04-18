@@ -235,6 +235,7 @@ class DeviceTreeView(QtWidgets.QWidget):
             device = load_device(parent=self)
 
         if device is not None:
+            device.on_offline_bus = bus.fields.name == 'Offline'
             device = epyqlib.devicetree.Device(device=device)
 
             self.model.add_device(bus, device)
