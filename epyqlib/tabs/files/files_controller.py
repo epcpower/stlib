@@ -335,12 +335,22 @@ class FilesController:
             self.view.serial_number.setText(self._serial_number)
 
         self._ensure_current_token()
-        # TODO: Show message if offline: "Unable to sync. Epyq is offline"
+
+        ## Verify that we actually are offline
+        if self._is_offline:
+            try:
+                await self.api.test_connection()
+                self.set_offline(False)
+            except Exception:
+                pass
 
         try:
             await self.get_inverter_associations(self._serial_number)
         except InverterNotFoundException:
             self.view.show_inverter_error("Error: Inverter ID not found.")
+            return
+        except DNSLookupError:
+            self.set_offline(True)
             return
 
         try:

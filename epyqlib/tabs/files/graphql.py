@@ -393,6 +393,9 @@ class API:
         response = await self._make_request(self._get_create_association_mutation(inverterId, fileId))
         return response['data']['createAssociation']
 
+    async def test_connection(self):
+        response = await self._make_request({"query": "{ __typename}"})
+
     async def set_file_notes(self, file_id: str, description: str, notes: str):
         response = await self._make_request(self._get_update_file_notes_mutation(file_id, description, notes))
         return response['data']['updateFile']
@@ -409,7 +412,7 @@ class API:
         return deferred
 
 
-    async def subscribe(self, customer_id: str, on_message: Callable[[str, dict], Coroutine], on_close: Callable[[], Coroutine]):
+    async def subscribe(self, customer_id: str, on_message: Callable[[str, dict], Coroutine], on_close: Callable[[], Coroutine] = None):
         print(f"{self._tag} Subscribing to events for public events and events for context {customer_id}")
 
         ### WARNING: Enabling too many of these will leads to those that share a common wss url to be closed prematurely.
