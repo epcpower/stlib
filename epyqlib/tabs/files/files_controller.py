@@ -101,7 +101,12 @@ class FilesController:
     def device_interface_set(self, device_interface: DeviceInterface):
         self._device_interface = device_interface
 
-    async def _read_info_from_inverter(self, online: bool = None, transmit: bool = None):
+
+    async def _read_info_from_inverter(self):
+        """
+        Read serial number and build hash from the inverter, and query the API for the inverterId for
+        the given serial number
+        """
         # Hasn't been set yet
         if self._device_interface is None:
             return
@@ -111,7 +116,7 @@ class FilesController:
             return
 
         bus_status: DeviceInterface.TransmitStatus = self._device_interface.get_connected_status()
-        # Appears you can never be "connected" in offline mode?
+        # Appears you can never be "connected" to the offline inverter?
         if not (bus_status.connected and bus_status.transmitting):
             return
 
@@ -121,8 +126,6 @@ class FilesController:
             self._build_hash = await self._device_interface.get_build_hash()
 
             self.log_manager.build_id = self._build_hash
-
-
 
         await self._get_id_for_serial_number(self._serial_number)
 
@@ -255,6 +258,7 @@ class FilesController:
         self.cache_manager.verify_cache()
 
         self.view.serial_number.setText(self._serial_number)
+        self.view.disable_serial_number_input(not self._device_interface.on_offline_bus())
 
         self._show_pending_logs()
 
@@ -262,8 +266,13 @@ class FilesController:
             await self.sync_now()
 
 
-    async def on_bus_status_changed(self, online: bool, transmit: bool):
-        await self._read_info_from_inverter(online, transmit)
+    async def on_bus_status_changed(self):
+        # Note: this gets called at least once for the offline inverter before on_offline_bus is
+        # set to true. So do not trust that exclusively. (BSB 18Apr19)
+        if self._device_interface is not None:
+            bus_status: DeviceInterface.TransmitStatus = self._device_interface.get_connected_status()
+            if bus_status.connected and bus_status.transmitting:
+                await self.sync_now()
 
     ## UI Events
     async def login_clicked(self):
@@ -306,17 +315,24 @@ class FilesController:
     async def sync_now(self):
         self.view.show_inverter_error(None)
 
-        # If InverterId is not set and we're connected, get inverter serial #
         if self._serial_number is None:
-            await self._read_info_from_inverter()
+            if self._device_interface.on_offline_bus():
+                return
+
 
             if not self._device_interface.get_connected_status().connected:
                 self.view.show_inverter_error('Bus is disconnected. Unable to get Inverter Serial Number')
                 return
-            self._serial_number = await self._device_interface.get_serial_number()
+
+
+            # If InverterId is not set and we're connected, get inverter serial #
+            await self._read_info_from_inverter()
+
+            if self._serial_number is None:
+                # If we still can't get it, bail out
+                return
 
             self.view.serial_number.setText(self._serial_number)
-
 
         self._ensure_current_token()
         # TODO: Show message if offline: "Unable to sync. Epyq is offline"
@@ -335,7 +351,7 @@ class FilesController:
         await self._sync_files()
         if not self._is_offline:
             await self.api.unsubscribe()
-            await self.api.subscribe(self.aws_login_manager.get_user_customer(), self.subscription_fired, self.subscription_closed)
+            await self.api.subscribe(self.aws_login_manager.get_user_customer(), self.subscription_fired)
 
     async def sync_all(self):
         self.view.add_log_line("Starting to sync all associations for organization.")
@@ -388,15 +404,6 @@ class FilesController:
         new_associations = [value.association for key, value in self.associations.items()]
 
         self.association_cache.put_associations(self._serial_number, new_associations)
-
-    async def subscription_closed(self):
-        # self.api.ws_handler.set_on_socket_close(None)  #Stop us from getting further events as the rest of the clients disconnect
-        # self.api.ws_handler.disconnect()
-
-        # TODO: Detect if we are offline and do not retry failed subscribes
-        print(f'{self._tag} Received subscription closed event.')
-        if not self._is_offline:
-            await self.api.subscribe(self.aws_login_manager.get_user_customer(), self.subscription_fired, self.subscription_closed)
 
     async def show_new_association(self, association_id: str, file_id: str):
         association = await self.api.get_association(association_id, file_id)

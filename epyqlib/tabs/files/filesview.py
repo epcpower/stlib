@@ -114,8 +114,8 @@ class FilesView(UiBase):
         ensureDeferred(self.controller.tab_selected()) \
             .addErrback(open_error_dialog)
 
-    def on_bus_status_changed(self, online: bool, transmit: bool):
-        ensureDeferred(self.controller.on_bus_status_changed(online, transmit))\
+    def on_bus_status_changed(self):
+        ensureDeferred(self.controller.on_bus_status_changed()) \
             .addErrback(open_error_dialog)
 
     ### Setup methods
@@ -212,6 +212,8 @@ class FilesView(UiBase):
         self.serial_number.setReadOnly(False)  #TODO: Link to whether or not they have admin access
         self.show_inverter_error(None)
 
+    def disable_serial_number_input(self, disable: bool):
+        self.serial_number.setReadOnly(disable)
 
     def _remove_all_children(self, parent: QTreeWidgetItem):
         while parent.childCount() > 0:
@@ -320,8 +322,7 @@ class FilesView(UiBase):
     ### Action
     def _serial_number_entered(self):
         self.controller._serial_number = self.serial_number.text()
-        ensureDeferred(self.controller._read_info_from_inverter()) \
-            .addCallback(lambda _: ensureDeferred(self.controller.sync_now())) \
+        ensureDeferred(self.controller.sync_now()) \
             .addErrback(open_error_dialog)
 
     def _debug_clicked(self):

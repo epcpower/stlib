@@ -19,7 +19,9 @@ class WebSocketHandler():
         self.clients: List[mqtt.Client] = []
         self.disconnecting = False
 
-    def connect(self, response: Dict, on_message: Callable[[str, Dict], Coroutine], on_close: SocketCloseHandler) -> None:
+        self.resubscribe = False
+
+    def connect(self, response: Dict, on_message: Callable[[str, Dict], Coroutine], on_close: SocketCloseHandler = None) -> None:
         """
         Makes WebSocket connection and starts looping
         :param response JSON body response from a subscription call to AppSync
@@ -46,10 +48,18 @@ class WebSocketHandler():
 
             new_connections[mqtt_connection['url']]['topics'].add(topic)
 
+        self._mqtt_connections = new_connections
+        self._do_connect()
 
-        for new_connection in new_connections.values():
-            client_id = new_connection['connection']['client']
-            url = new_connection['connection']['url']
+        self.resubscribe = True
+
+        self.loopingCall: LoopingCall = LoopingCall(self.loop)
+        self.loopingCall.start(1)
+
+    def _do_connect(self):
+        for connection in self._mqtt_connections.values():
+            client_id = connection['connection']['client']
+            url = connection['connection']['url']
 
             urlparts = urlparse(url)
 
@@ -64,17 +74,23 @@ class WebSocketHandler():
             client.ws_set_options(path="{}?{}".format(urlparts.path, urlparts.query), headers=headers)
             client.tls_set()
 
-            client.user_data_set({'topics': new_connection['topics']})
+            client.user_data_set({'topics': connection['topics']})
 
             client.connect(urlparts.netloc, port=443)
             self.clients.append(client)
 
-        self.loopingCall: LoopingCall = LoopingCall(self.loop)
-        self.loopingCall.start(1)
 
     def loop(self):
         if not self.is_subscribed():
-            return
+            # If we shouldn't resub, stop looping
+            if not self.resubscribe:
+                self.loopingCall.stop()
+                return
+
+            # Otherwise, re-sub
+            self._do_connect()
+
+
 
         # print("Looping")
         for client in self.clients:
@@ -83,9 +99,6 @@ class WebSocketHandler():
             client.loop_misc()
 
     def disconnect(self):
-        if self.loopingCall.running:
-            self.loopingCall.stop()
-
         for client in self.clients:
             client.disconnect()
 
@@ -95,7 +108,6 @@ class WebSocketHandler():
     def _on_connect(self, client: mqtt.Client, userdata: Dict, flags, rc):
         topics: set[str] = userdata['topics']
         sub_list = list(map(lambda topic: (topic, 1), topics))
-        print("[Graphql Websocket] On connect. Subscribing to topics: " + json.dumps(sub_list))
         client.subscribe(sub_list)
 
     def _on_log(self, client, userdata, level, buf):
@@ -121,12 +133,8 @@ class WebSocketHandler():
             print(f"[Graphql Websocket] Error iterating over payload: " + json.dumps(payload_json))
             print(e)
 
-    # def set_on_socket_close(self, on_close: SocketCloseHandler):
-    #     self._on_close_handler = on_close
-
     def _on_socket_close(self, client: mqtt.Client, userdata: Dict, socket):
         print(f"Socket closed. Connection to topics ${userdata.get('topics')} closed.")
-        # todo?: Give the callback client URL and topics if it needs it.
         self.clients.remove(client)
 
         # Make sure this only fires once no matter how many clients are open
@@ -134,9 +142,13 @@ class WebSocketHandler():
             self.disconnecting = True
             self.disconnect()
             self.disconnecting = False
-            result = self._on_close_handler()
-            if inspect.iscoroutine(result):
-                ensureDeferred(result)
+
+
+            # Make sure the on_close handler only gets run once
+            if self._on_close_handler:
+                result = self._on_close_handler()
+                if inspect.iscoroutine(result):
+                    ensureDeferred(result)
 
 # Example of the format of `response`:
 # {

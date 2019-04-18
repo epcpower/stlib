@@ -419,7 +419,7 @@ class API:
                     orgFileUpdated: fileUpdated(owner: $customerId) { id }
                     orgFileDeleted: fileDeleted(owner: $customerId) { id }
                     
-                    publicFileCreated: fileCreated(owner: "public") { id }
+                    # publicFileCreated: fileCreated(owner: "public") { id }
                     publicFileUpdated: fileUpdated(owner: "public") { id }
                     publicFileDeleted: fileDeleted(owner: "public") { id }
                     
@@ -443,6 +443,7 @@ class API:
 
     async def unsubscribe(self):
         if self.ws_handler.is_subscribed():
+            self.ws_handler.resubscribe = False
             self.ws_handler.disconnect()
 
     def set_id_token(self, id_token: str):
