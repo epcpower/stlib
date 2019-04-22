@@ -13,6 +13,7 @@ OnMessageHandler = Callable[[str, Dict], Coroutine]
 
 class WebSocketHandler():
     def __init__(self):
+        self._tag = '[Graphql Websocket]'
         self._on_message_handler: OnMessageHandler = None
         self._on_close_handler: SocketCloseHandler = None
         self.loopingCall: LoopingCall = None
@@ -81,24 +82,25 @@ class WebSocketHandler():
 
 
     def loop(self):
-        if not self.is_subscribed():
-            # If we shouldn't resub, stop looping
-            if not self.resubscribe:
-                self.loopingCall.stop()
-                return
+        # if not self.is_subscribed():
+        #     # If we shouldn't resub, stop looping
+        #     if not self.resubscribe:
+        #         self.loopingCall.stop()
+        #         return
+        #
+        #     # Otherwise, re-sub
+        #     self._do_connect()
 
-            # Otherwise, re-sub
-            self._do_connect()
+        if len(self.clients) == 0:
+            self.loopingCall.stop()
 
-
-
-        # print("Looping")
         for client in self.clients:
             client.loop_read()
             client.loop_write()
             client.loop_misc()
 
     def disconnect(self):
+        self.resubscribe = False
         for client in self.clients:
             client.disconnect()
 
@@ -111,15 +113,15 @@ class WebSocketHandler():
         client.subscribe(sub_list)
 
     def _on_log(self, client, userdata, level, buf):
-        print(f"[Graphql Websocket]  Log {level} {buf}")
+        print(f"{self._tag}  Log {level} {buf}")
 
     def _on_message(self, client, userdata, msg: mqtt.MQTTMessage):
         try:
             payload = msg.payload.decode('ascii')
             payload_json = json.loads(payload)
-            print(f"[Graphql Websocket] Message received: {payload}")
+            print(f"{self._tag} Message received: {payload}")
         except Exception as e:
-            print(f"[Graphql Websocket] Error converting payload to JSON: " + msg.payload.decode('ascii'))
+            print(f"{self._tag} Error converting payload to JSON: " + msg.payload.decode('ascii'))
             print(e)
             return
 
@@ -130,25 +132,43 @@ class WebSocketHandler():
                 if inspect.iscoroutine(result):
                     ensureDeferred(result)
         except Exception as e:
-            print(f"[Graphql Websocket] Error iterating over payload: " + json.dumps(payload_json))
+            print(f"{self._tag} Error iterating over payload: " + json.dumps(payload_json))
             print(e)
 
     def _on_socket_close(self, client: mqtt.Client, userdata: Dict, socket):
-        print(f"Socket closed. Connection to topics ${userdata.get('topics')} closed.")
+        if self.resubscribe:
+            status = client.reconnect()
+            if (status == 0):
+                return
+            else:
+                print(f'{self._tag} Error reconnecting to websocket: {self.error_lookup[status]}. Aborting reconnect.')
+
         self.clients.remove(client)
+        # print(f"Socket closed. Connection to topics ${userdata.get('topics')} closed.")
+        # self.clients.remove(client)
+        #
+        # # Make sure this only fires once no matter how many clients are open
+        # if self.disconnecting is False:
+        #     self.disconnecting = True
+        #     self.disconnect()
+        #     self.disconnecting = False
+        #
+        #
+        #     # Make sure the on_close handler only gets run once
+        #     if self._on_close_handler:
+        #         result = self._on_close_handler()
+        #         if inspect.iscoroutine(result):
+        #             ensureDeferred(result)
 
-        # Make sure this only fires once no matter how many clients are open
-        if self.disconnecting is False:
-            self.disconnecting = True
-            self.disconnect()
-            self.disconnecting = False
-
-
-            # Make sure the on_close handler only gets run once
-            if self._on_close_handler:
-                result = self._on_close_handler()
-                if inspect.iscoroutine(result):
-                    ensureDeferred(result)
+    # From https://pypi.org/project/paho-mqtt/#on-connect
+    error_lookup = {
+        0: "Connection successful",
+        1: "Connection refused - incorrect protocol version",
+        2: 'Connection refused - invalid client',
+        3: 'Connection refused - server unavailable',
+        4: 'Connection refused - bad username or password',
+        5: 'Connection refused - not authorised',
+    }
 
 # Example of the format of `response`:
 # {

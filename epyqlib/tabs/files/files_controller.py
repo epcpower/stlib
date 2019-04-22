@@ -574,8 +574,7 @@ class FilesController:
         return self._inverter_id_lookup[serial_number]
 
     async def debug(self):
-        await self.api.unsubscribe()
-        # await self.subscription_closed()
+        self.api.ws_handler.clients[0].disconnect()
 
 
 class LogRenderer():
