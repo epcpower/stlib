@@ -89,14 +89,20 @@ class FilesController:
                 self.aws_login_manager.refresh()
 
                 # Make sure that using the refresh token worked
-                if self.aws_login_manager.is_logged_in():
-                    self.set_offline(False)
-                    self.api.set_id_token(self.aws_login_manager.get_id_token())
-                    self.periodically_refresh_token()
-                    self.view.show_logged_in_status(True, self.aws_login_manager.get_username())
+                if not self.aws_login_manager.is_logged_in():
+                    print(f"{self._tag} Unable to login to AWS. Setting offline mode to true.")
+                    self.set_offline(True)
+                    return
+
             except (EndpointConnectionError, DNSLookupError):
                 print(f"{self._tag} Unable to login to AWS. Setting offline mode to true.")
                 self.set_offline(True)
+                return
+
+        self.set_offline(False)
+        self.api.set_id_token(self.aws_login_manager.get_id_token())
+        self.periodically_refresh_token()
+        self.view.show_logged_in_status(True, self.aws_login_manager.get_username())
 
     def device_interface_set(self, device_interface: DeviceInterface):
         self._device_interface = device_interface
