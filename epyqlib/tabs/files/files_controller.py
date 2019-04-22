@@ -84,17 +84,21 @@ class FilesController:
         self._show_pending_logs()
 
     def _ensure_current_token(self):
-        if self.aws_login_manager.is_logged_in() and not self.aws_login_manager.is_session_valid():
+
+        if not self.aws_login_manager.is_logged_in():
+            return
+
+        if not self.aws_login_manager.is_session_valid():
             try:
                 self.aws_login_manager.refresh()
 
                 # Make sure that using the refresh token worked
-                if not self.aws_login_manager.is_logged_in():
-                    print(f"{self._tag} Unable to login to AWS. Setting offline mode to true.")
-                    self.set_offline(True)
-                    return
+                error = not self.aws_login_manager.is_logged_in()
 
             except (EndpointConnectionError, DNSLookupError):
+                error = True
+
+            if (error):
                 print(f"{self._tag} Unable to login to AWS. Setting offline mode to true.")
                 self.set_offline(True)
                 return
@@ -106,7 +110,6 @@ class FilesController:
 
     def device_interface_set(self, device_interface: DeviceInterface):
         self._device_interface = device_interface
-
 
     async def _read_info_from_inverter(self):
         """
