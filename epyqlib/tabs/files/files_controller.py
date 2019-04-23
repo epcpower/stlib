@@ -93,12 +93,10 @@ class FilesController:
                 self.aws_login_manager.refresh()
 
                 # Make sure that using the refresh token worked
-                error = not self.aws_login_manager.is_logged_in()
+                if not self.aws_login_manager.is_logged_in():
+                    return
 
             except (EndpointConnectionError, DNSLookupError):
-                error = True
-
-            if (error):
                 print(f"{self._tag} Unable to login to AWS. Setting offline mode to true.")
                 self.set_offline(True)
                 return
@@ -271,8 +269,15 @@ class FilesController:
 
         self._show_pending_logs()
 
-        if self.aws_login_manager.is_logged_in() and self.sync_config.get(Vars.auto_sync):
-            await self.sync_now()
+        if self.aws_login_manager.is_logged_in():
+            self._ensure_current_token()
+
+            if not self.aws_login_manager.is_logged_in():
+                self.view.show_logged_out_warning()
+                return
+
+            if self.sync_config.get(Vars.auto_sync):
+                await self.sync_now()
 
 
     async def on_bus_status_changed(self):
