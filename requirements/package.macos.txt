@@ -83,7 +83,7 @@ smmap2==2.0.5             # via gitdb2
 soappy==0.12.22           # via twisted
 tqdm==4.31.1              # via twine
 twine==1.13.0
-twisted==18.9.0 ; platform_system == "Darwin"
+twisted[osx_platform]==18.9.0 ; platform_system == "Darwin"
 typing==3.6.6             # via python-can
 urllib3==1.24.2           # via requests
 webencodings==0.5.1       # via bleach

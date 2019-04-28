@@ -21,7 +21,7 @@ python-dateutil==2.7.5
 python-docx==0.8.7
 python-dotenv==0.9.1
 
-Twisted==18.9.0
+Twisted==18.9.0; platform_system != "Darwin" and platform_system != "Windows"
 Twisted[osx_platform]==18.9.0; platform_system == "Darwin"
 Twisted[windows_platform]==18.9.0; platform_system == "Windows"
 

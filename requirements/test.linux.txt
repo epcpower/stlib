@@ -56,7 +56,7 @@ requests==2.21.0          # via romp
 romp==2019.4.1
 six==1.12.0               # via automat, pathlib2, pip-tools, pyhamcrest, pytest, python-dateutil
 smmap2==2.0.5             # via gitdb2
-twisted==18.9.0
+twisted==18.9.0 ; platform_system != "Darwin" and platform_system != "Windows"
 typing==3.6.6             # via python-can
 urllib3==1.24.2           # via requests
 wrapt==1.11.1             # via python-can
