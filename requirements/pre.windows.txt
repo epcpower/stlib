@@ -10,9 +10,9 @@ click==7.0                # via pip-tools, romp
 idna==2.8                 # via requests
 pip-tools==3.3.2
 requests==2.21.0          # via romp
-romp==2019.3.3
+romp==2019.4.1
 six==1.12.0               # via pip-tools
-urllib3==1.24.1           # via requests
+urllib3==1.24.2           # via requests
 
 # The following packages are considered to be unsafe in a requirements file:
 pip==18.1
