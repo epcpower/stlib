@@ -144,6 +144,11 @@ class Parameter(epyqlib.treenode.TreeNode):
         ),
     )
 
+    internal_variable = epyqlib.attrsmodel.create_str_or_none_attribute()
+    getter_function = epyqlib.attrsmodel.create_str_or_none_attribute()
+    setter_function = epyqlib.attrsmodel.create_str_or_none_attribute()
+    internal_type = epyqlib.attrsmodel.create_str_or_none_attribute()
+
     can_getter = epyqlib.attrsmodel.create_str_or_none_attribute()
     can_setter = epyqlib.attrsmodel.create_str_or_none_attribute()
     sunspec_getter = epyqlib.attrsmodel.create_str_or_none_attribute()
@@ -1661,6 +1666,11 @@ columns = epyqlib.attrsmodel.columns(
     ),
 
     merge('label', SunSpecEnumerator),
+
+    merge('internal_variable', Parameter),
+    merge('getter_function', Parameter),
+    merge('setter_function', Parameter),
+    merge('internal_type', Parameter),
 
     merge('can_getter', Table, Parameter),
     merge('can_setter', Table, Parameter),
