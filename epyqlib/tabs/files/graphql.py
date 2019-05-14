@@ -98,7 +98,7 @@ class API:
             fragment associationFields on Association {
                 id
                 customer { name }
-                file {id, createdBy, createdAt, description, filename, hash, notes, owner, type, uploadPath, version}
+                file {id, createdBy, createdAt, description, filename, hash, notes, owner, type, version}
                 model {name}
                 inverter {id, serialNumber}
                 site {name}
@@ -176,9 +176,7 @@ class API:
                 details: $details
             ) {
                   inverterId
-                  customerId
                   details
-                  siteId
                   timestamp
                   type
                   
