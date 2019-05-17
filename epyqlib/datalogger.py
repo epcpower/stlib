@@ -54,8 +54,11 @@ class DataLogger:
             bus=self.bus)
 
     def pull_raw_log(self, path):
-        # d = self._pull_raw_log()
-        d = twisted.internet.defer.execute(self._pull_raw_log_fake)
+        pull_fake_log = False
+        if (pull_fake_log):
+            d = twisted.internet.defer.execute(self._pull_raw_log_fake)
+        else:
+            d = self._pull_raw_log()
         d.addCallback(write_to_file, path=path)
         d.addCallback(lambda _: twisted.internet.defer.ensureDeferred(self._notify_new_raw_log(path)))
 

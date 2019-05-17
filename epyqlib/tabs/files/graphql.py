@@ -413,8 +413,6 @@ class API:
     async def subscribe(self, customer_id: str, on_message: Callable[[str, dict], Coroutine], on_close: Callable[[], Coroutine] = None):
         print(f"{self._tag} Subscribing to events for public events and events for context {customer_id}")
 
-        ### WARNING: Enabling too many of these will leads to those that share a common wss url to be closed prematurely.
-        ### See TODO in websocket_handler.py about a possible way to fix
         gql = """subscription($customerId: String!) {
                     # orgFileCreated: fileCreated(owner: $customerId) { id }
                     orgFileUpdated: fileUpdated(owner: $customerId) { id }
