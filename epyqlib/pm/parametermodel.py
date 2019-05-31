@@ -269,6 +269,13 @@ class Parameter(epyqlib.treenode.TreeNode):
 
         return result
 
+    def uses_interface_item(self):
+        return any(v is not None for v in (
+            self.internal_variable,
+            self.getter_function,
+            self.setter_function,
+        ))
+
     can_delete = epyqlib.attrsmodel.childless_can_delete
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
