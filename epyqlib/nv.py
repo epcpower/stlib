@@ -331,7 +331,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 self.status_frames[value].set_frame = nv.frame
 
                 search = (s for s in self.status_frames[value].signals
-                          if s.start_bit == nv.start_bit)
+                          if s.start_bit == nv.start_bit and s.signal_size == nv.signal_size)
                 try:
                     nv.status_signal, = search
                 except ValueError:
