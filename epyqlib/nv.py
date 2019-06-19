@@ -96,7 +96,7 @@ class Configuration:
     read_write_signal = attr.ib()
     read_write_status_signal = attr.ib()
     meta_signal = attr.ib()
-
+    nv_save_in_progress_name = attr.ib()
 
 configurations = {
     'original': Configuration(
@@ -107,6 +107,7 @@ configurations = {
         read_write_signal='ReadParam_command',
         read_write_status_signal='ReadParam_status',
         meta_signal=None,
+        nv_save_in_progress_name = None,
     ),
     'j1939': Configuration(
         set_frame='ParameterQuery',
@@ -116,6 +117,7 @@ configurations = {
         read_write_signal='ReadParam_command',
         read_write_status_signal = 'ReadParam_status',
         meta_signal='Meta',
+        nv_save_in_progress_name = 'eeSaveInProgress',
     )
 }
 
@@ -237,6 +239,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         self.save_frame = None
         self.save_signal = None
         self.save_value = None
+        self.nv_save_in_progress_signal = None
         self.confirm_save_frame = None
         self.confirm_save_multiplex_value = None
         self.confirm_save_signal = None
@@ -260,6 +263,11 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                             self.confirm_save_multiplex_value = signal.multiplex
                             self.confirm_save_signal = signal
                             self.confirm_save_value = key
+
+        for frame in self.set_frames.values():
+            for signal in frame.signals:
+                if signal.name == self.configuration.nv_save_in_progress_name:
+                    self.nv_save_in_progress_signal = signal
 
         if self.confirm_save_frame is None:
             raise Exception(
@@ -813,45 +821,36 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             logger.info("Unrecognized NV value named '{}' found when loading to "
                   "defaults from dict".format(name))
 
-    def module_to_nv(self):
-        self.activity_started.emit('Requested save to NV...')
-        self.save_signal.set_value(self.save_value)
-        self.save_frame.update_from_signals()
-        d = self.protocol.write(
-            nv_signal=self.save_signal,
-            passive=True,
-            meta=MetaEnum.value,
-        )
-        d.addBoth(
-            epyqlib.utils.twisted.detour_result,
-            self.module_to_nv_off,
-        )
-        d.addCallback(self._module_to_nv_response)
-        d.addErrback(
-            epyqlib.utils.twisted.detour_result,
-            self._module_to_nv_response,
-            (0, None),
-        )
-        d.addErrback(epyqlib.utils.twisted.errbackhook)
+    async def module_to_nv(self):
+        for value in [not self.save_value, self.save_value, not self.save_value]:
+            self.save_signal.set_value(value)
+            self.save_frame.update_from_signals()
 
-    def module_to_nv_off(self):
-        self.save_signal.set_value(not self.save_value)
-        d = self.protocol.write(
-            nv_signal=self.save_signal,
-            passive=True,
-            meta=MetaEnum.value,
-        )
-        d.addErrback(lambda _: None)
-
-    def _module_to_nv_response(self, result):
-        if result[0] == 1:
-            feedback = 'Save to NV confirmed'
-        else:
-            feedback = 'Save to NV failed ({})'.format(
-                self.confirm_save_signal.full_string
+            result = await self.protocol.write(
+                nv_signal=self.save_signal,
+                passive=True,
+                meta=MetaEnum.value,
             )
+            save_signal_response = result[0]
+            write_accepted = save_signal_response == value
+            if not write_accepted:
+                raise Exception('Save to NV write rejected: {}'.format(
+                    save_signal_response)
+                )
 
-        self.activity_ended.emit(feedback)
+        if self.nv_save_in_progress_signal is not None:
+            await self.wait_for_nv_save_complete()
+
+    async def wait_for_nv_save_complete(self):
+        while True:
+            result = await self.protocol.read(
+                nv_signal=self.nv_save_in_progress_signal,
+                meta=MetaEnum.value,
+            )
+            save_active = result[0]
+            if not save_active:
+                break
+            await epyqlib.utils.twisted.sleep(0.5)
 
     def logger_set_frames(self):
         frames = [frame for frame in self.set_frames.values()
@@ -1725,8 +1724,16 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
     @pyqtSlot()
     def module_to_nv(self):
-        # TODO: monitor and report success/failure of write
-        self.root.module_to_nv()
+        deferred = twisted.internet.defer.ensureDeferred(self._module_to_nv())
+        deferred.addErrback(epyqlib.utils.twisted.errbackhook)
+
+    async def _module_to_nv(self):
+        with self.activity_manager(
+                start='Requesting save to NV...',
+                success='Save to NV succeeded',
+                failure='Save to NV failed',
+        ):
+            await self.root.module_to_nv()
 
     @pyqtSlot()
     def write_to_module(self):
