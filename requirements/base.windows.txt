@@ -12,14 +12,15 @@ arrow==0.12.1
 asn1crypto==0.24.0        # via cryptography
 attrs==18.2.0
 automat==0.7.0            # via twisted
+bcrypt==3.1.7             # via twisted
 bitstruct==6.0.0
 canmatrix==0.7
-certifi==2019.3.9         # via requests
-cffi==1.12.3              # via cryptography
+certifi==2019.6.16        # via requests
+cffi==1.12.3              # via bcrypt, cryptography
 chardet==3.0.4            # via requests
 click==7.0
 constantly==15.1.0        # via twisted
-cryptography==2.6.1       # via pyopenssl, service-identity, twisted
+cryptography==2.7         # via pyopenssl, service-identity, twisted
 defusedxml==0.6.0         # via soappy
 future==0.17.1            # via canmatrix
 gitdb2==2.0.5             # via gitpython
@@ -31,11 +32,11 @@ hyperframe==5.2.0         # via h2
 hyperlink==19.0.0         # via twisted
 idna==2.8                 # via hyperlink, requests, twisted
 incremental==17.5.0       # via twisted
-lxml==4.3.3               # via python-docx
+lxml==4.3.4               # via python-docx
 marshmallow==2.16.3
 natsort==5.5.0
-pathlib2==2.3.3           # via canmatrix
-pbr==5.2.0                # via wstools
+pathlib2==2.3.4           # via canmatrix
+pbr==5.3.1                # via wstools
 pint==0.9
 pip-tools==3.3.2
 priority==1.3.0           # via twisted
@@ -45,7 +46,7 @@ pycparser==2.19           # via cffi
 pyelftools==0.25
 pyhamcrest==1.9.0         # via twisted
 pyopenssl==19.0.0         # via twisted
-pyqt5-sip==4.19.15        # via pyqt5
+pyqt5-sip==4.19.17        # via pyqt5
 pyqt5-tools==5.11.3.1.5rc0 ; platform_system == "Windows"
 pyqt5==5.11.3
 pyserial==3.4             # via twisted
@@ -55,17 +56,17 @@ python-docx==0.8.7
 python-dotenv==0.9.1
 pywin32==224              # via twisted
 qt5reactor==0.5
-requests==2.21.0          # via romp
+requests==2.22.0          # via romp
 romp==2019.4.1
 service-identity==18.1.0  # via twisted
-six==1.12.0               # via automat, cryptography, pathlib2, pip-tools, pyhamcrest, pyopenssl, python-dateutil, wstools
+six==1.12.0               # via automat, bcrypt, cryptography, pathlib2, pip-tools, pyhamcrest, pyopenssl, python-dateutil, wstools
 smmap2==2.0.5             # via gitdb2
 soappy==0.12.22           # via twisted
-twisted[windows_platform]==18.9.0 ; platform_system == "Windows"
-typing==3.6.6             # via python-can
-urllib3==1.24.2           # via requests
+twisted[windows_platform]==19.2.1 ; platform_system == "Windows"
+typing==3.7.4             # via python-can
+urllib3==1.25.3           # via requests
 windows-curses==1.1       # via python-can
-wrapt==1.11.1             # via python-can
+wrapt==1.11.2             # via python-can
 wstools==0.4.8            # via soappy
 zope.interface==4.6.0     # via twisted
 

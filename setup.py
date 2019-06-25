@@ -47,9 +47,9 @@ setuptools.setup(
         'PyQt5',
         'python-docx',
         'python-can',
-        'Twisted==18.9.0; platform_system != "Darwin" and platform_system != "Windows"',
-        'Twisted[osx_platform]==18.9.0; platform_system == "Darwin"',
-        'Twisted[windows_platform]==18.9.0; platform_system == "Windows"',
+        'Twisted; platform_system != "Darwin" and platform_system != "Windows"',
+        'Twisted[osx_platform]; platform_system == "Darwin"',
+        'Twisted[windows_platform]; platform_system == "Windows"',
     ],
     extras_require={
         'deploy': [
