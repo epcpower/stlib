@@ -28,6 +28,7 @@ from epyqlib.treenode import TreeNode
 from PyQt5.QtCore import (Qt, QVariant, QModelIndex, pyqtSignal, pyqtSlot)
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog
+import qtawesome
 import textwrap
 import time
 import twisted.internet.defer
@@ -1392,11 +1393,14 @@ class Frame(epyqlib.canneo.Frame, TreeNode):
         self._send.emit(signals)
 
 
+font_awesome = QtGui.QFont(qtawesome._instance().fontname['fa'])
+
+
 @attr.s
 class Icon:
     character = attr.ib()
     check = attr.ib()
-    font = attr.ib(QtGui.QFont('fontawesome'))
+    font = attr.ib(default=font_awesome)
 
 
 @attr.s
