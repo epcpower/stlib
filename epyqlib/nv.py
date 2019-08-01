@@ -1393,14 +1393,15 @@ class Frame(epyqlib.canneo.Frame, TreeNode):
         self._send.emit(signals)
 
 
-font_awesome = QtGui.QFont(qtawesome._instance().fontname['fa'])
+def get_font_awesome():
+    return QtGui.QFont(qtawesome._instance().fontname['fa'])
 
 
 @attr.s
 class Icon:
     character = attr.ib()
     check = attr.ib()
-    font = attr.ib(default=font_awesome)
+    font = attr.ib(factory=get_font_awesome)
 
 
 @attr.s
