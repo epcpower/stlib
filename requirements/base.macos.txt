@@ -32,16 +32,16 @@ hyperframe==5.2.0         # via h2
 hyperlink==19.0.0         # via twisted
 idna==2.8                 # via hyperlink, requests, twisted
 incremental==17.5.0       # via twisted
-lxml==4.3.4               # via python-docx
+lxml==4.4.0               # via python-docx
 marshmallow==2.16.3
 natsort==5.5.0
 pathlib2==2.3.4           # via canmatrix
-pbr==5.3.1                # via wstools
+pbr==5.4.1                # via wstools
 pint==0.9
 pip-tools==3.3.2
 priority==1.3.0           # via twisted
-pyasn1-modules==0.2.5     # via service-identity
-pyasn1==0.4.5             # via pyasn1-modules, service-identity, twisted
+pyasn1-modules==0.2.6     # via service-identity
+pyasn1==0.4.6             # via pyasn1-modules, service-identity, twisted
 pycparser==2.19           # via cffi
 pyelftools==0.25
 pyhamcrest==1.9.0         # via twisted
@@ -49,7 +49,7 @@ pyobjc-core==5.2          # via pyobjc-framework-cfnetwork, pyobjc-framework-coc
 pyobjc-framework-cfnetwork==5.2  # via twisted
 pyobjc-framework-cocoa==5.2  # via pyobjc-framework-cfnetwork, twisted
 pyopenssl==19.0.0         # via twisted
-pyqt5-sip==4.19.17        # via pyqt5
+pyqt5-sip==4.19.18        # via pyqt5
 pyqt5==5.11.3
 pyserial==3.4             # via twisted
 python-can==3.0.0
@@ -57,10 +57,12 @@ python-dateutil==2.7.5
 python-docx==0.8.7
 python-dotenv==0.9.1
 qt5reactor==0.5
+qtawesome==0.6.0
+qtpy==1.9.0               # via qtawesome
 requests==2.22.0          # via romp
 romp==2019.4.1
 service-identity==18.1.0  # via twisted
-six==1.12.0               # via automat, bcrypt, cryptography, pathlib2, pip-tools, pyhamcrest, pyopenssl, python-dateutil, wstools
+six==1.12.0               # via automat, bcrypt, cryptography, pathlib2, pip-tools, pyhamcrest, pyopenssl, python-dateutil, qtawesome, wstools
 smmap2==2.0.5             # via gitdb2
 soappy==0.12.22           # via twisted
 twisted[osx_platform]==19.2.1 ; platform_system == "Darwin"
