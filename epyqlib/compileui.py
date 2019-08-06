@@ -19,7 +19,8 @@ import PyQt5.uic
     type=click.Path(exists=True, file_okay=False),
 )
 @click.option('--suffix', default='_ui')
-def cli(ui_paths, directories, suffix):
+@click.option('--encoding', default='utf-8')
+def cli(ui_paths, directories, suffix, encoding):
     ui_paths = [pathlib.Path(path) for path in ui_paths]
 
     for directory in directories:
@@ -32,5 +33,5 @@ def cli(ui_paths, directories, suffix):
         out_path = path.with_name(f'{path.stem}{suffix}.py')
 
         click.echo(f'Converting: {in_path} -> {out_path}')
-        with open(out_path, 'w') as out_file:
+        with open(out_path, 'w', encoding=encoding) as out_file:
             PyQt5.uic.compileUi(in_path, out_file)
