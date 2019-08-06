@@ -3,9 +3,8 @@
 #TODO: """DocString if there is one"""
 
 import epyqlib.widgets.abstracttxwidget
-import os
-from PyQt5.QtCore import (pyqtSignal, pyqtProperty,
-                          QFile, QFileInfo, QTextStream, QTimer)
+import epyqlib.widgets.enum_ui
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -14,17 +13,17 @@ __license__ = 'GPLv2+'
 
 class Enum(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
     def __init__(self, parent=None, in_designer=False):
-        ui_file = os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)),
-                               'enum.ui')
+        self._frame = None
+        self._signal = None
 
-        epyqlib.widgets.abstracttxwidget.AbstractTxWidget.__init__(self,
-                ui=ui_file, parent=parent, in_designer=in_designer)
+        super().__init__(
+            ui_class=epyqlib.widgets.enum_ui.Ui_Form,
+            parent=parent,
+            in_designer=in_designer,
+        )
 
         # TODO: CAMPid 398956661298765098124690765
         self.ui.value.currentTextChanged.connect(self.widget_value_changed)
-
-        self._frame = None
-        self._signal = None
 
     def set_value(self, value):
         if self.signal_object is not None:
@@ -42,7 +41,8 @@ class Enum(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
 
     def set_signal(self, signal=None, force_update=False):
         if signal is not self.signal_object or force_update:
-            self.ui.value.clear()
+            if self.ui is not None:
+                self.ui.value.clear()
             if signal is not None:
 
 
@@ -56,8 +56,7 @@ class Enum(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
 
                 self.ui.value.addItems(full_strings)
 
-        epyqlib.widgets.abstracttxwidget.AbstractTxWidget.set_signal(
-            self, signal, force_update=force_update)
+        super().set_signal(signal, force_update=force_update)
 
 
 if __name__ == '__main__':

@@ -2,13 +2,13 @@
 
 #TODO: """DocString if there is one"""
 
-import io
-import os
-
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtProperty, QFile, QFileInfo, QTextStream
+from PyQt5.QtCore import pyqtProperty
 from PyQt5.QtWidgets import QWidget
 from PyQt5.QtGui import QColor
+
+import epyqlib.compoundscale_ui
+import epyqlib.utils.qt
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -16,30 +16,16 @@ __license__ = 'GPLv2+'
 
 
 class CompoundScale(QWidget):
-
-
     def __init__(self, parent=None, in_designer=False):
-
-        QWidget.__init__(self, parent=parent)
+        super().__init__(parent=parent)
 
         self.in_designer = in_designer
 
         # If true, flips the compound scale on y axis if vertically oriented.
         self.cs_vertically_flipped = False
 
-        ui = self.getPath()
-
-        # TODO: CAMPid 9549757292917394095482739548437597676742
-        if not QFileInfo(ui).isAbsolute():
-            ui_file = os.path.join(
-                QFileInfo.absolutePath(QFileInfo(__file__)), ui)
-        else:
-            ui_file = ui
-        ui_file = QFile(ui_file)
-        ui_file.open(QFile.ReadOnly | QFile.Text)
-        ts = QTextStream(ui_file)
-        sio = io.StringIO(ts.readAll())
-        self.ui = uic.loadUi(sio, self)
+        self.ui = epyqlib.compoundscale_ui.Ui_Form()
+        self.ui.setupUi(self)
 
         self.ui.command.in_designer = in_designer
         self.ui.echo.in_designer = in_designer
@@ -47,10 +33,6 @@ class CompoundScale(QWidget):
         self.ui.numeric_status.in_designer = in_designer
 
         self.update_echo_visibility()
-
-    def getPath(self):
-        return os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)),
-                          'compoundscale.ui')
 
     def update_echo_visibility(self):
         hidden = len(self.echo_signal_path) == 0

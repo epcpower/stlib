@@ -3,10 +3,9 @@
 #TODO: """DocString if there is one"""
 
 import epyqlib.widgets.abstracttxwidget
-import os
-from PyQt5.QtCore import (pyqtSignal, pyqtProperty,
-                          QFile, QFileInfo, QTextStream, Qt, QEvent,
-                          QTimer)
+import epyqlib.widgets.button_ui
+from PyQt5.QtCore import pyqtProperty
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -15,20 +14,20 @@ __license__ = 'GPLv2+'
 
 class Button(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
     def __init__(self, parent=None, in_designer=False):
-        ui_file = os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)),
-                               'button.ui')
-
-        epyqlib.widgets.abstracttxwidget.AbstractTxWidget.__init__(self,
-                ui=ui_file, parent=parent, in_designer=in_designer)
-
-        # TODO: CAMPid 398956661298765098124690765
-        self.ui.value.pressed.connect(self.pressed)
-        self.ui.value.released.connect(self.released)
-
         self._frame = None
         self._signal = None
         self._on_value = 1
         self._off_value = 0
+
+        super().__init__(
+            ui_class=epyqlib.widgets.button_ui.Ui_Form,
+            parent=parent,
+            in_designer=in_designer,
+        )
+
+        # TODO: CAMPid 398956661298765098124690765
+        self.ui.value.pressed.connect(self.pressed)
+        self.ui.value.released.connect(self.released)
 
     @pyqtProperty(int)
     def on_value(self):
@@ -48,8 +47,7 @@ class Button(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
         self.set(self.off_value)
 
     def set_signal(self, signal=None, force_update=False):
-        epyqlib.widgets.abstracttxwidget.AbstractTxWidget.set_signal(
-            self, signal, force_update=force_update)
+        super().set_signal(signal, force_update=force_update)
 
         if signal is not None:
             self.set(self.off_value)
@@ -70,7 +68,8 @@ class Button(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
 
                 button.setMinimumWidth(1.3 * max(widths))
         else:
-            self.ui.value.setText('')
+            if self.ui is not None:
+                self.ui.value.setText('')
 
     def set(self, value):
         self.widget_value_changed(value)
@@ -85,7 +84,7 @@ class Button(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
 
             return text
         else:
-            return self.label.text()
+            return self.ui.label.text()
 
     def set_text(self, value):
         self.ui.value.setText(self.calculate_text(value))

@@ -3,23 +3,22 @@
 #TODO: """DocString if there is one"""
 
 import collections
+import functools
+import io
+import pathlib
+
+from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QAbstractProxyModel
+import twisted.internet.defer
+
+import epyqlib.autodevice.build
 import epyqlib.nv
+import epyqlib.nvview_ui
 try:
     import epyqlib.resources.code
 except ImportError:
     pass # we will catch the failure to open the file
 import epyqlib.utils.qt
-import functools
-import io
-import os
-import pathlib
-import twisted.internet.defer
-from PyQt5 import QtWidgets, uic, QtCore
-from PyQt5.QtCore import (pyqtSignal, pyqtSlot, QFile, QFileInfo, QTextStream,
-                          QCoreApplication, Qt, QItemSelectionModel,
-                          QModelIndex, QAbstractProxyModel)
-
-import epyqlib.autodevice.build
 
 
 # See file COPYING in this source tree
@@ -31,10 +30,7 @@ class ActivityError(Exception):
     pass
 
 
-Ui, UiBase = uic.loadUiType(pathlib.Path(__file__).with_suffix('.ui'))
-
-
-class NvView(UiBase):
+class NvView(QtWidgets.QWidget):
     module_to_nv = pyqtSignal()
     read_from_file = pyqtSignal()
     read_from_value_set_file = pyqtSignal()
@@ -48,7 +44,7 @@ class NvView(UiBase):
 
         self.in_designer = in_designer
 
-        self.ui = Ui()
+        self.ui = epyqlib.nvview_ui.Ui_Form()
         self.ui.setupUi(self)
 
         self.ui.module_to_nv_button.clicked.connect(self.module_to_nv)

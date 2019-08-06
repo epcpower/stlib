@@ -2,39 +2,26 @@
 
 #TODO: """DocString if there is one"""
 
-import io
-import os
+from PyQt5.QtCore import pyqtProperty
+from PyQt5 import QtWidgets
 
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtProperty, QFile, QFileInfo, QTextStream
-from PyQt5.QtGui import QColor
-from PyQt5.QtWidgets import QLabel, QHBoxLayout, QWidget
+import epyqlib.iogroup_ui
+import epyqlib.utils.qt
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
 __license__ = 'GPLv2+'
 
 
-class IoPoint(QWidget):
+class IoPoint(QtWidgets.QWidget):
     def __init__(self, parent=None, in_designer=False):
-        QWidget.__init__(self, parent=parent)
+        super().__init__(parent=parent)
 
         self.in_designer = in_designer
 
-        ui = os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)),
-                          'iopoint.ui')
-
-        # TODO: CAMPid 9549757292917394095482739548437597676742
-        if not QFileInfo(ui).isAbsolute():
-            ui_file = os.path.join(
-                QFileInfo.absolutePath(QFileInfo(__file__)), ui)
-        else:
-            ui_file = ui
-        ui_file = QFile(ui_file)
-        ui_file.open(QFile.ReadOnly | QFile.Text)
-        ts = QTextStream(ui_file)
-        sio = io.StringIO(ts.readAll())
-        self.ui = uic.loadUi(sio, self)
+        self.ui = epyqlib.iogroup_ui.Ui_Form()
+        self.ui.setupUi(self)
 
         self.ui.status.in_designer = self.in_designer
         self.ui.set.in_designer = self.in_designer

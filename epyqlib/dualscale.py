@@ -2,20 +2,19 @@
 
 #TODO: """DocString if there is one"""
 
-import io
-import os
-
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtProperty, QFile, QFileInfo, QTextStream
-from PyQt5.QtWidgets import QWidget, QStackedLayout, QLayout 
+from PyQt5.QtCore import pyqtProperty
+from PyQt5.QtWidgets import QWidget, QStackedLayout
 from PyQt5.QtGui import QColor
 
-
+import epyqlib.dualscale_ui
+import epyqlib.utils.qt
 import epyqlib.widgets.scale
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2017, EPC Power Corp.'
 __license__ = 'GPLv2+'
+
 
 class DualScale(QWidget):
 
@@ -27,20 +26,8 @@ class DualScale(QWidget):
 
         self.d_vertically_flipped = False
 
-
-        ui = self.getPath()
-
-        # TODO: CAMPid 9549757292917394095482739548437597676742
-        if not QFileInfo(ui).isAbsolute():
-            ui_file = os.path.join(
-                QFileInfo.absolutePath(QFileInfo(__file__)), ui)
-        else:
-            ui_file = ui
-        ui_file = QFile(ui_file)
-        ui_file.open(QFile.ReadOnly | QFile.Text)
-        ts = QTextStream(ui_file)
-        sio = io.StringIO(ts.readAll())
-        self.ui = uic.loadUi(sio, self)
+        self.ui = epyqlib.dualscale_ui.Ui_Form()
+        self.ui.setupUi(self)
 
         self.scale1 = epyqlib.widgets.scale.Scale(self, in_designer)
         self.scale2 = epyqlib.widgets.scale.Scale(self, in_designer)
@@ -68,10 +55,6 @@ class DualScale(QWidget):
 
         # self.scale1.override_range = True
         # self.scale2.override_range = True
-
-    def getPath(self):
-        return os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)),
-                          'dualscale.ui')
 
     @pyqtProperty('QString')
     def scale1_signal_path(self):
@@ -198,4 +181,3 @@ class DualScale(QWidget):
     def upper_red_color(self, color):
         self.scale1._colors[4] = color
         self.scale1.update_configuration()
- 
