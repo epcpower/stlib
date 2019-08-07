@@ -29,7 +29,7 @@
       <item row="3" column="1">
        <widget class="CompoundScale" name="compoundscale_4">
         <property name="command_signal_path" stdset="0">
-         <string>ParameterQuery;PpcNominalFrequency;fNom</string>
+         <string>ParameterQuery;PccNetworkReference;fRef</string>
         </property>
         <property name="status_signal_path" stdset="0">
          <string>StatusAC;Frequency_measured</string>
@@ -39,7 +39,7 @@
       <item row="3" column="0">
        <widget class="CompoundScale" name="compoundscale_3">
         <property name="command_signal_path" stdset="0">
-         <string>ParameterQuery;VoltageRef;Voltage</string>
+         <string>ParameterQuery;PccNetworkReference;vRef</string>
         </property>
         <property name="status_signal_path" stdset="0">
          <string>StatusAC;VoltageAC_measured</string>
