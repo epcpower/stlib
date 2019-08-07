@@ -210,7 +210,10 @@ class Led(epyqlib.widgets.abstractwidget.AbstractWidget):
             svg = self.svg['manual_off']
 
         if svg is not self._last_loaded_svg:
-            self.ui.value.load(svg)
+            if svg is None:
+                self.ui.value.load(b'')
+            else:
+                self.ui.value.load(svg)
             self._last_loaded_svg = svg
 
         # TODO: figure out if this should be needed.  seems not but
