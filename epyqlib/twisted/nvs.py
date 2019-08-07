@@ -378,8 +378,15 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
         if request is None:
             return
 
-        if not (msg.arbitration_id == request.frame.status_frame.id and
-                    bool(msg.id_type) == request.frame.status_frame.extended):
+        if (
+                not (
+                    msg.arbitration_id == request.frame.status_frame.id
+                    and (
+                        bool(msg.is_extended_id)
+                        == request.frame.status_frame.extended
+                    )
+                )
+        ):
             return
 
         status_signal = tuple(request.signals)[0].status_signal
