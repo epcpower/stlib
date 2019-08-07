@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>818</width>
+    <width>839</width>
     <height>632</height>
    </rect>
   </property>
@@ -33,7 +33,7 @@
        <item alignment="Qt::AlignTop">
         <widget class="QGroupBox" name="boxNominalNetworkValues">
          <property name="title">
-          <string>Nominal Network Values</string>
+          <string>Reference Network Values</string>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_7">
           <property name="leftMargin">
@@ -54,7 +54,7 @@
              <enum>Qt::RightToLeft</enum>
             </property>
             <property name="signal_path" stdset="0">
-             <string>ParameterQuery;VoltageRef;Voltage</string>
+             <string>ParameterQuery;PccNetworkReference;vRef</string>
             </property>
             <property name="label_visible" stdset="0">
              <bool>false</bool>
@@ -79,7 +79,7 @@
              <enum>Qt::RightToLeft</enum>
             </property>
             <property name="signal_path" stdset="0">
-             <string>ParameterQuery;PpcNominalFrequency;fNom</string>
+             <string>ParameterQuery;PccNetworkReference;fRef</string>
             </property>
             <property name="label_override" stdset="0">
              <string>Frequency</string>
@@ -382,6 +382,77 @@
           </size>
          </property>
         </spacer>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="horizontalGroupBox">
+         <property name="title">
+          <string>Midpoint Status</string>
+         </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_12">
+          <property name="leftMargin">
+           <number>6</number>
+          </property>
+          <property name="topMargin">
+           <number>6</number>
+          </property>
+          <property name="rightMargin">
+           <number>6</number>
+          </property>
+          <property name="bottomMargin">
+           <number>6</number>
+          </property>
+          <item>
+           <widget class="CompactEpc" name="compactepc_15">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>150</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="baseSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="signal_path" stdset="0">
+             <string>StatusDCVoltage3L;DcMidpointOffset</string>
+            </property>
+            <property name="label_override" stdset="0">
+             <string>Offset</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="CompactEpc" name="compactepc_14">
+            <property name="maximumSize">
+             <size>
+              <width>150</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="signal_path" stdset="0">
+             <string>StatusDCVoltage3L;DcMidpointRipple</string>
+            </property>
+            <property name="label_override" stdset="0">
+             <string>Ripple</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
        </item>
        <item alignment="Qt::AlignBottom">
         <widget class="QGroupBox" name="gridGroupBox">

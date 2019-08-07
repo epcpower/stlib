@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>839</width>
-    <height>745</height>
+    <width>913</width>
+    <height>819</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -43,7 +43,10 @@
         <item>
          <widget class="Enum" name="enum_4">
           <property name="signal_path" stdset="0">
-           <string>ParameterQuery;AfeConfigFlags;EnableUPSMode</string>
+           <string>ParameterQuery;PpcIslOptionFlags;AllowAutoForming</string>
+          </property>
+          <property name="label_override" stdset="0">
+           <string>Allow Auto Forming</string>
           </property>
           <property name="units_visible" stdset="0">
            <bool>false</bool>
@@ -1077,6 +1080,114 @@
         <string>Faults</string>
        </property>
        <layout class="QGridLayout" name="gridLayout_2">
+        <item row="11" column="0">
+         <widget class="Led" name="led_21">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults;LossOfAC</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
+        <item row="10" column="1">
+         <widget class="Led" name="led_23">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults;InvalidEESection</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
+        <item row="17" column="1">
+         <widget class="Led" name="led_10">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults2;LowCoolingFlow</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
+        <item row="15" column="0">
+         <widget class="Led" name="led_36">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults;EStopShutdown</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="Led" name="led_31">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults;BridgeAVoltageOk</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
+        <item row="9" column="0">
+         <widget class="Led" name="led_35">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults2;OvertempPowerDevice</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="1">
+         <widget class="Epc" name="epc_8">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults;BridgeBFault</string>
+          </property>
+          <property name="label_visible" stdset="0">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="14" column="1">
+         <widget class="Led" name="led_5">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults;PWMISR</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
         <item row="11" column="1">
          <widget class="Led" name="led_33">
           <property name="signal_path" stdset="0">
@@ -1091,10 +1202,24 @@
           </property>
          </widget>
         </item>
-        <item row="14" column="1">
-         <widget class="Led" name="led_5">
+        <item row="8" column="0">
+         <widget class="Led" name="led_24">
           <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults;PWMISR</string>
+           <string>ParameterQuery;StatusFaults2;UndervoltageDC</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="0">
+         <widget class="Led" name="led_30">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults2;OvervoltageDC</string>
           </property>
           <property name="on_color" stdset="0">
            <color>
@@ -1133,17 +1258,16 @@
           </property>
          </widget>
         </item>
-        <item row="7" column="0">
-         <widget class="Led" name="led_30">
+        <item row="5" column="1">
+         <widget class="Led" name="led_44">
           <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults2;OvervoltageDC</string>
+           <string>StatusBits;MessageValidModeControl</string>
           </property>
-          <property name="on_color" stdset="0">
-           <color>
-            <red>192</red>
-            <green>32</green>
-            <blue>32</blue>
-           </color>
+          <property name="label_override" stdset="0">
+           <string/>
+          </property>
+          <property name="label_visible" stdset="0">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -1161,23 +1285,24 @@
           </property>
          </widget>
         </item>
-        <item row="5" column="1">
-         <widget class="Led" name="led_44">
-          <property name="signal_path" stdset="0">
-           <string>StatusBits;MessageValidModeControl</string>
-          </property>
-          <property name="label_override" stdset="0">
-           <string/>
-          </property>
-          <property name="label_visible" stdset="0">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
         <item row="15" column="1">
          <widget class="Led" name="led_6">
           <property name="signal_path" stdset="0">
            <string>ParameterQuery;StatusFaults;dIdt</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="0">
+         <widget class="Led" name="led_32">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults;BridgeBVoltageOk</string>
           </property>
           <property name="on_color" stdset="0">
            <color>
@@ -1198,38 +1323,10 @@
           </property>
          </widget>
         </item>
-        <item row="4" column="0">
-         <widget class="Led" name="led_32">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults;BridgeBVoltageOk</string>
-          </property>
-          <property name="on_color" stdset="0">
-           <color>
-            <red>192</red>
-            <green>32</green>
-            <blue>32</blue>
-           </color>
-          </property>
-         </widget>
-        </item>
         <item row="12" column="0">
          <widget class="Led" name="led_28">
           <property name="signal_path" stdset="0">
            <string>ParameterQuery;StatusFaults;FilterOvertemp</string>
-          </property>
-          <property name="on_color" stdset="0">
-           <color>
-            <red>192</red>
-            <green>32</green>
-            <blue>32</blue>
-           </color>
-          </property>
-         </widget>
-        </item>
-        <item row="14" column="0">
-         <widget class="Led" name="led_45">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults;OverloadAC</string>
           </property>
           <property name="on_color" stdset="0">
            <color>
@@ -1254,6 +1351,20 @@
           </property>
          </widget>
         </item>
+        <item row="14" column="0">
+         <widget class="Led" name="led_45">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults;OverloadAC</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
         <item row="6" column="0">
          <widget class="Led" name="led_34">
           <property name="signal_path" stdset="0">
@@ -1267,17 +1378,16 @@
           </property>
          </widget>
         </item>
-        <item row="18" column="1">
-         <widget class="Led" name="led_12">
+        <item row="6" column="1">
+         <widget class="Led" name="led_43">
           <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults;InsufficientHeap</string>
+           <string>StatusBits;MessageValidPowerCMD</string>
           </property>
-          <property name="on_color" stdset="0">
-           <color>
-            <red>192</red>
-            <green>32</green>
-            <blue>32</blue>
-           </color>
+          <property name="label_override" stdset="0">
+           <string/>
+          </property>
+          <property name="label_visible" stdset="0">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -1295,145 +1405,24 @@
           </property>
          </widget>
         </item>
-        <item row="4" column="1">
-         <widget class="Epc" name="epc_8">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults;BridgeBFault</string>
-          </property>
-          <property name="label_visible" stdset="0">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="10" column="1">
-         <widget class="Led" name="led_23">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults;InvalidEESection</string>
-          </property>
-          <property name="on_color" stdset="0">
-           <color>
-            <red>192</red>
-            <green>32</green>
-            <blue>32</blue>
-           </color>
-          </property>
-         </widget>
-        </item>
-        <item row="15" column="0">
-         <widget class="Led" name="led_36">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults;EStopShutdown</string>
-          </property>
-          <property name="on_color" stdset="0">
-           <color>
-            <red>192</red>
-            <green>32</green>
-            <blue>32</blue>
-           </color>
-          </property>
-         </widget>
-        </item>
-        <item row="17" column="1">
-         <widget class="Led" name="led_10">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults2;LowCoolingFlow</string>
-          </property>
-          <property name="on_color" stdset="0">
-           <color>
-            <red>192</red>
-            <green>32</green>
-            <blue>32</blue>
-           </color>
-          </property>
-         </widget>
-        </item>
-        <item row="9" column="0">
-         <widget class="Led" name="led_35">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults2;OvertempPowerDevice</string>
-          </property>
-          <property name="on_color" stdset="0">
-           <color>
-            <red>192</red>
-            <green>32</green>
-            <blue>32</blue>
-           </color>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="0">
-         <widget class="Led" name="led_24">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults2;UndervoltageDC</string>
-          </property>
-          <property name="on_color" stdset="0">
-           <color>
-            <red>192</red>
-            <green>32</green>
-            <blue>32</blue>
-           </color>
-          </property>
-         </widget>
-        </item>
-        <item row="11" column="0">
-         <widget class="Led" name="led_21">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults;LossOfAC</string>
-          </property>
-          <property name="on_color" stdset="0">
-           <color>
-            <red>192</red>
-            <green>32</green>
-            <blue>32</blue>
-           </color>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="Led" name="led_31">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults;BridgeAVoltageOk</string>
-          </property>
-          <property name="on_color" stdset="0">
-           <color>
-            <red>192</red>
-            <green>32</green>
-            <blue>32</blue>
-           </color>
-          </property>
-         </widget>
-        </item>
-        <item row="9" column="1">
-         <widget class="Led" name="led_37">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults;InvalidEEHeader</string>
-          </property>
-          <property name="on_color" stdset="0">
-           <color>
-            <red>192</red>
-            <green>32</green>
-            <blue>32</blue>
-           </color>
-          </property>
-         </widget>
-        </item>
-        <item row="6" column="1">
-         <widget class="Led" name="led_43">
-          <property name="signal_path" stdset="0">
-           <string>StatusBits;MessageValidPowerCMD</string>
-          </property>
-          <property name="label_override" stdset="0">
-           <string/>
-          </property>
-          <property name="label_visible" stdset="0">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
         <item row="19" column="0">
          <widget class="Led" name="led_14">
           <property name="signal_path" stdset="0">
            <string>ParameterQuery;StatusFaults;Overrun1ms</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
+        <item row="18" column="1">
+         <widget class="Led" name="led_12">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults;InsufficientHeap</string>
           </property>
           <property name="on_color" stdset="0">
            <color>
@@ -1472,6 +1461,34 @@
           </property>
          </widget>
         </item>
+        <item row="9" column="1">
+         <widget class="Led" name="led_37">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults;InvalidEEHeader</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
+        <item row="12" column="1">
+         <widget class="Led" name="led_3">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults;BackgroundTask</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
         <item row="19" column="1">
          <widget class="Led" name="led_13">
           <property name="signal_path" stdset="0">
@@ -1500,34 +1517,6 @@
           </property>
          </widget>
         </item>
-        <item row="13" column="1">
-         <widget class="Led" name="led_4">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults;Stack</string>
-          </property>
-          <property name="on_color" stdset="0">
-           <color>
-            <red>192</red>
-            <green>32</green>
-            <blue>32</blue>
-           </color>
-          </property>
-         </widget>
-        </item>
-        <item row="12" column="1">
-         <widget class="Led" name="led_3">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults;BackgroundTask</string>
-          </property>
-          <property name="on_color" stdset="0">
-           <color>
-            <red>192</red>
-            <green>32</green>
-            <blue>32</blue>
-           </color>
-          </property>
-         </widget>
-        </item>
         <item row="20" column="1">
          <widget class="Led" name="led_15">
           <property name="signal_path" stdset="0">
@@ -1542,7 +1531,52 @@
           </property>
          </widget>
         </item>
-        <item row="21" column="1">
+        <item row="13" column="1">
+         <widget class="Led" name="led_4">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults;Stack</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
+        <item row="23" column="0">
+         <widget class="Led" name="led_25">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults2;GeneralFault</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+          <property name="relative_height" stdset="0">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="16" column="0">
+         <widget class="Led" name="led_7">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults;CtlBrdVoltage</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
+        <item row="23" column="1">
          <layout class="QHBoxLayout" name="horizontalLayout_5">
           <item>
            <widget class="Led" name="led_47">
@@ -1578,23 +1612,6 @@
           </item>
          </layout>
         </item>
-        <item row="21" column="0">
-         <widget class="Led" name="led_25">
-          <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults2;GeneralFault</string>
-          </property>
-          <property name="on_color" stdset="0">
-           <color>
-            <red>192</red>
-            <green>32</green>
-            <blue>32</blue>
-           </color>
-          </property>
-          <property name="relative_height" stdset="0">
-           <double>1.000000000000000</double>
-          </property>
-         </widget>
-        </item>
         <item row="17" column="0">
          <widget class="Led" name="led_8">
           <property name="signal_path" stdset="0">
@@ -1609,10 +1626,52 @@
           </property>
          </widget>
         </item>
-        <item row="16" column="0">
-         <widget class="Led" name="led_7">
+        <item row="21" column="1">
+         <widget class="Led" name="led_18">
           <property name="signal_path" stdset="0">
-           <string>ParameterQuery;StatusFaults;CtlBrdVoltage</string>
+           <string>ParameterQuery;StatusFaults;Watchdog</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
+        <item row="21" column="0">
+         <widget class="Led" name="led_19">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults;Software</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
+        <item row="22" column="0">
+         <widget class="Led" name="led_22">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults;SPI</string>
+          </property>
+          <property name="on_color" stdset="0">
+           <color>
+            <red>192</red>
+            <green>32</green>
+            <blue>32</blue>
+           </color>
+          </property>
+         </widget>
+        </item>
+        <item row="22" column="1">
+         <widget class="Led" name="led_26">
+          <property name="signal_path" stdset="0">
+           <string>ParameterQuery;StatusFaults;EeTimeout</string>
           </property>
           <property name="on_color" stdset="0">
            <color>

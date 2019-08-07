@@ -2,16 +2,29 @@
     "_type": "root",
     "name": "Value Set",
     "children": [
-       {
+        {
+            "_type": "parameter",
+            "name": "AccessLevel:Level",
+            "value": "2",
+            "user_default": "0",
+            "factory_default": "0",
+            "minimum": "0",
+            "maximum": "63",
+            "parameter_uuid": "dc519ee7-7d80-424c-9398-73adbbe6b76b",
+            "readable": true,
+            "writable": true
+        },
+        {
             "_type": "parameter",
             "name": "rii:r",
             "value": "0.277778",
-            "user_default": null,
-            "factory_default": "0.2600000",
-            "minimum": "-2147.483648",
-            "maximum": "2147.483647",
-            "parameter_uuid": "b8ff91c2-3d64-4c75-ba91-07aaa730fec4",
-            "uuid": "52fc8388-8778-49bb-8c9e-972dca19a85e"
+            "user_default": "1.360000",
+            "factory_default": "0.260000",
+            "minimum": "0.000000",
+            "maximum": "10.000000",
+            "parameter_uuid": "4c23677d-788d-4960-aab1-c5746d44b2be",
+            "readable": true,
+            "writable": true
         }
     ],
     "uuid": "0032d9f0-cf30-4308-8157-2c4947013d86"
