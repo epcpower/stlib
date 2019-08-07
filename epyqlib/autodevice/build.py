@@ -1,4 +1,5 @@
 import collections
+import decimal
 import json
 import os
 import pathlib
@@ -214,10 +215,12 @@ class Builder:
                 if key in self._original_raw_dict:
                     raw_dict[key] = self._original_raw_dict[key]
 
-            if self.required_serial_number is None:
-                raw_dict['required_serial_number'] = None
-            else:
+            if isinstance(self.required_serial_number, decimal.Decimal):
                 raw_dict['required_serial_number'] = int(
+                    self.required_serial_number
+                )
+            else:
+                raw_dict['required_serial_number'] = (
                     self.required_serial_number
                 )
 
