@@ -2,12 +2,14 @@
 
 #TODO: """DocString if there is one"""
 
-import epyqlib.widgets.abstractwidget
 import textwrap
 
 from PyQt5.QtCore import pyqtProperty, pyqtSignal, QEvent, Qt
 from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtWidgets import QMessageBox, QWidget
+
+import epyqlib.widgets.abstractwidget
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -18,11 +20,14 @@ class AbstractTxWidget(epyqlib.widgets.abstractwidget.AbstractWidget):
     edit = pyqtSignal(QWidget, QWidget)
     edited = pyqtSignal(float)
 
-    def __init__(self, ui, parent=None, in_designer=False):
-        epyqlib.widgets.abstractwidget.AbstractWidget.__init__(
-            self, ui=ui, parent=parent, in_designer=in_designer)
+    def __init__(self, ui_class, parent=None, in_designer=False):
+        self._tx = False
 
-        self.tx = False
+        super().__init__(
+            ui_class=ui_class,
+            parent=parent,
+            in_designer=in_designer,
+        )
 
         for widget in self.findChildren(QWidget):
             if widget.property('editable_click'):
@@ -40,10 +45,11 @@ class AbstractTxWidget(epyqlib.widgets.abstractwidget.AbstractWidget):
         self._tx = bool(tx)
 
         self.set_signal(signal=self.signal_object)
-        self.ui.value.setDisabled(not self.tx)
+        if self.ui is not None:
+            self.ui.value.setDisabled(not self.tx)
 
     def meta_set_value(self, value):
-        if not self.value.hasFocus():
+        if not self.ui.value.hasFocus():
             self.set_value(value)
 
     def user_set_value(self, value):

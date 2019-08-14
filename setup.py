@@ -1,6 +1,14 @@
-import setuptools
+import pathlib
 
+import alqtendpy.compileui
+
+import setuptools
 import versioneer
+
+
+alqtendpy.compileui.compile_ui(
+    directory_paths=[pathlib.Path(__file__).parent / 'epyqlib'],
+)
 
 
 setuptools.setup(
@@ -33,6 +41,7 @@ setuptools.setup(
         ]
     },
     install_requires=[
+        'alqtendpy',
         'arrow',
         'bitstruct',
         'canmatrix',

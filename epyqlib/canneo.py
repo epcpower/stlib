@@ -735,7 +735,7 @@ class Frame(QtCanListener):
         unpacked = False
 
         if (msg.arbitration_id == self.id and
-                bool(msg.id_type) == self.extended):
+                bool(msg.is_extended_id) == self.extended):
             if self.mux_frame is None:
                 self.unpack(msg.data)
                 unpacked = True

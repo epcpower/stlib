@@ -13,6 +13,7 @@ import pytest_twisted
 import twisted
 
 import epyqlib.autodevice.build
+import epyqlib.busproxy
 import epyqlib.device
 import epyqlib.tests.common
 import epyqlib.utils.general
@@ -181,22 +182,23 @@ def test_from_zip(version, parameter_type, access_password, tmpdir):
 
 @pytest.mark.require_device
 @pytest_twisted.inlineCallbacks
-def test_general_load(qapp, auto_device, bus):
+def test_general_load(qapp, auto_device):
     device = epyqlib.device.Device(
         file=auto_device.path,
         archive_code=example_archive_code,
         node_id=247,
-        bus=bus,
+        bus=epyqlib.busproxy.BusProxy(),
     )
 
-    with device:
-        yield device.extension.no_gui_load_parameters()
-        yield wait_until_present(device)
+    with device.bus.managed_real_bus(bustype='socketcan', channel='can0'):
+        with device:
+            yield device.extension.no_gui_load_parameters()
+            yield wait_until_present(device)
 
 
 @pytest.mark.require_device
 @pytest_twisted.inlineCallbacks
-def test_invalid_serial(qapp, auto_device, bus, access_password):
+def test_invalid_serial(qapp, auto_device, access_password):
     # string should never match a serial number
     create_example_auto_device(
         version=auto_device.version,
@@ -209,35 +211,39 @@ def test_invalid_serial(qapp, auto_device, bus, access_password):
         file=auto_device.path,
         archive_code=example_archive_code,
         node_id=247,
-        bus=bus,
+        bus=epyqlib.busproxy.BusProxy(),
     )
 
-    with device:
-        with pytest.raises(epyqlib.utils.general.UnmatchedSerialNumberError):
-            yield device.extension.no_gui_load_parameters()
-        yield wait_until_present(device)
+    with device.bus.managed_real_bus(bustype='socketcan', channel='can0'):
+        with device:
+            with pytest.raises(
+                    epyqlib.utils.general.UnmatchedSerialNumberError,
+            ):
+                yield device.extension.no_gui_load_parameters()
+            yield wait_until_present(device)
 
 
 @pytest.mark.require_device
 @pytest_twisted.inlineCallbacks
-def test_valid_serial(qapp, auto_device, tmpdir, bus, access_password):
+def test_valid_serial(qapp, auto_device, tmpdir, access_password):
     temporary_directory = pathlib.Path(tmpdir)
 
     device = epyqlib.device.Device(
         file=auto_device.path,
         archive_code=example_archive_code,
         node_id=247,
-        bus=bus,
+        bus=epyqlib.busproxy.BusProxy(),
     )
 
-    with device:
-        serial_nv = device.extension.nvs.signal_from_names(
-            *device.extension.serial_number_names,
-        )
-        present_serial, _ = yield device.extension.nv_protocol.read(
-            nv_signal=serial_nv,
-            meta=epyqlib.nv.MetaEnum.value,
-        )
+    with device.bus.managed_real_bus(bustype='socketcan', channel='can0'):
+        with device:
+            serial_nv = device.extension.nvs.signal_from_names(
+                *device.extension.serial_number_names,
+            )
+            present_serial, _ = yield device.extension.nv_protocol.read(
+                nv_signal=serial_nv,
+                meta=epyqlib.nv.MetaEnum.value,
+            )
 
     device_path = temporary_directory/'serial_locked_auto_device.epz'
 
@@ -252,9 +258,10 @@ def test_valid_serial(qapp, auto_device, tmpdir, bus, access_password):
         file=auto_device.path,
         archive_code=example_archive_code,
         node_id=247,
-        bus=bus,
+        bus=epyqlib.busproxy.BusProxy(),
     )
 
-    with device:
-        yield device.extension.no_gui_load_parameters()
-        yield wait_until_present(device)
+    with device.bus.managed_real_bus(bustype='socketcan', channel='can0'):
+        with device:
+            yield device.extension.no_gui_load_parameters()
+            yield wait_until_present(device)

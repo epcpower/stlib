@@ -1,9 +1,9 @@
-import os
-
 from PyQt5 import QtCore
 from PyQt5 import QtWidgets
 
+import epyqlib.searchbox_ui
 import epyqlib.utils.qt
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2017, EPC Power Corp.'
@@ -22,25 +22,24 @@ class SearchBox(QtWidgets.QWidget):
 
         self.in_designer = in_designer
 
-        epyqlib.utils.qt.load_ui(
-            os.path.join(os.path.dirname(__file__), 'searchbox.ui'),
-            self,
-        )
-
         self._hide_search = False
         self._hide_filter = False
+
+        self.ui = epyqlib.searchbox_ui.Ui_Form()
+        self.ui.setupUi(self)
+
         self.hide_filter = True
 
         self.search_shortcut = None
         self.view = None
 
-        self.ui_search_text.setPlaceholderText('Search...')
-        self.ui_search_text.textChanged.connect(self.search_text_changed)
-        self.ui_search_text.returnPressed.connect(self.search_requested)
+        self.ui.search_text.setPlaceholderText('Search...')
+        self.ui.search_text.textChanged.connect(self.search_text_changed)
+        self.ui.search_text.returnPressed.connect(self.search_requested)
 
-        self.ui_filter_text.setPlaceholderText('Filter...')
-        self.ui_filter_text.textChanged.connect(self.filter_text_changed)
-        self.ui_filter_text.textChanged.connect(self.filter_requested)
+        self.ui.filter_text.setPlaceholderText('Filter...')
+        self.ui.filter_text.textChanged.connect(self.filter_text_changed)
+        self.ui.filter_text.textChanged.connect(self.filter_requested)
 
     @QtCore.pyqtProperty(bool)
     def hide_search(self):
@@ -49,7 +48,7 @@ class SearchBox(QtWidgets.QWidget):
     @hide_search.setter
     def hide_search(self, hide):
         self._hide_search = hide
-        self.ui_search_text.setHidden(self.hide_search)
+        self.ui.search_text.setHidden(self.hide_search)
 
     @QtCore.pyqtProperty(bool)
     def hide_filter(self):
@@ -58,26 +57,26 @@ class SearchBox(QtWidgets.QWidget):
     @hide_filter.setter
     def hide_filter(self, hide):
         self._hide_filter = hide
-        self.ui_filter_text.setHidden(self.hide_filter)
+        self.ui.filter_text.setHidden(self.hide_filter)
 
     def focus_search(self):
-        self.ui_search_text.setFocus()
+        self.ui.search_text.setFocus()
 
     @property
     def search_text(self):
-        return self.ui_search_text.text()
+        return self.ui.search_text.text()
 
     @search_text.setter
     def search_text(self, text):
-        self.ui_search_text.setText(text)
+        self.ui.search_text.setText(text)
 
     @property
     def filter_text(self):
-        return self.ui_filter_text.text()
+        return self.ui.filter_text.text()
 
     @filter_text.setter
     def filter_text(self, text):
-        self.ui_filter_text.setText(text)
+        self.ui.filter_text.setText(text)
 
     def connect_to_view(self, view, column):
         def _search():

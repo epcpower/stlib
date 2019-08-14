@@ -1,4 +1,5 @@
 import collections
+import decimal
 import json
 import os
 import pathlib
@@ -214,7 +215,14 @@ class Builder:
                 if key in self._original_raw_dict:
                     raw_dict[key] = self._original_raw_dict[key]
 
-            raw_dict['required_serial_number'] = self.required_serial_number
+            if isinstance(self.required_serial_number, decimal.Decimal):
+                raw_dict['required_serial_number'] = int(
+                    self.required_serial_number
+                )
+            else:
+                raw_dict['required_serial_number'] = (
+                    self.required_serial_number
+                )
 
             can_path = directory_path / can_path
             with open(can_path, 'wb') as f:

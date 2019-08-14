@@ -2,14 +2,14 @@
 
 #TODO: """DocString if there is one"""
 
-import io
-import os
-import epyqlib.form
-
 from collections import OrderedDict
-from PyQt5 import QtWidgets, uic
-from PyQt5.QtCore import (pyqtSignal, pyqtProperty,
-                          QFile, QFileInfo, QTextStream, QEvent)
+
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import pyqtSignal, pyqtProperty, QEvent
+
+import epyqlib.form
+import epyqlib.utils.qt
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -64,29 +64,14 @@ def string_to_signal_path(s):
 class AbstractWidget(QtWidgets.QWidget):
     trigger_action = pyqtSignal()
 
-    def __init__(self, ui=None, parent=None, in_designer=False):
+    def __init__(self, ui_class, parent=None, in_designer=False):
         self.in_designer = in_designer
-        QtWidgets.QWidget.__init__(self, parent=parent)
+        super().__init__(parent=parent)
+
+        self.ui = None
 
         self.left = None
         self.right = None
-
-        if ui is None:
-            self.ui = None
-        else:
-            # TODO: CAMPid 9549757292917394095482739548437597676742
-            if not QFileInfo(ui).isAbsolute():
-                ui_file = os.path.join(
-                    QFileInfo.absolutePath(QFileInfo(__file__)), ui)
-            else:
-                ui_file = ui
-            ui_file = QFile(ui_file)
-            ui_file.open(QFile.ReadOnly | QFile.Text)
-            ts = QTextStream(ui_file)
-            sio = io.StringIO(ts.readAll())
-            self.ui = uic.loadUi(sio, self)
-
-        self.has_units_label = hasattr(self.ui, 'units')
 
         self.signal_object = None
 
@@ -97,11 +82,14 @@ class AbstractWidget(QtWidgets.QWidget):
         self._conversion_multiplier = 1
         self._decimal_places = -1
 
-        self.set_signal(force_update=True)
-
         self._signal_path = [''] * 3
         self._display_units = ''
         self._action = ''
+
+        self.ui = ui_class()
+        self.ui.setupUi(self)
+
+        self.set_signal(force_update=True)
 
         self.ignore = False
 
@@ -220,13 +208,10 @@ class AbstractWidget(QtWidgets.QWidget):
             self.ui.label.setVisible(new_visible)
             self.update_metadata()
 
-    def has_units_label_a(self):
-        return self.has_units_label
-
     @pyqtProperty(bool)
     def units_visible(self):
         if self.ui is not None:
-            if self.has_units_label:
+            if hasattr(self.ui, 'units'):
                 return self.ui.units.isVisibleTo(self.parent())
 
         return False
@@ -234,7 +219,7 @@ class AbstractWidget(QtWidgets.QWidget):
     @units_visible.setter
     def units_visible(self, new_visible):
         if self.ui is not None:
-            if self.has_units_label:
+            if hasattr(self.ui, 'units'):
                 self.ui.units.setVisible(new_visible)
                 self.update_metadata()
 
@@ -357,7 +342,8 @@ class AbstractWidget(QtWidgets.QWidget):
                             self.right = right
 
     def set_unit_text(self, units):
-        self.ui.units.setText(units)
+        if self.ui is not None:
+            self.ui.units.setText(units)
 
     def set_full_string(self, string):
         pass

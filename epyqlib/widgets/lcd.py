@@ -3,9 +3,8 @@
 #TODO: """DocString if there is one"""
 
 import epyqlib.widgets.abstractwidget
-import os
-from PyQt5.QtCore import (pyqtSignal, pyqtProperty,
-                          QFile, QFileInfo, QTextStream)
+import epyqlib.widgets.lcd_ui
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -14,11 +13,11 @@ __license__ = 'GPLv2+'
 
 class Lcd(epyqlib.widgets.abstractwidget.AbstractWidget):
     def __init__(self, parent=None, in_designer=False):
-        ui_file = os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)),
-                               'lcd.ui')
-
-        epyqlib.widgets.abstractwidget.AbstractWidget.__init__(self,
-                ui=ui_file, parent=parent, in_designer=in_designer)
+        super().__init__(
+            ui_class=epyqlib.widgets.lcd_ui.Ui_Form,
+            parent=parent,
+            in_designer=in_designer,
+        )
 
         self._frame = None
         self._signal = None

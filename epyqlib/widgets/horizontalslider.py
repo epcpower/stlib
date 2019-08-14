@@ -4,9 +4,8 @@
 
 import epyqlib.mixins
 import epyqlib.widgets.abstracttxwidget
-import os
-from PyQt5.QtCore import (pyqtSignal, pyqtProperty,
-                          QFile, QFileInfo, QTextStream)
+import epyqlib.widgets.horizontalslider_ui
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -16,23 +15,22 @@ __license__ = 'GPLv2+'
 class HorizontalSlider(epyqlib.widgets.abstracttxwidget.AbstractTxWidget,
                        epyqlib.mixins.OverrideRange):
     def __init__(self, parent=None, in_designer=False):
-        ui_file = os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)),
-                               'horizontalslider.ui')
-
-        epyqlib.widgets.abstracttxwidget.AbstractTxWidget.__init__(self,
-                ui=ui_file, parent=parent, in_designer=in_designer)
-
-        epyqlib.mixins.OverrideRange.__init__(self)
-
         self._zero_count = None
         self._counts = 1000
+        self._frame = None
+        self._signal = None
+
+        super().__init__(
+            ui_class=epyqlib.widgets.horizontalslider_ui.Ui_Form,
+            parent=parent,
+            in_designer=in_designer,
+        )
+
         self.ui.value.setTickInterval(self._counts/4)
         self.ui.value.setRange(0, self._counts)
 
         self.ui.value.valueChanged.connect(self.widget_value_changed)
 
-        self._frame = None
-        self._signal = None
 
     def widget_value_changed(self, counts):
         value = (counts - self._zero_count)

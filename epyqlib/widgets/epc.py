@@ -2,12 +2,13 @@
 
 #TODO: """DocString if there is one"""
 
-import epyqlib.widgets.abstracttxwidget
-import os
-from PyQt5.QtCore import (pyqtSignal, pyqtProperty,
-                          QFile, QFileInfo, QTextStream, Qt)
+from PyQt5.QtCore import pyqtProperty, Qt
 from PyQt5.QtGui import QFocusEvent, QKeyEvent
-# from PyQt5.QWidgets import QWidget
+
+import epyqlib.utils.qt
+import epyqlib.widgets.abstracttxwidget
+import epyqlib.widgets.epc_ui
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -15,25 +16,30 @@ __license__ = 'GPLv2+'
 
 
 class Epc(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
-    def __init__(self, parent=None, ui_file='epc.ui', in_designer=False):
-        ui_file = os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)),
-                               ui_file)
-
-        epyqlib.widgets.abstracttxwidget.AbstractTxWidget.__init__(self,
-                ui=ui_file, parent=parent, in_designer=in_designer)
-
-        # TODO: CAMPid 398956661298765098124690765
-        self.ui.value.returnPressed.connect(self.widget_value_changed)
-        self.ui.value.installEventFilter(self)
-
-        self.ui.edit_button.hide()
-
+    def __init__(
+            self,
+            parent=None,
+            ui_class=epyqlib.widgets.epc_ui.Ui_Form,
+            in_designer=False,
+    ):
         self._frame = None
         self._signal = None
 
         self._show_enumeration_value = True
 
         self.isBlue = False # By default, the text color is black.
+
+        super().__init__(
+            ui_class=ui_class,
+            parent=parent,
+            in_designer=in_designer,
+        )
+
+        # TODO: CAMPid 398956661298765098124690765
+        self.ui.value.returnPressed.connect(self.widget_value_changed)
+        self.ui.value.installEventFilter(self)
+
+        self.ui.edit_button.hide()
 
         self.update()
 
@@ -48,8 +54,7 @@ class Epc(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
         self.update()
 
     def set_signal(self, *args, **kwargs):
-        epyqlib.widgets.abstracttxwidget.AbstractTxWidget.set_signal(
-            self, *args, **kwargs)
+        super().set_signal(*args, **kwargs)
 
         self.update()
 
@@ -60,8 +65,7 @@ class Epc(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
         )
 
     def eventFilter(self, object, event):
-        super_result = epyqlib.widgets.abstracttxwidget.AbstractTxWidget.\
-            eventFilter(self, object, event)
+        super_result = super().eventFilter(object, event)
 
         if not super_result:
             if object is self.ui.value:
@@ -130,8 +134,7 @@ class Epc(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
 
 
     def widget_value_changed(self):
-        epyqlib.widgets.abstracttxwidget.AbstractTxWidget.widget_value_changed(
-            self, self.ui.value.text())
+        super().widget_value_changed(self.ui.value.text())
 
     def set_value(self, value):
         if self.signal_object is not None:

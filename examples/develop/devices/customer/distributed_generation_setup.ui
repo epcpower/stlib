@@ -28,7 +28,7 @@
         <string>Mode Settings</string>
        </property>
        <layout class="QGridLayout" name="gridLayout">
-        <item row="0" column="2">
+        <item row="0" column="0">
          <widget class="QGroupBox" name="groupBox_7">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -68,20 +68,7 @@
           </layout>
          </widget>
         </item>
-        <item row="0" column="3">
-         <widget class="CompoundToggle" name="compoundtoggle_5">
-          <property name="box_title" stdset="0">
-           <string>UPS Mode</string>
-          </property>
-          <property name="command_signal_path" stdset="0">
-           <string>ParameterQuery;AfeConfigFlags;EnableUPSMode</string>
-          </property>
-          <property name="status_signal_path" stdset="0">
-           <string>ParameterQuery;AfeConfigFlags;EnableUPSMode</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2" colspan="2">
+        <item row="1" column="0">
          <widget class="Led" name="led_39">
           <property name="signal_path" stdset="0">
            <string>StatusBits;HardwareEnable</string>

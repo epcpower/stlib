@@ -2,31 +2,29 @@
 
 #TODO: """DocString if there is one"""
 
-import epyqlib.mixins
-import epyqlib.widgets.abstractwidget
-import os
-import sys
-from PyQt5.QtCore import Qt, pyqtSignal, pyqtProperty, QFileInfo
+from PyQt5.QtCore import Qt, pyqtProperty
 from PyQt5.QtGui import QColor
+
+import epyqlib.widgets.abstractwidget
+import epyqlib.mixins
+import epyqlib.widgets.scale_ui
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
 __license__ = 'GPLv2+'
 
 
-class Scale(epyqlib.widgets.abstractwidget.AbstractWidget,
-            epyqlib.mixins.OverrideRange):
+class Scale(
+        epyqlib.widgets.abstractwidget.AbstractWidget,
+        epyqlib.mixins.OverrideRange
+):
     def __init__(self, parent=None, in_designer=False):
-
         self.s_vertically_flipped = False
 
-        ui_file = os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)),
-                               'scale.ui')
-
-        epyqlib.widgets.abstractwidget.AbstractWidget.__init__(self,
-                ui=ui_file, parent=parent, in_designer=in_designer)
-
-        epyqlib.mixins.OverrideRange.__init__(self)
+        # TODO: multiple inheritance *sigh* should get this for me eventually...
+        self._min = 0
+        self._max = 1
 
         self._breakpoints = [self._min + (self._max - self._min) * n
                              for n in [0.10, 0.25, 0.75, 0.90]]
@@ -46,6 +44,12 @@ class Scale(epyqlib.widgets.abstractwidget.AbstractWidget,
 
         self._frame = None
         self._signal = None
+
+        super().__init__(
+            ui_class=epyqlib.widgets.scale_ui.Ui_Form,
+            parent=parent,
+            in_designer=in_designer,
+        )
 
         self.update_configuration()
 
