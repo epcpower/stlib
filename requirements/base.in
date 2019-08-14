@@ -3,6 +3,7 @@
 
 --requirement pre.in
 
+alqtendpy==0.0.4
 arrow==0.12.1
 attrs==18.2.0
 bitstruct==6.0.0

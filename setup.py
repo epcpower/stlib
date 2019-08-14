@@ -1,6 +1,14 @@
-import setuptools
+import pathlib
 
+import alqtendpy.compileui
+
+import setuptools
 import versioneer
+
+
+alqtendpy.compileui.compile_ui(
+    directory_paths=[pathlib.Path(__file__).parent / 'epyqlib'],
+)
 
 
 setuptools.setup(
@@ -27,13 +35,13 @@ setuptools.setup(
             'versionfile = epyqlib.cli.versionfile:cli',
             'generateversion = epyqlib.cli.generateversion:cli',
             'autodevice = epyqlib.autodevice.cli:cli',
-            'compileui = epyqlib.compileui:cli',
         ],
         'pytest11': [
             'epyqlib = epyqlib.tests.pytest_plugin',
         ]
     },
     install_requires=[
+        'alqtendpy',
         'arrow',
         'bitstruct',
         'canmatrix',
