@@ -6,7 +6,6 @@ init:
 
 build_script:
   - python boots.py create --group package
-  - venv\\Scripts\\compileui
   - venv\\Scripts\\genbuildinfo "epyqlib\\_build_generated.py"
   - ps: Update-AppveyorBuild -Version "v$(venv\\Scripts\\python -c 'import epyqlib; print(epyqlib.__version__, end=\"\")') b$Env:APPVEYOR_BUILD_NUMBER"
   - python boots.py build
