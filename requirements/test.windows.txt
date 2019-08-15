@@ -85,6 +85,7 @@ soappy==0.12.22           # via twisted
 twisted[windows_platform]==19.2.1 ; platform_system == "Windows"
 typing==3.7.4             # via python-can
 urllib3==1.25.3           # via requests
+wheel==0.33.4
 windows-curses==2.0       # via python-can
 wrapt==1.11.2             # via python-can
 wstools==0.4.8            # via soappy
