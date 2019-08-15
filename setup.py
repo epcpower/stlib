@@ -57,9 +57,7 @@ setuptools.setup(
         'python-docx',
         'python-can',
         'QtAwesome',
-        'Twisted; platform_system != "Darwin" and platform_system != "Windows"',
-        'Twisted[osx_platform]; platform_system == "Darwin"',
-        'Twisted[windows_platform]; platform_system == "Windows"',
+        'Twisted',
     ],
     extras_require={
         'deploy': [

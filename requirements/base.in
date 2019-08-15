@@ -23,9 +23,7 @@ python-docx==0.8.7
 python-dotenv==0.9.1
 QtAwesome==0.6.0
 
-Twisted==19.2.1; platform_system != "Darwin" and platform_system != "Windows"
-Twisted[osx_platform]==19.2.1; platform_system == "Darwin"
-Twisted[windows_platform]==19.2.1; platform_system == "Windows"
+Twisted==19.2.1
 
 -e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec
 
