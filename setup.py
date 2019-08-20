@@ -52,7 +52,7 @@ setuptools.setup(
         'pyelftools',
         'qt5reactor',
         'gitpython',
-        'graham',
+        'graham>=0.1.11',
         'PyQt5',
         'python-docx',
         'python-can',

@@ -27,7 +27,7 @@ easyprocess==0.2.7        # via pyvirtualdisplay
 future==0.17.1            # via canmatrix
 gitdb2==2.0.5             # via gitpython
 gitpython==2.1.11
-graham==0.1.10
+graham==0.1.11
 greenlet==0.4.15
 hyperlink==19.0.0         # via twisted
 idna==2.8                 # via hyperlink, requests
