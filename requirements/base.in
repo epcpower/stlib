@@ -15,7 +15,7 @@ marshmallow==2.16.3
 natsort==5.5.0
 Pint==0.9
 pyelftools==0.25
-PyQt5==5.11.3
+PyQt5==5.13.0
 qt5reactor==0.5
 python-can==3.0.0
 python-dateutil==2.7.5
@@ -27,4 +27,4 @@ Twisted==19.7.0
 
 -e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec
 
-pyqt5-tools==5.11.3.1.5rc0; platform_system == 'Windows'
+pyqt5-tools==5.13.0.1.5; platform_system == 'Windows'
