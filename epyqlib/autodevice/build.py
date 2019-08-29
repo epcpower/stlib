@@ -171,7 +171,7 @@ class Builder:
             directory_path.mkdir()
 
             for access_input in self.access_parameters:
-                node = self.get_or_create_parameter(name=access_input.node)
+                node = self.get_or_create_parameter(name=access_input.node.name)
 
                 node.value = access_input.value
 

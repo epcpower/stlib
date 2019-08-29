@@ -307,8 +307,7 @@ class NvView(QtWidgets.QWidget):
             if node is None:
                 return None
 
-            return ':'.join((root.password_node.frame.mux_name,
-                          root.password_node.name))
+            return ':'.join((node.frame.mux_name, node.name))
 
         builder.set_access_level_names(
             password_name=name_from_node(root.password_node),
