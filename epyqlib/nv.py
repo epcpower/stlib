@@ -29,10 +29,12 @@ from PyQt5.QtCore import (Qt, QVariant, QModelIndex, pyqtSignal, pyqtSlot)
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog
 import qtawesome
+import re
 import textwrap
 import time
 import twisted.internet.defer
 import twisted.internet.task
+import uuid
 import weakref
 
 # See file COPYING in this source tree
@@ -679,6 +681,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     maximum=child.meta.maximum.get_human_value(for_file=True),
                     readable=not child.is_write_only(),
                     writable=not child.is_read_only(),
+                    parameter_uuid=child.parameter_uuid,
                 )
             elif include_secrets:
                 def format_float(value):
@@ -696,6 +699,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     factory_default=format_float(value=0),
                     minimum=format_float(value=child.min),
                     maximum=format_float(value=child.max),
+                    parameter_uuid=child.parameter_uuid,
                 )
             else:
                 continue
@@ -729,13 +733,9 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             ),
         )
         only_in_file = {
-            parameter.name
-            for parameter in parameter_nodes
-        }
-        only_in_file = {
-            (name, meta)
-            for name, meta in itertools.product(
-                only_in_file,
+            (parameter, meta)
+            for parameter, meta in itertools.product(
+                parameter_nodes,
                 epyqlib.nv.MetaEnum,
             )
         }
@@ -743,11 +743,14 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         d = collections.defaultdict(list)
         for parameter in parameter_nodes:
             d[parameter.name].append(parameter)
+            d[parameter.parameter_uuid].append(parameter)
 
         for child in self.all_nv():
             name = child.fields.name
 
-            parameters = d.get(name, [])
+            parameters = d.get(child.parameter_uuid, [])
+            if len(parameters) == 0:
+                parameters = d.get(name, [])
 
             not_found_format = (
                 "Nv value named '{}' ({{}}) not found when loading "
@@ -956,6 +959,19 @@ class CyclicReader:
                             )
 
 
+def strip_uuid_from_comment(comment):
+    match = re.search(r'<uuid:([a-z0-9-]+)>', comment)
+
+    if match is None:
+        return None
+
+    uuid_object = uuid.UUID(match[1])
+
+    stripped_comment = comment.replace(match[0], '').strip()
+
+    return stripped_comment, uuid_object
+
+
 class Nv(epyqlib.canneo.Signal, TreeNode):
     changed = epyqlib.utils.qt.Signal(
         TreeNode,
@@ -978,6 +994,13 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         epyqlib.canneo.Signal.__init__(self, signal=signal, frame=frame,
                                     parent=parent)
         TreeNode.__init__(self)
+
+        if signal.comment is None:
+            self.parameter_uuid = None
+        else:
+            self.comment, self.parameter_uuid = strip_uuid_from_comment(
+                self.comment,
+            )
 
         if meta_value is None:
             self.meta_value = MetaEnum.value
@@ -1861,13 +1884,9 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             ),
         )
         only_in_file = {
-            parameter.name
-            for parameter in parameter_nodes
-        }
-        only_in_file = {
-            (name, meta)
-            for name, meta in itertools.product(
-                only_in_file,
+            (parameter, meta)
+            for parameter, meta in itertools.product(
+                parameter_nodes,
                 epyqlib.nv.MetaEnum,
             )
         }
@@ -1875,6 +1894,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         d = collections.defaultdict(list)
         for parameter in parameter_nodes:
             d[parameter.name].append(parameter)
+            d[parameter.parameter_uuid].append(parameter)
 
         skip_nodes = (
             self.root.access_level_node,
@@ -1899,7 +1919,9 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
                 name = child.fields.name
 
-                parameters = d.get(name, [])
+                parameters = d.get(child.parameter_uuid, [])
+                if len(parameters) == 0:
+                    parameters = d.get(name, [])
 
                 not_found_format = (
                     "Nv value named '{}' ({{}}) not found when loading "
