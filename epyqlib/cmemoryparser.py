@@ -1200,9 +1200,13 @@ def process_file(filename):
     
     typedefs = []
     for die in objects['DW_TAG_typedef']:
+        die_type = die.attributes.get('DW_AT_type')
+        if die_type is not None:
+            die_type = die_type.value
+
         typedef = TypeDef(
             name=die.attributes['DW_AT_name'].value.decode('utf-8'),
-            type=(die.offset, die.attributes['DW_AT_type'].value)
+            type=(die.offset, die_type)
         )
         typedefs.append(typedef)
         offsets[die.offset] = typedef
