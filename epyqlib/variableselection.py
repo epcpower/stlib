@@ -158,8 +158,8 @@ class VariableSelection(QtWidgets.QWidget):
                 d.addErrback(epyqlib.utils.twisted.errbackhook)
 
     def context_menu(self, position):
-        index = self.ui.view.tree_view.indexAt(position)
-        index = self.ui.view.tree_view.model().mapToSource(index)
+        index = self.ui.view.ui.tree_view.indexAt(position)
+        index = self.ui.view.ui.tree_view.model().mapToSource(index)
 
         if not index.isValid():
             return
@@ -170,7 +170,7 @@ class VariableSelection(QtWidgets.QWidget):
         read_action = menu.addAction('Read')
 
         action = menu.exec(
-            self.ui.view.tree_view.viewport().mapToGlobal(position))
+            self.ui.view.ui.tree_view.viewport().mapToGlobal(position))
 
         if action is None:
             pass
