@@ -57,6 +57,7 @@ setuptools.setup(
         'python-docx',
         'python-can',
         'QtAwesome',
+        'siphash-cffi',
         'Twisted',
     ],
     extras_require={

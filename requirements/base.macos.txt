@@ -8,14 +8,16 @@
 --trusted-host fstab.net
 
 -e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec
+-e git+https://github.com/altendky/siphash-cffi@2a97bdca72145f16dd7c987164cd76ea8484dfc8#egg=siphash-cffi
 alqtendpy==0.0.4
-altendpy==0.0.17          # via alqtendpy
+altendpy==0.0.19          # via alqtendpy
 arrow==0.12.1
 attrs==18.2.0
 automat==0.7.0            # via twisted
 bitstruct==6.0.0
 canmatrix==0.7
-certifi==2019.6.16        # via requests
+certifi==2019.9.11        # via requests
+cffi==1.12.3
 chardet==3.0.4            # via requests
 click==7.0
 constantly==15.1.0        # via twisted
@@ -26,15 +28,18 @@ graham==0.1.11
 hyperlink==19.0.0         # via twisted
 idna==2.8                 # via hyperlink, requests
 incremental==17.5.0       # via twisted
+jinja2==2.10.1            # via altendpy
 lxml==4.4.1               # via python-docx
+markupsafe==1.1.1         # via jinja2
 marshmallow==2.16.3
 natsort==5.5.0
-pathlib2==2.3.4           # via canmatrix
+pathlib2==2.3.5           # via canmatrix
 pint==0.9
 pip-tools==4.0.0
+pycparser==2.19           # via cffi
 pyelftools==0.25
 pyhamcrest==1.9.0         # via twisted
-pyqt5-sip==4.19.18        # via pyqt5
+pyqt5-sip==4.19.19        # via pyqt5
 pyqt5==5.13.0
 pyserial==3.4
 python-can==3.0.0
@@ -49,8 +54,8 @@ romp==2019.4.1
 six==1.12.0               # via automat, pathlib2, pip-tools, pyhamcrest, python-dateutil, qtawesome
 smmap2==2.0.5             # via gitdb2
 twisted==19.7.0
-typing==3.7.4             # via python-can
-urllib3==1.25.3           # via requests
+typing==3.7.4.1           # via python-can
+urllib3==1.25.6           # via requests
 wheel==0.33.4
 wrapt==1.11.2             # via python-can
 zope.interface==4.6.0     # via twisted

@@ -26,5 +26,7 @@ QtAwesome==0.6.0
 Twisted==19.7.0
 
 -e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec
+-e git+https://github.com/altendky/siphash-cffi@2a97bdca72145f16dd7c987164cd76ea8484dfc8#egg=siphash-cffi
+
 
 pyqt5-tools==5.13.0.1.5; platform_system == 'Windows'

@@ -1,3 +1,4 @@
+import contextlib
 import functools
 import json
 import operator
@@ -192,8 +193,7 @@ class Nv:
     nv = attr.ib()
     device = attr.ib()
 
-    @twisted.internet.defer.inlineCallbacks
-    def set(
+    async def set(
             self,
             value=None,
             user_default=None,
@@ -201,28 +201,89 @@ class Nv:
             minimum=None,
             maximum=None,
     ):
-        values = (
-            (epyqlib.nv.MetaEnum.maximum, maximum),
-            (epyqlib.nv.MetaEnum.minimum, minimum),
-            (epyqlib.nv.MetaEnum.factory_default, factory_default),
-            (epyqlib.nv.MetaEnum.user_default, user_default),
-            (epyqlib.nv.MetaEnum.value, value),
+        values = {
+            epyqlib.nv.MetaEnum.maximum: maximum,
+            epyqlib.nv.MetaEnum.minimum: minimum,
+            epyqlib.nv.MetaEnum.factory_default: factory_default,
+            epyqlib.nv.MetaEnum.user_default: user_default,
+            epyqlib.nv.MetaEnum.value: value,
+        }
+
+        values = {
+            meta: value
+            for meta, value in values.items()
+            if value is not None
+        }
+
+        for meta, value in values.items():
+            await self.set_meta(value=value, meta=meta)
+
+    async def set_meta(self, value, meta):
+        if meta == epyqlib.nv.MetaEnum.value:
+            self.nv.set_value(value)
+        else:
+            getattr(self.nv.meta, meta.name).set_value(value)
+
+        # TODO: verify value was accepted
+        await self.device.nvs.protocol.write(
+            nv_signal=self.nv,
+            meta=meta,
         )
 
-        for meta, value in values:
-            if value is None:
-                continue
+    @contextlib.asynccontextmanager
+    async def temporary_set(
+            self,
+            value=None,
+            user_default=None,
+            factory_default=None,
+            minimum=None,
+            maximum=None,
+            read_context=None,
+            set_context=None,
+            restoration_context=None,
+    ):
+        @contextlib.asynccontextmanager
+        async def async_null_context(enter_result=None):
+            with contextlib.nullcontext(enter_result=enter_result) as result:
+                yield result
 
-            if meta == epyqlib.nv.MetaEnum.value:
-                self.nv.set_value(value)
-            else:
-                getattr(self.nv.meta, meta.name).set_value(value)
+        if read_context is None:
+            read_context = async_null_context
+        if set_context is None:
+            set_context = async_null_context
+        if restoration_context is None:
+            restoration_context = async_null_context
 
-            # TODO: verify value was accepted
-            yield self.device.nvs.protocol.write(
-                nv_signal=self.nv,
-                meta=meta,
-            )
+        values = {
+            epyqlib.nv.MetaEnum.maximum: maximum,
+            epyqlib.nv.MetaEnum.minimum: minimum,
+            epyqlib.nv.MetaEnum.factory_default: factory_default,
+            epyqlib.nv.MetaEnum.user_default: user_default,
+            epyqlib.nv.MetaEnum.value: value,
+        }
+
+        values = {
+            meta: value
+            for meta, value in values.items()
+            if value is not None
+        }
+
+        original = {}
+
+        try:
+            async with read_context():
+                for meta, value in values.items():
+                    original[meta] = await self.get(meta=meta)
+
+            async with set_context():
+                for meta, value in values.items():
+                    await self.set_meta(value=value, meta=meta)
+
+            yield
+        finally:
+            async with restoration_context():
+                for meta, value in original.items():
+                    await self.set_meta(value=value, meta=meta)
 
     @twisted.internet.defer.inlineCallbacks
     def get(self, meta=epyqlib.nv.MetaEnum.value):
@@ -258,6 +319,9 @@ class Nv:
                 f'within {timeout:.1f} seconds'
             ),
         )
+
+    def parameter_uuid(self):
+        return self.nv.parameter_uuid
 
 
 @attr.s
@@ -397,3 +461,17 @@ class Device:
         )
 
         yield self.nvs.write_all_to_device(only_these=selected_nodes)
+
+    @contextlib.asynccontextmanager
+    async def temporary_access_level(self, level=None, password=None):
+        access_level_parameter = self.nv(*self.definition.access_level_path[1:])
+        original_access_level = await access_level_parameter.get()
+
+        try:
+            await self.set_access_level(level=level, password=password)
+            yield
+        finally:
+            await self.set_access_level(
+                level=original_access_level,
+                password=password,
+            )
