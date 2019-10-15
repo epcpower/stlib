@@ -90,6 +90,10 @@ class TooManyMetaSignalsError(Exception):
     pass
 
 
+class SimultaneousTransactionsError(Exception):
+    pass
+
+
 @attr.s
 class Configuration:
     set_frame = attr.ib()
@@ -1597,6 +1601,9 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         self.check_range = state == Qt.Checked
 
     def start_transaction(self):
+        if self.transaction_actions is not None:
+            raise SimultaneousTransactionsError(self.transaction_actions)
+
         self.transaction_actions = collections.defaultdict(list)
 
     def submit_transaction(self):
@@ -1666,7 +1673,10 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         await self._submit_transaction()
 
-    def setData(self, index, data, role=None):
+    def setData(self, index, data, role=None, check_range=None):
+        if check_range is None:
+            check_range = self.check_range
+
         column = index.column()
 
         if data == '':
@@ -1677,10 +1687,10 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 node = self.node_from_index(index)
                 valid = node.check_data(
                     data,
-                    check_range=self.check_range,
+                    check_range=check_range,
                 )
                 if valid:
-                    node.scratch.set_human_value(data, check_range=self.check_range)
+                    node.scratch.set_human_value(data, check_range=check_range)
                     node.fields.scratch = node.scratch.full_string
         elif column in self.meta_columns:
             if role == Qt.EditRole:
@@ -1692,7 +1702,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 valid = node.check_meta(
                     data,
                     meta=meta,
-                    check_range=self.check_range,
+                    check_range=check_range,
                 )
 
                 if valid:
@@ -1934,7 +1944,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                     index = self.index_from_node(child)
 
                     for meta in MetaEnum:
-                        only_in_file.discard((name, meta))
+                        only_in_file.discard((parameter, meta))
 
                         v = getattr(parameter, meta.name)
                         if v is not None:
@@ -1944,6 +1954,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                                 ),
                                 v,
                                 Qt.EditRole,
+                                check_range=False,
                             )
                         else:
                             logger.warning(not_found_format.format(meta.name))
@@ -1958,9 +1969,9 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                         "value set".format(name),
                     )
 
-            for name, meta in sorted(only_in_file):
+            for parameter, meta in sorted(only_in_file):
                 logger.warning("Unrecognized NV value named '{}' ({}) found when loading "
-                      "from value set".format(name, meta.name))
+                      "from value set".format(parameter.name, meta.name))
 
 
 if __name__ == '__main__':
