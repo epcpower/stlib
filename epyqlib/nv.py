@@ -967,7 +967,7 @@ def strip_uuid_from_comment(comment):
     match = re.search(r'<uuid:([a-z0-9-]+)>', comment)
 
     if match is None:
-        return None
+        return comment, None
 
     uuid_object = uuid.UUID(match[1])
 
