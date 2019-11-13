@@ -31,8 +31,8 @@ class BusAlreadySetError(Exception):
 
 
 def format_version_validator(instance, attribute, value):
-    if value != [1]:
-        raise FormatVersionError('Only format_version 1 is supported')
+    if value != [2]:
+        raise FormatVersionError('Only format_version 2 is supported')
 
 
 @attr.s
