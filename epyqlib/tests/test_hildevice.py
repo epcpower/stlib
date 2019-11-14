@@ -1,3 +1,5 @@
+import os
+import shutil
 import pathlib
 
 import attr
@@ -16,7 +18,9 @@ def factory_definition():
 
 def test_definition_format_version_validator(factory_definition):
     with pytest.raises(epyqlib.hildevice.FormatVersionError):
-        attr.evolve(factory_definition, format_version=[2])
+        attr.evolve(factory_definition, format_version=[1])
+    with pytest.raises(epyqlib.hildevice.FormatVersionError):
+        attr.evolve(factory_definition, format_version=[3])
 
 
 def test_definition_load(factory_definition):
@@ -28,6 +32,18 @@ def test_definition_load(factory_definition):
 
 def test_definition_loads():
     path = pathlib.Path(epyqlib.tests.common.devices['factory'])
+
+    # Hack to avoid needing to update test files to latest version
+    # Probably need to identify better way of checking files
+    # without needing to upload actual development .epc/.epz/.pmvs ...
+    if not epyqlib.updateepc.is_latest(path):
+        path_old = pathlib.Path(str(path.resolve()) + '_old')
+        shutil.copy2(path, path_old)
+        path = pathlib.Path(epyqlib.updateepc.convert(
+            path_old,
+            os.path.dirname(path_old),
+        ))
+
     with open(path) as f:
         s = f.read()
 

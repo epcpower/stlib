@@ -5,6 +5,8 @@ import operator
 import pathlib
 import time
 import uuid
+import os.path
+import shutil
 
 import attr
 import canmatrix
@@ -16,6 +18,8 @@ import epyqlib.nv
 import epyqlib.utils.qt
 import epyqlib.utils.twisted
 import epyqlib.utils.units
+import epyqlib.updateepc
+import tempfile
 
 
 class FormatVersionError(Exception):
@@ -74,6 +78,23 @@ class Definition:
 
     @classmethod
     def loadp(cls, path):
+
+        # check format here
+        # tried using temp directory like device.Device._init_from_file
+        # but was having challenges. just creating in same directory for now
+        path_old = None
+
+        if not epyqlib.updateepc.is_latest(path):
+            if isinstance(path, pathlib.Path):
+                path_old = str(path.resolve()) + '_old'
+            else:
+                path_old = path + '_old'
+            shutil.copy2(path, path_old)
+            path = epyqlib.updateepc.convert(
+                path_old,
+                os.path.dirname(path_old),
+            )
+
         with open(path) as f:
             return cls.load(f)
 

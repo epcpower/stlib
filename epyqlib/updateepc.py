@@ -7,6 +7,7 @@ import os
 import shutil
 import tempfile
 import textwrap
+import pathlib
 
 import attr
 import click
@@ -486,11 +487,16 @@ def version(path):
     except:
         pass
 
-    ui_files = tuple(
-        f
-        for f in referenced_files
-        if f.endswith('.ui')
-    )
+    # path might be a string or a pathlib.Path object
+    # need to be able to handle both 
+    ui_files = []
+    for f in referenced_files:
+        if isinstance(f, pathlib.Path):
+            if f.name.endswith('.ui'):
+                ui_files.append(f.name)
+        else:
+            if f.endswith('.ui'):
+                ui_files.append(f)
 
     if v is None:
         fragment = '_path_element_'
