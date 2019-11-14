@@ -1,4 +1,5 @@
 import collections
+import contextlib
 import distutils.dir_util
 import importlib
 import json
@@ -598,6 +599,17 @@ def convert(source_path, destination_path, destination_version=None):
     logging.info('New device file saved to: {}'.format(destination_path))
 
     return os.path.join(destination_path, os.path.basename(source_path))
+
+
+@contextlib.contextmanager
+def updated(path):
+    with tempfile.TemporaryDirectory() as converted_directory:
+        final_file = epyqlib.updateepc.convert(
+            source_path=path,
+            destination_path=converted_directory,
+        )
+
+        yield pathlib.Path(final_file)
 
 
 @click.command()
