@@ -490,14 +490,13 @@ def version(path):
 
     # path might be a string or a pathlib.Path object
     # need to be able to handle both 
-    ui_files = []
-    for f in referenced_files:
-        if isinstance(f, pathlib.Path):
-            if f.name.endswith('.ui'):
-                ui_files.append(f.name)
-        else:
-            if f.endswith('.ui'):
-                ui_files.append(f)
+    referenced_files = tuple(pathlib.Path(path) for path in referenced_files)
+
+    ui_files = tuple(
+        f
+        for f in referenced_files
+        if f.suffix == '.ui'
+    )
 
     if v is None:
         fragment = '_path_element_'
