@@ -16,6 +16,7 @@ import epyqlib.nv
 import epyqlib.utils.qt
 import epyqlib.utils.twisted
 import epyqlib.utils.units
+import epyqlib.updateepc
 
 
 class FormatVersionError(Exception):
@@ -30,9 +31,16 @@ class BusAlreadySetError(Exception):
     pass
 
 
+supported_version = [2]
+
+
 def format_version_validator(instance, attribute, value):
-    if value != [1]:
-        raise FormatVersionError('Only format_version 1 is supported')
+    if value != supported_version:
+        raise FormatVersionError(
+            'Only format_version {} is supported'.format(
+                '.'.join(str(v) for v in supported_version),
+            ),
+        )
 
 
 @attr.s
@@ -343,15 +351,15 @@ class Device:
         if self.definition is not None:
             raise AlreadyLoadedError('The definition has already been loaded')
 
-        self.definition = Definition.loadp(self.definition_path)
+        with epyqlib.updateepc.updated(self.definition_path) as updated:
+            self.definition = Definition.loadp(updated)
+            matrix = self.definition.load_can()
 
         node_id_adjust = functools.partial(
             epyqlib.device.node_id_types[self.definition.node_id_type],
             device_id=self.definition.node_id,
             controller_id=self.definition.controller_id,
         )
-
-        matrix = self.definition.load_can()
 
         self.neo = epyqlib.canneo.Neo(
             matrix=matrix,

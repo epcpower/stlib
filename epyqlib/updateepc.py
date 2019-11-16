@@ -1,4 +1,5 @@
 import collections
+import contextlib
 import distutils.dir_util
 import importlib
 import json
@@ -7,6 +8,7 @@ import os
 import shutil
 import tempfile
 import textwrap
+import pathlib
 
 import attr
 import click
@@ -486,10 +488,14 @@ def version(path):
     except:
         pass
 
+    # path might be a string or a pathlib.Path object
+    # need to be able to handle both 
+    referenced_files = tuple(pathlib.Path(path) for path in referenced_files)
+
     ui_files = tuple(
         f
         for f in referenced_files
-        if f.endswith('.ui')
+        if f.suffix == '.ui'
     )
 
     if v is None:
@@ -592,6 +598,17 @@ def convert(source_path, destination_path, destination_version=None):
     logging.info('New device file saved to: {}'.format(destination_path))
 
     return os.path.join(destination_path, os.path.basename(source_path))
+
+
+@contextlib.contextmanager
+def updated(path):
+    with tempfile.TemporaryDirectory() as converted_directory:
+        final_file = epyqlib.updateepc.convert(
+            source_path=path,
+            destination_path=converted_directory,
+        )
+
+        yield pathlib.Path(final_file)
 
 
 @click.command()
