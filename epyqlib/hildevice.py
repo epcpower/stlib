@@ -5,8 +5,6 @@ import operator
 import pathlib
 import time
 import uuid
-import os.path
-import shutil
 
 import attr
 import canmatrix
@@ -19,7 +17,6 @@ import epyqlib.utils.qt
 import epyqlib.utils.twisted
 import epyqlib.utils.units
 import epyqlib.updateepc
-import tempfile
 
 
 class FormatVersionError(Exception):
@@ -34,9 +31,16 @@ class BusAlreadySetError(Exception):
     pass
 
 
+supported_version = [2]
+
+
 def format_version_validator(instance, attribute, value):
-    if value != [2]:
-        raise FormatVersionError('Only format_version 2 is supported')
+    if value != supported_version:
+        raise FormatVersionError(
+            'Only format_version {} is supported'.format(
+                '.'.join(str(v) for v in supported_version),
+            ),
+        )
 
 
 @attr.s
@@ -78,23 +82,6 @@ class Definition:
 
     @classmethod
     def loadp(cls, path):
-
-        # check format here
-        # tried using temp directory like device.Device._init_from_file
-        # but was having challenges. just creating in same directory for now
-        path_old = None
-
-        if not epyqlib.updateepc.is_latest(path):
-            if isinstance(path, pathlib.Path):
-                path_old = str(path.resolve()) + '_old'
-            else:
-                path_old = path + '_old'
-            shutil.copy2(path, path_old)
-            path = epyqlib.updateepc.convert(
-                path_old,
-                os.path.dirname(path_old),
-            )
-
         with open(path) as f:
             return cls.load(f)
 
@@ -364,15 +351,15 @@ class Device:
         if self.definition is not None:
             raise AlreadyLoadedError('The definition has already been loaded')
 
-        self.definition = Definition.loadp(self.definition_path)
+        with epyqlib.updateepc.updated(self.definition_path) as updated:
+            self.definition = Definition.loadp(updated)
+            matrix = self.definition.load_can()
 
         node_id_adjust = functools.partial(
             epyqlib.device.node_id_types[self.definition.node_id_type],
             device_id=self.definition.node_id,
             controller_id=self.definition.controller_id,
         )
-
-        matrix = self.definition.load_can()
 
         self.neo = epyqlib.canneo.Neo(
             matrix=matrix,
