@@ -418,7 +418,9 @@ class Device:
 
     @twisted.internet.defer.inlineCallbacks
     def active_to_nv(self, wait=False):
-        yield self.save_nv.set(value=self.save_nv_value)
+        yield twisted.internet.defer.ensureDeferred(
+            self.save_nv.set(value=self.save_nv_value),
+        )
 
         if wait:
             yield self.wait_for_nv_save_completion()
