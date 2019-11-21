@@ -602,8 +602,12 @@ def convert(source_path, destination_path, destination_version=None):
 
 @contextlib.contextmanager
 def updated(path):
+    if epyqlib.updateepc.is_latest(path):
+        yield pathlib.Path(path)
+        return
+
     with tempfile.TemporaryDirectory() as converted_directory:
-        final_file = epyqlib.updateepc.convert(
+        final_file = convert(
             source_path=path,
             destination_path=converted_directory,
         )
