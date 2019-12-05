@@ -584,6 +584,7 @@ class Array(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(),
         ),
     )
+    abbreviation = create_abbreviation_attribute()
     length = attr.ib(
         default=1,
         converter=int,
@@ -651,6 +652,7 @@ class Array(epyqlib.treenode.TreeNode):
                     type_ = self.element_types[type(original)]
                     new_child = type_(original=original)
                     new_child.name = f'_{(index + 1):0{places}}'
+                    new_child.abbreviation = f'{self.abbreviation}{index + 1}'
                     self.append_child(new_child)
 
         epyqlib.utils.qt.pyqtify_set(self, 'length', value)
@@ -1642,7 +1644,13 @@ def merge(name, *types):
 
 columns = epyqlib.attrsmodel.columns(
     merge('name', *types.types.values()),
-    merge('abbreviation', Parameter, ArrayParameterElement, TableArrayElement),
+    merge(
+        'abbreviation',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+        Array,
+    ),
     (
         merge('type_name', Parameter, Group)
         + merge('type', SunSpecEnumerator)
