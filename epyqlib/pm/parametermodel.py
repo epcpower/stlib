@@ -1,5 +1,6 @@
 import contextlib
 import itertools
+import math
 import uuid
 
 import attr
@@ -644,10 +645,13 @@ class Array(epyqlib.treenode.TreeNode):
                 for row in range(len(self.children) - 1, value - 1, - 1):
                     self.remove_child(row=row)
             elif 1 <= len(self.children) < value:
-                for _ in range(value - len(self.children)):
+                places = math.ceil(math.log10(value + 1))
+                for index in range(len(self.children), value):
                     original = self.children[0]
                     type_ = self.element_types[type(original)]
-                    self.append_child(type_(original=original))
+                    new_child = type_(original=original)
+                    new_child.name = f'_{(index + 1):0{places}}'
+                    self.append_child(new_child)
 
         epyqlib.utils.qt.pyqtify_set(self, 'length', value)
 
