@@ -72,6 +72,7 @@
                         {
                             "_type": "array",
                             "name": "Table Array A",
+                            "abbreviation": null,
                             "named_enumerators": true,
                             "children": [
                                 {
@@ -112,7 +113,7 @@
                                 {
                                     "_type": "array_parameter_element",
                                     "name": "A1",
-                                    "abbreviation": null,
+                                    "abbreviation": "None2",
                                     "notes": null,
                                     "read_only": false,
                                     "default": null,
@@ -137,6 +138,7 @@
                         {
                             "_type": "array",
                             "name": "Table Array B",
+                            "abbreviation": null,
                             "named_enumerators": true,
                             "children": [
                                 {
@@ -177,7 +179,7 @@
                                 {
                                     "_type": "array_parameter_element",
                                     "name": "B1",
-                                    "abbreviation": null,
+                                    "abbreviation": "None2",
                                     "notes": null,
                                     "read_only": false,
                                     "default": null,
@@ -258,7 +260,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
-                                                            "abbreviation": null,
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -326,7 +328,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
-                                                            "abbreviation": null,
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -407,7 +409,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
-                                                            "abbreviation": null,
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -475,7 +477,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
-                                                            "abbreviation": null,
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -568,7 +570,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
-                                                            "abbreviation": null,
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -636,7 +638,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
-                                                            "abbreviation": null,
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -717,7 +719,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
-                                                            "abbreviation": null,
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -785,7 +787,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
-                                                            "abbreviation": null,
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
