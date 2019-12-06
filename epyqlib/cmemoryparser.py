@@ -37,6 +37,9 @@ import epyqlib.twisted.cancalibrationprotocol as ccp
 
 bits_per_byte = 16
 
+class ArrayLengthError(Exception):
+    pass
+
 @enum.unique
 class TypeFormats(enum.Enum):
     # http://www.dwarfstd.org/doc/Dwarf3.doc
@@ -1035,6 +1038,7 @@ def process_file(filename):
         logging.debug('{: 10d} {}'.format(die.offset, volatile_type))
 
     array_types = []
+    array_types_with_unknown_lengths = []
     for die in objects['DW_TAG_array_type']:
         name = die.attributes.get('DW_AT_name', None)
         if name is not None:
@@ -1048,7 +1052,21 @@ def process_file(filename):
             if child.tag != 'DW_TAG_subrange_type':
                 continue
 
-            dimensions.append(child.attributes['DW_AT_upper_bound'].value + 1)
+            lower_bound = child.attributes.get('DW_AT_lower_bound')
+            if lower_bound is None:
+                # assuming lower bound of zero for C code if not specified
+                lower_bound = 0
+            else:
+                lower_bound = lower_bound.value
+
+            upper_bound = child.attributes.get('DW_AT_upper_bound')
+            if upper_bound is not None:
+                upper_bound = upper_bound.value
+                length = (upper_bound - lower_bound) + 1
+            else:
+                length = child.attributes.get('DW_AT_count')
+
+            dimensions.append(length)
 
         array_type = ArrayType(
             name=name,
@@ -1056,7 +1074,16 @@ def process_file(filename):
             dimensions=dimensions,
             type=die.attributes['DW_AT_type'].value
         )
-        array_types.append(array_type)
+
+        if None in array_type.dimensions:
+            # For example if you `export int x[];` in a header.  Luckily it
+            # seems these aren't used.  If at some point they are we can review
+            # how to report this usefully.
+            # http://dwarfstd.org/doc/DWARF4.pdf#page=113
+            array_types_with_unknown_lengths.append(array_type)
+        else:
+            array_types.append(array_type)
+
         offsets[die.offset] = array_type
         logging.debug('{: 10d} {}'.format(die.offset, array_type))
         tags = ('DW_AT_stride_size',)
