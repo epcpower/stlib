@@ -4,7 +4,7 @@ import attr
 import siphash
 
 
-struct_format = '<I16sHf'
+struct_format = '<I16sHq'
 
 
 def high_32(value):
