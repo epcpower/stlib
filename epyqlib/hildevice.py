@@ -451,6 +451,12 @@ class Device:
             frame.cyclic_request(self.uuid, None)
 
     @twisted.internet.defer.inlineCallbacks
+    def get_access_level(self):
+        nv = Nv(nv=self.nvs.access_level_node, device=self)
+        access_level = yield nv.get()
+        return access_level
+
+    @twisted.internet.defer.inlineCallbacks
     def set_access_level(self, level=None, password=None):
         if level is None:
             level = self.default_elevated_access_level
