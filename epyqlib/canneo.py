@@ -12,6 +12,7 @@ from PyQt5.QtCore import (QObject, QTimer, Qt)
 import re
 import struct
 import sys
+import uuid
 
 import epyqlib.utils.qt
 import epyqlib.utils.units
@@ -34,6 +35,19 @@ class NotFoundError(Exception):
 
 
 nothing = object()
+
+
+def strip_uuid_from_comment(comment):
+    match = re.search(r'<uuid:([a-z0-9-]+)>', comment)
+
+    if match is None:
+        return comment, None
+
+    uuid_object = uuid.UUID(match[1])
+
+    stripped_comment = comment.replace(match[0], '').strip()
+
+    return stripped_comment, uuid_object
 
 
 @functools.lru_cache(4096)
@@ -241,6 +255,13 @@ class Signal:
         )
         if connect is not None:
             self.connect(connect)
+
+        if signal.comment is None:
+            self.parameter_uuid = None
+        else:
+            self.comment, self.parameter_uuid = strip_uuid_from_comment(
+                self.comment,
+            )
 
     def __str__(self):
         return '{name}: sb:{start_bit}, osb:{ordering_start_bit}, len:{length}'.format(
@@ -908,6 +929,13 @@ class Neo(QtCanListener):
                         multiplex_frames[multiplex_value] = neo_frame
 
         self.frames = tuple(frames)
+
+        self.signal_from_uuid = {
+            signal.parameter_uuid: signal
+            for frame in self.frames
+            for signal in frame.signals
+            if signal.parameter_uuid is not None
+        }
 
         if bus is not None:
             self.set_bus(bus=bus)

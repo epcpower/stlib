@@ -475,6 +475,11 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             metas=metas,
         )
 
+        self.nv_from_uuid = {
+            nv.parameter_uuid: nv
+            for nv in self.all_nv()
+        }
+
     def terminate(self):
         self.cancel_cyclic_read_all()
 
@@ -963,19 +968,6 @@ class CyclicReader:
                             )
 
 
-def strip_uuid_from_comment(comment):
-    match = re.search(r'<uuid:([a-z0-9-]+)>', comment)
-
-    if match is None:
-        return comment, None
-
-    uuid_object = uuid.UUID(match[1])
-
-    stripped_comment = comment.replace(match[0], '').strip()
-
-    return stripped_comment, uuid_object
-
-
 class Nv(epyqlib.canneo.Signal, TreeNode):
     changed = epyqlib.utils.qt.Signal(
         TreeNode,
@@ -998,13 +990,6 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         epyqlib.canneo.Signal.__init__(self, signal=signal, frame=frame,
                                     parent=parent)
         TreeNode.__init__(self)
-
-        if signal.comment is None:
-            self.parameter_uuid = None
-        else:
-            self.comment, self.parameter_uuid = strip_uuid_from_comment(
-                self.comment,
-            )
 
         if meta_value is None:
             self.meta_value = MetaEnum.value
