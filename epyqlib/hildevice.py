@@ -493,3 +493,29 @@ class Device:
                 level=original_access_level,
                 password=password,
             )
+
+    async def reset(self, timeout=None):
+        # SoftwareReset:InitiateReset
+        reset_uuid = uuid.UUID('b582085d-7734-4260-ab97-47e50a41b06c')
+        reset_nv = Nv(
+            nv=self.nvs.nv_from_uuid[reset_uuid],
+            device=self,
+        )
+
+        # StatusBits:State
+        state_uuid = uuid.UUID('6392782a-b886-45a0-9642-dd4f47cd2a59')
+        state_signal = Signal(
+            signal=self.neo.signal_from_uuid[state_uuid],
+            device=self,
+        )
+
+        # TODO: just accept the 1s or whatever default timeout?  A set without
+        #       waiting for the response could be nice.  (or embedded sending
+        #       a response)
+        with contextlib.suppress(epyqlib.twisted.nvs.RequestTimeoutError):
+            await reset_nv.set(value=1)
+
+        await state_signal.get(stale_after=0, timeout=10)
+
+    async def to_nv(self):
+        await self.nvs.module_to_nv()
