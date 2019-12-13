@@ -400,7 +400,9 @@ class Device:
 
         self.bus = bus
         self.bus.notifier.add(self.neo)
-        self.bus.notifier.add(self.nvs)
+        # TODO: really think through what is proper...  won't this keep the
+        #       nv objects from getting updated?
+        # self.bus.notifier.add(self.nvs)
 
     # @functools.lru_cache(maxsize=512)
     def signal(self, *path):
