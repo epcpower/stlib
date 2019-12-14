@@ -411,10 +411,22 @@ class Device:
             device=self,
         )
 
+    def signal_from_uuid(self, uuid_):
+        return Signal(
+            signal=self.neo.signal_from_uuid[uuid_],
+            device=self,
+        )
+
     # @functools.lru_cache(maxsize=512)
     def nv(self, *path):
         return Nv(
             nv=self.nvs.signal_from_names(*path),
+            device=self,
+        )
+
+    def nv_from_uuid(self, uuid_):
+        return Nv(
+            nv=self.nvs.nv_from_uuid[uuid_],
             device=self,
         )
 
@@ -496,17 +508,13 @@ class Device:
 
     async def reset(self, timeout=None):
         # SoftwareReset:InitiateReset
-        reset_uuid = uuid.UUID('b582085d-7734-4260-ab97-47e50a41b06c')
-        reset_nv = Nv(
-            nv=self.nvs.nv_from_uuid[reset_uuid],
-            device=self,
+        reset_nv = self.nv_from_uuid(
+            uuid_=uuid.UUID('b582085d-7734-4260-ab97-47e50a41b06c'),
         )
 
         # StatusBits:State
-        state_uuid = uuid.UUID('6392782a-b886-45a0-9642-dd4f47cd2a59')
-        state_signal = Signal(
-            signal=self.neo.signal_from_uuid[state_uuid],
-            device=self,
+        state_signal = self.signal_from_uuid(
+            uuid_=uuid.UUID('6392782a-b886-45a0-9642-dd4f47cd2a59'),
         )
 
         # TODO: just accept the 1s or whatever default timeout?  A set without
