@@ -35,6 +35,18 @@ class Uint64:
     def to_bytes(self, byteorder='little'):
         return self.value.to_bytes(8, byteorder)
 
+    def evolve_low(self, low):
+        return attr.evolve(
+            self,
+            value=(self.high_32() << 32) | low_32(low),
+        )
+
+    def evolve_high(self, high):
+        return attr.evolve(
+            self,
+            value=(low_32(high) << 32) | self.low_32(),
+        )
+
 
 @attr.s(frozen=True)
 class Tag64:
