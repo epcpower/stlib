@@ -527,3 +527,217 @@ class Device:
 
     async def to_nv(self):
         await self.nvs.module_to_nv()
+
+    async def get_serial_number(self):
+        nv = self.nv_from_uuid(
+            uuid_=uuid.UUID('390f27ea-6f28-4313-b183-5f37d007ccd1'),
+        )
+        value = await nv.get()
+        return value
+
+    async def clear_faults(self):
+        clear_faults_signal = self.signal_from_uuid(
+            uuid_=uuid.UUID('62b6dc82-c93a-454a-a643-dd8a7b2a220e'),
+        )
+        clear_faults_status_signal = self.signal_from_uuid(
+            uuid_=uuid.UUID('d84e5184-696d-487c-8850-cc904a7c018f'),
+        )
+
+        clear_faults_signal.set(value=False)
+        await clear_faults_status_signal.wait_for(
+            op='==',
+            value=False,
+            timeout=1,
+        )
+
+        clear_faults_signal.set(value=True)
+        await clear_faults_status_signal.wait_for(
+            op='==',
+            value=True,
+            timeout=1,
+        )
+
+        clear_faults_signal.set(value=False)
+        await clear_faults_status_signal.wait_for(
+            op='==',
+            value=False,
+            timeout=1,
+        )
+
+
+
+
+async def set_key_inplace(
+        key_nvs,
+        tag_nvs,
+        existing_key,
+        replacement_key,
+        serial_number,
+):
+    new_level_key = attr.evolve(existing_key, level=replacement_key)
+    new_low_key = attr.evolve(
+        new_level_key,
+        value=new_level_key.value.evolve_low(replacement_key.value.low_32()),
+    )
+
+    to_write = [
+        (key_nvs.access_level, existing_key, replacement_key.level),
+        (key_nvs.low, new_level_key, replacement_key.value.low_32()),
+        (key_nvs.high, new_low_key, replacement_key.value.high_32()),
+    ]
+
+    for nv, present_key, value in to_write:
+        tag = epyqlib.authorization.create_tag(
+            key_value=present_key.value,
+            serial_number=serial_number,
+            parameter_uuid=nv.parameter_uuid(),
+            meta_index=0,
+            value=int(
+                nv.nv.pack_bitstring(value=value),
+                2,
+            ),
+        )
+
+        async with temporary_set(
+                nvs_and_values=(
+                    (tag_nvs.low, tag.value.low_32()),
+                    (tag_nvs.high, tag.value.high_32()),
+                )
+        ):
+            await nv.set(value)
+            print()
+
+
+@contextlib.asynccontextmanager
+async def temporary_key(
+        key_nvs,
+        tag_nvs,
+        existing_key,
+        replacement_key,
+        serial_number,
+):
+    try:
+        await set_key_inplace(
+            key_nvs=key_nvs,
+            tag_nvs=tag_nvs,
+            existing_key=existing_key,
+            replacement_key=replacement_key,
+            serial_number=serial_number,
+        )
+
+        yield
+    finally:
+        await set_key_inplace(
+            key_nvs=key_nvs,
+            tag_nvs=tag_nvs,
+            existing_key=replacement_key,
+            replacement_key=existing_key,
+            serial_number=serial_number,
+        )
+
+
+@attr.s(frozen=True)
+class KeyNvs:
+    low = attr.ib()
+    high = attr.ib()
+    access_level = attr.ib()
+    index = attr.ib()
+
+    @classmethod
+    def from_index(cls, index, device):
+        # These UUIDs are for key 0
+
+        return cls(
+            low=device.nv_from_uuid(
+                uuid_=uuid.UUID('f046a08b-9308-4da7-ae5e-b931d610b3f4'),
+            ),
+            high=device.nv_from_uuid(
+                uuid_=uuid.UUID('3e021694-d565-4636-8a5d-3e0976d1112c'),
+            ),
+            access_level=device.nv_from_uuid(
+                uuid_=uuid.UUID('07c45cff-0b95-413d-9aed-01a4f514e8da'),
+            ),
+            index=index,
+        )
+
+
+@attr.s(frozen=True)
+class TagNvs:
+    low = attr.ib()
+    high = attr.ib()
+    index = attr.ib()
+
+    @classmethod
+    def from_index(cls, index, device):
+        return cls(
+            low=device.nv(f'AuthTag{index}Low32', 'Low32'),
+            high=device.nv(f'AuthTag{index}High32', 'High32'),
+            index=index,
+        )
+
+
+@contextlib.asynccontextmanager
+async def temporary_set(nvs_and_values):
+    async with contextlib.AsyncExitStack() as exit_stack:
+        for nv, value in nvs_and_values:
+            await exit_stack.enter_async_context(nv.temporary_set(value=value))
+
+        yield
+
+
+@attr.s
+class AccessLevel:
+    name = attr.ib()
+    level = attr.ib()
+    password = attr.ib()
+
+
+# TODO: shouldn't need to be duplicated here
+
+highest_authenticatable_access_level = AccessLevel(
+    name='EPC Factory',
+    level=3,
+    password=13250,
+)
+
+
+authenticatable_elevated_access_levels = [
+    AccessLevel(
+        name='Service Eng',
+        level=1,
+        password=42,
+    ),
+    AccessLevel(
+        name='EPC Eng',
+        level=2,
+        password=13125,
+    ),
+    highest_authenticatable_access_level,
+]
+
+
+base_access_level = AccessLevel(
+    name='Service Tech',
+    level=0,
+    password=0,
+)
+
+
+authenticatable_access_levels = [
+    base_access_level,
+    *authenticatable_elevated_access_levels,
+]
+
+
+unauthenticatable_access_levels = [
+    AccessLevel(
+        name='MAC Auth',
+        level=4,
+        password=31415,
+    ),
+]
+
+access_levels = [
+    *authenticatable_access_levels,
+    *unauthenticatable_access_levels,
+]
