@@ -432,6 +432,7 @@ class Device:
 
     @twisted.internet.defer.inlineCallbacks
     def active_to_nv(self, wait=False):
+        # TODO: dedupe 8795477695t46542676781543768139
         yield twisted.internet.defer.ensureDeferred(
             self.save_nv.set(value=self.save_nv_value),
         )
@@ -526,6 +527,7 @@ class Device:
         await state_signal.get(stale_after=0, timeout=10)
 
     async def to_nv(self):
+        # TODO: dedupe 8795477695t46542676781543768139
         await self.nvs.module_to_nv()
 
     async def get_serial_number(self):
