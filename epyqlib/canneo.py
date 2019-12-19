@@ -819,12 +819,15 @@ class Neo(QtCanListener):
 
         for frame in matrix.frames:
             if node_id_adjust is not None:
-                frame.arbitration_id.from_compound_integer(node_id_adjust(
-                    message_id=frame.arbitration_id.to_compound_integer(),
-                    to_device=(
-                        frame.attributes['Receivable'].casefold() == 'false'
+                frame.arbitration_id = canmatrix.canmatrix.ArbitrationId(
+                    id=node_id_adjust(
+                        message_id=frame.arbitration_id.id,
+                        to_device=(
+                            frame.attributes['Receivable'].casefold() == 'false'
+                        ),
                     ),
-                ))
+                    extended=frame.arbitration_id.extended,
+                )
             multiplex_signal = None
             for signal in frame.signals:
                 if signal.multiplex == 'Multiplexor':
