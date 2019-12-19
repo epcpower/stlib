@@ -177,12 +177,7 @@ class Signal:
 
     def __init__(self, signal, frame, connect=None, parent=None):
         # self.attributes = signal._attributes # {dict} {'GenSigStartValue': '0.0', 'LongName': 'Enable'}
-        try:
-            self.default_value = signal.attributes['GenSigStartValue']
-        except KeyError:
-            self.default_value = None
-        else:
-            self.default_value = decimal.Decimal(self.default_value)
+        self.default_value = signal.initial_value
         self.long_name = signal.attributes.get('LongName', None)
         self.hexadecimal_output = signal.attributes.get('HexadecimalOutput',
                                                          None)
