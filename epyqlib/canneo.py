@@ -577,7 +577,7 @@ class Frame(QtCanListener):
 
         self.mux_frame = mux_frame
 
-        self.id = frame.id # {int} 16755521
+        self.id = frame.arbitration_id # {int} 16755521
         # self.SignalGroups = frame.SignalGroups # {list} []
         self.size = frame.size # {int} 8
         # self.Transmitter = frame.Transmitter # {list} []
@@ -819,8 +819,8 @@ class Neo(QtCanListener):
 
         for frame in matrix.frames:
             if node_id_adjust is not None:
-                frame.id = node_id_adjust(
-                    message_id=frame.id,
+                frame.arbitration_id = node_id_adjust(
+                    message_id=frame.arbitration_id,
                     to_device=(
                         frame.attributes['Receivable'].casefold() == 'false'
                     ),
@@ -846,7 +846,7 @@ class Neo(QtCanListener):
                 # parsing messages later
                 multiplex_frame = canmatrix.Frame(
                         name=frame.name,
-                        id=frame.id,
+                        arbitration_id=frame.arbitration_id,
                         size=frame.size,
                         transmitters=list(frame.transmitters))
                 if 'GenMsgCycleTime' in frame.attributes:
@@ -885,7 +885,7 @@ class Neo(QtCanListener):
                     # just those signals.
                     matrix_frame = canmatrix.Frame(
                             name=frame.name,
-                            id=frame.id,
+                            arbitration_id=frame.arbitration_id,
                             size=frame.size,
                             transmitters=list(frame.transmitters))
                     matrix_frame.extended = frame.extended

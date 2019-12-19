@@ -44,7 +44,7 @@ setuptools.setup(
         'alqtendpy',
         'arrow',
         'bitstruct',
-        'canmatrix',
+        'canmatrix>=0.9.1',
         'click>=7',
         'python-dotenv',
         'natsort',

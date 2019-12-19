@@ -7,7 +7,7 @@ alqtendpy==0.0.4
 arrow==0.12.1
 attrs==18.2.0
 bitstruct==6.0.0
-canmatrix==0.7
+canmatrix==0.9.1
 Click==7.0
 GitPython==2.1.11
 graham==0.1.11
