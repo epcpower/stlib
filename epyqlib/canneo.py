@@ -215,12 +215,12 @@ class Signal:
         else:
             self.multiplex = signal.multiplex # {NoneType} None
 
-        self.raw_minimum, self.raw_maximum = signal.calculateRawRange()
+        self.raw_minimum, self.raw_maximum = signal.calculate_raw_range()
 
         self.name = signal.name # {str} 'Enable_command'
         # self.receiver = signal.receiver # {str} ''
         self.signal_size = int(signal.size) # {int} 2
-        self.start_bit = int(signal.getStartbit()) # {int} 0
+        self.start_bit = int(signal.get_startbit()) # {int} 0
         self.unit = signal.unit # {str} ''
         self.enumeration = {int(k): v for k, v in signal.values.items()} # {dict} {'0': 'Disable', '2': 'Error', '1': 'Enable', '3': 'N/A'}
         self.enumeration_name = signal.enumeration
@@ -577,19 +577,19 @@ class Frame(QtCanListener):
 
         self.mux_frame = mux_frame
 
-        self.id = frame.arbitration_id # {int} 16755521
+        self.id = frame.arbitration_id.to_compound_integer() # {int} 16755521
         # self.SignalGroups = frame.SignalGroups # {list} []
         self.size = frame.size # {int} 8
         # self.Transmitter = frame.Transmitter # {list} []
         # self.attributes = frame.attributes # {dict} {'GenMsgCycleTime': '200'}
-        self.cycle_time = frame.attributes.get('GenMsgCycleTime', None)
+        self.cycle_time = frame.cycle_time if frame.cycle_time != 0 else None
         self.mux_name = frame.attributes.get('mux_name', None)
         self.sendable = frame.attributes.get('Sendable') == 'True'
         self.receivable = frame.attributes.get('Receivable') == 'True'
         self.comment = frame.comment # {str} 'Operational commands are received by the module via control bits within this message.'
         if self.comment is None:
             self.comment = ''
-        self.extended = bool(frame.extended) # {int} 1
+        self.extended = bool(frame.arbitration_id.extended) # {int} 1
         self.name = frame.name # {str} 'CommandModeControl'
         # self.receiver = frame.receiver # {list} []
         # self.signals = frame.signals # {list} [<canmatrix.canmatrix.Signal object at 0x7fddf8053fd0>, <canmatrix.canmatrix.Signal object at 0x7fddf8054048>, <canmatrix.canmatrix.Signal object at 0x7fddf80543c8>, <canmatrix.canmatrix.Signal object at 0x7fddf8054470>, <canmatrix.canmatrix.Signal object
@@ -819,12 +819,12 @@ class Neo(QtCanListener):
 
         for frame in matrix.frames:
             if node_id_adjust is not None:
-                frame.arbitration_id = node_id_adjust(
-                    message_id=frame.arbitration_id,
+                frame.arbitration_id.from_compound_integer(node_id_adjust(
+                    message_id=frame.arbitration_id.to_compound_integer(),
                     to_device=(
                         frame.attributes['Receivable'].casefold() == 'false'
                     ),
-                )
+                ))
             multiplex_signal = None
             for signal in frame.signals:
                 if signal.multiplex == 'Multiplexor':
@@ -845,19 +845,15 @@ class Neo(QtCanListener):
                 # Make a frame with just the multiplexor entry for
                 # parsing messages later
                 multiplex_frame = canmatrix.Frame(
-                        name=frame.name,
-                        arbitration_id=frame.arbitration_id,
-                        size=frame.size,
-                        transmitters=list(frame.transmitters))
-                if 'GenMsgCycleTime' in frame.attributes:
-                    multiplex_frame.addAttribute(
-                        'GenMsgCycleTime',
-                        frame.attributes['GenMsgCycleTime']
-                    )
-                multiplex_frame.extended = frame.extended
+                    name=frame.name,
+                    arbitration_id=frame.arbitration_id,
+                    size=frame.size,
+                    transmitters=list(frame.transmitters),
+                    cycle_time=frame.cycle_time,
+                )
                 matrix_signal = canmatrix.Signal(
                         name=multiplex_signal.name,
-                        startBit=multiplex_signal.startBit,
+                        start_bit=multiplex_signal.start_bit,
                         size=multiplex_signal.size,
                         is_little_endian=multiplex_signal.is_little_endian,
                         is_signed=multiplex_signal.is_signed,
@@ -867,7 +863,7 @@ class Neo(QtCanListener):
                         max=multiplex_signal.max,
                         unit=multiplex_signal.unit,
                         multiplex=multiplex_signal.multiplex)
-                multiplex_frame.addSignal(matrix_signal)
+                multiplex_frame.add_signal(matrix_signal)
                 multiplex_neo_frame = frame_class(
                     frame=multiplex_frame,
                     strip_summary=strip_summary,
@@ -884,22 +880,18 @@ class Neo(QtCanListener):
                     # For each multiplexed frame, make a frame with
                     # just those signals.
                     matrix_frame = canmatrix.Frame(
-                            name=frame.name,
-                            arbitration_id=frame.arbitration_id,
-                            size=frame.size,
-                            transmitters=list(frame.transmitters))
-                    matrix_frame.extended = frame.extended
-                    if 'GenMsgCycleTime' in frame.attributes:
-                        matrix_frame.addAttribute(
-                            'GenMsgCycleTime',
-                            frame.attributes['GenMsgCycleTime']
-                        )
-                    matrix_frame.addAttribute('mux_name', multiplex_name)
-                    matrix_frame.addComment(multiplex_signal.comments[int(
+                        name=frame.name,
+                        arbitration_id=frame.arbitration_id,
+                        size=frame.size,
+                        transmitters=list(frame.transmitters),
+                        cycle_time=frame.cycle_time,
+                    )
+                    matrix_frame.add_attribute('mux_name', multiplex_name)
+                    matrix_frame.add_comment(multiplex_signal.comments[int(
                         multiplex_value)])
                     matrix_signal = canmatrix.Signal(
                             name=multiplex_signal.name,
-                            startBit=multiplex_signal.startBit,
+                            start_bit=multiplex_signal.start_bit,
                             size=multiplex_signal.size,
                             is_little_endian=multiplex_signal.is_little_endian,
                             is_signed=multiplex_signal.is_signed,
@@ -910,11 +902,11 @@ class Neo(QtCanListener):
                             unit=multiplex_signal.unit,
                             multiplex=multiplex_signal.multiplex)
                     # neo_signal = signal_class(signal=matrix_signal, frame=multiplex_neo_frame)
-                    matrix_frame.addSignal(matrix_signal)
+                    matrix_frame.add_signal(matrix_signal)
 
                     for signal in frame.signals:
                         if signal.multiplex == multiplex_value:
-                            matrix_frame.addSignal(signal)
+                            matrix_frame.add_signal(signal)
 
                     neo_frame = frame_class(
                         frame=matrix_frame,

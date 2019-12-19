@@ -110,7 +110,7 @@ class Builder:
     def load_epp(self, parameters, can, can_suffix):
         matrix, = canmatrix.formats.load(
             can,
-            importType=can_suffix[1:],
+            import_type=can_suffix[1:],
         ).values()
         neo = epyqlib.canneo.Neo(
             matrix=matrix,
