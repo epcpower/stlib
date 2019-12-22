@@ -572,7 +572,7 @@ class Frame(QtCanListener):
 
         self.mux_frame = mux_frame
 
-        self.id = frame.arbitration_id.to_compound_integer() # {int} 16755521
+        self.id = frame.arbitration_id.id # {int} 16755521
         # self.SignalGroups = frame.SignalGroups # {list} []
         self.size = frame.size # {int} 8
         # self.Transmitter = frame.Transmitter # {list} []

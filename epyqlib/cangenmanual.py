@@ -264,13 +264,13 @@ def main(can, template, output, verbose):
     for frame in sorted(matrix.frames, key=lambda f: f.name):
         frame_table.append(
             frame.name,
-            id_string(frame.arbitration_id.to_compound_integer()),
+            id_string(frame.arbitration_id.id),
         )
 
         a_ft = Table(
             title='{} ({})'.format(
                 frame.name,
-                id_string(frame.arbitration_id.to_compound_integer()),
+                id_string(frame.arbitration_id.id),
             ),
             comment=frame.comment,
             headings=frame_table_header,
@@ -280,7 +280,7 @@ def main(can, template, output, verbose):
 
         mux_table.append('{} ({})'.format(
             frame.name,
-            id_string(frame.arbitration_id).to_compound_integer(),
+            id_string(frame.arbitration_id).id,
         ))
 
         multiplex_signal = frame.signals[0]
@@ -309,7 +309,7 @@ def main(can, template, output, verbose):
                 a_mt = Table(
                     title='{} ({}) - {} ({})'.format(
                         frame.name,
-                        id_string(frame.arbitration_id.to_compound_integer()),
+                        id_string(frame.arbitration_id.id),
                         name,
                         value
                     ),
