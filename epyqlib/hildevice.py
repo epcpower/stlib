@@ -173,6 +173,7 @@ class Signal:
         op = operator_map.get(op, op)
         operator_string = reverse_operator_map.get(op, str(op))
 
+        @twisted.internet.defer.inlineCallbacks
         def check():
             present_value = yield self.get()
             return op(present_value, value)
@@ -526,6 +527,18 @@ class Device:
 
         await state_signal.get(stale_after=0, timeout=10)
 
+    async def wait_through_power_on_reset(self):
+        status_signal = self.signal_from_uuid(
+            uuid_=uuid.UUID('6392782a-b886-45a0-9642-dd4f47cd2a59'),
+        )
+
+        await status_signal.wait_for(
+            op='!=',
+            # TODO: stop comparing strings...
+            value='Power On Reset',
+            timeout=60,
+        )
+
     async def to_nv(self):
         # TODO: dedupe 8795477695t46542676781543768139
         await self.nvs.module_to_nv()
@@ -548,21 +561,21 @@ class Device:
         clear_faults_signal.set(value=False)
         await clear_faults_status_signal.wait_for(
             op='==',
-            value=False,
+            value='Normal',
             timeout=1,
         )
 
         clear_faults_signal.set(value=True)
         await clear_faults_status_signal.wait_for(
             op='==',
-            value=True,
+            value='Clear Faults',
             timeout=1,
         )
 
         clear_faults_signal.set(value=False)
         await clear_faults_status_signal.wait_for(
             op='==',
-            value=False,
+            value='Normal',
             timeout=1,
         )
 
