@@ -521,6 +521,13 @@ class NvView(QtWidgets.QWidget):
             self.ui.enforce_range_limits_check_box.checkState(),
         )
 
+        self.ui.edit_locally_check_box.stateChanged.connect(
+            model.edit_locally_changed,
+        )
+        model.edit_locally_changed(
+            self.ui.edit_locally_check_box.checkState(),
+        )
+
         self.module_to_nv.connect(model.module_to_nv)
 
         read_from_file = functools.partial(

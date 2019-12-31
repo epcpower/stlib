@@ -1483,6 +1483,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         color = QtGui.QColor(palette.windowText().color())
         color.setAlphaF(0.3)
         self.stale_foreground = color
+        self.edit_locally = False
 
     def all_nv(self):
         return self.root.all_nv()
@@ -1584,6 +1585,9 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
     def check_range_changed(self, state):
         self.check_range = state == Qt.Checked
+
+    def edit_locally_changed(self, state):
+        self.edit_locally = state == Qt.Checked
 
     def start_transaction(self):
         if self.transaction_actions is not None:
@@ -1693,29 +1697,41 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 if valid:
                     nodes = (node,)
 
-                    if self.transaction_actions is None:
-                        callback = functools.partial(
-                            self.update_signals,
+                    if self.edit_locally:
+                        self.update_signals(
+                            arg=[
+                                {node.status_signal: data},
+                                meta,
+                            ],
                             only_these=nodes,
                         )
-
-                        d = self.root.write_all_to_device(
-                            only_these=nodes,
-                            values={(node, meta): node.calc_human_value(data)},
-                            callback=callback,
-                            meta=(meta,),
-                        )
-                        d.addErrback(epyqlib.utils.twisted.catch_expected)
-                        d.addErrback(epyqlib.utils.twisted.errbackhook)
                     else:
-                        self.transaction_actions[meta].append(
-                            TransactionAction(
+                        human_value = node.calc_human_value(data)
+                        values = {(node, meta): human_value}
+
+                        if self.transaction_actions is None:
+                            callback = functools.partial(
+                                self.update_signals,
                                 only_these=nodes,
-                                values={(node, meta): node.calc_human_value(data)},
-                                callback=self.update_signals,
-                                meta=meta,
-                            ),
-                        )
+                            )
+
+                            d = self.root.write_all_to_device(
+                                only_these=nodes,
+                                values=values,
+                                callback=callback,
+                                meta=(meta,),
+                            )
+                            d.addErrback(epyqlib.utils.twisted.catch_expected)
+                            d.addErrback(epyqlib.utils.twisted.errbackhook)
+                        else:
+                            self.transaction_actions[meta].append(
+                                TransactionAction(
+                                    only_these=nodes,
+                                    values=values,
+                                    callback=self.update_signals,
+                                    meta=meta,
+                                ),
+                            )
 
         return False
 
