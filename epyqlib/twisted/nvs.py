@@ -311,60 +311,63 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
 
     def _read_write(self, request):
         self._deferred = request.deferred
-        self._start_transaction()
-        self.state = State.reading if request.read else State.writing
+        try:
+            self._start_transaction()
+            self.state = State.reading if request.read else State.writing
 
-        read_write, = (k for k, v
-                       in request.frame.read_write.enumeration.items()
-                       if v == ('Read' if request.read else 'Write'))
+            read_write, = (k for k, v
+                           in request.frame.read_write.enumeration.items()
+                           if v == ('Read' if request.read else 'Write'))
 
-        data = collections.OrderedDict()
-        for signal in request.frame.signals:
-            if signal is request.frame.read_write:
-                data[signal] = read_write
-            elif signal.enumeration_name == 'Meta':
-                data[signal] = request.meta.value
-            elif signal not in request.frame.parameter_signals:
-                data[signal] = signal.value
-            elif signal in request.signals and not request.read:
-                data[signal] = request.signals[signal]
-            else:
-                data[signal] = None
+            data = collections.OrderedDict()
+            for signal in request.frame.signals:
+                if signal is request.frame.read_write:
+                    data[signal] = read_write
+                elif signal.enumeration_name == 'Meta':
+                    data[signal] = request.meta.value
+                elif signal not in request.frame.parameter_signals:
+                    data[signal] = signal.value
+                elif signal in request.signals and not request.read:
+                    data[signal] = request.signals[signal]
+                else:
+                    data[signal] = None
 
-            if data[signal] is None:
-                v = next(
-                    v
-                    for v in (
-                        signal.from_human(signal.default_value),
-                        signal.from_human(signal.min),
-                        signal.from_human(signal.max),
-                        0,
+                if data[signal] is None:
+                    v = next(
+                        v
+                        for v in (
+                            signal.from_human(signal.default_value),
+                            signal.from_human(signal.min),
+                            signal.from_human(signal.max),
+                            0,
+                        )
+                        if v is not None
                     )
-                    if v is not None
-                )
-                data[signal] = v
+                    data[signal] = v
 
-            data[signal] = int(data[signal])
+                data[signal] = int(data[signal])
 
-        data = request.frame.update_from_signals(
-            data=data.values(),
-            only_return=True,
-        )
+            data = request.frame.update_from_signals(
+                data=data.values(),
+                only_return=True,
+            )
 
-        if request.passive:
-            write = self._transport.write_passive
-        else:
-            write = self._transport.write
+            if request.passive:
+                write = self._transport.write_passive
+            else:
+                write = self._transport.write
 
-        self._request_memory = request
+            self._request_memory = request
 
-        if not write(request.frame.to_message(data)):
-            self.send_failed()
-            return
+            if not write(request.frame.to_message(data)):
+                self.send_failed()
+                return
 
-        request.send_time = time.time()
+            request.send_time = time.time()
 
-        self.setTimeout(self._timeout)
+            self.setTimeout(self._timeout)
+        except Exception as e:
+            self.errback(e)
 
     def dataReceived(self, msg):
 

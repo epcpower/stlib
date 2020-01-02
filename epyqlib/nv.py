@@ -556,75 +556,77 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
         if not background:
             self.activity_started.emit('{}...'.format(activity))
-        d = twisted.internet.defer.Deferred()
-        d.callback(None)
 
-        def handle_frame(frame, signals, enumerator):
-            if read:
-                d.addCallback(
-                    lambda _, enumerator=enumerator: self.protocol.read_multiple(
-                        nv_signals=signals,
-                        meta=enumerator,
-                        priority=epyqlib.twisted.nvs.Priority.user,
-                        passive=True,
-                        all_values=True,
+        try:
+            d = twisted.internet.defer.Deferred()
+            d.callback(None)
+
+            def handle_frame(frame, signals, enumerator):
+                if read:
+                    d.addCallback(
+                        lambda _, enumerator=enumerator: self.protocol.read_multiple(
+                            nv_signals=signals,
+                            meta=enumerator,
+                            priority=epyqlib.twisted.nvs.Priority.user,
+                            passive=True,
+                            all_values=True,
+                        )
                     )
-                )
-            elif frame.read_write.min <= 0:
-                not_none_signals = {}
-                for signal in signals:
-                    values_key = (signal, enumerator)
-                    if values_key in values:
-                        value = values[values_key]
-                    elif enumerator == MetaEnum.value:
-                        value = signal.value
-                    else:
-                        value = getattr(signal.meta, enumerator.name).value
+                elif frame.read_write.min <= 0:
+                    not_none_signals = {}
+                    for signal in signals:
+                        values_key = (signal, enumerator)
+                        if values_key in values:
+                            value = values[values_key]
+                        elif enumerator == MetaEnum.value:
+                            value = signal.value
+                        else:
+                            value = getattr(signal.meta, enumerator.name).value
 
-                    if value is not None:
-                        not_none_signals[signal] = value
+                        if value is not None:
+                            not_none_signals[signal] = value
 
-                if len(not_none_signals) == 0:
+                    if len(not_none_signals) == 0:
+                        return
+
+                    d.addCallback(
+                        lambda _, enumerator=enumerator, not_none_signals=not_none_signals: self.protocol.write_multiple(
+                            nv_signals=not_none_signals,
+                            meta=enumerator,
+                            priority=epyqlib.twisted.nvs.Priority.user,
+                            passive=True,
+                            all_values=True,
+                        )
+                    )
+                else:
                     return
 
-                d.addCallback(
-                    lambda _, enumerator=enumerator, not_none_signals=not_none_signals: self.protocol.write_multiple(
-                        nv_signals=not_none_signals,
-                        meta=enumerator,
-                        priority=epyqlib.twisted.nvs.Priority.user,
-                        passive=True,
-                        all_values=True,
+                if callback is not None:
+                    d.addCallback(callback)
+
+            if only_these is None:
+                only_these = self.all_nv()
+
+            frames = set(nv.frame for nv in only_these)
+            for frame in frames:
+                signals = tuple(nv for nv in only_these
+                                if nv.frame is frame)
+
+                frame.update_from_signals()
+                for enumerator in meta:
+                    handle_frame(
+                        frame=frame,
+                        signals=signals,
+                        enumerator=enumerator,
                     )
-                )
-            else:
-                return
-
-            if callback is not None:
-                d.addCallback(callback)
-
-        if only_these is None:
-            only_these = self.all_nv()
-
-        frames = set(nv.frame for nv in only_these)
-        for frame in frames:
-            signals = tuple(nv for nv in only_these
-                            if nv.frame is frame)
-
-            frame.update_from_signals()
-            for enumerator in meta:
-                handle_frame(
-                    frame=frame,
-                    signals=signals,
-                    enumerator=enumerator,
-                )
-
-        if not background:
-            d.addCallback(epyqlib.utils.twisted.detour_result,
-                          self.activity_ended.emit,
-                          'Finished {}...'.format(activity.lower()))
-            d.addErrback(epyqlib.utils.twisted.detour_result,
-                         self.activity_ended.emit,
-                         'Failed while {}...'.format(activity.lower()))
+        finally:
+            if not background:
+                d.addCallback(epyqlib.utils.twisted.detour_result,
+                              self.activity_ended.emit,
+                              'Finished {}...'.format(activity.lower()))
+                d.addErrback(epyqlib.utils.twisted.detour_result,
+                             self.activity_ended.emit,
+                             'Failed while {}...'.format(activity.lower()))
 
         return d
 
