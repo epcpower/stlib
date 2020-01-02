@@ -335,7 +335,7 @@ class Protocol(twisted.protocols.policies.TimeoutMixin):
                 v = next(
                     v
                     for v in (
-                        signal.default_value,
+                        signal.from_human(signal.default_value),
                         signal.from_human(signal.min),
                         signal.from_human(signal.max),
                         0,
