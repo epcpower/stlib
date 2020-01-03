@@ -527,6 +527,9 @@ class Signal:
     def unpack_bitstring(self, bits):
         return unpack_bitstring(self.signal_size, self.float, self.signed, bits)
 
+    def some_packable_value(self):
+        return self.unpack_bitstring(bits='0' * self.signal_size)
+
 
 @functools.lru_cache(10000)
 def locale_format(format, value):

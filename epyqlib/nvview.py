@@ -799,68 +799,69 @@ class NvView(QtWidgets.QWidget):
 
         d = twisted.internet.defer.Deferred()
         d.callback(None)
+        try:
 
-        if action in copy_to_columns:
-            destination_column = copy_to_columns[action]
-            model.start_transaction()
+            if action in copy_to_columns:
+                destination_column = copy_to_columns[action]
+                model.start_transaction()
 
-            for index in selected_indexes:
-                maybe_copy(
-                    source_column=index.column(),
-                    destination_column=destination_column,
-                    index=index,
-                    model=model,
-                )
-
-            model.submit_transaction()
-        else:
-            for meta, nodes in selected_by_meta.items():
-                callback = functools.partial(
-                    self.update_signals,
-                    only_these=nodes,
-                )
-                if action is None:
-                    pass
-                elif action is read:
-                    d.addCallback(
-                        lambda _, nodes=nodes, callback=callback, meta=meta:
-                        model.root.read_all_from_device(
-                            only_these=nodes,
-                            callback=callback,
-                            meta=(meta,),
-                        )
+                for index in selected_indexes:
+                    maybe_copy(
+                        source_column=index.column(),
+                        destination_column=destination_column,
+                        index=index,
+                        model=model,
                     )
-                elif action is write:
-                    d.addCallback(
-                        lambda _, nodes=nodes, callback=callback, meta=meta:
-                        model.root.write_all_to_device(
-                            only_these=nodes,
-                            callback=callback,
-                            meta=(meta,),
-                        )
-                    )
-                elif action is saturate:
-                    self.disable_column_resize()
-                    for node in nodes:
-                        model.saturate_node(node, meta=meta)
-                    self.enable_column_resize()
-                elif action is reset:
-                    self.disable_column_resize()
-                    for node in nodes:
-                        model.reset_node(node, meta=meta)
-                    self.enable_column_resize()
-                elif action is clear:
-                    self.disable_column_resize()
-                    for node in nodes:
-                        model.clear_node(node, meta=meta)
-                    self.enable_column_resize()
-                elif action is expand_all:
-                    self.ui.tree_view.expandAll()
-                elif action is collapse_all:
-                    self.ui.tree_view.collapseAll()
 
-        d.addErrback(epyqlib.utils.twisted.catch_expected)
-        d.addErrback(epyqlib.utils.twisted.errbackhook)
+                model.submit_transaction()
+            else:
+                for meta, nodes in selected_by_meta.items():
+                    callback = functools.partial(
+                        self.update_signals,
+                        only_these=nodes,
+                    )
+                    if action is None:
+                        pass
+                    elif action is read:
+                        d.addCallback(
+                            lambda _, nodes=nodes, callback=callback, meta=meta:
+                            model.root.read_all_from_device(
+                                only_these=nodes,
+                                callback=callback,
+                                meta=(meta,),
+                            )
+                        )
+                    elif action is write:
+                        d.addCallback(
+                            lambda _, nodes=nodes, callback=callback, meta=meta:
+                            model.root.write_all_to_device(
+                                only_these=nodes,
+                                callback=callback,
+                                meta=(meta,),
+                            )
+                        )
+                    elif action is saturate:
+                        self.disable_column_resize()
+                        for node in nodes:
+                            model.saturate_node(node, meta=meta)
+                        self.enable_column_resize()
+                    elif action is reset:
+                        self.disable_column_resize()
+                        for node in nodes:
+                            model.reset_node(node, meta=meta)
+                        self.enable_column_resize()
+                    elif action is clear:
+                        self.disable_column_resize()
+                        for node in nodes:
+                            model.clear_node(node, meta=meta)
+                        self.enable_column_resize()
+                    elif action is expand_all:
+                        self.ui.tree_view.expandAll()
+                    elif action is collapse_all:
+                        self.ui.tree_view.collapseAll()
+        finally:
+            d.addErrback(epyqlib.utils.twisted.catch_expected)
+            d.addErrback(epyqlib.utils.twisted.errbackhook)
 
     def header_context_menu(self, pos):
         menu = QtWidgets.QMenu(parent=self.ui.tree_view)

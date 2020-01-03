@@ -612,7 +612,15 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 signals = tuple(nv for nv in only_these
                                 if nv.frame is frame)
 
-                frame.update_from_signals()
+                if read:
+                    data = tuple(
+                        signal.some_packable_value()
+                        for signal in frame.signals
+                    )
+                    frame.update_from_signals(data=data)
+                else:
+                    frame.update_from_signals()
+
                 for enumerator in meta:
                     handle_frame(
                         frame=frame,
