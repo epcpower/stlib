@@ -473,7 +473,7 @@ class Device:
         return access_level
 
     @twisted.internet.defer.inlineCallbacks
-    def set_access_level(self, level=None, password=None):
+    def set_access_level(self, level=None, password=None, check_limits=True):
         if level is None:
             level = self.default_elevated_access_level
 
@@ -482,12 +482,17 @@ class Device:
 
         self.nvs.password_node.set_value(password)
         self.nvs.access_level_node.set_value(level)
+        check_limits_nv = self.nv_from_uuid(
+            uuid.UUID('bd7c3c96-bde9-4b4b-a646-e1d06a7cc24f'),
+        )
+        check_limits_nv.nv.set_value(check_limits)
 
         selected_nodes = tuple(
             node
             for node in (
                 self.nvs.password_node,
                 self.nvs.access_level_node,
+                check_limits_nv.nv,
             )
             if node is not None
         )
@@ -495,18 +500,39 @@ class Device:
         yield self.nvs.write_all_to_device(only_these=selected_nodes)
 
     @contextlib.asynccontextmanager
-    async def temporary_access_level(self, level=None, password=None):
+    async def temporary_access_level(
+            self,
+            level=None,
+            password=None,
+            check_limits=True,
+    ):
         access_level_parameter = self.nv(*self.definition.access_level_path[1:])
         original_access_level = await access_level_parameter.get()
 
+        check_limits_nv = self.nv_from_uuid(
+            uuid.UUID('bd7c3c96-bde9-4b4b-a646-e1d06a7cc24f'),
+        )
+        original_check_limits = await check_limits_nv.get()
+
         try:
-            await self.set_access_level(level=level, password=password)
+            await self.set_access_level(
+                level=level,
+                password=password,
+                check_limits=check_limits,
+            )
             yield
         finally:
-            await self.set_access_level(
-                level=original_access_level,
-                password=password,
-            )
+            try:
+                await self.set_access_level(
+                    level=level,
+                    password=password,
+                    check_limits=original_check_limits,
+                )
+            finally:
+                await self.set_access_level(
+                    level=original_access_level,
+                    password=password,
+                )
 
     async def reset(self, timeout=None):
         # SoftwareReset:InitiateReset
