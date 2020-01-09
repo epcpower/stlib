@@ -64,7 +64,7 @@ def string_to_signal_path(s):
 class AbstractWidget(QtWidgets.QWidget):
     trigger_action = pyqtSignal()
 
-    def __init__(self, ui_class, parent=None, in_designer=False):
+    def __init__(self, ui_class=None, parent=None, in_designer=False):
         self.in_designer = in_designer
         super().__init__(parent=parent)
 
@@ -86,8 +86,11 @@ class AbstractWidget(QtWidgets.QWidget):
         self._display_units = ''
         self._action = ''
 
-        self.ui = ui_class()
-        self.ui.setupUi(self)
+        if ui_class is None:
+            self.ui = None
+        else:
+            self.ui = ui_class()
+            self.ui.setupUi(self)
 
         self.set_signal(force_update=True)
 

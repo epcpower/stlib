@@ -5,7 +5,7 @@
 from PyQt5.QtCore import pyqtProperty
 from PyQt5 import QtWidgets
 
-import epyqlib.iogroup_ui
+import epyqlib.iopoint_ui
 import epyqlib.utils.qt
 
 
@@ -20,7 +20,7 @@ class IoPoint(QtWidgets.QWidget):
 
         self.in_designer = in_designer
 
-        self.ui = epyqlib.iogroup_ui.Ui_Form()
+        self.ui = epyqlib.iopoint_ui.Ui_Form()
         self.ui.setupUi(self)
 
         self.ui.status.in_designer = self.in_designer

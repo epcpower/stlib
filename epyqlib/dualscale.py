@@ -32,11 +32,11 @@ class DualScale(QWidget):
         self.scale1 = epyqlib.widgets.scale.Scale(self, in_designer)
         self.scale2 = epyqlib.widgets.scale.Scale(self, in_designer)
         # color ranges, scale markers, labels, needle painted.
-        self.scale1.scale.m_paintMode = 1
+        self.scale1.ui.scale.m_paintMode = 1
         # needle, cover painted.
-        self.scale2.scale.m_paintMode = 3
+        self.scale2.ui.scale.m_paintMode = 3
         # scale2's needle is blue
-        self.scale2.scale.isBlue = True
+        self.scale2.ui.scale.isBlue = True
         self.stackedLayout = QStackedLayout()
         self.stackedLayout.addWidget(self.scale2)
         self.stackedLayout.addWidget(self.scale1)

@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import QAbstractSlider
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, QModelIndex
 
 import epyqlib.listmenu
+import epyqlib.listmenuview_ui
 import epyqlib.utils.qt
 
 # See file COPYING in this source tree
@@ -25,7 +26,7 @@ class ListMenuView(QtWidgets.QWidget):
 
         self.in_designer = in_designer
 
-        self.ui = epyqlib.listmenuview.Ui_Form()
+        self.ui = epyqlib.listmenuview_ui.Ui_Form()
         self.ui.setupUi(self)
 
         scroll_bar = self.ui.list_view.verticalScrollBar()
