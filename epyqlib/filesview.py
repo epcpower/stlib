@@ -24,7 +24,7 @@ class FilesView(UiBase):
         return instance
 
     @classmethod
-    def qt_build(cls, parent, in_designer):
+    def qt_build(cls, parent, in_designer=False):
         instance = cls.build()
         instance.setParent(parent)
 
