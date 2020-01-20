@@ -881,6 +881,9 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
     def update(self):
         sort_multiselect(self)
 
+    def uses_interface_item(self):
+        return True
+
     can_delete = epyqlib.attrsmodel.childless_can_delete
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
     child_from = epyqlib.attrsmodel.default_child_from
