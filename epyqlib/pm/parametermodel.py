@@ -253,7 +253,6 @@ class Parameter(epyqlib.treenode.TreeNode):
     def check(self, result, models):
         results = []
 
-        print()
         try:
             models.sunspec.root.nodes_by_attribute(
                 attribute_value=self.uuid,
