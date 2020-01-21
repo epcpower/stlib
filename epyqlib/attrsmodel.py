@@ -234,6 +234,13 @@ def names_from_uuid_list(node, value, model):
     return names
 
 
+def name_from_enumerator(node, value, model):
+    if value is None:
+        return ''
+
+    return value.name
+
+
 @attr.s
 class Column:
     name = attr.ib()

@@ -1,5 +1,8 @@
+import enum
+
 import attr
 import graham
+import marshmallow
 
 import epyqlib.attrsmodel
 import epyqlib.treenode
@@ -64,6 +67,13 @@ class Node(epyqlib.treenode.TreeNode):
     internal_move = epyqlib.attrsmodel.default_internal_move
 
 
+@enum.unique
+class ResultSeverity(enum.Enum):
+    information = 0
+    warning = 1
+    error = 2
+
+
 @graham.schemify(tag='result')
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
@@ -75,6 +85,17 @@ class Result(epyqlib.treenode.TreeNode):
         no_column=True,
     )
 
+    severity = attr.ib(
+        default=None,
+        converter=ResultSeverity,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(),
+        ),
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=severity,
+        data_display=epyqlib.attrsmodel.name_from_enumerator,
+    )
     message = epyqlib.attrsmodel.create_str_attribute()
 
     children = attr.ib(
@@ -127,6 +148,7 @@ def merge(name, *types):
 
 columns = epyqlib.attrsmodel.columns(
     merge('name', Node),
+    merge('severity', Result),
     merge('message', Result),
 )
 

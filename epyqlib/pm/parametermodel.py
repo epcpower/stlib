@@ -251,20 +251,16 @@ class Parameter(epyqlib.treenode.TreeNode):
 
     @epyqlib.attrsmodel.check_children
     def check(self, result, models):
-        results = []
-
         try:
             models.sunspec.root.nodes_by_attribute(
                 attribute_value=self.uuid,
                 attribute_name='parameter_uuid',
             )
         except epyqlib.treenode.NotFoundError:
-            results.append('No linked SunSpec data point found')
-
-        for r in results:
             result.append_child(epyqlib.checkresultmodel.Result(
                 node=self,
-                message=r,
+                severity=epyqlib.checkresultmodel.ResultSeverity.information,
+                message='No linked SunSpec data point found',
             ))
 
         return result
