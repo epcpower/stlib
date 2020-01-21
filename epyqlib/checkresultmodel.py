@@ -87,7 +87,6 @@ class Result(epyqlib.treenode.TreeNode):
 
     severity = attr.ib(
         default=None,
-        converter=ResultSeverity,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
