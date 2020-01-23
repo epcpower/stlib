@@ -497,7 +497,10 @@ class Device:
             if node is not None
         )
 
-        yield self.nvs.write_all_to_device(only_these=selected_nodes)
+        yield self.nvs.write_all_to_device(
+            only_these=selected_nodes,
+            meta=[epyqlib.nv.MetaEnum.value],
+        )
 
     @contextlib.asynccontextmanager
     async def temporary_access_level(
