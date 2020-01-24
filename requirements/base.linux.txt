@@ -7,6 +7,7 @@
 --extra-index-url http://fstab.net/pypi/simple
 --trusted-host fstab.net
 
+-e git+https://github.com/epcpower/sunspec-demo@19581317ae2fd136b5df229d824f81a17da52c58#egg=epcsunspecdemo
 -e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec
 -e git+https://github.com/altendky/siphash-cffi@2a97bdca72145f16dd7c987164cd76ea8484dfc8#egg=siphash-cffi
 alqtendpy==0.0.4
@@ -38,7 +39,7 @@ pint==0.9
 pip-tools==4.0.0
 pycparser==2.19           # via cffi
 pyelftools==0.25
-pyhamcrest==1.9.0         # via twisted
+pyhamcrest==2.0.0         # via twisted
 pyqt5-sip==12.7.0         # via pyqt5
 pyqt5==5.13.0
 pyserial==3.4
@@ -51,11 +52,13 @@ qtawesome==0.6.0
 qtpy==1.9.0               # via qtawesome
 requests==2.22.0          # via romp
 romp==2019.4.1
-six==1.13.0               # via automat, pathlib2, pip-tools, pyhamcrest, python-dateutil, qtawesome
+six==1.14.0               # via automat, pathlib2, pip-tools, python-dateutil, qtawesome
 smmap2==2.0.5             # via gitdb2
+toolz==0.10.0
+tqdm==4.41.1
 twisted==19.7.0
 typing==3.7.4.1           # via python-can
-urllib3==1.25.7           # via requests
+urllib3==1.25.8           # via requests
 wheel==0.33.4
 wrapt==1.11.2             # via python-can
 zope.interface==4.7.1     # via twisted

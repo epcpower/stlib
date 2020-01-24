@@ -8,6 +8,9 @@ import uuid
 
 import attr
 import canmatrix
+import epcsunspecdemo.demos
+import epcsunspecdemo.utils
+import sunspec.core.client
 import twisted.internet.defer
 
 import epyqlib.canneo
@@ -472,6 +475,22 @@ class Device:
         access_level = yield nv.get()
         return access_level
 
+    async def get_check_limits(self):
+        nv = self.nv_from_uuid(
+            uuid.UUID('bd7c3c96-bde9-4b4b-a646-e1d06a7cc24f'),
+        )
+        value = await nv.get()
+
+        return value
+
+    async def get_password(self):
+        nv = self.nv_from_uuid(
+            uuid.UUID('cc438574-bec0-4443-8a25-785e41240c1b'),
+        )
+        value = await nv.get()
+
+        return value
+
     @twisted.internet.defer.inlineCallbacks
     def set_access_level(self, level=None, password=None, check_limits=True):
         if level is None:
@@ -785,3 +804,89 @@ access_levels = [
     *authenticatable_access_levels,
     *unauthenticatable_access_levels,
 ]
+
+
+@attr.s
+class SunSpecDevice:
+    model_path = attr.ib(converter=pathlib.Path)
+    device = attr.ib(default=None)
+    cyclic_frames = attr.ib(default=attr.Factory(set))
+    default_elevated_access_level = attr.ib(default=None)
+    default_access_level_password = attr.ib(default=None)
+    save_nv = attr.ib(default=None)
+    save_nv_value = attr.ib(default=None)
+    uuid = attr.ib(default=uuid.uuid4)
+
+    def load(self):
+        with epcsunspecdemo.utils.fresh_smdx_path(self.model_path):
+            self.device = sunspec.core.client.SunSpecClientDevice(
+                slave_id=1,
+                device_type=sunspec.core.client.RTU,
+                name='/dev/ttyUSB0',
+                baudrate=9600,
+                timeout=1,
+            )
+
+    async def get_access_level(self):
+        access_level_point = self.device.epc_control.model.points['AccLvl']
+
+        self.device.epc_control.read()
+
+        return access_level_point.value
+
+    async def get_check_limits(self):
+        point = self.device.epc_control.model.points['ChkLmts']
+        self.device.epc_control.read()
+
+        return point.value
+
+    async def get_password(self):
+        point = self.device.epc_control.model.points['Passwd']
+        self.device.epc_control.read()
+
+        return point.value
+
+    async def set_access_level(self, level=None, password=None, check_limits=True):
+        if level is None:
+            level = self.default_elevated_access_level
+
+        if password is None:
+            password = self.default_access_level_password
+
+        access_level_point = self.device.epc_control.model.points['AccLvl']
+        password_point = self.device.epc_control.model.points['Passwd']
+        check_limits_point = self.device.epc_control.model.points['ChkLmts']
+        submit_point = self.device.epc_control.model.points['SubAccLvl']
+
+        epcsunspecdemo.demos.send_val(access_level_point, level)
+        epcsunspecdemo.demos.send_val(password_point, password)
+        epcsunspecdemo.demos.send_val(check_limits_point, check_limits)
+
+        epcsunspecdemo.demos.send_val(submit_point, True)
+
+    @contextlib.asynccontextmanager
+    async def temporary_access_level(
+            self,
+            level=None,
+            password=None,
+            check_limits=True,
+    ):
+        check_limits_point = self.device.epc_control.model.points['ChkLmts']
+
+        original_access_level = await self.get_access_level()
+        self.device.epc_control.read()
+        original_check_limits = check_limits_point.value
+
+        try:
+            await self.set_access_level(
+                level=level,
+                password=password,
+                check_limits=check_limits,
+            )
+            yield
+        finally:
+            await self.set_access_level(
+                level=original_access_level,
+                password=password,
+                check_limits=original_check_limits,
+            )

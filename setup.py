@@ -46,6 +46,7 @@ setuptools.setup(
         'bitstruct',
         'canmatrix>=0.9.1',
         'click>=7',
+        'epcsunspecdemo',
         'python-dotenv',
         'natsort',
         'pint',
