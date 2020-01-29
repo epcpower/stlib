@@ -103,7 +103,7 @@ class ScriptingView(QtWidgets.QWidget):
         ]
         filename = epyqlib.utils.qt.file_dialog(
             filters,
-            parent=self.ui,
+            parent=self,
         )
 
         if filename is None:
