@@ -807,6 +807,57 @@ access_levels = [
 
 
 @attr.s
+class SunSpecNv:
+    nv = attr.ib()
+    model = attr.ib()
+    # device = attr.ib()
+
+    async def set(self, value):
+        self.nv.value = value
+        self.nv.write()
+
+    @contextlib.asynccontextmanager
+    async def temporary_set(
+            self,
+            value,
+            read_context=None,
+            set_context=None,
+            restoration_context=None,
+    ):
+        @contextlib.asynccontextmanager
+        async def async_null_context(enter_result=None):
+            with contextlib.nullcontext(enter_result=enter_result) as result:
+                yield result
+
+        if read_context is None:
+            read_context = async_null_context
+        if set_context is None:
+            set_context = async_null_context
+        if restoration_context is None:
+            restoration_context = async_null_context
+
+        original = None
+
+        try:
+            async with read_context():
+                original = await self.get()
+
+            async with set_context():
+                await self.set(value=value)
+
+            yield
+        finally:
+            async with restoration_context():
+                if original is not None:
+                    await self.set(value=value)
+
+    async def get(self):
+        self.model.read_points()
+
+        return self.nv.value
+
+
+@attr.s
 class SunSpecDevice:
     model_path = attr.ib(converter=pathlib.Path)
     device = attr.ib(default=None)
@@ -815,6 +866,8 @@ class SunSpecDevice:
     default_access_level_password = attr.ib(default=None)
     save_nv = attr.ib(default=None)
     save_nv_value = attr.ib(default=None)
+    uuid_to_point = attr.ib(default=None)
+    uuid_to_model = attr.ib(default=None)
     uuid = attr.ib(default=uuid.uuid4)
 
     def load(self):
@@ -826,6 +879,36 @@ class SunSpecDevice:
                 baudrate=9600,
                 timeout=1,
             )
+
+    # def signal_from_uuid(self, uuid_) -> SunSpecNv:
+    #     return self.nv_from_uuid(uuid_=uuid_)
+
+    def nv_from_uuid(self, uuid_) -> SunSpecNv:
+        return SunSpecNv(
+            nv=self.uuid_to_point[uuid_],
+            model=self.uuid_to_model[uuid_],
+            # device=self,
+        )
+
+    def map_uuids(self):
+        def get_uuid(point):
+            comment, uuid = epyqlib.canneo.strip_uuid_from_comment(
+                point.point_type.notes,
+            )
+
+            return uuid
+
+        self.uuid_to_point = {
+            get_uuid(point): point
+            for model in self.device.device.models_list
+            for point in model.points_list
+        }
+
+        self.uuid_to_model = {
+            get_uuid(point): model
+            for model in self.device.device.models_list
+            for point in model.points_list
+        }
 
     async def get_access_level(self):
         access_level_point = self.device.epc_control.model.points['AccLvl']
