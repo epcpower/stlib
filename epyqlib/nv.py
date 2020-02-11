@@ -1844,6 +1844,75 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             self.activity_ended.emit(message)
 
     @pyqtSlot()
+    def write_to_overlay_value_set_file(self, parent=None):
+        fields = attr.fields(epyqlib.pm.valuesetmodel.ValueSet)
+        filters = fields.filters.default
+
+        reference_path = epyqlib.utils.qt.file_dialog(
+            caption='Overlay Reference File',
+            filters=filters,
+            save=False,
+            parent=parent,
+        )
+
+        if reference_path is None:
+            return
+
+        reference_value_set = epyqlib.pm.valuesetmodel.loadp(reference_path)
+
+        save_path = epyqlib.utils.qt.file_dialog(
+            caption='Overlay File',
+            filters=filters,
+            save=True,
+            parent=parent,
+        )
+
+        if save_path is None:
+            return
+
+        complete_value_set = self.root.to_value_set()
+        complete_value_set.path = save_path
+
+        reference_parameter_by_uuid = {
+            parameter.parameter_uuid: parameter
+            for parameter in reference_value_set.model.root.children
+        }
+
+        drop_list = []
+
+        for output_parameter in complete_value_set.model.root.children:
+            reference_parameter = reference_parameter_by_uuid.get(
+                output_parameter.parameter_uuid,
+            )
+            if reference_parameter is None:
+                continue
+
+            keep = False
+            for meta in MetaEnum:
+                reference_value = getattr(reference_parameter, meta.name)
+                output_value = getattr(output_parameter, meta.name)
+
+                if reference_value == output_value:
+                    setattr(output_parameter, meta.name, None)
+                elif output_value is not None:
+                    keep = True
+
+            if not keep:
+                drop_list.append(output_parameter)
+
+        for parameter in drop_list:
+            complete_value_set.model.root.remove_child(child=parameter)
+
+        try:
+            complete_value_set.save()
+        except epyqlib.pm.valuesetmodel.SaveCancelled:
+            message = 'Save cancelled'
+        else:
+            message = 'Saved to "{}"'.format(complete_value_set.path)
+
+        self.activity_ended.emit(message)
+
+    @pyqtSlot()
     def read_from_file(self, parent=None):
         filters = [
             ('EPC Parameters', ['epp']),

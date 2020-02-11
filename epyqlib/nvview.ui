@@ -65,6 +65,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="write_to_overlay_value_set_file_button">
+         <property name="text">
+          <string>To Overlay Value Set File</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="write_to_auto_parameters_button">
          <property name="text">
           <string>To Auto Parameters</string>
