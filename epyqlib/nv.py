@@ -1346,10 +1346,16 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         return self.factory
 
     def is_read_only(self):
-        return self.frame.read_write.min > 0 or self.is_summary
+        if self.rw is None:
+            return self.frame.read_write.min > 0 or self.is_summary
+
+        return self.rw.readable and not self.rw.writable
 
     def is_write_only(self):
-        return self.frame.read_write.max < 1
+        if self.rw is None:
+            return self.frame.read_write.max < 1
+
+        return self.rw.writable and not self.rw.readable
 
     def unique(self):
         # TODO: make it more unique
@@ -1887,17 +1893,14 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             if reference_parameter is None:
                 continue
 
-            keep = False
-            for meta in MetaEnum:
-                reference_value = getattr(reference_parameter, meta.name)
-                output_value = getattr(output_parameter, meta.name)
+            if not output_parameter.writable:
+                drop_list.append(output_parameter)
+                continue
 
-                if reference_value == output_value:
-                    setattr(output_parameter, meta.name, None)
-                elif output_value is not None:
-                    keep = True
+            for meta in MetaEnum.non_value:
+                setattr(output_parameter, meta.name, None)
 
-            if not keep:
+            if reference_parameter.value == output_parameter.value:
                 drop_list.append(output_parameter)
 
         for parameter in drop_list:

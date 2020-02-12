@@ -14,6 +14,7 @@ import struct
 import sys
 import uuid
 
+import attr
 import epyqlib.utils.qt
 import epyqlib.utils.units
 
@@ -48,6 +49,28 @@ def strip_uuid_from_comment(comment):
     stripped_comment = comment.replace(match[0], '').strip()
 
     return stripped_comment, uuid_object
+
+
+@attr.s
+class ReadWrite:
+    readable = attr.ib()
+    writable = attr.ib()
+
+
+def strip_rw_from_comment(comment):
+    match = re.search(r'<rw:([01]):([01])>', comment)
+
+    if match is None:
+        return comment, None
+
+    rw = ReadWrite(
+        readable=bool(int(match[1])),
+        writable=bool(int(match[2])),
+    )
+
+    stripped_comment = comment.replace(match[0], '').strip()
+
+    return stripped_comment, rw
 
 
 @functools.lru_cache(4096)
@@ -253,8 +276,12 @@ class Signal:
 
         if signal.comment is None:
             self.parameter_uuid = None
+            self.rw = None
         else:
             self.comment, self.parameter_uuid = strip_uuid_from_comment(
+                self.comment,
+            )
+            self.comment, self.rw = strip_rw_from_comment(
                 self.comment,
             )
 
