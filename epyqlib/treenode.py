@@ -120,6 +120,13 @@ class TreeNode:
 
         return root
 
+    def ancestors(self):
+        node = self
+
+        while node.tree_parent is not None:
+            node = node.tree_parent
+            yield node
+
     def children_by_attribute(self, value, name):
         return [
             child
