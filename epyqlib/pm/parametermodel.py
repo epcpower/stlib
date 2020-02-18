@@ -156,6 +156,9 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.Integer(),
         ),
     )
+    reject_from_inactive_interfaces = (
+        epyqlib.attrsmodel.create_checkbox_attribute()
+    )
 
     can_getter = epyqlib.attrsmodel.create_str_or_none_attribute()
     can_setter = epyqlib.attrsmodel.create_str_or_none_attribute()
@@ -1696,6 +1699,7 @@ columns = epyqlib.attrsmodel.columns(
     merge('setter_function', Parameter),
     merge('internal_type', Parameter),
     merge('internal_scale_factor', Parameter),
+    merge('reject_from_inactive_interfaces', Parameter),
 
     merge('can_getter', Table, Parameter),
     merge('can_setter', Table, Parameter),
