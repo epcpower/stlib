@@ -138,6 +138,7 @@ class Signal:
 
     @twisted.internet.defer.inlineCallbacks
     def get(self, stale_after=0.1, timeout=1):
+        # TODO: uh...  why not time.monotonic()?
         start = time.time()
 
         last_received = self.signal.last_received()
@@ -148,7 +149,10 @@ class Signal:
                 timeout=timeout,
             )
 
-        value = self.signal.to_human(self.signal.value)
+        return self._to_human()
+
+    def _to_human(self):
+        value = self.signal.to_human(value=self.signal.value)
 
         if value in self.signal.enumeration:
             return self.signal.enumeration[value]
@@ -198,6 +202,36 @@ class Signal:
 
     def f_string(self):
         return f'.{self.decimal_places()}f'
+
+    @contextlib.asynccontextmanager
+    async def temporary_set(
+            self,
+            value=None,
+            read_context=None,
+            set_context=None,
+            restoration_context=None,
+    ):
+        @contextlib.asynccontextmanager
+        async def async_null_context(enter_result=None):
+            with contextlib.nullcontext(enter_result=enter_result) as result:
+                yield result
+
+        if set_context is None:
+            set_context = async_null_context
+        if restoration_context is None:
+            restoration_context = async_null_context
+
+        original = self._to_human()
+
+        try:
+            async with set_context():
+                self.set(value=value)
+
+            yield
+        finally:
+            if original is not None:
+                async with restoration_context():
+                    self.set(value=original)
 
 
 @attr.s
@@ -433,6 +467,12 @@ class Device:
             nv=self.nvs.nv_from_uuid[uuid_],
             device=self,
         )
+
+    def parameter_from_uuid(self, uuid_):
+        try:
+            return self.nv_from_uuid(uuid_=uuid_)
+        except KeyError:
+            return self.signal_from_uuid(uuid_=uuid_)
 
     @twisted.internet.defer.inlineCallbacks
     def active_to_nv(self, wait=False):
@@ -813,6 +853,10 @@ class SunSpecNv:
     # device = attr.ib()
 
     async def set(self, value):
+        units = self.units()
+        if units != epyqlib.utils.units.registry.dimensionless:
+            value = value.to(units).magnitude
+
         self.nv.value = value
         self.nv.write()
 
@@ -854,7 +898,12 @@ class SunSpecNv:
     async def get(self):
         self.model.read_points()
 
-        return self.nv.value
+        return self.nv.value * self.units()
+
+    def units(self):
+        return epyqlib.utils.units.registry.parse_expression(
+            self.nv.point_type.units,
+        )
 
 
 @attr.s
@@ -889,6 +938,9 @@ class SunSpecDevice:
             model=self.uuid_to_model[uuid_],
             # device=self,
         )
+
+    # no 'signals' so just alias
+    parameter_from_uuid = nv_from_uuid
 
     def map_uuids(self):
         def get_uuid(point):
