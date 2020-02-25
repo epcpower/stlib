@@ -137,7 +137,7 @@ class Signal:
     device = attr.ib()
 
     @twisted.internet.defer.inlineCallbacks
-    def get(self, stale_after=0.1, timeout=1):
+    def get_raw(self, stale_after=0.1, timeout=1):
         # TODO: uh...  why not time.monotonic()?
         start = time.time()
 
@@ -148,6 +148,12 @@ class Signal:
                 self.signal.value_set,
                 timeout=timeout,
             )
+
+        return self.signal.value
+
+    @twisted.internet.defer.inlineCallbacks
+    def get(self, stale_after=0.1, timeout=1):
+        yield self.get_raw(stale_after=stale_after, timeout=timeout)
 
         return self._to_human()
 
