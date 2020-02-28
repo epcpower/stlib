@@ -148,6 +148,7 @@ class Parameter(epyqlib.treenode.TreeNode):
     internal_variable = epyqlib.attrsmodel.create_str_or_none_attribute()
     getter_function = epyqlib.attrsmodel.create_str_or_none_attribute()
     setter_function = epyqlib.attrsmodel.create_str_or_none_attribute()
+    rejected_callback = epyqlib.attrsmodel.create_str_or_none_attribute()
     internal_type = epyqlib.attrsmodel.create_str_or_none_attribute()
     internal_scale_factor = attr.ib(
         default=0,
@@ -1697,6 +1698,7 @@ columns = epyqlib.attrsmodel.columns(
     merge('internal_variable', Parameter),
     merge('getter_function', Parameter),
     merge('setter_function', Parameter),
+    merge('rejected_callback', Parameter),
     merge('internal_type', Parameter),
     merge('internal_scale_factor', Parameter),
     merge('reject_from_inactive_interfaces', Parameter),

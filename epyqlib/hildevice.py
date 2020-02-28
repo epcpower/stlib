@@ -173,6 +173,11 @@ class Signal:
         self.signal.set_human_value(value)
         self.signal.frame._send(update=True)
 
+    # TODO: get rid of this and update everything to have .set() itself
+    #       be an async
+    async def async_set(self, value):
+        return self.set(value=value)
+
     def units(self):
         return epyqlib.utils.units.registry.parse_expression(
             self.signal.unit,
