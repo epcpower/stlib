@@ -902,9 +902,9 @@ class SunSpecNv:
 
             yield
         finally:
-            async with restoration_context():
-                if original is not None:
-                    await self.set(value=value)
+            if original is not None:
+                async with restoration_context():
+                    await self.set(value=original)
 
     async def get(self):
         self.model.read_points()
