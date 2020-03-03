@@ -49,7 +49,7 @@ setuptools.setup(
         'epcsunspecdemo',
         'python-dotenv',
         'natsort',
-        'pint',
+        'pint>0.9',
         'pyelftools',
         'qt5reactor',
         'gitpython',
