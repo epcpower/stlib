@@ -266,13 +266,17 @@ class DeviceExtension:
         )
         d.addBoth(
             epyqlib.utils.twisted.detour_result,
-            self.nvs.module_to_nv_off,
+            self._module_to_nv_off,
         )
 
         return d
 
     def _module_to_nv_off(self):
-        self.save_signal.set_value(not self.save_value)
-        d = self.protocol.write(self.save_signal, passive=True)
+        self.nvs.save_signal.set_value(not self.nvs.save_value)
+        d = self.nv_protocol.write(
+            nv_signal=self.nvs.save_signal,
+            passive=True,
+            meta=epyqlib.nv.MetaEnum.value,
+        )
 
         return d

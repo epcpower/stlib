@@ -284,7 +284,10 @@ class TxRx(TreeNode, epyqlib.canneo.QtCanListener):
         if message_node is None:
             # TODO: yuck, stop using the matrix
             frame = canmatrix.canmatrix.Frame(
-                id=message.arbitration_id,
+                arbitration_id=canmatrix.canmatrix.ArbitrationId(
+                    id=message.arbitration_id,
+                    extended=message.is_extended_id,
+                ),
                 name='',
                 size=message.dlc,
             )

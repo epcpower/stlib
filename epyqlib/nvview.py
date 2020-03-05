@@ -3,23 +3,22 @@
 #TODO: """DocString if there is one"""
 
 import collections
+import functools
+import io
+import pathlib
+
+from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QAbstractProxyModel
+import twisted.internet.defer
+
+import epyqlib.autodevice.build
 import epyqlib.nv
+import epyqlib.nvview_ui
 try:
     import epyqlib.resources.code
 except ImportError:
     pass # we will catch the failure to open the file
 import epyqlib.utils.qt
-import functools
-import io
-import os
-import pathlib
-import twisted.internet.defer
-from PyQt5 import QtWidgets, uic, QtCore
-from PyQt5.QtCore import (pyqtSignal, pyqtSlot, QFile, QFileInfo, QTextStream,
-                          QCoreApplication, Qt, QItemSelectionModel,
-                          QModelIndex, QAbstractProxyModel)
-
-import epyqlib.autodevice.build
 
 
 # See file COPYING in this source tree
@@ -31,15 +30,13 @@ class ActivityError(Exception):
     pass
 
 
-Ui, UiBase = uic.loadUiType(pathlib.Path(__file__).with_suffix('.ui'))
-
-
-class NvView(UiBase):
+class NvView(QtWidgets.QWidget):
     module_to_nv = pyqtSignal()
     read_from_file = pyqtSignal()
     read_from_value_set_file = pyqtSignal()
     write_to_file = pyqtSignal()
     write_to_value_set_file = pyqtSignal()
+    write_to_overlay_value_set_file = pyqtSignal()
     auto_read_checked = pyqtSignal()
     auto_read_unchecked = pyqtSignal()
 
@@ -48,7 +45,7 @@ class NvView(UiBase):
 
         self.in_designer = in_designer
 
-        self.ui = Ui()
+        self.ui = epyqlib.nvview_ui.Ui_Form()
         self.ui.setupUi(self)
 
         self.ui.module_to_nv_button.clicked.connect(self.module_to_nv)
@@ -57,6 +54,9 @@ class NvView(UiBase):
         self.ui.write_to_file_button.clicked.connect(self.write_to_file)
         self.ui.write_to_value_set_file_button.clicked.connect(
             self.write_to_value_set_file,
+        )
+        self.ui.write_to_overlay_value_set_file_button.clicked.connect(
+            self.write_to_overlay_value_set_file,
         )
         self.ui.read_from_file_button.clicked.connect(self.read_from_file)
         self.ui.read_from_value_set_file_button.clicked.connect(
@@ -311,8 +311,7 @@ class NvView(UiBase):
             if node is None:
                 return None
 
-            return ':'.join((root.password_node.frame.mux_name,
-                          root.password_node.name))
+            return ':'.join((node.frame.mux_name, node.name))
 
         builder.set_access_level_names(
             password_name=name_from_node(root.password_node),
@@ -526,6 +525,13 @@ class NvView(UiBase):
             self.ui.enforce_range_limits_check_box.checkState(),
         )
 
+        self.ui.edit_locally_check_box.stateChanged.connect(
+            model.edit_locally_changed,
+        )
+        model.edit_locally_changed(
+            self.ui.edit_locally_check_box.checkState(),
+        )
+
         self.module_to_nv.connect(model.module_to_nv)
 
         read_from_file = functools.partial(
@@ -551,6 +557,14 @@ class NvView(UiBase):
             parent=self
         )
         self.write_to_value_set_file.connect(write_to_value_set_file)
+
+        write_to_overlay_value_set_file = functools.partial(
+            model.write_to_overlay_value_set_file,
+            parent=self
+        )
+        self.write_to_overlay_value_set_file.connect(
+            write_to_overlay_value_set_file,
+        )
 
         for i in epyqlib.nv.Columns.indexes:
             if self.resize_columns[i]:
@@ -797,68 +811,69 @@ class NvView(UiBase):
 
         d = twisted.internet.defer.Deferred()
         d.callback(None)
+        try:
 
-        if action in copy_to_columns:
-            destination_column = copy_to_columns[action]
-            model.start_transaction()
+            if action in copy_to_columns:
+                destination_column = copy_to_columns[action]
+                model.start_transaction()
 
-            for index in selected_indexes:
-                maybe_copy(
-                    source_column=index.column(),
-                    destination_column=destination_column,
-                    index=index,
-                    model=model,
-                )
-
-            model.submit_transaction()
-        else:
-            for meta, nodes in selected_by_meta.items():
-                callback = functools.partial(
-                    self.update_signals,
-                    only_these=nodes,
-                )
-                if action is None:
-                    pass
-                elif action is read:
-                    d.addCallback(
-                        lambda _, nodes=nodes, callback=callback, meta=meta:
-                        model.root.read_all_from_device(
-                            only_these=nodes,
-                            callback=callback,
-                            meta=(meta,),
-                        )
+                for index in selected_indexes:
+                    maybe_copy(
+                        source_column=index.column(),
+                        destination_column=destination_column,
+                        index=index,
+                        model=model,
                     )
-                elif action is write:
-                    d.addCallback(
-                        lambda _, nodes=nodes, callback=callback, meta=meta:
-                        model.root.write_all_to_device(
-                            only_these=nodes,
-                            callback=callback,
-                            meta=(meta,),
-                        )
-                    )
-                elif action is saturate:
-                    self.disable_column_resize()
-                    for node in nodes:
-                        model.saturate_node(node, meta=meta)
-                    self.enable_column_resize()
-                elif action is reset:
-                    self.disable_column_resize()
-                    for node in nodes:
-                        model.reset_node(node, meta=meta)
-                    self.enable_column_resize()
-                elif action is clear:
-                    self.disable_column_resize()
-                    for node in nodes:
-                        model.clear_node(node, meta=meta)
-                    self.enable_column_resize()
-                elif action is expand_all:
-                    self.ui.tree_view.expandAll()
-                elif action is collapse_all:
-                    self.ui.tree_view.collapseAll()
 
-        d.addErrback(epyqlib.utils.twisted.catch_expected)
-        d.addErrback(epyqlib.utils.twisted.errbackhook)
+                model.submit_transaction()
+            else:
+                for meta, nodes in selected_by_meta.items():
+                    callback = functools.partial(
+                        self.update_signals,
+                        only_these=nodes,
+                    )
+                    if action is None:
+                        pass
+                    elif action is read:
+                        d.addCallback(
+                            lambda _, nodes=nodes, callback=callback, meta=meta:
+                            model.root.read_all_from_device(
+                                only_these=nodes,
+                                callback=callback,
+                                meta=(meta,),
+                            )
+                        )
+                    elif action is write:
+                        d.addCallback(
+                            lambda _, nodes=nodes, callback=callback, meta=meta:
+                            model.root.write_all_to_device(
+                                only_these=nodes,
+                                callback=callback,
+                                meta=(meta,),
+                            )
+                        )
+                    elif action is saturate:
+                        self.disable_column_resize()
+                        for node in nodes:
+                            model.saturate_node(node, meta=meta)
+                        self.enable_column_resize()
+                    elif action is reset:
+                        self.disable_column_resize()
+                        for node in nodes:
+                            model.reset_node(node, meta=meta)
+                        self.enable_column_resize()
+                    elif action is clear:
+                        self.disable_column_resize()
+                        for node in nodes:
+                            model.clear_node(node, meta=meta)
+                        self.enable_column_resize()
+                    elif action is expand_all:
+                        self.ui.tree_view.expandAll()
+                    elif action is collapse_all:
+                        self.ui.tree_view.collapseAll()
+        finally:
+            d.addErrback(epyqlib.utils.twisted.catch_expected)
+            d.addErrback(epyqlib.utils.twisted.errbackhook)
 
     def header_context_menu(self, pos):
         menu = QtWidgets.QMenu(parent=self.ui.tree_view)

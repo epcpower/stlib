@@ -2,26 +2,22 @@
 
 #TODO: """DocString if there is one"""
 
+import math
+import textwrap
+
 import can
+from PyQt5 import QtWidgets
+from PyQt5.QtWidgets import QHeaderView, QMenu, QMessageBox
+from PyQt5.QtCore import Qt, pyqtSignal, QItemSelectionModel
+
 import epyqlib.datalogger
 import epyqlib.device
 import epyqlib.devicetree
+import epyqlib.devicetreeview_ui
 import epyqlib.flash
 import epyqlib.utils.general
 import epyqlib.utils.qt
 import epyqlib.utils.twisted
-import functools
-import io
-import math
-import os
-import textwrap
-import epyqlib.utils.twisted
-
-from PyQt5 import QtWidgets, uic
-from PyQt5.QtWidgets import (QApplication, QAction, QFileDialog, QHeaderView,
-                             QMenu, QProgressDialog, QMessageBox)
-from PyQt5.QtCore import (Qt, pyqtSignal, pyqtSlot, QFile, QFileInfo,
-                          QTextStream, QModelIndex, QItemSelectionModel)
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2017, EPC Power Corp.'
@@ -56,22 +52,12 @@ class DeviceTreeView(QtWidgets.QWidget):
     device_selected = pyqtSignal(epyqlib.device.Device)
 
     def __init__(self, parent=None, in_designer=False):
-        QtWidgets.QWidget.__init__(self, parent=parent)
+        super().__init__(parent=parent)
 
         self.in_designer = in_designer
 
-        ui = 'devicetreeview.ui'
-        # TODO: CAMPid 9549757292917394095482739548437597676742
-        if not QFileInfo(ui).isAbsolute():
-            ui_file = os.path.join(
-                QFileInfo.absolutePath(QFileInfo(__file__)), ui)
-        else:
-            ui_file = ui
-        ui_file = QFile(ui_file)
-        ui_file.open(QFile.ReadOnly | QFile.Text)
-        ts = QTextStream(ui_file)
-        sio = io.StringIO(ts.readAll())
-        self.ui = uic.loadUi(sio, self)
+        self.ui = epyqlib.devicetreeview_ui.Ui_Form()
+        self.ui.setupUi(self)
 
         self.resize_columns = epyqlib.devicetree.Columns(
             name=True,

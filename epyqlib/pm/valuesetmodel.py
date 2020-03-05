@@ -213,8 +213,11 @@ class ValueSet:
         )
     )
 
-    def save(self, parent=None):
-        if self.path is None:
+    def save(self, path=None, parent=None):
+        if path is None:
+            path = self.path
+
+        if path is None:
             path = epyqlib.utils.qt.file_dialog(
                 filters=self.filters,
                 parent=parent,
@@ -236,7 +239,7 @@ class ValueSet:
 
         s = graham.dumps(sorted_root, indent=4).data
 
-        with open(self.path, 'w') as f:
+        with open(path, 'w') as f:
             f.write(s)
 
             if not s.endswith('\n'):

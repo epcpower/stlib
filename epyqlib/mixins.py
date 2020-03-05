@@ -10,10 +10,12 @@ __license__ = 'GPLv2+'
 
 
 class OverrideRange:
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         self._override_range = False
         self._min = 0
         self._max = 1
+
+        super().__init__(*args, **kwargs)
 
     @pyqtProperty(bool)
     def override_range(self):

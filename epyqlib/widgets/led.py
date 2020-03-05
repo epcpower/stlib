@@ -2,7 +2,6 @@
 
 #TODO: """DocString if there is one"""
 
-import epyqlib.widgets.abstractwidget
 import os
 import re
 
@@ -10,6 +9,10 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtProperty, QFile, QFileInfo, QEvent
 from PyQt5.QtGui import QColor
 from PyQt5.QtXml import QDomDocument
+
+import epyqlib.widgets.abstractwidget
+import epyqlib.widgets.led_ui
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -63,12 +66,6 @@ def rgb_string(color):
 
 class Led(epyqlib.widgets.abstractwidget.AbstractWidget):
     def __init__(self, parent=None, in_designer=False):
-        ui_file = os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)),
-                               'led.ui')
-
-        epyqlib.widgets.abstractwidget.AbstractWidget.__init__(self,
-                ui=ui_file, parent=parent, in_designer=in_designer)
-
         file_name = 'led.svg'
 
         # TODO: CAMPid 9549757292917394095482739548437597676742
@@ -92,17 +89,24 @@ class Led(epyqlib.widgets.abstractwidget.AbstractWidget):
             'automatic_off': None,
             'manual_off': None
         }
-        self.ui.value.main_element = 'led'
 
         self._last_loaded_svg = object()
 
         self._on_color = QColor()
         self._manual_off_color = QColor()
         self._automatic_off_color = True
+
+        super().__init__(
+            ui_class=epyqlib.widgets.led_ui.Ui_Form,
+            parent=parent,
+            in_designer=in_designer,
+        )
+
+        self.ui.value.main_element = 'led'
+        self.update_svg()
+
         self.on_color = QColor("#20C020")
         self.manual_off_color = self.on_color.darker(factor=darker_factor)
-
-        self.update_svg()
 
         self.font_event_signal = FontChangeEventSignal()
         self.ui.label.installEventFilter(self.font_event_signal)
@@ -206,7 +210,10 @@ class Led(epyqlib.widgets.abstractwidget.AbstractWidget):
             svg = self.svg['manual_off']
 
         if svg is not self._last_loaded_svg:
-            self.ui.value.load(svg)
+            if svg is None:
+                self.ui.value.load(b'')
+            else:
+                self.ui.value.load(svg)
             self._last_loaded_svg = svg
 
         # TODO: figure out if this should be needed.  seems not but

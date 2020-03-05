@@ -1,4 +1,5 @@
 import collections
+import decimal
 import json
 import os
 import pathlib
@@ -109,7 +110,7 @@ class Builder:
     def load_epp(self, parameters, can, can_suffix):
         matrix, = canmatrix.formats.load(
             can,
-            importType=can_suffix[1:],
+            import_type=can_suffix[1:],
         ).values()
         neo = epyqlib.canneo.Neo(
             matrix=matrix,
@@ -170,7 +171,7 @@ class Builder:
             directory_path.mkdir()
 
             for access_input in self.access_parameters:
-                node = self.get_or_create_parameter(name=access_input.node)
+                node = self.get_or_create_parameter(name=access_input.node.name)
 
                 node.value = access_input.value
 
@@ -214,7 +215,14 @@ class Builder:
                 if key in self._original_raw_dict:
                     raw_dict[key] = self._original_raw_dict[key]
 
-            raw_dict['required_serial_number'] = self.required_serial_number
+            if isinstance(self.required_serial_number, decimal.Decimal):
+                raw_dict['required_serial_number'] = int(
+                    self.required_serial_number
+                )
+            else:
+                raw_dict['required_serial_number'] = (
+                    self.required_serial_number
+                )
 
             can_path = directory_path / can_path
             with open(can_path, 'wb') as f:

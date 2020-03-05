@@ -19,7 +19,7 @@ def centered_rectangle(width, height):
 class LineBar(epyqlib.widgets.abstractwidget.AbstractWidget):
     def __init__(self, parent=None, in_designer=False):
         self.in_designer = in_designer
-        epyqlib.widgets.abstractwidget.AbstractWidget.__init__(self, parent=parent)
+        super().__init__(parent=parent, in_designer=in_designer)
 
         self._background_color = QColor('#474747')
         self._color = QColor('#39C550')

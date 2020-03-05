@@ -1,12 +1,12 @@
-import io
-import os
 import pathlib
 
-from PyQt5 import QtCore, QtWidgets, uic
+from PyQt5 import QtCore, QtWidgets
 import twisted.internet.defer
 
+import epyqlib.scriptingview_ui
 import epyqlib.utils.qt
 import epyqlib.utils.twisted
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2017, EPC Power Corp.'
@@ -53,18 +53,8 @@ class ScriptingView(QtWidgets.QWidget):
 
         self.in_designer = in_designer
 
-        ui = 'scriptingview.ui'
-        # TODO: CAMPid 9549757292917394095482739548437597676742
-        if not QtCore.QFileInfo(ui).isAbsolute():
-            ui_file = os.path.join(
-                QtCore.QFileInfo.absolutePath(QtCore.QFileInfo(__file__)), ui)
-        else:
-            ui_file = ui
-        ui_file = QtCore.QFile(ui_file)
-        ui_file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
-        ts = QtCore.QTextStream(ui_file)
-        sio = io.StringIO(ts.readAll())
-        self.ui = uic.loadUi(sio, self)
+        self.ui = epyqlib.scriptingview_ui.Ui_Form()
+        self.ui.setupUi(self)
 
         self.ui.load_button.clicked.connect(self.load)
         self.ui.save_button.clicked.connect(self.save)
@@ -113,7 +103,7 @@ class ScriptingView(QtWidgets.QWidget):
         ]
         filename = epyqlib.utils.qt.file_dialog(
             filters,
-            parent=self.ui,
+            parent=self,
         )
 
         if filename is None:
@@ -130,7 +120,7 @@ class ScriptingView(QtWidgets.QWidget):
         filename = epyqlib.utils.qt.file_dialog(
             filters,
             save=True,
-            parent=self.ui,
+            parent=self,
         )
 
         if filename is None:

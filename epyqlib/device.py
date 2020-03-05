@@ -1163,7 +1163,7 @@ class Device:
         else:
             text = 'offline'
 
-        self.ui.offline_overlay.label.setText(text)
+        self.ui.offline_overlay.ui.label.setText(text)
         self.ui.offline_overlay.setVisible(len(text) > 0)
         self.ui.offline_overlay.setStyleSheet(style)
 
@@ -1216,7 +1216,7 @@ class Device:
         if present:
             text = ''
 
-        self.ui.connection_monitor_overlay.label.setText(text)
+        self.ui.connection_monitor_overlay.ui.label.setText(text)
         self.ui.connection_monitor_overlay.setVisible(len(text) > 0)
 
         if self.nvs is not None:

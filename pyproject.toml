@@ -1,0 +1,7 @@
+[build-system]
+requires = [
+    "alqtendpy",
+    "pyqt5<5.14.1",
+    "setuptools",
+    "wheel",
+]

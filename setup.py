@@ -1,6 +1,14 @@
-import setuptools
+import pathlib
 
+import alqtendpy.compileui
+
+import setuptools
 import versioneer
+
+
+alqtendpy.compileui.compile_ui(
+    directory_paths=[pathlib.Path(__file__).parent / 'epyqlib'],
+)
 
 
 setuptools.setup(
@@ -33,22 +41,25 @@ setuptools.setup(
         ]
     },
     install_requires=[
+        'alqtendpy',
         'arrow',
-        'appdirs',
         'bitstruct',
-        'canmatrix',
+        'canmatrix>=0.9.1',
         'click>=7',
+        'epcsunspecdemo',
         'python-dotenv',
         'natsort',
         'pint',
         'pyelftools',
         'qt5reactor',
         'gitpython',
-        'graham',
+        'graham>=0.1.11',
         'PyQt5',
         'python-docx',
         'python-can',
-        'twisted[tls]>=18.9.0',
+        'QtAwesome',
+        'siphash-cffi',
+        'Twisted',
     ],
     extras_require={
         'deploy': [

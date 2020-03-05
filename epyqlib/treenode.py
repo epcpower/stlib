@@ -120,6 +120,13 @@ class TreeNode:
 
         return root
 
+    def ancestors(self):
+        node = self
+
+        while node.tree_parent is not None:
+            node = node.tree_parent
+            yield node
+
     def children_by_attribute(self, value, name):
         return [
             child
@@ -130,7 +137,7 @@ class TreeNode:
     def __len__(self):
         return len(self.children)
 
-    def nodes_by_attribute(self, attribute_value, attribute_name):
+    def nodes_by_attribute(self, attribute_value, attribute_name, raise_=True):
         def matches(node):
             if not hasattr(node, attribute_name):
                 return False
@@ -139,7 +146,7 @@ class TreeNode:
 
         nodes = self.nodes_by_filter(filter=matches)
 
-        if len(nodes) == 0:
+        if len(nodes) == 0 and raise_:
             raise NotFoundError(
                 '''Attribute '{}' with value '{}' not found'''.format(
                     attribute_name,

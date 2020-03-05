@@ -1,9 +1,8 @@
-import io
-import os.path
-
-from PyQt5 import QtCore
 from PyQt5 import QtWidgets
-import PyQt5.uic
+
+import epyqlib.faultlogview_ui
+import epyqlib.utils.qt
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2018, EPC Power Corp.'
@@ -16,20 +15,8 @@ class FaultLogView(QtWidgets.QWidget):
 
         self.in_designer = in_designer
 
-        ui = 'faultlogview.ui'
-        # TODO: CAMPid 9549757292917394095482739548437597676742
-        if not QtCore.QFileInfo(ui).isAbsolute():
-            ui_file = os.path.join(
-                QtCore.QFileInfo.absolutePath(QtCore.QFileInfo(__file__)),
-                ui,
-            )
-        else:
-            ui_file = ui
-        ui_file = QtCore.QFile(ui_file)
-        ui_file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
-        ts = QtCore.QTextStream(ui_file)
-        sio = io.StringIO(ts.readAll())
-        self.ui = PyQt5.uic.loadUi(sio, self)
+        self.ui = epyqlib.faultlogview_ui.Ui_Form()
+        self.ui.setupUi(self)
 
         view = self.ui.tree_view
         view.setSelectionBehavior(view.SelectRows)

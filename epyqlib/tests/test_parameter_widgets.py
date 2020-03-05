@@ -52,7 +52,7 @@ def test_self_toggling(qtbot):
         if w.signal_path == ';'.join(tx_signal_path)
     ]
 
-    widget.value.valueChanged.connect(value_changed)
+    widget.ui.value.valueChanged.connect(value_changed)
 
     def toggle(n):
         value = False

@@ -159,6 +159,12 @@ class CheckableChart:
         self.view = QtChart.QChartView(self.chart)
         self.view_filters = make_chart_view_zoomable(self.view)
 
+        reference_height = self.check_box.minimumSizeHint().height()
+        reference_height += self.scaling_spin_box.minimumSizeHint().height()
+        self.view.setMinimumHeight(6 * reference_height)
+        view_size_policy = self.view.sizePolicy()
+        view_size_policy.setVerticalPolicy(view_size_policy.Minimum)
+
         self._name = None
         self.name = '<unnamed>'
 

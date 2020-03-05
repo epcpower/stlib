@@ -264,20 +264,24 @@ def main(can, template, output, verbose):
     for frame in sorted(matrix.frames, key=lambda f: f.name):
         frame_table.append(
             frame.name,
-            id_string(frame.id),
+            id_string(frame.arbitration_id.id),
         )
 
         a_ft = Table(
-            title='{} ({})'.format(frame.name, id_string(frame.id)),
+            title='{} ({})'.format(
+                frame.name,
+                id_string(frame.arbitration_id.id),
+            ),
             comment=frame.comment,
             headings=frame_table_header,
             widths=widths,
         )
         frame_tables.append(a_ft)
 
-        mux_table.append(
-            '{} ({})'.format(frame.name, id_string(frame.id)),
-        )
+        mux_table.append('{} ({})'.format(
+            frame.name,
+            id_string(frame.arbitration_id).id,
+        ))
 
         multiplex_signal = frame.signals[0]
         if multiplex_signal.multiplex is None:
@@ -305,7 +309,7 @@ def main(can, template, output, verbose):
                 a_mt = Table(
                     title='{} ({}) - {} ({})'.format(
                         frame.name,
-                        id_string(frame.id),
+                        id_string(frame.arbitration_id.id),
                         name,
                         value
                     ),

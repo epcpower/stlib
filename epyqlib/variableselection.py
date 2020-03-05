@@ -1,18 +1,15 @@
-# import epyqlib.delegates
-# import epyqlib.txrx
+import pathlib
+
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import QSortFilterProxyModel, Qt
+import twisted.internet.threads
+
 import epyqlib.cmemoryparser
 import epyqlib.datalogger
 import epyqlib.utils.qt
 import epyqlib.utils.twisted
-import io
-import os
-import pathlib
-from PyQt5 import QtWidgets, uic
-# from PyQt5.QtGui import QFontMetrics
-from PyQt5.QtCore import (QFile, QFileInfo, QTextStream, QSortFilterProxyModel,
-                          Qt)
-from PyQt5.QtWidgets import QFileDialog, QProgressDialog
-import twisted.internet.threads
+import epyqlib.variableselection_ui
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2017, EPC Power Corp.'
@@ -21,24 +18,12 @@ __license__ = 'GPLv2+'
 
 class VariableSelection(QtWidgets.QWidget):
     def __init__(self, parent=None, in_designer=False):
-        QtWidgets.QWidget.__init__(self, parent=parent)
+        super().__init__(parent=parent)
 
         self.in_designer = in_designer
 
-
-        ui = 'variableselection.ui'
-        self.file_name = ui
-        # TODO: CAMPid 9549757292917394095482739548437597676742
-        if not QFileInfo(ui).isAbsolute():
-            ui_file = os.path.join(
-                QFileInfo.absolutePath(QFileInfo(__file__)), ui)
-        else:
-            ui_file = ui
-        ui_file = QFile(ui_file)
-        ui_file.open(QFile.ReadOnly | QFile.Text)
-        ts = QTextStream(ui_file)
-        sio = io.StringIO(ts.readAll())
-        self.ui = uic.loadUi(sio, self)
+        self.ui = epyqlib.variableselection_ui.Ui_Form()
+        self.ui.setupUi(self)
 
         self.ui.load_binary_button.clicked.connect(self.load_binary)
         self.ui.save_selection_button.clicked.connect(self.save_selection)
@@ -47,8 +32,8 @@ class VariableSelection(QtWidgets.QWidget):
         self.ui.process_raw_log_button.clicked.connect(self.process_raw_log)
         self.ui.process_raw_log_button.setEnabled(False)
 
-        self.ui.view.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.ui.view.tree_view.customContextMenuRequested.connect(
+        self.ui.view.ui.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.view.ui.tree_view.customContextMenuRequested.connect(
             self.context_menu
         )
 
@@ -173,8 +158,8 @@ class VariableSelection(QtWidgets.QWidget):
                 d.addErrback(epyqlib.utils.twisted.errbackhook)
 
     def context_menu(self, position):
-        index = self.ui.view.tree_view.indexAt(position)
-        index = self.ui.view.tree_view.model().mapToSource(index)
+        index = self.ui.view.ui.tree_view.indexAt(position)
+        index = self.ui.view.ui.tree_view.model().mapToSource(index)
 
         if not index.isValid():
             return
@@ -185,7 +170,7 @@ class VariableSelection(QtWidgets.QWidget):
         read_action = menu.addAction('Read')
 
         action = menu.exec(
-            self.ui.view.tree_view.viewport().mapToGlobal(position))
+            self.ui.view.ui.tree_view.viewport().mapToGlobal(position))
 
         if action is None:
             pass

@@ -1,9 +1,10 @@
-import io
-import os
-from PyQt5 import QtWidgets, uic
-from PyQt5.QtCore import (pyqtProperty, pyqtSlot, Qt, QFile,
-                          QFileInfo, QTextStream)
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import pyqtProperty, Qt
 from PyQt5.QtGui import QFontMetrics
+
+import epyqlib.overlaylabel_ui
+import epyqlib.utils.qt
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2018, EPC Power Corp.'
@@ -20,29 +21,19 @@ styles = {
 
 class OverlayLabel(QtWidgets.QWidget):
     def __init__(self, parent=None, in_designer=False):
-        QtWidgets.QWidget.__init__(self, parent=parent)
+        super().__init__(parent=parent)
 
         self.in_designer = in_designer
 
-        ui = 'overlaylabel.ui'
-        # TODO: CAMPid 9549757292917394095482739548437597676742
-        if not QFileInfo(ui).isAbsolute():
-            ui_file = os.path.join(
-                QFileInfo.absolutePath(QFileInfo(__file__)), ui)
-        else:
-            ui_file = ui
-        ui_file = QFile(ui_file)
-        ui_file.open(QFile.ReadOnly | QFile.Text)
-        ts = QTextStream(ui_file)
-        sio = io.StringIO(ts.readAll())
-        self.ui = uic.loadUi(sio, self)
+        self._width_ratio = 0.8
+        self._height_ratio = 0.8
 
         self.setStyleSheet(styles['red'])
 
-        self.ui.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
 
-        self._width_ratio = 0.8
-        self._height_ratio = 0.8
+        self.ui = epyqlib.overlaylabel_ui.Ui_Form()
+        self.ui.setupUi(self)
 
     @pyqtProperty(str)
     def text(self):
@@ -74,10 +65,10 @@ class OverlayLabel(QtWidgets.QWidget):
         self.update_overlay_size(event.size())
 
     def update_overlay_size(self, size):
-        text = self.label.text()
+        text = self.ui.label.text()
         if not text:
             text = '-'
-        font = self.label.font()
+        font = self.ui.label.font()
         font.setPixelSize(1000)
         metric = QFontMetrics(font)
         rect = metric.boundingRect(text)

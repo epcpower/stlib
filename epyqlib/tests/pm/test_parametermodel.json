@@ -22,6 +22,13 @@
                     "nv_format": null,
                     "nv_factor": null,
                     "nv_cast": false,
+                    "internal_variable": null,
+                    "getter_function": null,
+                    "setter_function": null,
+                    "rejected_callback": null,
+                    "internal_type": null,
+                    "internal_scale_factor": 0,
+                    "reject_from_inactive_interfaces": false,
                     "can_getter": null,
                     "can_setter": null,
                     "sunspec_getter": null,
@@ -67,6 +74,7 @@
                         {
                             "_type": "array",
                             "name": "Table Array A",
+                            "abbreviation": null,
                             "named_enumerators": true,
                             "children": [
                                 {
@@ -84,6 +92,13 @@
                                     "nv_format": null,
                                     "nv_factor": null,
                                     "nv_cast": false,
+                                    "internal_variable": null,
+                                    "getter_function": null,
+                                    "setter_function": null,
+                                    "rejected_callback": null,
+                                    "internal_type": null,
+                                    "internal_scale_factor": 0,
+                                    "reject_from_inactive_interfaces": false,
                                     "can_getter": null,
                                     "can_setter": null,
                                     "sunspec_getter": null,
@@ -102,7 +117,7 @@
                                 {
                                     "_type": "array_parameter_element",
                                     "name": "A1",
-                                    "abbreviation": null,
+                                    "abbreviation": "None2",
                                     "notes": null,
                                     "read_only": false,
                                     "default": null,
@@ -127,6 +142,7 @@
                         {
                             "_type": "array",
                             "name": "Table Array B",
+                            "abbreviation": null,
                             "named_enumerators": true,
                             "children": [
                                 {
@@ -144,6 +160,13 @@
                                     "nv_format": null,
                                     "nv_factor": null,
                                     "nv_cast": false,
+                                    "internal_variable": null,
+                                    "getter_function": null,
+                                    "setter_function": null,
+                                    "rejected_callback": null,
+                                    "internal_type": null,
+                                    "internal_scale_factor": 0,
+                                    "reject_from_inactive_interfaces": false,
                                     "can_getter": null,
                                     "can_setter": null,
                                     "sunspec_getter": null,
@@ -162,7 +185,7 @@
                                 {
                                     "_type": "array_parameter_element",
                                     "name": "B1",
-                                    "abbreviation": null,
+                                    "abbreviation": "None2",
                                     "notes": null,
                                     "read_only": false,
                                     "default": null,
@@ -243,7 +266,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
-                                                            "abbreviation": null,
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -311,7 +334,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
-                                                            "abbreviation": null,
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -392,7 +415,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
-                                                            "abbreviation": null,
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -460,7 +483,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
-                                                            "abbreviation": null,
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -553,7 +576,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
-                                                            "abbreviation": null,
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -621,7 +644,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
-                                                            "abbreviation": null,
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -702,7 +725,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
-                                                            "abbreviation": null,
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -770,7 +793,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
-                                                            "abbreviation": null,
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -835,6 +858,13 @@
             "nv_format": null,
             "nv_factor": null,
             "nv_cast": false,
+            "internal_variable": null,
+            "getter_function": null,
+            "setter_function": null,
+            "rejected_callback": null,
+            "internal_type": null,
+            "internal_scale_factor": 0,
+            "reject_from_inactive_interfaces": false,
             "can_getter": null,
             "can_setter": null,
             "sunspec_getter": null,

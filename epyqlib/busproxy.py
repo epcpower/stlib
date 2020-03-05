@@ -2,11 +2,12 @@
 
 # TODO: get some docstrings in here!
 
-import can
-import can.interfaces.pcan
+import contextlib
 import logging
 import time
 
+import can
+import can.interfaces.pcan
 from epyqlib.canneo import QtCanListener
 import epyqlib.utils.qt
 from PyQt5 import QtCore
@@ -38,6 +39,18 @@ class BusProxy:
         self.flash_timer.setSingleShot(True)
         self.flash_timer.setInterval(10 * 1000)
         self.flash_timer.timeout.connect(self.stop_flashing)
+
+    @contextlib.contextmanager
+    def managed_real_bus(self, bustype, channel):
+        real_bus = can.interface.Bus(bustype=bustype, channel=channel)
+        try:
+            self.set_bus(bus=real_bus)
+            try:
+                yield
+            finally:
+                self.terminate()
+        finally:
+            real_bus.shutdown()
 
     @property
     def transmit(self):

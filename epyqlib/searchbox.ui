@@ -30,7 +30,7 @@
     <number>0</number>
    </property>
    <item>
-    <widget class="QLineEdit" name="ui_search_text">
+    <widget class="QLineEdit" name="search_text">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -56,7 +56,7 @@
     </spacer>
    </item>
    <item>
-    <widget class="QLineEdit" name="ui_filter_text">
+    <widget class="QLineEdit" name="filter_text">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
        <horstretch>0</horstretch>

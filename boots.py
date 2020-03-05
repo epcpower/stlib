@@ -12,15 +12,16 @@ import errno
 import glob
 import os
 import os.path
+import posixpath
 import shlex
 import shutil
 import stat
 import subprocess
 import sys
+import sysconfig
 import tarfile
 import tempfile
 import time
-import zipfile
 
 python2 = (2,) <= sys.version_info < (3,)
 python3 = (3,) <= sys.version_info
@@ -230,15 +231,10 @@ def common_create(
     if symlink:
         os.symlink(venv_bin, configuration.resolved_venv_common_bin())
 
-    check_call(
-        [
-            configuration.resolved_venv_python(),
-            '-m', 'pip',
-            'install',
-            '--upgrade',
-        ] + pip_seed_requirements(configuration=configuration),
-        cwd=configuration.project_root,
+    install_pre(
+        python=configuration.resolved_venv_python(),
         env=env,
+        configuration=configuration,
     )
 
     if group is None:
@@ -250,7 +246,26 @@ def common_create(
     )
 
 
-def sync_requirements(group, configuration):
+def install_pre(python, configuration, env=None):
+    if env is None:
+        env = os.environ
+
+    check_call(
+        [
+            python,
+            '-m', 'pip',
+            'install',
+            '--upgrade',
+        ] + pip_seed_requirements(configuration=configuration),
+        cwd=configuration.project_root,
+        env=env,
+    )
+
+
+def sync_requirements(group, configuration, python=None, pip_sync=None):
+    if python is None:
+        python = configuration.resolved_venv_python()
+
     path = build_requirements_path(
         group=group,
         stage=requirements_lock,
@@ -264,6 +279,7 @@ def sync_requirements(group, configuration):
         env=env,
         requirements=path,
         configuration=configuration,
+        pip_sync=pip_sync,
     )
 
     requirements_path = os.path.join(
@@ -273,7 +289,7 @@ def sync_requirements(group, configuration):
     if os.path.isfile(requirements_path):
         check_call(
             [
-                configuration.resolved_venv_python(),
+                python,
                 '-m', 'pip',
                 'install',
                 '--no-deps',
@@ -284,12 +300,24 @@ def sync_requirements(group, configuration):
         )
 
 
-def sync_requirements_file(env, requirements, configuration):
+def sync_requirements_file(env, requirements, configuration, pip_sync):
+    if pip_sync is None:
+        pip_sync = [
+            os.path.join(
+                configuration.resolved_venv_common_bin(),
+                'python',
+            ),
+            '-m', 'piptools',
+            'sync',
+        ]
+
     check_call(
-        [
-            os.path.join(configuration.resolved_venv_common_bin(), 'pip-sync'),
-            requirements,
-        ],
+        (
+            pip_sync
+            + [
+                requirements,
+            ]
+        ),
         cwd=configuration.project_root,
         env=env,
     )
@@ -342,7 +370,9 @@ def rm(ignore_missing, configuration):
             )
 
 
-def lock(temporary_env, configuration):
+def lock(temporary_env, use_default_python, configuration):
+    configuration.python_identifier.use_default_python = use_default_python
+
     if not temporary_env:
         lock_core(configuration=configuration)
     else:
@@ -389,8 +419,8 @@ def lock_core(configuration):
                     'pip-compile',
                 ),
                 '--output-file', out_path,
-                specification_path,
-            ] + extras,
+                '--build-isolation',
+            ] + extras + [specification_path],
             cwd=configuration.project_root,
         )
 
@@ -561,39 +591,43 @@ def pick(destination, group, configuration):
     shutil.copyfile(source, destination)
 
 
-def strip_zip_info_prefixes(prefix, zip_infos):
-    prefix = prefix.rstrip(os.sep) + os.sep
-    result = []
-
-    for zip_info in zip_infos:
-        name = zip_info.filename
-
-        if os.path.commonpath((name, prefix)) == '':
-            raise Exception('unexpected path: ' + name)
-
-        if len(name) <= len(prefix):
-            continue
-
-        if name.endswith(os.sep):
-            continue
-
-        zip_info.filename = os.path.relpath(name, prefix)
-        print(name, '->', zip_info.filename)
-        result.append(zip_info)
-
-    return result
-
-
 # TODO: CAMPid 0743105874017581374310081
 def make_remote_lock_archive(archive_path, configuration):
+    root = configuration.project_root
+
     with tarfile.open(name=archive_path, mode='w') as archive:
         for pattern in configuration.remotelock_paths:
-            for path in glob.glob(pattern):
-                archive.add(path)
+            for path in glob.glob(os.path.join(root, pattern)):
+                archive_name = os.path.relpath(path, root)
+                archive.add(path, arcname=archive_name)
+
+
+# https://www.oreilly.com/library/view/python-cookbook/0596001673/ch04s16.html
+def splitall(path):
+    allparts = []
+    while 1:
+        parts = os.path.split(path)
+        if parts[0] == path:  # sentinel for absolute paths
+            allparts.insert(0, parts[0])
+            break
+        elif parts[1] == path: # sentinel for relative paths
+            allparts.insert(0, parts[1])
+            break
+        else:
+            path = parts[0]
+            allparts.insert(0, parts[1])
+    return allparts
+
+
+def ensure_posixpath(path):
+    return posixpath.join(*splitall(path))
 
 
 def remotelock(configuration):
-    artifact_name = 'lock_files'
+    if not venv_existed(configuration=configuration):
+        create(group=None, configuration=configuration)
+
+    configuration.python_identifier.use_default_python = True
 
     directory = tempfile.mkdtemp()
 
@@ -606,29 +640,54 @@ def remotelock(configuration):
             configuration=configuration,
         )
 
+        version = configuration.python_identifier.romp_version()
+        architecture = configuration.python_identifier.romp_architecture()
+
+        artifact_paths = ensure_posixpath(os.path.join(
+            configuration.requirements_path,
+            '*.txt',
+        ))
+
         check_call(
             [
                 os.path.join(configuration.resolved_venv_common_bin(), 'romp'),
-                '--command', './boots.py lock',
-                '--environments', ''.join(
-                    '|{}'.format(
-                        configuration.python_identifier.for_romp(platform),
-                    )
-                    for platform in (linux, macos, windows)
-                ),
-                '--archive', archive_path,
+                '--command', 'python {} lock --use-default-python'.format(os.path.basename(__file__)),
+                '--platform', 'Windows',
+                '--interpreter', 'CPython',
+                '--version', version,
+                '--architecture', architecture,
+                # '--include', 'Windows', 'CPython', version, 'x86',
+                '--include', 'Linux', 'CPython', version, 'x86_64',
+                '--include', 'macOS', 'CPython', version, 'x86_64',
+                '--archive-file', archive_path,
+                '--artifact-paths', artifact_paths,
                 '--artifact', artifact_path,
             ]
         )
 
-        with zipfile.ZipFile(file=artifact_path) as zip_file:
-            tweaked_members = strip_zip_info_prefixes(
-                prefix=artifact_name,
-                zip_infos=zip_file.infolist(),
-            )
-            zip_file.extractall(members=tweaked_members)
+        with tarfile.open(artifact_path, mode='r:gz') as tar:
+            tar.extractall(path=configuration.project_root)
     finally:
         rmtree(directory)
+
+
+def install(group, configuration):
+    if group == 'pre':
+        install_pre(
+            python=sys.executable,
+            configuration=configuration,
+        )
+    else:
+        sync_requirements(
+            python=sys.executable,
+            group=group,
+            configuration=configuration,
+            pip_sync=[
+                configuration.resolved_active_python_script('python'),
+                '-m', 'piptools',
+                'sync',
+            ],
+        )
 
 
 def add_group_option(parser, default):
@@ -642,6 +701,19 @@ def add_group_option(parser, default):
     )
 
 
+def add_use_default_python_option(parser):
+    parser.add_argument(
+        '--use-default-python',
+        action='store_true',
+        help=(
+            'Use just bare `python` instead of searching for the proper'
+            'version.  This can be helpful when you know you have the proper'
+            "Python version as 'default' but it may not be identifiable as"
+            'such via the normal means.'
+        ),
+    )
+
+
 def add_subparser(subparser, *args, **kwargs):
     return subparser.add_parser(
         *args,
@@ -651,9 +723,10 @@ def add_subparser(subparser, *args, **kwargs):
 
 
 class PythonIdentifier:
-    def __init__(self, version, bit_width):
+    def __init__(self, version, bit_width, use_default_python=False):
         self.version = version
         self.bit_width = bit_width
+        self.use_default_python = use_default_python
 
     @classmethod
     def from_string(cls, identifier_string):
@@ -666,7 +739,7 @@ class PythonIdentifier:
         if split == bit_split:
             bit_width = int(bit_width)
         else:
-            bit_width = None
+            bit_width = 64
 
         version_string = version_string.strip()
         if version_string == '':
@@ -684,12 +757,18 @@ class PythonIdentifier:
         return '.'.join(str(v) for v in self.version[:places])
 
     def linux_command(self):
+        if self.use_default_python:
+            return ['python']
+
         command = 'python'
         command += self.dotted_version(places=2)
 
         return [command]
 
     def windows_command(self):
+        if self.use_default_python:
+            return ['python']
+
         command = ['py']
 
         if len(self.version) > 0:
@@ -708,6 +787,15 @@ class PythonIdentifier:
             self.dotted_version(places=2),
             self.bit_width,
         )
+
+    def romp_version(self):
+        return self.dotted_version(places=2)
+
+    def romp_architecture(self):
+        return {
+            32: 'x86',
+            64: 'x86_64',
+        }[self.bit_width]
 
 
 boolean_string_pairs = (
@@ -750,10 +838,12 @@ class Configuration:
         'dist_dir': 'dist',
         'use_hashes': 'yes',
         'remotelock_paths': ':'.join((
-            'boots.py',
+            os.path.basename(__file__),
+            '{}.cfg'.format(os.path.splitext(os.path.basename(__file__))[0]),
             'setup.cfg',
             'setup.py',
             'requirements/*.in',
+            'pyproject.toml',
         )),
     }
 
@@ -864,6 +954,9 @@ class Configuration:
     def resolved_venv_python(self):
         return resolve_path(self.resolved_venv_common_bin(), self.venv_python)
 
+    def resolved_active_python_script(self, script):
+        return resolve_path(sysconfig.get_path('scripts'), script)
+
     def resolved_venv_prompt(self):
         if self.venv_prompt is None:
             return '{} - {}'.format(
@@ -962,12 +1055,15 @@ def main():
             ' platform using a shared filesystem'
         ),
     )
+    add_use_default_python_option(lock_parser)
     lock_parser.set_defaults(func=lock)
 
     resole_parser = add_subparser(
         subparsers,
         'resole',
-        description='Resole boots.py (self update)',
+        description='Resole {} (self update)'.format(
+            os.path.basename(__file__)
+        ),
     )
     resole_parser.add_argument(
         '--url',
@@ -1017,6 +1113,14 @@ def main():
         description='Remotely lock',
     )
     remotelock_parser.set_defaults(func=remotelock)
+
+    install_parser = add_subparser(
+        subparsers,
+        'install',
+        description="Install requirements",
+    )
+    add_group_option(install_parser, default=configuration.default_group)
+    install_parser.set_defaults(func=install)
 
     args = parser.parse_args()
 

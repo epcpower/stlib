@@ -1,5 +1,6 @@
 import contextlib
 import itertools
+import math
 import uuid
 
 import attr
@@ -144,6 +145,22 @@ class Parameter(epyqlib.treenode.TreeNode):
         ),
     )
 
+    internal_variable = epyqlib.attrsmodel.create_str_or_none_attribute()
+    getter_function = epyqlib.attrsmodel.create_str_or_none_attribute()
+    setter_function = epyqlib.attrsmodel.create_str_or_none_attribute()
+    rejected_callback = epyqlib.attrsmodel.create_str_or_none_attribute()
+    internal_type = epyqlib.attrsmodel.create_str_or_none_attribute()
+    internal_scale_factor = attr.ib(
+        default=0,
+        converter=int,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Integer(),
+        ),
+    )
+    reject_from_inactive_interfaces = (
+        epyqlib.attrsmodel.create_checkbox_attribute()
+    )
+
     can_getter = epyqlib.attrsmodel.create_str_or_none_attribute()
     can_setter = epyqlib.attrsmodel.create_str_or_none_attribute()
     sunspec_getter = epyqlib.attrsmodel.create_str_or_none_attribute()
@@ -238,24 +255,26 @@ class Parameter(epyqlib.treenode.TreeNode):
 
     @epyqlib.attrsmodel.check_children
     def check(self, result, models):
-        results = []
-
-        print()
         try:
             models.sunspec.root.nodes_by_attribute(
                 attribute_value=self.uuid,
                 attribute_name='parameter_uuid',
             )
         except epyqlib.treenode.NotFoundError:
-            results.append('No linked SunSpec data point found')
-
-        for r in results:
             result.append_child(epyqlib.checkresultmodel.Result(
                 node=self,
-                message=r,
+                severity=epyqlib.checkresultmodel.ResultSeverity.information,
+                message='No linked SunSpec data point found',
             ))
 
         return result
+
+    def uses_interface_item(self):
+        return any(v is not None for v in (
+            self.internal_variable,
+            self.getter_function,
+            self.setter_function,
+        ))
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
@@ -564,6 +583,7 @@ class Array(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(),
         ),
     )
+    abbreviation = create_abbreviation_attribute()
     length = attr.ib(
         default=1,
         converter=int,
@@ -625,10 +645,14 @@ class Array(epyqlib.treenode.TreeNode):
                 for row in range(len(self.children) - 1, value - 1, - 1):
                     self.remove_child(row=row)
             elif 1 <= len(self.children) < value:
-                for _ in range(value - len(self.children)):
+                places = math.ceil(math.log10(value + 1))
+                for index in range(len(self.children), value):
                     original = self.children[0]
                     type_ = self.element_types[type(original)]
-                    self.append_child(type_(original=original))
+                    new_child = type_(original=original)
+                    new_child.name = f'_{(index + 1):0{places}}'
+                    new_child.abbreviation = f'{self.abbreviation}{index + 1}'
+                    self.append_child(new_child)
 
         epyqlib.utils.qt.pyqtify_set(self, 'length', value)
 
@@ -855,6 +879,9 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
 
     def update(self):
         sort_multiselect(self)
+
+    def uses_interface_item(self):
+        return True
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
@@ -1619,7 +1646,13 @@ def merge(name, *types):
 
 columns = epyqlib.attrsmodel.columns(
     merge('name', *types.types.values()),
-    merge('abbreviation', Parameter, ArrayParameterElement, TableArrayElement),
+    merge(
+        'abbreviation',
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+        Array,
+    ),
     (
         merge('type_name', Parameter, Group)
         + merge('type', SunSpecEnumerator)
@@ -1661,6 +1694,14 @@ columns = epyqlib.attrsmodel.columns(
     ),
 
     merge('label', SunSpecEnumerator),
+
+    merge('internal_variable', Parameter),
+    merge('getter_function', Parameter),
+    merge('setter_function', Parameter),
+    merge('rejected_callback', Parameter),
+    merge('internal_type', Parameter),
+    merge('internal_scale_factor', Parameter),
+    merge('reject_from_inactive_interfaces', Parameter),
 
     merge('can_getter', Table, Parameter),
     merge('can_setter', Table, Parameter),

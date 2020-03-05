@@ -1,4 +1,5 @@
 import collections
+import contextlib
 import distutils.dir_util
 import importlib
 import json
@@ -7,6 +8,7 @@ import os
 import shutil
 import tempfile
 import textwrap
+import pathlib
 
 import attr
 import click
@@ -293,6 +295,92 @@ def cf(self, source_directory, source_file_name, destination_path):
 
 @converters.append(
     old_version=(1,),
+    new_version=(2,),
+    description='self.ui is not longer self',
+)
+def cf(self, source_directory, source_file_name, destination_path):
+    with open(os.path.join(source_directory, source_file_name)) as f:
+        device_dict = json.load(f, object_pairs_hook=collections.OrderedDict)
+
+    ui_paths = get_ui_paths_0(device_dict)
+
+    module_path = device_dict.get('module', None)
+
+    if module_path is None:
+        module = epyqlib.deviceextension
+    else:
+        spec = importlib.util.spec_from_file_location(
+            'extension', os.path.join(source_directory, module_path))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+    referenced_files = (
+        source_file_name,
+        *(
+            device_dict.get(name) for name in
+            (
+                'module',
+                'can_path',
+                'compatibility',
+                'parameter_defaults',
+                'parameter_hierarchy',
+            )
+            if name in device_dict
+        ),
+        *ui_paths.values(),
+        *module.referenced_files(device_dict),
+    )
+
+    referenced_files = {f: False for f in referenced_files}
+
+    with open(os.path.join(source_directory, module_path), 'r') as f:
+        source = f.read()
+
+    replacements = [
+        [
+            'd.voltage_droop_mode.ui.signal_object',
+            'd.voltage_droop_mode.signal_object',
+        ],
+        [
+            'd.voltage_droop_mode.ui.setVisible',
+            'd.voltage_droop_mode.setVisible',
+        ],
+        [
+            'self.setup.pump_reset_button.value',
+            'self.setup.pump_reset_button.ui.value',
+        ],
+    ]
+
+    for original, replacement in replacements:
+        source = source.replace(original, replacement)
+
+    with open(os.path.join(destination_path, module_path), 'w') as f:
+        f.write(source)
+
+    referenced_files[module_path] = True
+
+    device_dict['format_version'] = self.new_version
+    device_dict.move_to_end('format_version', last=False)
+
+    destination_device_file = os.path.join(destination_path, source_file_name)
+    with open(destination_device_file, 'w') as f:
+        json.dump(device_dict, f, indent=4)
+        f.write('\n')
+    referenced_files[source_file_name] = True
+
+    for f, handled in referenced_files.items():
+        if not handled:
+            logging.info('Copying {}'.format(f))
+            shutil.copy(
+                src=os.path.join(source_directory, f),
+                dst=destination_path,
+            )
+
+    return destination_device_file
+
+
+@converters.append(
+    old_version=(2,),
     new_version=None,
     description='template for next format version')
 def cf(self, source_directory, source_file_name, destination_path):
@@ -400,10 +488,14 @@ def version(path):
     except:
         pass
 
+    # path might be a string or a pathlib.Path object
+    # need to be able to handle both 
+    referenced_files = tuple(pathlib.Path(path) for path in referenced_files)
+
     ui_files = tuple(
         f
         for f in referenced_files
-        if f.endswith('.ui')
+        if f.suffix == '.ui'
     )
 
     if v is None:
@@ -506,6 +598,21 @@ def convert(source_path, destination_path, destination_version=None):
     logging.info('New device file saved to: {}'.format(destination_path))
 
     return os.path.join(destination_path, os.path.basename(source_path))
+
+
+@contextlib.contextmanager
+def updated(path):
+    if epyqlib.updateepc.is_latest(path):
+        yield pathlib.Path(path)
+        return
+
+    with tempfile.TemporaryDirectory() as converted_directory:
+        final_file = convert(
+            source_path=path,
+            destination_path=converted_directory,
+        )
+
+        yield pathlib.Path(final_file)
 
 
 @click.command()

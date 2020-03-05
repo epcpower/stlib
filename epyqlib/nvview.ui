@@ -65,6 +65,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="write_to_overlay_value_set_file_button">
+         <property name="text">
+          <string>To Overlay Value Set File</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="write_to_auto_parameters_button">
          <property name="text">
           <string>To Auto Parameters</string>
@@ -201,6 +208,22 @@
          </property>
          <property name="checked">
           <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="edit_locally_check_box">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="text">
+          <string>Edit Locally</string>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
          </property>
         </widget>
        </item>

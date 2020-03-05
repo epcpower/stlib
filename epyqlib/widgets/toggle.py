@@ -2,13 +2,13 @@
 
 #TODO: """DocString if there is one"""
 
-import epyqlib.widgets.abstracttxwidget
-import os
-from PyQt5.QtCore import (pyqtSignal, pyqtProperty,
-                          QFile, QFileInfo, QTextStream, Qt, QEvent,
-                          QTimer)
+from PyQt5.QtCore import pyqtProperty, Qt, QEvent
 from PyQt5.QtGui import QMouseEvent
 import PyQt5.QtWidgets
+
+import epyqlib.widgets.abstracttxwidget
+import epyqlib.widgets.toggle_ui
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -17,18 +17,18 @@ __license__ = 'GPLv2+'
 
 class Toggle(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
     def __init__(self, parent=None, in_designer=False):
-        ui_file = os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)),
-                               'toggle.ui')
-
-        epyqlib.widgets.abstracttxwidget.AbstractTxWidget.__init__(self,
-                ui=ui_file, parent=parent, in_designer=in_designer)
-
-        self.ui.value.installEventFilter(self)
-        # TODO: CAMPid 398956661298765098124690765
-
         self._frame = None
         self._signal = None
         self._value_labels_visible = True
+
+        super().__init__(
+            ui_class=epyqlib.widgets.toggle_ui.Ui_Form,
+            parent=parent,
+            in_designer=in_designer,
+        )
+
+        self.ui.value.installEventFilter(self)
+        # TODO: CAMPid 398956661298765098124690765
 
         self.ui.value.setFixedHeight(3 * self.ui.on.fontMetrics().height())
 

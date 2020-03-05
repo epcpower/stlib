@@ -1,6 +1,6 @@
 {
     "format_version": [
-        1
+        2
     ],
     "can_path": "auto_parameters.sym",
     "name": "Auto Parameters",

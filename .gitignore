@@ -2,6 +2,7 @@ epyqlib/_build_generated.py
 .idea
 /epyqlib/resources/code
 /epyqlib/resources/*.py
+*_ui.py
 
 
 # Created by https://www.gitignore.io/api/vim,git,python

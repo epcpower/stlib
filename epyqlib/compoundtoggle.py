@@ -2,13 +2,13 @@
 
 #TODO: """DocString if there is one"""
 
-import io
-import os
-
-from PyQt5 import uic
-from PyQt5.QtCore import pyqtProperty, QFile, QFileInfo, QTextStream
+from PyQt5.QtCore import pyqtProperty
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QWidget
+
+import epyqlib.compoundtoggle_ui
+import epyqlib.utils.qt
+
 
 # See file COPYING in this source tree
 __copyright__ = 'Copyright 2016, EPC Power Corp.'
@@ -21,20 +21,8 @@ class CompoundToggle(QWidget):
 
         self.in_designer = in_designer
 
-        ui = os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)),
-                          'compoundtoggle.ui')
-
-        # TODO: CAMPid 9549757292917394095482739548437597676742
-        if not QFileInfo(ui).isAbsolute():
-            ui_file = os.path.join(
-                QFileInfo.absolutePath(QFileInfo(__file__)), ui)
-        else:
-            ui_file = ui
-        ui_file = QFile(ui_file)
-        ui_file.open(QFile.ReadOnly | QFile.Text)
-        ts = QTextStream(ui_file)
-        sio = io.StringIO(ts.readAll())
-        self.ui = uic.loadUi(sio, self)
+        self.ui = epyqlib.compoundtoggle_ui.Ui_Form()
+        self.ui.setupUi(self)
 
         self.ui.command.in_designer = self.in_designer
         self.ui.status_on.in_designer = self.in_designer
