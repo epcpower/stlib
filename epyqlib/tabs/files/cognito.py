@@ -23,18 +23,18 @@ class CognitoHelper:
     _tag = '[CognitoHelper]'
 
     configs = {
-        'dev': {
-            'identity_pool_id': 'us-west-2:3f24de0e-c97c-46ad-841a-9611371e4b6c',
-            'client_id': '4eqpagdediq79a16ebg37c410a',
+        'internal': {
+            'identity_pool_id': 'us-west-2:2e8a787f-e6b3-4fc0-b24f-2f7855b9bcf3',
+            'client_id': '6ald2becsbriio982480bjacgq',
             'region': "us-west-2",
-            'user_pool_id': 'cognito-idp.us-west-2.amazonaws.com/us-west-2_4Q2Ug5I8S'
+            'user_pool_id': 'cognito-idp.us-west-2.amazonaws.com/us-west-2_wIVmyFHI5'
         },
 
-        'beta': {
-            'identity_pool_id': 'us-west-2:339ba726-2c24-41fe-afb6-d62a7587f623',
-            'client_id': '3re7n0ht3oh2cem8548e0eoh81',
+        'client': {
+            'identity_pool_id': 'us-west-2:92cfea99-64ff-4c20-9202-b752d9e0db61',
+            'client_id': '2jof2obe6dtofat1eml8kqjssv',
             'region': "us-west-2",
-            'user_pool_id': 'cognito-idp.us-west-2.amazonaws.com/us-west-2_RyqpR9o3w'
+            'user_pool_id': 'cognito-idp.us-west-2.amazonaws.com/us-west-2_DdfcP6fUX'
         }
     }
 
@@ -100,7 +100,7 @@ class CognitoHelper:
         cognito: CognitoIdentityClient = boto3.client('cognito-identity', region_name=self.config['region'])
 
         id = cognito.get_id(
-            AccountId="674475255666",
+            AccountId="203222013089",
             IdentityPoolId=self.config['identity_pool_id'],
             Logins={self.config['user_pool_id']: self._id_token}
         )

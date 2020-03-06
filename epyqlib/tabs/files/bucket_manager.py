@@ -4,8 +4,8 @@ from epyqlib.tabs.files.sync_config import SyncConfig
 
 class BucketManager():
     _bucket_names = {
-        'dev': 'epc-files-dev',
-        'beta': 'epc-files-beta'
+        'internal': 'epc-files-internal-203222013089',
+        'client': 'epc-files-client-203222013089'
     }
     _bucket_name = _bucket_names[SyncConfig.get_env()]
     _logs_path = 'logs/'
