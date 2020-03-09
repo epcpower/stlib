@@ -181,7 +181,8 @@ class Signal:
 
     def units(self):
         unit = self.signal.unit
-        unit = unit.replace('%', ' percent ')
+        if unit is not None:
+            unit = unit.replace('%', ' percent ')
 
         return epyqlib.utils.units.registry.parse_units(unit)
 
@@ -359,7 +360,8 @@ class Nv:
 
     def units(self):
         unit = self.nv.unit
-        unit = unit.replace('%', ' percent ')
+        if unit is not None:
+            unit = unit.replace('%', ' percent ')
 
         return epyqlib.utils.units.registry.parse_units(unit)
 
@@ -932,7 +934,8 @@ class SunSpecNv:
 
     def units(self):
         unit = self.nv.point_type.units
-        unit = unit.replace('%', ' percent ')
+        if unit is not None:
+            unit = unit.replace('%', ' percent ')
 
         return epyqlib.utils.units.registry.parse_units(unit)
 
