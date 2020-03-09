@@ -153,15 +153,15 @@ class Signal:
         return self.signal.value
 
     @twisted.internet.defer.inlineCallbacks
-    def get(self, stale_after=0.1, timeout=1):
+    def get(self, stale_after=0.1, timeout=1, enumeration_as_string=True):
         yield self._get_raw(stale_after=stale_after, timeout=timeout)
 
-        return self._to_human()
+        return self._to_human(enumeration_as_string=enumeration_as_string)
 
-    def _to_human(self):
+    def _to_human(self, enumeration_as_string):
         value = self.signal.to_human(value=self.signal.value)
 
-        if value in self.signal.enumeration:
+        if enumeration_as_string and value in self.signal.enumeration:
             return self.signal.enumeration[value]
 
         return value * self.units()
@@ -235,7 +235,7 @@ class Signal:
         if restoration_context is None:
             restoration_context = async_null_context
 
-        original = self._to_human()
+        original = self._to_human(enumeration_as_string=True)
 
         try:
             async with set_context():
