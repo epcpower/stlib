@@ -1,4 +1,5 @@
 import contextlib
+import decimal
 import functools
 import json
 import operator
@@ -137,7 +138,7 @@ class Signal:
     device = attr.ib()
 
     @twisted.internet.defer.inlineCallbacks
-    def get_raw(self, stale_after=0.1, timeout=1):
+    def _get_raw(self, stale_after=0.1, timeout=1):
         # TODO: uh...  why not time.monotonic()?
         start = time.time()
 
@@ -153,7 +154,7 @@ class Signal:
 
     @twisted.internet.defer.inlineCallbacks
     def get(self, stale_after=0.1, timeout=1):
-        yield self.get_raw(stale_after=stale_after, timeout=timeout)
+        yield self._get_raw(stale_after=stale_after, timeout=timeout)
 
         return self._to_human()
 
@@ -179,9 +180,10 @@ class Signal:
         return self.set(value=value)
 
     def units(self):
-        return epyqlib.utils.units.registry.parse_expression(
-            self.signal.unit,
-        )
+        unit = self.signal.unit
+        unit = unit.replace('%', ' percent ')
+
+        return epyqlib.utils.units.registry.parse_units(unit)
 
     def cyclic_send(self, period):
         self.device.cyclic_send_signal(self, period=period)
@@ -276,10 +278,14 @@ class Nv:
             await self.set_meta(value=value, meta=meta)
 
     async def set_meta(self, value, meta):
+        units = self.units()
+        if units != epyqlib.utils.units.registry.dimensionless:
+            value = value.to(units).magnitude
+
         if meta == epyqlib.nv.MetaEnum.value:
-            self.nv.set_value(value)
+            self.nv.set_human_value(value)
         else:
-            getattr(self.nv.meta, meta.name).set_value(value)
+            getattr(self.nv.meta, meta.name).set_human_value(value)
 
         # TODO: verify value was accepted
         await self.device.nvs.protocol.write(
@@ -349,7 +355,14 @@ class Nv:
             meta=meta,
         )
 
-        return value
+        return value * self.units()
+
+    def units(self):
+        unit = self.nv.unit
+        unit = unit.replace('%', ' percent ')
+
+        return epyqlib.utils.units.registry.parse_units(unit)
+
 
     @twisted.internet.defer.inlineCallbacks
     def wait_for(self, op, value, timeout, ignore_read_failures=False):
@@ -624,7 +637,7 @@ class Device:
         with contextlib.suppress(epyqlib.twisted.nvs.RequestTimeoutError):
             await reset_nv.set(value=1)
 
-        await state_signal.get(stale_after=0, timeout=10)
+        await state_signal.get(stale_after=-1, timeout=10)
 
     async def wait_through_power_on_reset(self):
         status_signal = self.signal_from_uuid(
@@ -909,12 +922,19 @@ class SunSpecNv:
     async def get(self):
         self.model.read_points()
 
-        return self.nv.value * self.units()
+        value = decimal.Decimal(self.nv.value)
+        scale_factor = self.nv.value_sf
+        if scale_factor is None:
+            scale_factor = 0
+        value = round(value, -scale_factor)
+
+        return value * self.units()
 
     def units(self):
-        return epyqlib.utils.units.registry.parse_expression(
-            self.nv.point_type.units,
-        )
+        unit = self.nv.point_type.units
+        unit = unit.replace('%', ' percent ')
+
+        return epyqlib.utils.units.registry.parse_units(unit)
 
 
 @attr.s
