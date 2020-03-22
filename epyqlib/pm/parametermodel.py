@@ -1417,6 +1417,7 @@ class SunSpecEnumerator(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(),
         ),
     )
+    abbreviation = create_abbreviation_attribute()
     label = attr.ib(
         default='',
         converter=epyqlib.attrsmodel.to_str_or_none,
@@ -1652,6 +1653,7 @@ columns = epyqlib.attrsmodel.columns(
         ArrayParameterElement,
         TableArrayElement,
         Array,
+        SunSpecEnumerator,
     ),
     (
         merge('type_name', Parameter, Group)
