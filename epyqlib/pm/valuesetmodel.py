@@ -245,6 +245,33 @@ class ValueSet:
             if not s.endswith('\n'):
                 f.write('\n')
 
+    def overlay(self, overlay):
+        attribute_names = [
+            'value',
+            'user_default',
+            'factory_default',
+            'minimum',
+            'maximum',
+        ]
+
+        parameter_from_parameter_uuid = {
+            parameter.parameter_uuid: parameter
+            for parameter in self.model.root.children
+        }
+
+        for overlay_parameter in overlay.model.root.children:
+            base_parameter = parameter_from_parameter_uuid.get(
+                overlay_parameter.parameter_uuid,
+            )
+            if base_parameter is None:
+                self.model.root.append_child(attr.evolve(overlay_parameter))
+                continue
+
+            for name in attribute_names:
+                value = getattr(overlay_parameter, name)
+                if value is not None:
+                    setattr(base_parameter, name, value)
+
 
 # TODO: CAMPid 943896754217967154269254167
 def merge(name, *types):
