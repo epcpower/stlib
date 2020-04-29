@@ -287,7 +287,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         self.status_frames[0].set_frame = self.set_frames[0]
         for value, frame in self.set_frames.items():
             signals = [s for s in frame.signals]
-            signals = [s for s in signals if s.multiplex is not 'Multiplexor']
+            signals = [s for s in signals if s.multiplex != 'Multiplexor']
             signals = [
                 s for s in signals
                 if s.name not in [

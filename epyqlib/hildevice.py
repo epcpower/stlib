@@ -622,24 +622,33 @@ class Device:
                     password=password,
                 )
 
-    async def reset(self, timeout=None):
+    async def reset(self, timeout=10):
         # SoftwareReset:InitiateReset
-        reset_nv = self.nv_from_uuid(
+        reset_parameter = self.parameter_from_uuid(
             uuid_=uuid.UUID('b582085d-7734-4260-ab97-47e50a41b06c'),
         )
 
-        # StatusBits:State
-        state_signal = self.signal_from_uuid(
-            uuid_=uuid.UUID('6392782a-b886-45a0-9642-dd4f47cd2a59'),
+        # Serial Number
+        a_parameter_that_can_be_read = self.parameter_from_uuid(
+            uuid_=uuid.UUID('390f27ea-6f28-4313-b183-5f37d007ccd1'),
         )
 
         # TODO: just accept the 1s or whatever default timeout?  A set without
         #       waiting for the response could be nice.  (or embedded sending
         #       a response)
         with contextlib.suppress(epyqlib.twisted.nvs.RequestTimeoutError):
-            await reset_nv.set(value=1)
+            await reset_parameter.set(value=1)
 
-        await state_signal.get(stale_after=-1, timeout=10)
+        end = time.monotonic() + timeout
+        while True:
+            try:
+                await a_parameter_that_can_be_read.get()
+            except epyqlib.twisted.nvs.RequestTimeoutError:
+                if time.monotonic() > end:
+                    raise
+                continue
+            else:
+                break
 
     async def wait_through_power_on_reset(self):
         status_signal = self.signal_from_uuid(
@@ -1059,3 +1068,54 @@ class SunSpecDevice:
                 password=password,
                 check_limits=original_check_limits,
             )
+
+    async def reset(self, timeout=10):
+        # SoftwareReset:InitiateReset
+        reset_parameter = self.parameter_from_uuid(
+            uuid_=uuid.UUID('b582085d-7734-4260-ab97-47e50a41b06c'),
+        )
+
+        # Serial Number
+        a_parameter_that_can_be_read = self.parameter_from_uuid(
+            uuid_=uuid.UUID('390f27ea-6f28-4313-b183-5f37d007ccd1'),
+        )
+
+        # TODO: just accept the 1s or whatever default timeout?  A set without
+        #       waiting for the response could be nice.  (or embedded sending
+        #       a response)
+        with contextlib.suppress(sunspec.core.client.SunSpecClientError):
+            await reset_parameter.set(value=1)
+
+        end = time.monotonic() + timeout
+        while True:
+            try:
+                await a_parameter_that_can_be_read.get()
+            except sunspec.core.client.SunSpecClientError:
+                if time.monotonic() > end:
+                    raise
+                continue
+            else:
+                break
+
+    async def to_nv(self, timeout=10):
+        save_command_parameter = self.parameter_from_uuid(
+            uuid.UUID('2c768acc-f88e-431c-8fc1-ea8d5b2ba253'),
+        )
+        save_in_progress_parameter = self.parameter_from_uuid(
+            uuid.UUID('5d623539-a564-4374-b00d-492a0fbb2f55'),
+        )
+
+        await save_command_parameter.set(1)
+        await epyqlib.utils.twisted.sleep(0.250)
+
+        end = time.monotonic() + timeout
+        while time.monotonic() < end:
+            try:
+                saving = await save_in_progress_parameter.get()
+            except sunspec.core.client.SunSpecClientError:
+                continue
+
+            if not saving:
+                break
+        else:
+            raise Exception()

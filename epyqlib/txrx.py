@@ -402,7 +402,7 @@ class TxRxModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         if node.tx:
             if index.column() == Columns.indexes.value:
                 if isinstance(node, SignalNode):
-                    allow = node.multiplex is not True
+                    allow = not node.multiplex
                 else:
                     allow = False
 
