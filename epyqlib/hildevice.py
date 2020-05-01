@@ -830,57 +830,6 @@ class AccessLevel:
     password = attr.ib()
 
 
-# TODO: shouldn't need to be duplicated here
-
-highest_authenticatable_access_level = AccessLevel(
-    name='EPC Factory',
-    level=3,
-    password=13250,
-)
-
-
-authenticatable_elevated_access_levels = [
-    AccessLevel(
-        name='Service Eng',
-        level=1,
-        password=42,
-    ),
-    AccessLevel(
-        name='EPC Eng',
-        level=2,
-        password=13125,
-    ),
-    highest_authenticatable_access_level,
-]
-
-
-base_access_level = AccessLevel(
-    name='Service Tech',
-    level=0,
-    password=0,
-)
-
-
-authenticatable_access_levels = [
-    base_access_level,
-    *authenticatable_elevated_access_levels,
-]
-
-
-unauthenticatable_access_levels = [
-    AccessLevel(
-        name='MAC Auth',
-        level=4,
-        password=31415,
-    ),
-]
-
-access_levels = [
-    *authenticatable_access_levels,
-    *unauthenticatable_access_levels,
-]
-
-
 @attr.s
 class SunSpecNv:
     nv = attr.ib()
