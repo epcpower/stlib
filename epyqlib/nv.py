@@ -1897,6 +1897,10 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 drop_list.append(output_parameter)
                 continue
 
+            if output_parameter.value is None:
+                drop_list.append(output_parameter)
+                continue
+
             for meta in MetaEnum.non_value:
                 setattr(output_parameter, meta.name, None)
 
