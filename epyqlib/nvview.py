@@ -37,6 +37,7 @@ class NvView(QtWidgets.QWidget):
     write_to_file = pyqtSignal()
     write_to_value_set_file = pyqtSignal()
     write_to_overlay_value_set_file = pyqtSignal()
+    write_to_sparse_value_set_file = pyqtSignal()
     auto_read_checked = pyqtSignal()
     auto_read_unchecked = pyqtSignal()
 
@@ -57,6 +58,9 @@ class NvView(QtWidgets.QWidget):
         )
         self.ui.write_to_overlay_value_set_file_button.clicked.connect(
             self.write_to_overlay_value_set_file,
+        )
+        self.ui.write_to_sparse_value_set_file_button.clicked.connect(
+            self.write_to_sparse_value_set_file,
         )
         self.ui.read_from_file_button.clicked.connect(self.read_from_file)
         self.ui.read_from_value_set_file_button.clicked.connect(
@@ -564,6 +568,14 @@ class NvView(QtWidgets.QWidget):
         )
         self.write_to_overlay_value_set_file.connect(
             write_to_overlay_value_set_file,
+        )
+
+        write_to_sparse_value_set_file = functools.partial(
+            model.write_to_sparse_value_set_file,
+            parent=self,
+        )
+        self.write_to_sparse_value_set_file.connect(
+            write_to_sparse_value_set_file,
         )
 
         for i in epyqlib.nv.Columns.indexes:

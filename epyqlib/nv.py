@@ -1916,6 +1916,45 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         self.activity_ended.emit(message)
 
     @pyqtSlot()
+    def write_to_sparse_value_set_file(self, parent=None):
+        fields = attr.fields(epyqlib.pm.valuesetmodel.ValueSet)
+        filters = fields.filters.default
+
+        save_path = epyqlib.utils.qt.file_dialog(
+            caption='Sparse File',
+            filters=filters,
+            save=True,
+            parent=parent,
+        )
+
+        if save_path is None:
+            return
+
+        value_set = self.root.to_value_set()
+        value_set.path = save_path
+
+        drop_list = [
+            parameter
+            for parameter in value_set.model.root.children
+            if (
+                not parameter.writable
+                or parameter.value is None
+            )
+        ]
+
+        for parameter in drop_list:
+            value_set.model.root.remove_child(child=parameter)
+
+        try:
+            value_set.save()
+        except epyqlib.pm.valuesetmodel.SaveCancelled:
+            message = 'Save cancelled'
+        else:
+            message = 'Saved to "{}"'.format(value_set.path)
+
+        self.activity_ended.emit(message)
+
+    @pyqtSlot()
     def read_from_file(self, parent=None):
         filters = [
             ('EPC Parameters', ['epp']),

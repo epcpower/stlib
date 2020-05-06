@@ -72,6 +72,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="write_to_sparse_value_set_file_button">
+         <property name="text">
+          <string>Sparse</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="write_to_auto_parameters_button">
          <property name="text">
           <string>To Auto Parameters</string>
