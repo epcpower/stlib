@@ -115,7 +115,7 @@ def copy_parameter_data(
     )
 
 
-def decimal_attrib(**kwargs):
+def decimal_attrib(load_only=False, **kwargs):
     attrib = attr.ib(
         converter=epyqlib.attrsmodel.to_decimal_or_none,
         **kwargs,
@@ -125,6 +125,7 @@ def decimal_attrib(**kwargs):
         field=marshmallow.fields.Decimal(
             allow_none=kwargs.get('default', False) is None,
             as_string=True,
+            load_only=load_only,
         ),
     )
     
@@ -145,10 +146,10 @@ class Parameter(epyqlib.treenode.TreeNode):
     )
 
     value = decimal_attrib(default=None)
-    user_default = decimal_attrib(default=None)
-    factory_default = decimal_attrib(default=None)
-    minimum = decimal_attrib(default=None)
-    maximum = decimal_attrib(default=None)
+    user_default = decimal_attrib(default=None, load_only=True)
+    factory_default = decimal_attrib(default=None, load_only=True)
+    minimum = decimal_attrib(default=None, load_only=True)
+    maximum = decimal_attrib(default=None, load_only=True)
 
     parameter_uuid = epyqlib.attrsmodel.attr_uuid(
         default=None,
