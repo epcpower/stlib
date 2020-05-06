@@ -5,6 +5,7 @@ import graham
 import marshmallow
 
 import epyqlib.attrsmodel
+import epyqlib.nv
 import epyqlib.pm.parametermodel
 import epyqlib.treenode
 
@@ -272,6 +273,38 @@ class ValueSet:
                 value = getattr(overlay_parameter, name)
                 if value is not None:
                     setattr(base_parameter, name, value)
+
+    def strip_common(self, reference):
+        reference_parameter_by_uuid = {
+            parameter.parameter_uuid: parameter
+            for parameter in reference.model.root.children
+        }
+
+        drop_list = []
+
+        for output_parameter in self.model.root.children:
+            reference_parameter = reference_parameter_by_uuid.get(
+                output_parameter.parameter_uuid,
+            )
+            if reference_parameter is None:
+                continue
+
+            if not output_parameter.writable:
+                drop_list.append(output_parameter)
+                continue
+
+            if output_parameter.value is None:
+                drop_list.append(output_parameter)
+                continue
+
+            for meta in epyqlib.nv.MetaEnum.non_value:
+                setattr(output_parameter, meta.name, None)
+
+            if reference_parameter.value == output_parameter.value:
+                drop_list.append(output_parameter)
+
+        for parameter in drop_list:
+            self.model.root.remove_child(child=parameter)
 
 
 # TODO: CAMPid 943896754217967154269254167

@@ -1,3 +1,4 @@
+import collections
 import os
 import pathlib
 
@@ -45,7 +46,87 @@ class OverlayConfiguration:
     )
 
 
-@click.command()
+@click.group(name='value-sets')
+def group():
+    pass
+
+
+@group.group()
+def recipes():
+    pass
+
+
+@recipes.command(name='generate')
+@click.option(
+    '--input',
+    'value_set_path_strings',
+    type=click.Path(dir_okay=False, readable=True, resolve_path=True),
+    multiple=True,
+    required=True,
+)
+@click.option(
+    '--common-output',
+    'common_output_path_string',
+    type=click.Path(dir_okay=False, readable=True, resolve_path=True),
+    required=True,
+)
+def generate_recipes(value_set_path_strings, common_output_path_string):
+    value_set_paths = [
+        pathlib.Path(path_string)
+        for path_string in value_set_path_strings
+    ]
+    common_output_path = pathlib.Path(common_output_path_string)
+
+    common_value_set = epyqlib.pm.valuesetmodel.create_blank()
+
+    value_sets = [
+        epyqlib.pm.valuesetmodel.loadp(value_set_path)
+        for value_set_path in value_set_paths
+    ]
+
+    all_parameters_by_uuid = collections.defaultdict(list)
+    for value_set in value_sets:
+        for parameter in value_set.model.root.children:
+            all_parameters_by_uuid[parameter.parameter_uuid].append(parameter)
+
+    common_uuids = [
+        uuid_
+        for uuid_, parameters in all_parameters_by_uuid.items()
+        if len(parameters) == len(value_sets)
+    ]
+
+    common_and_equal_uuids = [
+        uuid_
+        for uuid_ in common_uuids
+        if 1 == len({
+            parameter.value for parameter in all_parameters_by_uuid[uuid_]
+        })
+    ]
+
+    for uuid_ in common_and_equal_uuids:
+        reference_parameter = all_parameters_by_uuid[uuid_][0]
+
+        new_parameter = epyqlib.pm.valuesetmodel.Parameter(
+            name=reference_parameter.name,
+            value=reference_parameter.value,
+            parameter_uuid=reference_parameter.parameter_uuid,
+            readable=reference_parameter.readable,
+            writable=reference_parameter.writable,
+        )
+
+        common_value_set.model.root.append_child(new_parameter)
+
+    for value_set in value_sets:
+        value_set.strip_common(reference=common_value_set)
+
+    common_value_set.save(path=common_output_path)
+    for value_set in value_sets:
+        new_name = common_output_path.stem + '-' + value_set.path.name
+        path = common_output_path.parent / new_name
+        value_set.save(path=path)
+
+
+@recipes.command(name='cook')
 @click.option(
     '--configuration',
     'configuration_path_string',

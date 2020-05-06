@@ -1879,36 +1879,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         complete_value_set = self.root.to_value_set()
         complete_value_set.path = save_path
 
-        reference_parameter_by_uuid = {
-            parameter.parameter_uuid: parameter
-            for parameter in reference_value_set.model.root.children
-        }
-
-        drop_list = []
-
-        for output_parameter in complete_value_set.model.root.children:
-            reference_parameter = reference_parameter_by_uuid.get(
-                output_parameter.parameter_uuid,
-            )
-            if reference_parameter is None:
-                continue
-
-            if not output_parameter.writable:
-                drop_list.append(output_parameter)
-                continue
-
-            if output_parameter.value is None:
-                drop_list.append(output_parameter)
-                continue
-
-            for meta in MetaEnum.non_value:
-                setattr(output_parameter, meta.name, None)
-
-            if reference_parameter.value == output_parameter.value:
-                drop_list.append(output_parameter)
-
-        for parameter in drop_list:
-            complete_value_set.model.root.remove_child(child=parameter)
+        complete_value_set.strip_common(reference=reference_value_set)
 
         try:
             complete_value_set.save()

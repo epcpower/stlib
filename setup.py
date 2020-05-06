@@ -35,6 +35,7 @@ setuptools.setup(
             'versionfile = epyqlib.cli.versionfile:cli',
             'generateversion = epyqlib.cli.generateversion:cli',
             'autodevice = epyqlib.autodevice.cli:cli',
+            'epyqlib = epyqlib.cli.main:cli',
         ],
         'pytest11': [
             'epyqlib = epyqlib.tests.pytest_plugin',
