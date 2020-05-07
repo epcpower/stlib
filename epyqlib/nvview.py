@@ -726,8 +726,11 @@ class NvView(QtWidgets.QWidget):
         menu = QtWidgets.QMenu(parent=self.ui.tree_view)
         menu.setSeparatorsCollapsible(True)
 
+        model = self.nonproxy_model()
+
         expand_all = menu.addAction('Expand All')
         collapse_all = menu.addAction('Collapse All')
+        clear_all = menu.addAction('Clear All')
 
         action = menu.exec(self.ui.tree_view.viewport().mapToGlobal(position))
 
@@ -735,6 +738,11 @@ class NvView(QtWidgets.QWidget):
             self.ui.tree_view.expandAll()
         elif action is collapse_all:
             self.ui.tree_view.collapseAll()
+        elif action is clear_all:
+            self.disable_column_resize()
+            for node in model.all_nv():
+                model.clear_node(node)
+            self.enable_column_resize()
 
     def nv_context_menu(self, position):
         index = self.ui.tree_view.indexAt(position)
@@ -818,6 +826,7 @@ class NvView(QtWidgets.QWidget):
         menu.addSeparator()
         expand_all = menu.addAction('Expand All')
         collapse_all = menu.addAction('Collapse All')
+        clear_all = menu.addAction('Clear All')
 
         action = menu.exec(self.ui.tree_view.viewport().mapToGlobal(position))
 
@@ -883,6 +892,11 @@ class NvView(QtWidgets.QWidget):
                         self.ui.tree_view.expandAll()
                     elif action is collapse_all:
                         self.ui.tree_view.collapseAll()
+                    elif action is clear_all:
+                        self.disable_column_resize()
+                        for node in model.all_nv():
+                            model.clear_node(node)
+                        self.enable_column_resize()
         finally:
             d.addErrback(epyqlib.utils.twisted.catch_expected)
             d.addErrback(epyqlib.utils.twisted.errbackhook)
