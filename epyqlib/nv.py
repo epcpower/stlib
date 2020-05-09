@@ -198,7 +198,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
     def __init__(self, neo, bus=None, stop_cyclic=None, start_cyclic=None,
                  configuration=None, hierarchy=None, metas=(MetaEnum.value,),
                  access_level_path=None, access_password_path=None,
-                 parent=None):
+                 serial_number_uuid=None, parent=None):
         TreeNode.__init__(self)
         epyqlib.canneo.QtCanListener.__init__(self, parent=parent)
 
@@ -242,6 +242,10 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             f for f in self.neo.frames
             if f.name == self.configuration.status_frame
         ][0].multiplex_frames
+
+        self.serial_number_node = None
+        if serial_number_uuid is not None:
+            self.serial_number_node = self.nv_from_uuid(serial_number_uuid)
 
         self.save_frame = None
         self.save_signal = None
@@ -503,6 +507,17 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         visit(self, all)
 
         return all
+
+    def nv_from_uuid(self, uuid_):
+        [nv] = [
+            signal
+            for frame in self.neo.frames
+            for signal in frame.signals
+            if signal.parameter_uuid == uuid_
+            if signal.frame in self.set_frames.values()
+        ]
+
+        return nv
 
     def names(self):
         return '\n'.join([n.fields.name for n in self.all_nv()])

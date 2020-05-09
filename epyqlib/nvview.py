@@ -11,6 +11,7 @@ from PyQt5 import QtWidgets, QtCore
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QAbstractProxyModel
 import twisted.internet.defer
 
+import epyqlib.authorization
 import epyqlib.autodevice.build
 import epyqlib.nv
 import epyqlib.nvview_ui
@@ -28,6 +29,45 @@ __license__ = 'GPLv2+'
 
 class ActivityError(Exception):
     pass
+
+
+class InputCancelledError(Exception):
+    pass
+
+
+def get_integer_from_user(parent, title, message, secret):
+    if secret:
+        echo = QtWidgets.QLineEdit.Password
+    else:
+        echo = QtWidgets.QLineEdit.Normal
+
+    while True:
+        entered, ok_clicked = (
+            QtWidgets.QInputDialog.getText(
+                parent,
+                title,
+                message,
+                echo,
+            )
+        )
+
+        if not ok_clicked:
+            raise InputCancelledError()
+
+        try:
+            parsed = int(entered, 0)
+        except ValueError:
+            chosen_button = QtWidgets.QMessageBox.question(
+                parent,
+                'Invalid Input',
+                'Invalid input, try again?',
+            )
+            if chosen_button == QtWidgets.QMessageBox.Yes:
+                continue
+            else:
+                raise InputCancelledError()
+
+        return parsed
 
 
 class NvView(QtWidgets.QWidget):
@@ -145,6 +185,8 @@ class NvView(QtWidgets.QWidget):
                 else self.auto_read_unchecked.emit()
             )
         )
+
+        self.auth_key = None
 
     def terminate(self):
         self.device = None
@@ -759,10 +801,14 @@ class NvView(QtWidgets.QWidget):
         selected_by_node = collections.defaultdict(list)
         selected_by_meta = collections.defaultdict(list)
         selected_column_by_node = collections.defaultdict(set)
+        selected_scratch_nodes = []
 
         for index in selected_indexes:
             node = model.node_from_index(index)
             column = index.column()
+
+            if column == epyqlib.nv.Columns.indexes.scratch:
+                selected_scratch_nodes.append(node)
 
             selected_column_by_node[node].add(column)
 
@@ -824,6 +870,20 @@ class NvView(QtWidgets.QWidget):
         }
 
         menu.addSeparator()
+        auth_submenu = menu.addMenu('Auth tags')
+        if len(selected_indexes) == 1:
+            create_auth_tag_label = 'Create tag'
+        else:
+            create_auth_tag_label = 'Create tags'
+        enter_auth_key = auth_submenu.addAction('Enter auth key...')
+
+        clear_auth_key = auth_submenu.addAction('Clear auth key')
+        clear_auth_key.setEnabled(self.auth_key is not None)
+
+        create_auth_tag = auth_submenu.addAction(create_auth_tag_label)
+        create_auth_tag.setEnabled(self.auth_key is not None)
+
+        menu.addSeparator()
         expand_all = menu.addAction('Expand All')
         collapse_all = menu.addAction('Collapse All')
         clear_all = menu.addAction('Clear All')
@@ -847,6 +907,78 @@ class NvView(QtWidgets.QWidget):
                     )
 
                 model.submit_transaction()
+            elif action is enter_auth_key:
+                try:
+                    self.auth_key = get_integer_from_user(
+                        parent=self,
+                        title='Authorization Key',
+                        message="Enter authorization key",
+                        secret=True,
+                    )
+                except InputCancelledError:
+                    return
+            elif action is clear_auth_key:
+                self.auth_key = None
+            elif action is create_auth_tag:
+                if model.root.serial_number_node is not None:
+                    serial_number = model.root.serial_number_node.value
+                else:
+                    try:
+                        serial_number = get_integer_from_user(
+                            parent=self,
+                            title='Serial Number',
+                            message="Enter serial number for tag creation",
+                            secret=False,
+                        )
+                    except InputCancelledError:
+                        return
+
+                tags = {}
+
+                for node in selected_scratch_nodes:
+                    key = epyqlib.authorization.Uint64.ensure(
+                        value=self.auth_key,
+                    )
+
+                    interface_value = node.scratch.value
+                    packed_value = int(
+                        node.pack_bitstring(value=interface_value),
+                        2,
+                    )
+
+                    tag = epyqlib.authorization.create_tag(
+                        key_value=key,
+                        serial_number=serial_number,
+                        parameter_uuid=node.parameter_uuid,
+                        meta_index=epyqlib.nv.MetaEnum.value,
+                        value=packed_value,
+                    )
+
+                    tags[node] = (tag, interface_value)
+
+                text = '\n\n'.join([
+                    '\n'.join([
+                        f'          {node.name} -> {node.to_human(value)} for S/N {serial_number}',
+                        f'    High: {tag.value.high_32()}',
+                        f'     Low: {tag.value.low_32()}',
+                    ])
+                    for node, (tag, value) in tags.items()
+                ])
+
+                QtWidgets.QMessageBox.information(
+                    self,
+                    "Auth Tags",
+                    text,
+                )
+            elif action is expand_all:
+                self.ui.tree_view.expandAll()
+            elif action is collapse_all:
+                self.ui.tree_view.collapseAll()
+            elif action is clear_all:
+                self.disable_column_resize()
+                for node in model.all_nv():
+                    model.clear_node(node)
+                self.enable_column_resize()
             else:
                 for meta, nodes in selected_by_meta.items():
                     callback = functools.partial(
@@ -887,15 +1019,6 @@ class NvView(QtWidgets.QWidget):
                         self.disable_column_resize()
                         for node in nodes:
                             model.clear_node(node, meta=meta)
-                        self.enable_column_resize()
-                    elif action is expand_all:
-                        self.ui.tree_view.expandAll()
-                    elif action is collapse_all:
-                        self.ui.tree_view.collapseAll()
-                    elif action is clear_all:
-                        self.disable_column_resize()
-                        for node in model.all_nv():
-                            model.clear_node(node)
                         self.enable_column_resize()
         finally:
             d.addErrback(epyqlib.utils.twisted.catch_expected)
