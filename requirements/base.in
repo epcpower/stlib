@@ -22,11 +22,11 @@ python-dateutil==2.7.5
 python-docx==0.8.7
 python-dotenv==0.9.1
 QtAwesome==0.6.0
+siphash-cffi>=0.1.4
 
 Twisted==19.7.0
 
 -e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec
--e git+https://github.com/altendky/siphash-cffi@2a97bdca72145f16dd7c987164cd76ea8484dfc8#egg=siphash-cffi
 -e git+https://github.com/epcpower/sunspec-demo@19581317ae2fd136b5df229d824f81a17da52c58#egg=epcsunspecdemo
 
 

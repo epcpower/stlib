@@ -9,7 +9,6 @@
 
 -e git+https://github.com/epcpower/sunspec-demo@19581317ae2fd136b5df229d824f81a17da52c58#egg=epcsunspecdemo  # via -r /home/vsts/work/1/s/work/requirements/base.in
 -e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec  # via -r /home/vsts/work/1/s/work/requirements/base.in, epcsunspecdemo
--e git+https://github.com/altendky/siphash-cffi@2a97bdca72145f16dd7c987164cd76ea8484dfc8#egg=siphash-cffi  # via -r /home/vsts/work/1/s/work/requirements/base.in
 aenum==2.2.3              # via python-can
 alqtendpy==0.0.4          # via -r /home/vsts/work/1/s/work/requirements/base.in
 altendpy==0.0.21          # via alqtendpy
@@ -53,6 +52,7 @@ qtawesome==0.6.0          # via -r /home/vsts/work/1/s/work/requirements/base.in
 qtpy==1.9.0               # via qtawesome
 requests==2.23.0          # via romp
 romp==2020.3              # via -r /home/vsts/work/1/s/work/requirements/pre.in
+siphash-cffi==0.1.4       # via -r /home/vsts/work/1/s/work/requirements/base.in
 six==1.14.0               # via automat, pathlib2, pip-tools, python-dateutil, qtawesome
 smmap2==3.0.1             # via gitdb2
 smmap==3.0.4              # via smmap2
