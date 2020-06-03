@@ -156,19 +156,24 @@ class TreeNode:
 
         return nodes
 
-    def nodes_by_filter(self, filter):
+    def nodes_by_filter(self, filter, collection=None):
         def visit(node, matches):
             if filter(node):
-                matches.add(node)
+                if isinstance(matches, set):
+                    matches.add(node)
+                if isinstance(matches, list):
+                    matches.append(node)
 
-        nodes = set()
+        if collection is None:
+            collection = set()
+
         self.traverse(
             call_this=visit,
-            payload=nodes,
+            payload=collection,
             internal_nodes=True
         )
 
-        return nodes
+        return collection
 
     def recursively_remove_children(self):
         nodes = []

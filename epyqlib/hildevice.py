@@ -1,6 +1,7 @@
 import contextlib
 import decimal
 import functools
+import itertools
 import json
 import operator
 import pathlib
@@ -934,23 +935,39 @@ class SunSpecDevice:
     parameter_from_uuid = nv_from_uuid
 
     def map_uuids(self):
-        def get_uuid(point):
-            comment, uuid = epyqlib.canneo.strip_uuid_from_comment(
-                point.point_type.notes,
-            )
+        def get_uuid(block, point):
+            comment = point.point_type.notes
 
-            return uuid
+            for index in itertools.count():
+                comment, uuid = epyqlib.canneo.strip_uuid_from_comment(
+                    comment,
+                )
+
+                if uuid is None:
+                    return uuid
+
+                if block.type == 'fixed':
+                    return uuid
+
+                if block.type == 'repeating' and index == block.index - 1:
+                    return uuid
+
+        points = [
+            [model, block, point]
+            for model in self.device.device.models_list
+            for block in model.blocks
+            for point in [*block.points_list, *block.points_sf.values()]
+            if point.point_type.notes is not None
+        ]
 
         self.uuid_to_point = {
-            get_uuid(point): point
-            for model in self.device.device.models_list
-            for point in model.points_list
+            get_uuid(block=block, point=point): point
+            for model, block, point in points
         }
 
         self.uuid_to_model = {
-            get_uuid(point): model
-            for model in self.device.device.models_list
-            for point in model.points_list
+            get_uuid(block=block, point=point): model
+            for model, block, point in points
         }
 
     async def get_access_level(self):
