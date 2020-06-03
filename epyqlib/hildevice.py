@@ -47,6 +47,17 @@ def format_version_validator(instance, attribute, value):
         )
 
 
+def parse_units(unit_string):
+    if unit_string is not None:
+        unit_string = unit_string.replace('%', ' percent ')
+        # TODO: this is terrible T1179
+        unit_string = unit_string.replace('nominal', '')
+        unit_string = unit_string.replace('Power', '')
+        unit_string = unit_string.replace('cos()', '')
+
+    return epyqlib.utils.units.registry.parse_units(unit_string)
+
+
 @attr.s
 class Definition:
     base_path = attr.ib()
@@ -180,11 +191,7 @@ class Signal:
         return self.set(value=value)
 
     def units(self):
-        unit = self.signal.unit
-        if unit is not None:
-            unit = unit.replace('%', ' percent ')
-
-        return epyqlib.utils.units.registry.parse_units(unit)
+        return parse_units(self.signal.unit)
 
     def cyclic_send(self, period):
         self.device.cyclic_send_signal(self, period=period)
@@ -359,11 +366,7 @@ class Nv:
         return value * self.units()
 
     def units(self):
-        unit = self.nv.unit
-        if unit is not None:
-            unit = unit.replace('%', ' percent ')
-
-        return epyqlib.utils.units.registry.parse_units(unit)
+        return parse_units(unit_string=self.nv.unit)
 
 
     @twisted.internet.defer.inlineCallbacks
@@ -891,11 +894,7 @@ class SunSpecNv:
         return value * self.units()
 
     def units(self):
-        unit = self.nv.point_type.units
-        if unit is not None:
-            unit = unit.replace('%', ' percent ')
-
-        return epyqlib.utils.units.registry.parse_units(unit)
+        return parse_units(unit_string=self.nv.point_type.units)
 
 
 @attr.s
