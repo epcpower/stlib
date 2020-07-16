@@ -702,9 +702,14 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
         for child in self.all_nv():
             if not child.secret:
+                value = child.get_human_value(for_file=True)
+
+                if value is not None:
+                    value = decimal.Decimal(value)
+
                 parameter = epyqlib.pm.valuesetmodel.Parameter(
                     name=child.fields.name,
-                    value=child.get_human_value(for_file=True),
+                    value=value,
                     user_default=child.meta.user_default.get_human_value(
                         for_file=True
                     ),
