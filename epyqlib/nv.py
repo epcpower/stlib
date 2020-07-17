@@ -198,7 +198,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
     def __init__(self, neo, bus=None, stop_cyclic=None, start_cyclic=None,
                  configuration=None, hierarchy=None, metas=(MetaEnum.value,),
                  access_level_path=None, access_password_path=None,
-                 parent=None):
+                 serial_number_uuid=None, parent=None):
         TreeNode.__init__(self)
         epyqlib.canneo.QtCanListener.__init__(self, parent=parent)
 
@@ -242,6 +242,10 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             f for f in self.neo.frames
             if f.name == self.configuration.status_frame
         ][0].multiplex_frames
+
+        self.serial_number_node = None
+        if serial_number_uuid is not None:
+            self.serial_number_node = self.nv_from_uuid(serial_number_uuid)
 
         self.save_frame = None
         self.save_signal = None
@@ -287,7 +291,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         self.status_frames[0].set_frame = self.set_frames[0]
         for value, frame in self.set_frames.items():
             signals = [s for s in frame.signals]
-            signals = [s for s in signals if s.multiplex is not 'Multiplexor']
+            signals = [s for s in signals if s.multiplex != 'Multiplexor']
             signals = [
                 s for s in signals
                 if s.name not in [
@@ -504,6 +508,17 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
         return all
 
+    def nv_from_uuid(self, uuid_):
+        [nv] = [
+            signal
+            for frame in self.neo.frames
+            for signal in frame.signals
+            if signal.parameter_uuid == uuid_
+            if signal.frame in self.set_frames.values()
+        ]
+
+        return nv
+
     def names(self):
         return '\n'.join([n.fields.name for n in self.all_nv()])
 
@@ -687,9 +702,14 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
         for child in self.all_nv():
             if not child.secret:
+                value = child.get_human_value(for_file=True)
+
+                if value is not None:
+                    value = decimal.Decimal(value)
+
                 parameter = epyqlib.pm.valuesetmodel.Parameter(
                     name=child.fields.name,
-                    value=child.get_human_value(for_file=True),
+                    value=value,
                     user_default=child.meta.user_default.get_human_value(
                         for_file=True
                     ),
@@ -1879,32 +1899,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         complete_value_set = self.root.to_value_set()
         complete_value_set.path = save_path
 
-        reference_parameter_by_uuid = {
-            parameter.parameter_uuid: parameter
-            for parameter in reference_value_set.model.root.children
-        }
-
-        drop_list = []
-
-        for output_parameter in complete_value_set.model.root.children:
-            reference_parameter = reference_parameter_by_uuid.get(
-                output_parameter.parameter_uuid,
-            )
-            if reference_parameter is None:
-                continue
-
-            if not output_parameter.writable:
-                drop_list.append(output_parameter)
-                continue
-
-            for meta in MetaEnum.non_value:
-                setattr(output_parameter, meta.name, None)
-
-            if reference_parameter.value == output_parameter.value:
-                drop_list.append(output_parameter)
-
-        for parameter in drop_list:
-            complete_value_set.model.root.remove_child(child=parameter)
+        complete_value_set.strip_common(reference=reference_value_set)
 
         try:
             complete_value_set.save()
@@ -1912,6 +1907,45 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             message = 'Save cancelled'
         else:
             message = 'Saved to "{}"'.format(complete_value_set.path)
+
+        self.activity_ended.emit(message)
+
+    @pyqtSlot()
+    def write_to_sparse_value_set_file(self, parent=None):
+        fields = attr.fields(epyqlib.pm.valuesetmodel.ValueSet)
+        filters = fields.filters.default
+
+        save_path = epyqlib.utils.qt.file_dialog(
+            caption='Sparse File',
+            filters=filters,
+            save=True,
+            parent=parent,
+        )
+
+        if save_path is None:
+            return
+
+        value_set = self.root.to_value_set()
+        value_set.path = save_path
+
+        drop_list = [
+            parameter
+            for parameter in value_set.model.root.children
+            if (
+                not parameter.writable
+                or parameter.value is None
+            )
+        ]
+
+        for parameter in drop_list:
+            value_set.model.root.remove_child(child=parameter)
+
+        try:
+            value_set.save()
+        except epyqlib.pm.valuesetmodel.SaveCancelled:
+            message = 'Save cancelled'
+        else:
+            message = 'Saved to "{}"'.format(value_set.path)
 
         self.activity_ended.emit(message)
 

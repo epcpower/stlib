@@ -35,6 +35,7 @@ setuptools.setup(
             'versionfile = epyqlib.cli.versionfile:cli',
             'generateversion = epyqlib.cli.generateversion:cli',
             'autodevice = epyqlib.autodevice.cli:cli',
+            'epyqlib = epyqlib.cli.main:cli',
         ],
         'pytest11': [
             'epyqlib = epyqlib.tests.pytest_plugin',
@@ -49,7 +50,7 @@ setuptools.setup(
         'epcsunspecdemo',
         'python-dotenv',
         'natsort',
-        'pint',
+        'pint>0.9',
         'pyelftools',
         'qt5reactor',
         'gitpython',
@@ -58,7 +59,7 @@ setuptools.setup(
         'python-docx',
         'python-can',
         'QtAwesome',
-        'siphash-cffi',
+        'siphash-cffi>=0.1.4',
         'Twisted',
     ],
     extras_require={

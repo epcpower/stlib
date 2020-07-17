@@ -41,6 +41,7 @@ import shutil
 import tempfile
 import textwrap
 import twisted.internet.task
+import uuid
 import zipfile
 from twisted.internet.defer import setDebugging
 setDebugging(True)
@@ -692,6 +693,17 @@ class Device:
             if access_password_path is not None:
                 access_password_path = access_password_path.split(';')
 
+            def none_or_uuid(uuid_string):
+                if uuid_string is None:
+                    return None
+
+                return uuid.UUID(uuid_string)
+
+            parameter_uuids = self.raw_dict.get('parameter_uuids', {})
+            serial_number_uuid = none_or_uuid(
+                parameter_uuids.get('serial_number'),
+            )
+
             # TODO: CAMPid 0794311304143707516085683164039671793972
             if self.raw_dict['nv_meta_enum'] == 'Meta':
                 self.metas = epyqlib.nv.meta_limits_first
@@ -706,6 +718,7 @@ class Device:
                 metas=self.metas,
                 access_level_path=access_level_path,
                 access_password_path=access_password_path,
+                serial_number_uuid=serial_number_uuid,
             )
 
             default_metas = [
@@ -755,7 +768,8 @@ class Device:
                 bus=self.bus,
                 stop_cyclic=self.nv_looping_set.stop,
                 start_cyclic=self.nv_looping_set.start,
-                configuration=nv_configuration
+                configuration=nv_configuration,
+                serial_number_uuid=serial_number_uuid,
             )
             notifiees.append(self.widget_nvs)
 

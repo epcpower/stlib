@@ -339,9 +339,10 @@ report_and_check_call(command=[
     cwd='build'
 )
 
-installer_file = '{}-{}-{}.exe'.format(
+installer_file = '{}-{}-{}-{}.exe'.format(
     args.name,
     epyq.__version_tag__,
+    'x86_64' if sys.maxsize > 2**32 else 'x86',
     epyq.__build_tag__,
 )
 

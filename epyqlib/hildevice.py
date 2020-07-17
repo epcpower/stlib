@@ -1,5 +1,7 @@
 import contextlib
+import decimal
 import functools
+import itertools
 import json
 import operator
 import pathlib
@@ -44,6 +46,17 @@ def format_version_validator(instance, attribute, value):
                 '.'.join(str(v) for v in supported_version),
             ),
         )
+
+
+def parse_units(unit_string):
+    if unit_string is not None:
+        unit_string = unit_string.replace('%', ' percent ')
+        # TODO: this is terrible T1179
+        unit_string = unit_string.replace('nominal', '')
+        unit_string = unit_string.replace('Power', '')
+        unit_string = unit_string.replace('cos()', '')
+
+    return epyqlib.utils.units.registry.parse_units(unit_string)
 
 
 @attr.s
@@ -137,7 +150,7 @@ class Signal:
     device = attr.ib()
 
     @twisted.internet.defer.inlineCallbacks
-    def get_raw(self, stale_after=0.1, timeout=1):
+    def _get_raw(self, stale_after=0.1, timeout=1):
         # TODO: uh...  why not time.monotonic()?
         start = time.time()
 
@@ -152,15 +165,15 @@ class Signal:
         return self.signal.value
 
     @twisted.internet.defer.inlineCallbacks
-    def get(self, stale_after=0.1, timeout=1):
-        yield self.get_raw(stale_after=stale_after, timeout=timeout)
+    def get(self, stale_after=0.1, timeout=1, enumeration_as_string=True):
+        yield self._get_raw(stale_after=stale_after, timeout=timeout)
 
-        return self._to_human()
+        return self._to_human(enumeration_as_string=enumeration_as_string)
 
-    def _to_human(self):
+    def _to_human(self, enumeration_as_string):
         value = self.signal.to_human(value=self.signal.value)
 
-        if value in self.signal.enumeration:
+        if enumeration_as_string and value in self.signal.enumeration:
             return self.signal.enumeration[value]
 
         return value * self.units()
@@ -179,9 +192,7 @@ class Signal:
         return self.set(value=value)
 
     def units(self):
-        return epyqlib.utils.units.registry.parse_expression(
-            self.signal.unit,
-        )
+        return parse_units(self.signal.unit)
 
     def cyclic_send(self, period):
         self.device.cyclic_send_signal(self, period=period)
@@ -232,7 +243,7 @@ class Signal:
         if restoration_context is None:
             restoration_context = async_null_context
 
-        original = self._to_human()
+        original = self._to_human(enumeration_as_string=True)
 
         try:
             async with set_context():
@@ -276,10 +287,14 @@ class Nv:
             await self.set_meta(value=value, meta=meta)
 
     async def set_meta(self, value, meta):
+        units = self.units()
+        if units != epyqlib.utils.units.registry.dimensionless:
+            value = value.to(units).magnitude
+
         if meta == epyqlib.nv.MetaEnum.value:
-            self.nv.set_value(value)
+            self.nv.set_human_value(value)
         else:
-            getattr(self.nv.meta, meta.name).set_value(value)
+            getattr(self.nv.meta, meta.name).set_human_value(value)
 
         # TODO: verify value was accepted
         await self.device.nvs.protocol.write(
@@ -349,7 +364,11 @@ class Nv:
             meta=meta,
         )
 
-        return value
+        return value * self.units()
+
+    def units(self):
+        return parse_units(unit_string=self.nv.unit)
+
 
     @twisted.internet.defer.inlineCallbacks
     def wait_for(self, op, value, timeout, ignore_read_failures=False):
@@ -607,24 +626,33 @@ class Device:
                     password=password,
                 )
 
-    async def reset(self, timeout=None):
+    async def reset(self, timeout=10):
         # SoftwareReset:InitiateReset
-        reset_nv = self.nv_from_uuid(
+        reset_parameter = self.parameter_from_uuid(
             uuid_=uuid.UUID('b582085d-7734-4260-ab97-47e50a41b06c'),
         )
 
-        # StatusBits:State
-        state_signal = self.signal_from_uuid(
-            uuid_=uuid.UUID('6392782a-b886-45a0-9642-dd4f47cd2a59'),
+        # Serial Number
+        a_parameter_that_can_be_read = self.parameter_from_uuid(
+            uuid_=uuid.UUID('390f27ea-6f28-4313-b183-5f37d007ccd1'),
         )
 
         # TODO: just accept the 1s or whatever default timeout?  A set without
         #       waiting for the response could be nice.  (or embedded sending
         #       a response)
         with contextlib.suppress(epyqlib.twisted.nvs.RequestTimeoutError):
-            await reset_nv.set(value=1)
+            await reset_parameter.set(value=1)
 
-        await state_signal.get(stale_after=0, timeout=10)
+        end = time.monotonic() + timeout
+        while True:
+            try:
+                await a_parameter_that_can_be_read.get()
+            except epyqlib.twisted.nvs.RequestTimeoutError:
+                if time.monotonic() > end:
+                    raise
+                continue
+            else:
+                break
 
     async def wait_through_power_on_reset(self):
         status_signal = self.signal_from_uuid(
@@ -806,57 +834,6 @@ class AccessLevel:
     password = attr.ib()
 
 
-# TODO: shouldn't need to be duplicated here
-
-highest_authenticatable_access_level = AccessLevel(
-    name='EPC Factory',
-    level=3,
-    password=13250,
-)
-
-
-authenticatable_elevated_access_levels = [
-    AccessLevel(
-        name='Service Eng',
-        level=1,
-        password=42,
-    ),
-    AccessLevel(
-        name='EPC Eng',
-        level=2,
-        password=13125,
-    ),
-    highest_authenticatable_access_level,
-]
-
-
-base_access_level = AccessLevel(
-    name='Service Tech',
-    level=0,
-    password=0,
-)
-
-
-authenticatable_access_levels = [
-    base_access_level,
-    *authenticatable_elevated_access_levels,
-]
-
-
-unauthenticatable_access_levels = [
-    AccessLevel(
-        name='MAC Auth',
-        level=4,
-        password=31415,
-    ),
-]
-
-access_levels = [
-    *authenticatable_access_levels,
-    *unauthenticatable_access_levels,
-]
-
-
 @attr.s
 class SunSpecNv:
     nv = attr.ib()
@@ -909,12 +886,16 @@ class SunSpecNv:
     async def get(self):
         self.model.read_points()
 
-        return self.nv.value * self.units()
+        value = decimal.Decimal(self.nv.value)
+        scale_factor = self.nv.value_sf
+        if scale_factor is None:
+            scale_factor = 0
+        value = round(value, -scale_factor)
+
+        return value * self.units()
 
     def units(self):
-        return epyqlib.utils.units.registry.parse_expression(
-            self.nv.point_type.units,
-        )
+        return parse_units(unit_string=self.nv.point_type.units)
 
 
 @attr.s
@@ -954,23 +935,39 @@ class SunSpecDevice:
     parameter_from_uuid = nv_from_uuid
 
     def map_uuids(self):
-        def get_uuid(point):
-            comment, uuid = epyqlib.canneo.strip_uuid_from_comment(
-                point.point_type.notes,
-            )
+        def get_uuid(block, point):
+            comment = point.point_type.notes
 
-            return uuid
+            for index in itertools.count():
+                comment, uuid = epyqlib.canneo.strip_uuid_from_comment(
+                    comment,
+                )
+
+                if uuid is None:
+                    return uuid
+
+                if block.type == 'fixed':
+                    return uuid
+
+                if block.type == 'repeating' and index == block.index - 1:
+                    return uuid
+
+        points = [
+            [model, block, point]
+            for model in self.device.device.models_list
+            for block in model.blocks
+            for point in [*block.points_list, *block.points_sf.values()]
+            if point.point_type.notes is not None
+        ]
 
         self.uuid_to_point = {
-            get_uuid(point): point
-            for model in self.device.device.models_list
-            for point in model.points_list
+            get_uuid(block=block, point=point): point
+            for model, block, point in points
         }
 
         self.uuid_to_model = {
-            get_uuid(point): model
-            for model in self.device.device.models_list
-            for point in model.points_list
+            get_uuid(block=block, point=point): model
+            for model, block, point in points
         }
 
     async def get_access_level(self):
@@ -1036,3 +1033,54 @@ class SunSpecDevice:
                 password=password,
                 check_limits=original_check_limits,
             )
+
+    async def reset(self, timeout=10):
+        # SoftwareReset:InitiateReset
+        reset_parameter = self.parameter_from_uuid(
+            uuid_=uuid.UUID('b582085d-7734-4260-ab97-47e50a41b06c'),
+        )
+
+        # Serial Number
+        a_parameter_that_can_be_read = self.parameter_from_uuid(
+            uuid_=uuid.UUID('390f27ea-6f28-4313-b183-5f37d007ccd1'),
+        )
+
+        # TODO: just accept the 1s or whatever default timeout?  A set without
+        #       waiting for the response could be nice.  (or embedded sending
+        #       a response)
+        with contextlib.suppress(sunspec.core.client.SunSpecClientError):
+            await reset_parameter.set(value=1)
+
+        end = time.monotonic() + timeout
+        while True:
+            try:
+                await a_parameter_that_can_be_read.get()
+            except sunspec.core.client.SunSpecClientError:
+                if time.monotonic() > end:
+                    raise
+                continue
+            else:
+                break
+
+    async def to_nv(self, timeout=10):
+        save_command_parameter = self.parameter_from_uuid(
+            uuid.UUID('2c768acc-f88e-431c-8fc1-ea8d5b2ba253'),
+        )
+        save_in_progress_parameter = self.parameter_from_uuid(
+            uuid.UUID('5d623539-a564-4374-b00d-492a0fbb2f55'),
+        )
+
+        await save_command_parameter.set(1)
+        await epyqlib.utils.twisted.sleep(0.250)
+
+        end = time.monotonic() + timeout
+        while time.monotonic() < end:
+            try:
+                saving = await save_in_progress_parameter.get()
+            except sunspec.core.client.SunSpecClientError:
+                continue
+
+            if not saving:
+                break
+        else:
+            raise Exception()
