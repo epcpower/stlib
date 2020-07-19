@@ -626,7 +626,7 @@ class Device:
                     password=password,
                 )
 
-    async def reset(self, timeout=10):
+    async def reset(self, timeout=10, sleep=30):
         # SoftwareReset:InitiateReset
         reset_parameter = self.parameter_from_uuid(
             uuid_=uuid.UUID('b582085d-7734-4260-ab97-47e50a41b06c'),
@@ -642,6 +642,9 @@ class Device:
         #       a response)
         with contextlib.suppress(epyqlib.twisted.nvs.RequestTimeoutError):
             await reset_parameter.set(value=1)
+
+        if sleep > 0:
+            await epyqlib.utils.twisted.sleep(sleep)
 
         end = time.monotonic() + timeout
         while True:
@@ -917,7 +920,7 @@ class SunSpecDevice:
                 slave_id=1,
                 device_type=sunspec.core.client.RTU,
                 name='/dev/ttyUSB0',
-                baudrate=9600,
+                baudrate=115200,
                 timeout=1,
             )
 
@@ -1034,7 +1037,7 @@ class SunSpecDevice:
                 check_limits=original_check_limits,
             )
 
-    async def reset(self, timeout=10):
+    async def reset(self, timeout=10, sleep=30):
         # SoftwareReset:InitiateReset
         reset_parameter = self.parameter_from_uuid(
             uuid_=uuid.UUID('b582085d-7734-4260-ab97-47e50a41b06c'),
@@ -1050,6 +1053,9 @@ class SunSpecDevice:
         #       a response)
         with contextlib.suppress(sunspec.core.client.SunSpecClientError):
             await reset_parameter.set(value=1)
+
+        if sleep > 0:
+            await epyqlib.utils.twisted.sleep(sleep)
 
         end = time.monotonic() + timeout
         while True:
