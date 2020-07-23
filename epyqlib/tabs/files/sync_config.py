@@ -10,6 +10,7 @@ class Vars:
     offline_mode = "offline_mode"
     refresh_token = "refresh_token"
 
+
 class SyncConfig:
     _instance = None
     _tag = f'[{__name__}]'

@@ -18,6 +18,7 @@ logger = logging.getLogger("CognitoHelper")
 class CognitoException(Exception):
     message: str
 
+
 class CognitoHelper:
 
     _tag = '[CognitoHelper]'

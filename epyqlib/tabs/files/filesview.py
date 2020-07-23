@@ -363,6 +363,9 @@ class FilesView(UiBase):
 
     def _render_context_menu(self, position: QPoint):
         item = self.files_grid.itemAt(position)
+        if (item is None):
+            # User clicked empty space below the list items
+            return
         parent = item.parent()
 
         menu_pos = self.files_grid.viewport().mapToGlobal(position)
