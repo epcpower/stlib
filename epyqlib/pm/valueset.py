@@ -1,10 +1,12 @@
 import collections
 import os
+import math
 import pathlib
 
 import attr
 import click
 import epyqlib.pm.valuesetmodel
+import epyqlib.attrsmodel
 import graham
 import marshmallow
 
@@ -44,6 +46,63 @@ class OverlayConfiguration:
             field=marshmallow.fields.List(marshmallow.fields.Nested(graham.schema(OverlayRecipe))),
         ),
     )
+    reference_path = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_pathlib_or_none,
+    )
+    path = attr.ib(default=None)
+
+    @classmethod
+    def load(cls, path):
+        schema = graham.schema(cls)
+
+        configuration_text = path.read_text(encoding='utf-8')
+        configuration = schema.loads(configuration_text).data
+
+        configuration.path = path
+        if configuration.reference_path is None:
+            configuration.reference_path = path.parent
+
+        return configuration
+
+    def recipe_output_path(self, recipe):
+        return self.reference_path / self.output_path / recipe.output_path
+
+    def recipe_base_pmvs_path(self, recipe):
+        return self.reference_path / recipe.base_pmvs_path
+
+    def recipe_overlay_pmvs_paths(self, recipe):
+        return [
+            self.reference_path / path
+            for path in recipe.overlay_pmvs_paths
+        ]
+
+    def raw(self, echo=lambda *args, **kwargs: None):
+        input_modification_times = []
+        output_modification_times = []
+
+        input_modification_times.append(self.path.stat().st_mtime)
+
+        for recipe in self.recipes:
+            output_path = self.recipe_output_path(recipe=recipe)
+            echo(f'Checking: {os.fspath(output_path)}')
+
+            try:
+                stat = recipe.output_path.stat()
+            except FileNotFoundError:
+                output_modification_time = math.inf
+            else:
+                output_modification_time = stat.st_mtime
+            output_modification_times.append(output_modification_time)
+
+            overlay_pmvs_paths = self.recipe_overlay_pmvs_paths(recipe=recipe)
+
+            for overlay_pmvs_path in overlay_pmvs_paths:
+                input_modification_times.append(
+                    overlay_pmvs_path.stat().st_mtime,
+                )
+
+        return min(output_modification_times) < max(input_modification_times)
 
 
 @click.group(name='value-sets')
@@ -132,25 +191,37 @@ def generate_recipes(value_set_path_strings, common_output_path_string):
     'configuration_path_string',
     type=click.Path(dir_okay=False, readable=True, resolve_path=True),
 )
-def cli(configuration_path_string):
+@click.option(
+    '--if-raw/--assume-raw',
+    'only_if_raw',
+    default=False,
+)
+def cli(configuration_path_string, only_if_raw):
     configuration_path = pathlib.Path(configuration_path_string)
-    reference_path = configuration_path.parent
 
-    schema = graham.schema(OverlayConfiguration)
+    configuration = OverlayConfiguration.load(configuration_path)
 
-    configuration_text = configuration_path.read_text(encoding='utf-8')
-    configuration = schema.loads(configuration_text).data
+    if only_if_raw:
+        if not configuration.raw(echo=click.echo):
+            click.echo(
+                'Generated files appear to be up to date, skipping cooking',
+            )
+
+            return
+
+        click.echo(
+            'Generated files appear to be out of date, starting cooking'
+        )
 
     for recipe in configuration.recipes:
-        output_path = reference_path / configuration.output_path / recipe.output_path
+        output_path = configuration.recipe_output_path(recipe=recipe)
         click.echo(f'Creating: {os.fspath(output_path)}')
 
-        base_pmvs_path = reference_path / recipe.base_pmvs_path
+        base_pmvs_path = configuration.recipe_base_pmvs_path(recipe=recipe)
 
-        overlay_pmvs_paths = [
-            reference_path / path
-            for path in recipe.overlay_pmvs_paths
-        ]
+        overlay_pmvs_paths = configuration.recipe_overlay_pmvs_paths(
+            recipe=recipe,
+        )
 
         all_pmvs_paths = [base_pmvs_path, *overlay_pmvs_paths]
 
