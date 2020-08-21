@@ -7,6 +7,7 @@ import itertools
 import json
 import locale
 import logging
+import pathlib
 import string
 import sys
 import uuid
@@ -785,6 +786,13 @@ def to_int_or_none(s):
         raise ValueError('Invalid number: {}'.format(repr(s))) from e
 
     return result
+
+
+def to_pathlib_or_none(p):
+    if p is None:
+        return None
+
+    return pathlib.Path(p)
 
 
 def two_state_checkbox(v):
