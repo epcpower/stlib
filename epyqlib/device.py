@@ -1187,7 +1187,7 @@ class Device:
             if not online:
                 self.nvs.set_stale()
 
-        if self.ui.tabs.indexOf(self.ui.files) > 0:
+        if self.ui.tabs.indexOf(self.ui.files) != -1:
             self.ui.files_view.on_bus_status_changed()
 
 

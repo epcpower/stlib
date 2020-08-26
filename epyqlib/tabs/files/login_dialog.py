@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QLineEdit, QPushButton, QLabel, QDialogButtonBox
 from epyqlib.tabs.files.cognito import CognitoException
 
 # noinspection PyUnreachableCode
-if False:  # Tell the editor about the type, but don't invoke a cyclic dependency
+if typing.TYPE_CHECKING:
     from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
 
 Ui, UiBase = PyQt5.uic.loadUiType(
@@ -105,6 +105,5 @@ class LoginDialog(UiBase):
         if self.invalid_input:
             self.invalid_input = False
             self.btn_login.setEnabled(True)
-
 
 

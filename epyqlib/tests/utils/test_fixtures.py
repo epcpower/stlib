@@ -7,12 +7,6 @@ import pytest
 
 
 @pytest.fixture
-def temp_dir(request):
-    dir = tempfile.mkdtemp()
-
-    def cleanup():
-        shutil.rmtree(dir)
-
-    request.addfinalizer(cleanup)
-
-    return dir
+def temp_dir():
+    with tempfile.TemporaryDirectory() as dir:
+        yield dir

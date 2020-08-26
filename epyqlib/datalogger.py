@@ -83,7 +83,7 @@ class DataLogger:
                 nv_signal=build_hash_signal,
                 meta=epyqlib.nv.MetaEnum.value,
             )
-        build_hash = str(build_hash[0])
+        build_hash = f'{build_hash[0]:07x}'
         serial_number = await self.nv_protocol.read(
             nv_signal=serial_number_signal,
             meta=epyqlib.nv.MetaEnum.value,

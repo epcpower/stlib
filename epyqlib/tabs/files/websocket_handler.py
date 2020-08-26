@@ -162,12 +162,12 @@ class WebSocketHandler():
 
     # From https://pypi.org/project/paho-mqtt/#on-connect
     error_lookup = {
-        0: "Connection successful",
-        1: "Connection refused - incorrect protocol version",
-        2: 'Connection refused - invalid client',
-        3: 'Connection refused - server unavailable',
-        4: 'Connection refused - bad username or password',
-        5: 'Connection refused - not authorised',
+        mqtt.CONNACK_ACCEPTED: "Connection successful",
+        mqtt.CONNACK_REFUSED_PROTOCOL_VERSION: "Connection refused - incorrect protocol version",
+        mqtt.CONNACK_REFUSED_IDENTIFIER_REJECTED: 'Connection refused - invalid client',
+        mqtt.CONNACK_REFUSED_SERVER_UNAVAILABLE: 'Connection refused - server unavailable',
+        mqtt.CONNACK_REFUSED_BAD_USERNAME_PASSWORD: 'Connection refused - bad username or password',
+        mqtt.CONNACK_REFUSED_NOT_AUTHORIZED: 'Connection refused - not authorised',
     }
 
 # Example of the format of `response`:

@@ -118,20 +118,6 @@ class CognitoHelper:
                                               aws_session_token=credentials['SessionToken'])
 
 
-    def _init_unauth_session(self):
-        ### DEPRECATED: Should not be needed anymore
-        cognito: CognitoIdentityClient = boto3.client('cognito-identity', region_name=self.config['region'])
-
-        id = cognito.get_id(IdentityPoolId=self.config['identity_pool_id'])
-
-        response = cognito.get_credentials_for_identity(IdentityId=id['IdentityId'])
-        credentials = response['Credentials']
-
-        self._session = boto3.session.Session(region_name=self.config['region'],
-                                              aws_access_key_id=credentials['AccessKeyId'],
-                                              aws_secret_access_key=credentials['SecretKey'],
-                                              aws_session_token=credentials['SessionToken'])
-
     def _get_anonymous_client(self, type: str):
         return boto3.client(
             type,

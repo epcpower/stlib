@@ -132,7 +132,7 @@ class ActivityLog:
             with open(self._cache_file, 'rb') as cache:
                 cached_events = pickle.load(cache)
                 if not isinstance(cached_events, list):
-                    raise Exception(f"Error reading from {self._cache_file}. Not a JSON file with a list as the root.")
+                    raise Exception(f"Error reading from {self._cache_file}. Not a pickle file with a list as the root.")
                 self._activity_cache = cached_events + self._activity_cache
 
     async def _write_cache_file(self):
@@ -146,6 +146,5 @@ class ActivityLog:
 
         with open(self._cache_file, 'wb') as file_ref:
             pickle.dump(self._activity_cache, file_ref)
-
 
 
