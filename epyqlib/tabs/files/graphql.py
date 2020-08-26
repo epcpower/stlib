@@ -398,18 +398,6 @@ class API:
         response = await self._make_request(self._get_update_file_notes_mutation(file_id, description, notes))
         return response['data']['updateFile']
 
-    def awai(self, coroutine):
-        # Or `async.run(coroutine)`
-        return asyncio.get_event_loop().run_until_complete(coroutine)
-
-    def run(self, coroutine):
-        from twisted.internet.defer import ensureDeferred
-        deferred = ensureDeferred(coroutine)
-        deferred.addCallback(succ)
-        deferred.addErrback(err)
-        return deferred
-
-
     async def subscribe(self, customer_id: str, on_message: Callable[[str, dict], Coroutine], on_close: Callable[[], Coroutine] = None):
         print(f"{self._tag} Subscribing to events for public events and events for context {customer_id}")
 
