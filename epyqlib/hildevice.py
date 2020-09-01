@@ -927,9 +927,13 @@ class SunSpecDevice:
         pathlist=None,
         trace=False,
     ):
-        warnings.warn("SunSpecDevice.load() method is deprecated and will be " +
-                        "removed in the future. Use SunSpecDevice.load_rtu() " + 
-                        "or SunSpecDevice.load_tcp() instead.")
+        message = (
+            "SunSpecDevice.load() method is deprecated and will be"
+            + " removed in the future. Use SunSpecDevice.load_rtu()"
+            + " or SunSpecDevice.load_tcp() instead."
+        )
+        warnings.warn(message=message, category=warnings.DeprecationWarning)
+
         with epcsunspecdemo.utils.fresh_smdx_path(self.model_path):
             self.device = sunspec.core.client.SunSpecClientDevice(
                 slave_id=slave_id,
@@ -962,10 +966,10 @@ class SunSpecDevice:
             )
 
     def load_tcp(self,
+        ipaddr,
         slave_id=1,
         timeout=1,
-        ipaddr=None,
-        ipport=502,
+        ipport=None,
     ):
         with epcsunspecdemo.utils.fresh_smdx_path(self.model_path):
             self.device = sunspec.core.client.SunSpecClientDevice(
