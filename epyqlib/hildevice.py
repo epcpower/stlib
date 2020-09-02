@@ -7,6 +7,7 @@ import operator
 import pathlib
 import time
 import uuid
+import warnings
 
 import attr
 import canmatrix
@@ -914,14 +915,69 @@ class SunSpecDevice:
     uuid_to_model = attr.ib(default=None)
     uuid = attr.ib(default=uuid.uuid4)
 
-    def load(self):
+    def load(self,
+        slave_id=1,
+        device_type=sunspec.core.client.RTU,
+        name='/dev/ttyUSB0',
+        baudrate=115200,
+        timeout=1,
+        parity=sunspec.core.client.PARITY_NONE,
+        ipaddr=None,
+        ipport=502,
+        pathlist=None,
+        trace=False,
+    ):
+        message = (
+            "SunSpecDevice.load() method is deprecated and will be"
+            + " removed in the future. Use SunSpecDevice.load_rtu()"
+            + " or SunSpecDevice.load_tcp() instead."
+        )
+        warnings.warn(message=message, category=warnings.DeprecationWarning)
+
         with epcsunspecdemo.utils.fresh_smdx_path(self.model_path):
             self.device = sunspec.core.client.SunSpecClientDevice(
-                slave_id=1,
+                slave_id=slave_id,
+                device_type=device_type,
+                name=name,
+                baudrate=baudrate,
+                timeout=timeout,
+                parity=parity,
+                ipaddr=ipaddr,
+                ipport=ipport,
+                pathlist=pathlist,
+                trace=trace,
+            )
+
+    def load_rtu(self,
+        slave_id=1,
+        name='/dev/ttyUSB0',
+        baudrate=115200,
+        timeout=1,
+        parity=sunspec.core.client.PARITY_NONE,
+    ):
+        with epcsunspecdemo.utils.fresh_smdx_path(self.model_path):
+            self.device = sunspec.core.client.SunSpecClientDevice(
+                slave_id=slave_id,
                 device_type=sunspec.core.client.RTU,
-                name='/dev/ttyUSB0',
-                baudrate=115200,
-                timeout=1,
+                name=name,
+                baudrate=baudrate,
+                timeout=timeout,
+                parity=parity,
+            )
+
+    def load_tcp(self,
+        ipaddr,
+        slave_id=1,
+        timeout=1,
+        ipport=None,
+    ):
+        with epcsunspecdemo.utils.fresh_smdx_path(self.model_path):
+            self.device = sunspec.core.client.SunSpecClientDevice(
+                slave_id=slave_id,
+                device_type=sunspec.core.client.TCP,
+                timeout=timeout,
+                ipaddr=ipaddr,
+                ipport=ipport,
             )
 
     # def signal_from_uuid(self, uuid_) -> SunSpecNv:
