@@ -184,7 +184,7 @@
   <customwidget>
    <class>FilesViewQtBuilder</class>
    <extends>QWidget</extends>
-   <header>epyqlib.filesview</header>
+   <header>epyqlib.tabs.files.filesview</header>
   </customwidget>
   <customwidget>
    <class>OverlayLabel</class>

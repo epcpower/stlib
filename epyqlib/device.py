@@ -14,7 +14,7 @@ import epyqlib.canneo
 import epyqlib.deviceextension
 import epyqlib.faultlogmodel
 # https://www.riverbankcomputing.com/pipermail/pyqt/2018-December/041218.html
-import epyqlib.filesview
+import epyqlib.tabs.files.filesview
 try:
     import epyqlib.resources.code
 except ImportError:
@@ -302,6 +302,8 @@ class Device:
                      only_for_files=False, node_id=None, **kwargs):
         if tabs is None:
             tabs = Tabs.defaults()
+
+        self.on_offline_bus = False
 
         self.node_id = node_id
 
@@ -1122,6 +1124,11 @@ class Device:
             )
             self.ui.scripting_view.set_model(scripting_model)
 
+        self.device_interface = DeviceInterface(device=self)
+
+        if Tabs.files in tabs:
+            self.ui.files_view.set_device_interface(self.device_interface)
+
         self.notifiees = notifiees
         for notifiee in notifiees:
             self.bus.notifier.add(notifiee)
@@ -1139,6 +1146,10 @@ class Device:
         else:
             self.nv_looping_set.start()
             self.nv_tab_looping_set.stop()
+
+        #TODO: Remove this and find a better way to manage when files view should fetch its list
+        if self.ui.tabs.indexOf(self.ui.files) == index:
+            self.ui.files_view.tab_selected()
 
     def absolute_path(self, path=''):
         # TODO: CAMPid 9549757292917394095482739548437597676742
@@ -1175,6 +1186,10 @@ class Device:
         if self.nvs is not None:
             if not online:
                 self.nvs.set_stale()
+
+        if self.ui.tabs.indexOf(self.ui.files) != -1:
+            self.ui.files_view.on_bus_status_changed()
+
 
     def read_nv_widget_min_max(self):
         if not self.auto_read_nv_widget_min_max:
@@ -1266,6 +1281,49 @@ class FrameTimeout(epyqlib.canneo.QtCanListener):
 
     def terminate(self):
         self.timer.stop()
+
+
+@attr.s
+class DeviceInterface:
+    device: Device = attr.ib()
+
+    @attr.s(slots=True, auto_attribs=True)
+    class TransmitStatus:
+        connected: bool
+        transmitting: bool
+
+    async def get_serial_number(self) -> str:
+        serial_number_signal = self.device.nvs.signal_from_names(
+            'SN',
+            'SerialNumber',
+        )
+
+        return await self._read_single_param(serial_number_signal)
+
+    async def get_build_hash(self) -> str:
+        serial_number_signal = self.device.nvs.signal_from_names(
+            'SoftwareHash',
+            'SoftwareHash',
+        )
+
+        return await self._read_single_param(serial_number_signal)
+
+    async def _read_single_param(self, param_signal):
+        param_response = await self.device.nvs.read_all_from_device(
+            only_these=(param_signal,),
+            meta=(epyqlib.nv.MetaEnum.value,),
+        )
+        param = str(
+            param_response[0][param_signal.status_signal],
+        )
+        return param
+
+    def get_connected_status(self) -> TransmitStatus:
+        return DeviceInterface.TransmitStatus(connected=self.device.bus_online, transmitting=self.device.bus_tx)
+
+    def on_offline_bus(self):
+        return self.device.on_offline_bus
+
 
 
 if __name__ == '__main__':

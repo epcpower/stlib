@@ -14,6 +14,7 @@ import epyqlib.twisted.busproxy
 import epyqlib.twisted.cancalibrationprotocol as ccp
 import epyqlib.twisted.nvs
 import epyqlib.utils.qt
+from epyqlib.tabs.files.log_manager import LogManager
 
 __copyright__ = 'Copyright 2017, EPC Power Corp.'
 __license__ = 'GPLv2+'
@@ -53,14 +54,43 @@ class DataLogger:
             bus=self.bus)
 
     def pull_raw_log(self, path):
-        d = self._pull_raw_log()
+        pull_fake_log = False
+        if (pull_fake_log):
+            d = twisted.internet.defer.execute(self._pull_raw_log_fake)
+        else:
+            d = self._pull_raw_log()
         d.addCallback(write_to_file, path=path)
+        d.addCallback(lambda _: twisted.internet.defer.ensureDeferred(self._notify_new_raw_log(path)))
 
         d.addErrback(epyqlib.utils.twisted.detour_result,
                      self.progress.fail)
         d.addErrback(epyqlib.utils.twisted.errbackhook)
 
         return d
+
+    ## NOMERGE: Remove this before merging to master
+    # usage: d = twisted.internet.defer.execute(self._pull_raw_log_fake)
+    def _pull_raw_log_fake(self):
+        self.progress.complete(message=None)
+        from time import time
+        return bytes(str(time()), "utf-8")
+
+    async def _notify_new_raw_log(self, path: str):
+        build_hash_signal = self.nvs.signal_from_names('SoftwareHash', 'SoftwareHash')
+        serial_number_signal = self.nvs.signal_from_names('SN', 'SerialNumber')
+
+        build_hash = await self.nv_protocol.read(
+                nv_signal=build_hash_signal,
+                meta=epyqlib.nv.MetaEnum.value,
+            )
+        build_hash = f'{build_hash[0]:07x}'
+        serial_number = await self.nv_protocol.read(
+            nv_signal=serial_number_signal,
+            meta=epyqlib.nv.MetaEnum.value,
+        )
+        serial_number = str(serial_number[0])
+
+        await LogManager.get_instance().add_pending_log(path, build_hash, serial_number)
 
     @twisted.internet.defer.inlineCallbacks
     def _pull_raw_log(self):

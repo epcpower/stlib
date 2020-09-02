@@ -1,3 +1,4 @@
+import functools
 import decimal
 import logging
 import time
@@ -52,6 +53,7 @@ def ignore_cancelled(f):
 
 
 def ensure_deferred(f):
+    @functools.wraps(f)
     def wrapper(*args, **kwargs):
         return twisted.internet.defer.ensureDeferred(f(*args, **kwargs))
 
@@ -59,6 +61,7 @@ def ensure_deferred(f):
 
 
 def errback_dialog(f):
+    @functools.wraps(f)
     async def wrapper(*args, **kwargs):
         try:
             return await f(*args, **kwargs)

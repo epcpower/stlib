@@ -12,6 +12,7 @@ import traceback
 import textwrap
 import time
 import zipfile
+from typing import Optional
 
 import attr
 
@@ -405,6 +406,18 @@ def path_and_line(o):
 def intersect_dicts(a, b):
     common_keys = set(a).intersection(b)
     return {k: a[k] for k in common_keys}
+
+
+def safe_get(dct: dict, keys) -> Optional[dict]:
+    if type(keys) is not list and type(keys) is not tuple:
+        keys = [keys]
+    for key in keys:
+        try:
+            dct = dct[key]
+        except (KeyError, IndexError):
+            return None
+
+    return dct
 
 
 # TODO: CAMPid 073407143081341008467657184603164130
