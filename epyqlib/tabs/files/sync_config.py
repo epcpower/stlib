@@ -13,18 +13,17 @@ class Vars:
 
 class SyncConfig:
     _instance = None
-    _tag = f'[{__name__}]'
+    _tag = f"[{__name__}]"
 
-    default_values = {
-        Vars.auto_sync: True,
-        Vars.offline_mode: False
-    }
+    default_values = {Vars.auto_sync: True, Vars.offline_mode: False}
 
-    def __init__(self, directory=None, filename='epyq-config.json'):
-        self.required_keys = [key for key in Vars.__dict__.keys() if not key.startswith("__")]
+    def __init__(self, directory=None, filename="epyq-config.json"):
+        self.required_keys = [
+            key for key in Vars.__dict__.keys() if not key.startswith("__")
+        ]
 
         self.config_dir = directory or appdirs.user_config_dir("Epyq", "EPC Power")
-        self.cache_dir = directory or os.path.join(os.getcwd(), 'sync')
+        self.cache_dir = directory or os.path.join(os.getcwd(), "sync")
 
         print(f"{self._tag} Using config dir: {self.config_dir}")
         print(f"{self._tag} Using cache dir: {self.cache_dir}")
@@ -56,11 +55,13 @@ class SyncConfig:
         return SyncConfig._instance
 
     def _read_file(self):
-        with open(self.filename, 'r') as infile:
+        with open(self.filename, "r") as infile:
             contents = json.load(infile)
         if type(contents) is not dict:
             self.file_error = True
-            raise ConfigurationError('Configuration file is not a valid configuration JSON object.')
+            raise ConfigurationError(
+                "Configuration file is not a valid configuration JSON object."
+            )
         for key in self.required_keys:
             if key not in contents.keys() or contents[key] is None:
                 contents[key] = self.default_values.get(key)
@@ -68,7 +69,7 @@ class SyncConfig:
 
     def _write_file(self):
         if not self.file_error:
-            with open(self.filename, 'w') as outfile:
+            with open(self.filename, "w") as outfile:
                 json.dump(self.config, outfile, indent=2)
 
     def get(self, key):
@@ -84,5 +85,3 @@ class SyncConfig:
 
 class ConfigurationError(Exception):
     pass
-
-

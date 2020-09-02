@@ -12,8 +12,8 @@ from epyqlib.tabs.files.sync_config import SyncConfig
 
 
 @attr.s(slots=True, auto_attribs=True)
-class Event():
-    class Type():
+class Event:
+    class Type:
         fault_cleared = "fault-cleared"
         firmware_flashed = "firmware-flashed"
         inverter_to_nv = "inverter-to-nv"
@@ -26,8 +26,9 @@ class Event():
     user_id: str
     type: str
     details: dict
-    timestamp: str = attr.ib(factory=lambda: datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"))
-
+    timestamp: str = attr.ib(
+        factory=lambda: datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+    )
 
     @staticmethod
     def new_fault_cleared(inverter_id: str, user_id: str, fault_code: Union[str, int]):
@@ -47,11 +48,20 @@ class Event():
         return Event(inverter_id, user_id, Event.Type.inverter_to_nv, {})
 
     @staticmethod
-    def new_param_set_event(inverter_id: str, user_id: str, param_name: str, param_value: str):
-        return Event(inverter_id, user_id, Event.Type.param_set, {"paramName": param_name, "paramValue": param_value})
+    def new_param_set_event(
+        inverter_id: str, user_id: str, param_name: str, param_value: str
+    ):
+        return Event(
+            inverter_id,
+            user_id,
+            Event.Type.param_set,
+            {"paramName": param_name, "paramValue": param_value},
+        )
 
     @staticmethod
-    def new_load_param_file(inverter_id: str, user_id: str, file_id: str, file_hash: str, filename: str):
+    def new_load_param_file(
+        inverter_id: str, user_id: str, file_id: str, file_hash: str, filename: str
+    ):
         details = {"fileId": file_id, "fileHash": file_hash, "filename": filename}
         return Event(inverter_id, user_id, Event.Type.load_param_file, details)
 
@@ -60,14 +70,22 @@ class Event():
         return Event(inverter_id, user_id, Event.Type.push_to_inverter, {})
 
     @staticmethod
-    def new_raw_log(inverter_id: str, user_id: str, build_id: str, serial_number: str, filename: str, file_hash: str):
+    def new_raw_log(
+        inverter_id: str,
+        user_id: str,
+        build_id: str,
+        serial_number: str,
+        filename: str,
+        file_hash: str,
+    ):
         details = {
             "buildId": build_id,
             "fileHash": file_hash,
             "filename": filename,
-            "serialNumber": serial_number
+            "serialNumber": serial_number,
         }
         return Event(inverter_id, user_id, Event.Type.new_raw_log, details)
+
 
 class ActivityLog:
     _instance = None
@@ -112,7 +130,6 @@ class ActivityLog:
 
         await cache_write
 
-
     def remove(self, event: Event):
         self._activity_cache.remove(event)
 
@@ -129,22 +146,22 @@ class ActivityLog:
     ## Cache file management
     def _read_cache_file(self):
         if path.exists(self._cache_file):
-            with open(self._cache_file, 'rb') as cache:
+            with open(self._cache_file, "rb") as cache:
                 cached_events = pickle.load(cache)
                 if not isinstance(cached_events, list):
-                    raise Exception(f"Error reading from {self._cache_file}. Not a pickle file with a list as the root.")
+                    raise Exception(
+                        f"Error reading from {self._cache_file}. Not a pickle file with a list as the root."
+                    )
                 self._activity_cache = cached_events + self._activity_cache
 
     async def _write_cache_file(self):
         now = time.time()
 
-        if (self._last_write_time + 1 > now):
+        if self._last_write_time + 1 > now:
             # Don't write more often than once/sec
             return
 
         self._last_write_time = now
 
-        with open(self._cache_file, 'wb') as file_ref:
+        with open(self._cache_file, "wb") as file_ref:
             pickle.dump(self._activity_cache, file_ref)
-
-

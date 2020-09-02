@@ -8,7 +8,9 @@ def ensure_dir(dir_name: str):
         if os.path.isdir(dir_name):
             return
         else:
-            raise NotADirectoryError(f"Files cache dir {dir_name} already exists but is not a directory")
+            raise NotADirectoryError(
+                f"Files cache dir {dir_name} already exists but is not a directory"
+            )
 
     os.makedirs(dir_name, exist_ok=True)
 
@@ -19,11 +21,11 @@ def decode(s: str) -> str:
 
 
 def decode_jwt(jwt: str) -> dict:
-    [header, payload, signature] = jwt.split('.')
+    [header, payload, signature] = jwt.split(".")
     return {
-        'header': decode(header),
-        'payload': decode(payload),
-        'signature': signature
+        "header": decode(header),
+        "payload": decode(payload),
+        "signature": signature,
     }
 
 

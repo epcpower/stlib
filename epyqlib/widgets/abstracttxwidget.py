@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import textwrap
 
@@ -12,8 +12,8 @@ import epyqlib.widgets.abstractwidget
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class AbstractTxWidget(epyqlib.widgets.abstractwidget.AbstractWidget):
@@ -30,7 +30,7 @@ class AbstractTxWidget(epyqlib.widgets.abstractwidget.AbstractWidget):
         )
 
         for widget in self.findChildren(QWidget):
-            if widget.property('editable_click'):
+            if widget.property("editable_click"):
                 widget.installEventFilter(self)
 
         self._period = None
@@ -57,11 +57,13 @@ class AbstractTxWidget(epyqlib.widgets.abstractwidget.AbstractWidget):
         self.edited.emit(value)
 
     def eventFilter(self, qobject, qevent):
-        if (isinstance(qevent, QMouseEvent)
-                and self.tx
-                and qevent.button() == Qt.LeftButton
-                and qevent.type() == QEvent.MouseButtonRelease
-                and qobject.rect().contains(qevent.localPos().toPoint())):
+        if (
+            isinstance(qevent, QMouseEvent)
+            and self.tx
+            and qevent.button() == Qt.LeftButton
+            and qevent.type() == QEvent.MouseButtonRelease
+            and qobject.rect().contains(qevent.localPos().toPoint())
+        ):
             self.edit.emit(self, self)
 
             return True
@@ -80,7 +82,8 @@ class AbstractTxWidget(epyqlib.widgets.abstractwidget.AbstractWidget):
             self._period = None
 
         epyqlib.widgets.abstractwidget.AbstractWidget.set_signal(
-            self, signal, force_update=force_update)
+            self, signal, force_update=force_update
+        )
 
     def update_connection(self, signal=None):
         if signal is not self.signal_object:
@@ -90,8 +93,7 @@ class AbstractTxWidget(epyqlib.widgets.abstractwidget.AbstractWidget):
             if signal is not None and self.tx and self._period is not None:
                 signal.frame.cyclic_request(self, self._period)
 
-        epyqlib.widgets.abstractwidget.AbstractWidget.update_connection(
-                self, signal)
+        epyqlib.widgets.abstractwidget.AbstractWidget.update_connection(self, signal)
 
     def widget_value_changed(self, value):
         if self.signal_object is not None and self.tx:
@@ -101,14 +103,18 @@ class AbstractTxWidget(epyqlib.widgets.abstractwidget.AbstractWidget):
                     check_range=self.check_range,
                 )
             except epyqlib.canneo.OutOfRangeError as e:
-                message = textwrap.dedent('''\
+                message = textwrap.dedent(
+                    """\
                 Frame: {frame}
                 Signal: {signal}
 
                 Error: {error}
-                ''').format(frame=self.signal_object.frame.name,
-                            signal=self.signal_object.name,
-                            error=str(e))
+                """
+                ).format(
+                    frame=self.signal_object.frame.name,
+                    signal=self.signal_object.name,
+                    error=str(e),
+                )
 
                 epyqlib.utils.qt.dialog(
                     parent=self,
@@ -125,8 +131,8 @@ class AbstractTxWidget(epyqlib.widgets.abstractwidget.AbstractWidget):
         self.check_range = check
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

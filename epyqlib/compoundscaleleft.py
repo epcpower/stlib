@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import io
 import os
@@ -15,8 +15,8 @@ import epyqlib.compoundscale
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class CompoundScaleLeft(epyqlib.compoundscale.CompoundScale):
@@ -25,10 +25,13 @@ class CompoundScaleLeft(epyqlib.compoundscale.CompoundScale):
         epyqlib.compoundscale.CompoundScale.__init__(self, parent, in_designer)
 
     def getPath(self):
-        return os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)),
-                          'compoundscaleleft.ui')
-if __name__ == '__main__':
+        return os.path.join(
+            QFileInfo.absolutePath(QFileInfo(__file__)), "compoundscaleleft.ui"
+        )
+
+
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

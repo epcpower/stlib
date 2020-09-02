@@ -21,8 +21,8 @@ import lxml.etree
 import epyqlib.utils.general
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2017, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2017, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 logger = logging.getLogger(__name__)
@@ -32,31 +32,31 @@ logger = logging.getLogger(__name__)
 def set_repeat_table_header(row):
     tr = row._tr
     trPr = tr.get_or_add_trPr()
-    tblHeader = docx.oxml.OxmlElement('w:tblHeader')
-    tblHeader.set(docx.oxml.ns.qn('w:val'), "true")
+    tblHeader = docx.oxml.OxmlElement("w:tblHeader")
+    tblHeader.set(docx.oxml.ns.qn("w:val"), "true")
     trPr.append(tblHeader)
     return row
 
 
 # https://github.com/python-openxml/python-docx/issues/245#issuecomment-208476933
 def prevent_row_breaks(table):
-    tags = table._element.xpath('//w:tr')
+    tags = table._element.xpath("//w:tr")
     rows = len(tags)
-    for row in range(0,rows):
-        tag = tags[row]                     # Specify which <w:r> tag you want
-        child = docx.oxml.OxmlElement('w:cantSplit')  # Create arbitrary tag
-        tag.append(child)                   # Append in the new tag
+    for row in range(0, rows):
+        tag = tags[row]  # Specify which <w:r> tag you want
+        child = docx.oxml.OxmlElement("w:cantSplit")  # Create arbitrary tag
+        tag.append(child)  # Append in the new tag
 
 
 def w(s):
-    return '{http://schemas.openxmlformats.org/wordprocessingml/2006/main}' + s
+    return "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}" + s
 
 
 def shd_element(fill):
-    e = lxml.etree.Element(w('shd'))
+    e = lxml.etree.Element(w("shd"))
     # <w:shd w:val="clear" w:color="auto" w:fill="D9D9D9" w:themeFill="background1" w:themeFillShade="D9"/>
 
-    e.attrib[w('fill')] = fill
+    e.attrib[w("fill")] = fill
 
     return e
 
@@ -71,15 +71,15 @@ class Table:
     headings = attr.ib()
     widths = attr.ib()
     total_width = attr.ib(default=10)
-    comment = attr.ib(default='')
+    comment = attr.ib(default="")
     rows = attr.ib(default=attr.Factory(list))
 
     def fill_docx(
-            self,
-            table,
-            title_style=None,
-            heading_style=None,
-            contents_style=None,
+        self,
+        table,
+        title_style=None,
+        heading_style=None,
+        contents_style=None,
     ):
         table.alignment = docx.enum.table.WD_TABLE_ALIGNMENT.CENTER
         # table.autofit = True
@@ -113,7 +113,7 @@ class Table:
                 shade(cell, fill="000000")
 
         shadings = (
-            {'fill': 'D9D9D9'},
+            {"fill": "D9D9D9"},
             None,
         )
 
@@ -130,7 +130,7 @@ class Table:
                 now = time.monotonic()
                 delta = now - checkpoint
                 checkpoint = now
-                print('{} / {} ({:.3})'.format(i, total, delta / n))
+                print("{} / {} ({:.3})".format(i, total, delta / n))
 
             row = table.add_row()
             for cell, text in zip(row.cells, r):
@@ -141,15 +141,12 @@ class Table:
                     cell.paragraphs[0].style = contents_style
                 cell.paragraphs[0].paragraph_format.keep_with_next = True
 
-        remaining_width = (
-            self.total_width - sum(w for w in self.widths if w is not None)
+        remaining_width = self.total_width - sum(
+            w for w in self.widths if w is not None
         )
         each_width = remaining_width / sum(1 for w in self.widths if w is None)
         widths = [each_width if w is None else w for w in self.widths]
-        widths = [
-            w if w is None else docx.shared.Inches(w)
-            for w in widths
-        ]
+        widths = [w if w is None else docx.shared.Inches(w) for w in widths]
         for column, width in zip(table.columns, widths):
             column.width = width
 
@@ -161,7 +158,7 @@ class Table:
                 now = time.monotonic()
                 delta = now - checkpoint
                 checkpoint = now
-                print('{} / {} ({:.3})'.format(i, total, delta / n))
+                print("{} / {} ({:.3})".format(i, total, delta / n))
 
             for cell, width in zip(row.cells, widths):
                 cell.width = width
@@ -171,7 +168,7 @@ class Table:
 
 
 def id_string(id):
-    return '0x{:08X}'.format(id)
+    return "0x{:08X}".format(id)
 
 
 def tabulate_signals(signals):
@@ -179,20 +176,24 @@ def tabulate_signals(signals):
 
     for signal in signals:
         # if len(signal.unit) == 0 and signal.factor != 1:
-            # table.append(('***',) * 5)
+        # table.append(('***',) * 5)
         startbit = signal.getStartbit()
-        rows.append((
-            '', '',
-            signal.name,
-            '{}/{}'.format(startbit % 8, startbit // 8),
-            signal.size,
-            signal.factor,
-            signal.unit,
-            '{}: {}'.format(signal.enumeration, signal.values) if
-            signal.enumeration is not None else '',
-        ))
+        rows.append(
+            (
+                "",
+                "",
+                signal.name,
+                "{}/{}".format(startbit % 8, startbit // 8),
+                signal.size,
+                signal.factor,
+                signal.unit,
+                "{}: {}".format(signal.enumeration, signal.values)
+                if signal.enumeration is not None
+                else "",
+            )
+        )
         if len(signal.comment) > 0:
-            rows.append((*(('',) * 7), signal.comment))
+            rows.append((*(("",) * 7), signal.comment))
 
     return rows
 
@@ -202,48 +203,60 @@ def doc_signals(signals):
 
     for signal in signals:
         startbit = signal.getStartbit()
-        enumeration = (
-            signal.enumeration
-            if signal.enumeration is not None
-            else ''
+        enumeration = signal.enumeration if signal.enumeration is not None else ""
+        rows.append(
+            (
+                signal.name,
+                "{}/{}".format(startbit % 8, startbit // 8),
+                signal.size,
+                signal.factor,
+                signal.unit,
+                enumeration,
+                signal.comment,
+            )
         )
-        rows.append((
-            signal.name,
-            '{}/{}'.format(startbit % 8, startbit // 8),
-            signal.size,
-            signal.factor,
-            signal.unit,
-            enumeration,
-            signal.comment,
-        ))
 
     return rows
 
+
 @click.command()
-@click.option('--can', '-c', type=click.File('rb'), required=True)
-@click.option('--template', '-t', type=click.File('rb'), required=True)
-@click.option('--output', '-o', type=click.File('wb'), required=True)
-@click.option('--verbose', '-v', count=True)
+@click.option("--can", "-c", type=click.File("rb"), required=True)
+@click.option("--template", "-t", type=click.File("rb"), required=True)
+@click.option("--output", "-o", type=click.File("wb"), required=True)
+@click.option("--verbose", "-v", count=True)
 def main(can, template, output, verbose):
     if verbose >= 1:
         logger.setLevel(logging.DEBUG)
 
-    matrix, = canmatrix.formats.load(
-        can,
-        os.path.splitext(can.name)[1].lstrip('.')
+    (matrix,) = canmatrix.formats.load(
+        can, os.path.splitext(can.name)[1].lstrip(".")
     ).values()
 
     mux_table_header = (
-        'Mux Name', 'Mux ID', 'Name', 'Start', 'Length', 'Factor', 'Units',
-        'Enumeration', 'Comment'
+        "Mux Name",
+        "Mux ID",
+        "Name",
+        "Start",
+        "Length",
+        "Factor",
+        "Units",
+        "Enumeration",
+        "Comment",
     )
     mux_table = epyqlib.utils.general.TextTable()
     mux_table.append(mux_table_header)
     mux_table_header = mux_table_header[2:]
 
     frame_table_header = (
-        'Frame', 'ID', 'Name', 'Start', 'Length', 'Factor', 'Units',
-        'Enumeration', 'Comment'
+        "Frame",
+        "ID",
+        "Name",
+        "Start",
+        "Length",
+        "Factor",
+        "Units",
+        "Enumeration",
+        "Comment",
     )
 
     frame_table = epyqlib.utils.general.TextTable()
@@ -255,7 +268,7 @@ def main(can, template, output, verbose):
     widths[-2] = 1.5
     widths[-1] = None
 
-    enum_table_header = ('Value', 'Name')
+    enum_table_header = ("Value", "Name")
 
     frame_tables = []
     multiplex_tables = []
@@ -268,7 +281,7 @@ def main(can, template, output, verbose):
         )
 
         a_ft = Table(
-            title='{} ({})'.format(
+            title="{} ({})".format(
                 frame.name,
                 id_string(frame.arbitration_id.id),
             ),
@@ -278,10 +291,12 @@ def main(can, template, output, verbose):
         )
         frame_tables.append(a_ft)
 
-        mux_table.append('{} ({})'.format(
-            frame.name,
-            id_string(frame.arbitration_id).id,
-        ))
+        mux_table.append(
+            "{} ({})".format(
+                frame.name,
+                id_string(frame.arbitration_id).id,
+            )
+        )
 
         multiplex_signal = frame.signals[0]
         if multiplex_signal.multiplex is None:
@@ -307,11 +322,8 @@ def main(can, template, output, verbose):
                     continue
 
                 a_mt = Table(
-                    title='{} ({}) - {} ({})'.format(
-                        frame.name,
-                        id_string(frame.arbitration_id.id),
-                        name,
-                        value
+                    title="{} ({}) - {} ({})".format(
+                        frame.name, id_string(frame.arbitration_id.id), name, value
                     ),
                     # comment=frame.comment,
                     headings=mux_table_header,
@@ -320,29 +332,31 @@ def main(can, template, output, verbose):
                 multiplex_tables.append(a_mt)
 
                 mux_table.append(
-                    '',
+                    "",
                     value,
                     name,
                 )
 
                 signals = tuple(
-                    s for s in frame.signals
-                    if s.multiplex == value and s.name != 'ReadParam_command'
+                    s
+                    for s in frame.signals
+                    if s.multiplex == value and s.name != "ReadParam_command"
                 )
 
-                mux_table.extend(tabulate_signals(sorted(
-                    signals, key=lambda s: s.name)))
+                mux_table.extend(
+                    tabulate_signals(sorted(signals, key=lambda s: s.name))
+                )
 
                 a_mt.rows.extend(doc_signals(signals))
 
-    print('\n\n - - - - - - - Multiplexes\n')
+    print("\n\n - - - - - - - Multiplexes\n")
     print(mux_table)
 
-    print('\n\n - - - - - - - Frames\n')
+    print("\n\n - - - - - - - Frames\n")
     print(frame_table)
 
     enumeration_table = epyqlib.utils.general.TextTable()
-    enumeration_table.append('Name', '', 'Value')
+    enumeration_table.append("Name", "", "Value")
     widths = (1.5, None)
     for name, values in sorted(matrix.valueTables.items()):
         a_et = Table(
@@ -356,28 +370,28 @@ def main(can, template, output, verbose):
 
         enumeration_table.append(name)
         for i, s in sorted(values.items()):
-            enumeration_table.append('', s, i)
+            enumeration_table.append("", s, i)
 
-    print('\n\n - - - - - - - Enumerations\n')
+    print("\n\n - - - - - - - Enumerations\n")
     print(enumeration_table)
 
     doc = docx.Document(template)
 
     table_sets = {
-        'frames': frame_tables,
-        'multiplexers': multiplex_tables,
-        'enumerations': enumeration_tables,
+        "frames": frame_tables,
+        "multiplexers": multiplex_tables,
+        "enumerations": enumeration_tables,
     }
     for tag, tables in table_sets.items():
-        full_tag = '<gen_{}>'.format(tag)
+        full_tag = "<gen_{}>".format(tag)
         for paragraph in doc.paragraphs:
             if paragraph.text.strip() == full_tag:
                 break
             elif full_tag in paragraph.text:
-                f = 'Tag {} found, expected as only text in paragraph: {}'
+                f = "Tag {} found, expected as only text in paragraph: {}"
                 raise Exception(f.format(full_tag, repr(paragraph.text)))
         else:
-            raise Exception('Tag not found: {}'.format(full_tag))
+            raise Exception("Tag not found: {}".format(full_tag))
 
         for table in tables:
             doc_table = doc.add_table(rows=0, cols=len(table.headings))
@@ -388,9 +402,9 @@ def main(can, template, output, verbose):
 
             table.fill_docx(
                 doc_table,
-                title_style='CAN Table Title',
-                heading_style='CAN Table Heading',
-                contents_style='CAN Table Contents',
+                title_style="CAN Table Title",
+                heading_style="CAN Table Heading",
+                contents_style="CAN Table Contents",
             )
 
         # TODO: Would rather delete the tag paragraph but that breaks the
@@ -402,7 +416,7 @@ def main(can, template, output, verbose):
 
 
 def _entry_point():
-    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
 
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 

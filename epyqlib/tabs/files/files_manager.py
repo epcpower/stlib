@@ -6,7 +6,6 @@ from epyqlib.tabs.files.files_utils import ensure_dir
 
 
 class FilesManager:
-
     def __init__(self, files_dir):
         cache_dir = path.join(files_dir, "files")
         ensure_dir(cache_dir)
@@ -15,7 +14,7 @@ class FilesManager:
     def verify_cache(self):
         for filename in self.hashes():
             hash = self._md5(filename)
-            if (hash != filename):
+            if hash != filename:
                 print(f"File {filename} failed hash verification. Deleting.")
                 os.unlink(path.join(self._cache_dir, filename))
 

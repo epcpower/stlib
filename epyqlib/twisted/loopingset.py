@@ -20,9 +20,9 @@ class Element:
 
 @attr.s
 class Set:
-    requests = attr.ib(init=False,
-                       default=attr.Factory(lambda: collections.defaultdict(
-                           dict)))
+    requests = attr.ib(
+        init=False, default=attr.Factory(lambda: collections.defaultdict(dict))
+    )
     periods = attr.ib(init=False, default=attr.Factory(dict))
     loops = attr.ib(init=False, default=attr.Factory(dict))
 
@@ -41,8 +41,7 @@ class Set:
 
         if f not in self.loops:
             self.loops[f] = Element(
-                loop=twisted.internet.task.LoopingCall(f),
-                period=minimum_period
+                loop=twisted.internet.task.LoopingCall(f), period=minimum_period
             )
 
             _start_loop(self.loops[f].loop, self.loops[f].period)
@@ -51,8 +50,7 @@ class Set:
             self.loops[f].loop.stop()
 
             self.loops[f] = Element(
-                loop=twisted.internet.task.LoopingCall(f),
-                period=minimum_period
+                loop=twisted.internet.task.LoopingCall(f), period=minimum_period
             )
 
             _start_loop(self.loops[f].loop, self.loops[f].period)
@@ -73,13 +71,13 @@ def _start_loop(loop, period):
     loop_deferred.addErrback(epyqlib.utils.twisted.errbackhook)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # TODO: move this to a unit test and actually check it's result
     #       automatically
     import twisted.internet.reactor
 
-    a = lambda: print('a')
-    b = lambda: print('b')
+    a = lambda: print("a")
+    b = lambda: print("b")
     requests = (
         (1, Request(f=a, period=0.5)),
         (0, Request(f=a, period=2)),
@@ -89,7 +87,7 @@ if __name__ == '__main__':
 
     looping_set = Set()
     for key, request in requests:
-        print('Adding: {}: {}'.format(key, request))
+        print("Adding: {}: {}".format(key, request))
         looping_set.add_request(key=key, request=request)
 
     reactor = twisted.internet.reactor

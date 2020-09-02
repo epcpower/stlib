@@ -9,34 +9,34 @@ import epyqlib.utils.twisted
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2017, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2017, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class ScriptAlreadyActiveError(epyqlib.utils.general.ExpectedException):
     def expected_message(self):
-        return 'Script already active.'
+        return "Script already active."
 
 
 class ScriptNotActiveError(epyqlib.utils.general.ExpectedException):
     def expected_message(self):
-        return 'Script is not active.'
+        return "Script is not active."
 
 
 class ScriptAlreadyPausedError(epyqlib.utils.general.ExpectedException):
     def expected_message(self):
-        return 'Script already paused.'
+        return "Script already paused."
 
 
 class ScriptNotPausedError(epyqlib.utils.general.ExpectedException):
     def expected_message(self):
-        return 'Script is not paused.'
+        return "Script is not paused."
 
 
 def cancelled_handler(error):
     if isinstance(error.value, twisted.internet.defer.CancelledError):
         epyqlib.utils.qt.raw_exception_message_box(
-            brief='Script cancelled by user request.',
+            brief="Script cancelled by user request.",
             extended=error.getTraceback(),
         )
 
@@ -69,7 +69,7 @@ class ScriptingView(QtWidgets.QWidget):
         self.model = None
         self.model_connections = []
 
-        with open(pathlib.Path(__file__).parents[0] / 'scripting.csv') as f:
+        with open(pathlib.Path(__file__).parents[0] / "scripting.csv") as f:
             self.ui.csv_edit.setPlaceholderText(f.read())
 
         self.sequence = None
@@ -97,10 +97,7 @@ class ScriptingView(QtWidgets.QWidget):
         self.model = model
 
     def load(self):
-        filters = [
-            ('CSV', ['csv']),
-            ('All Files', ['*'])
-        ]
+        filters = [("CSV", ["csv"]), ("All Files", ["*"])]
         filename = epyqlib.utils.qt.file_dialog(
             filters,
             parent=self,
@@ -113,10 +110,7 @@ class ScriptingView(QtWidgets.QWidget):
             self.ui.csv_edit.setPlainText(f.read())
 
     def save(self):
-        filters = [
-            ('CSV', ['csv']),
-            ('All Files', ['*'])
-        ]
+        filters = [("CSV", ["csv"]), ("All Files", ["*"])]
         filename = epyqlib.utils.qt.file_dialog(
             filters,
             save=True,
@@ -126,11 +120,11 @@ class ScriptingView(QtWidgets.QWidget):
         if filename is None:
             return
 
-        with open(filename, 'w') as f:
+        with open(filename, "w") as f:
             text = self.ui.csv_edit.toPlainText()
             f.write(text)
-            if text[-1] != '\n':
-                f.write('\n')
+            if text[-1] != "\n":
+                f.write("\n")
 
     def stop(self):
         if self.sequence is None:

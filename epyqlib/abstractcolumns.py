@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import functools
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class AbstractColumns:
@@ -19,13 +19,16 @@ class AbstractColumns:
             finally:
                 setattr(self, member, value)
 
-        object.__setattr__(self, '_length', len(self.__dict__))
+        object.__setattr__(self, "_length", len(self.__dict__))
 
         invalid_parameters = set(kwargs.keys()) - set(self.__dict__.keys())
         if len(invalid_parameters):
-            raise ValueError('Invalid parameter{} passed: {}'.format(
-                's' if len(invalid_parameters) > 1 else '',
-                ', '.join(invalid_parameters)))
+            raise ValueError(
+                "Invalid parameter{} passed: {}".format(
+                    "s" if len(invalid_parameters) > 1 else "",
+                    ", ".join(invalid_parameters),
+                )
+            )
 
     @classmethod
     def __len__(cls):
@@ -53,7 +56,7 @@ class AbstractColumns:
             if index == getattr(self.__class__.indexes, attribute):
                 return attribute
 
-        raise IndexError('column index out of range')
+        raise IndexError("column index out of range")
 
     def __getitem__(self, index):
         if index < 0:
@@ -69,12 +72,11 @@ class AbstractColumns:
         if name in self._members:
             object.__setattr__(self, name, value)
         else:
-            raise TypeError("Attempted to set attribute {}"
-                            .format(name))
+            raise TypeError("Attempted to set attribute {}".format(name))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

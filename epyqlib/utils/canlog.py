@@ -9,8 +9,8 @@ import epyqlib.utils.general
 import epyqlib.canneo
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2017, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2017, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class MessageType(epyqlib.utils.general.AutoNumberIntEnum):
@@ -24,9 +24,7 @@ class Log(epyqlib.canneo.QtCanListener):
     name = attr.ib()
     messages = attr.ib(default=None, hash=False)
     _active = attr.ib(default=False)
-    _messages_factory = attr.ib(
-        default=lambda: collections.deque(maxlen=100000)
-    )
+    _messages_factory = attr.ib(default=lambda: collections.deque(maxlen=100000))
 
     def __attrs_post_init__(self):
         super().__init__(receiver=self._message_received)
@@ -81,7 +79,7 @@ class Message:
                 value=message.arbitration_id,
                 extended=message.id_type,
             ),
-            data=bytearray(message.data)
+            data=bytearray(message.data),
         )
 
     @property
@@ -100,7 +98,7 @@ class Message:
 
     @property
     def data_string_spaced(self):
-        return ' '.join('{:02X}'.format(b) for b in self.data)
+        return " ".join("{:02X}".format(b) for b in self.data)
 
     @property
     def length(self):
@@ -118,7 +116,8 @@ def to_trc_v1_1_s(messages):
 
 
 def to_trc_v1_1(messages, f):
-    header = textwrap.dedent('''\
+    header = textwrap.dedent(
+        """\
         ;$FILEVERSION=1.1
         ;$STARTTIME={start_time}
         ;
@@ -134,38 +133,38 @@ def to_trc_v1_1(messages, f):
         ;   |         |        |        |     Data Length
         ;   |         |        |        |     |   Data Bytes (hex) ...
         ;   |         |        |        |     |   |
-        ;---+--   ----+----  --+--  ----+---  +  -+ -- -- -- -- -- -- --'''
-    ).format(
-        start_time=0,
-        path=f.name,
-        start_string='',
-        version_string=''
-    )
+        ;---+--   ----+----  --+--  ----+---  +  -+ -- -- -- -- -- -- --"""
+    ).format(start_time=0, path=f.name, start_string="", version_string="")
 
-    format = '  '.join((
-        '{i: 6d})',
-        '{ms: 10.1f}',
-        '{type:<5s}',
-        '{id:08X}',
-        '{length:1d}',
-        '{data}',
-    ))
-    format += ' \n'
+    format = "  ".join(
+        (
+            "{i: 6d})",
+            "{ms: 10.1f}",
+            "{type:<5s}",
+            "{id:08X}",
+            "{length:1d}",
+            "{data}",
+        )
+    )
+    format += " \n"
 
     for line in header.splitlines():
-        f.write(line.rstrip() + '\n')
+        f.write(line.rstrip() + "\n")
 
     for i, message in enumerate(messages, start=1):
-        f.write(format.format(
-            i=i,
-            ms=message.ms,
-            type=message.type.name,
-            id=message.id.value,
-            length=message.length,
-            data=message.data_string_spaced,
-        ))
+        f.write(
+            format.format(
+                i=i,
+                ms=message.ms,
+                type=message.type.name,
+                id=message.id.value,
+                length=message.length,
+                data=message.data_string_spaced,
+            )
+        )
+
 
 def to_trc_v1_3(messages, bus):
     """`messages` should be a dict.  Keys are bus numbers and values are
     iterables of messages"""
-    raise Exception('Not implemented')
+    raise Exception("Not implemented")

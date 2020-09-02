@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import can
 import epyqlib.pyqabstractitemmodel
@@ -13,26 +13,35 @@ from collections import OrderedDict
 from epyqlib.abstractcolumns import AbstractColumns
 import epyqlib.device
 from epyqlib.treenode import TreeNode
-from PyQt5.QtCore import (Qt, QVariant, QModelIndex, pyqtSignal, pyqtSlot,
-                          QPersistentModelIndex)
+from PyQt5.QtCore import (
+    Qt,
+    QVariant,
+    QModelIndex,
+    pyqtSignal,
+    pyqtSlot,
+    QPersistentModelIndex,
+)
 from PyQt5.QtWidgets import QFileDialog
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class Columns(AbstractColumns):
-    _members = ['name', 'nickname', 'bitrate', 'transmit']
+    _members = ["name", "nickname", "bitrate", "transmit"]
+
 
 Columns.indexes = Columns.indexes()
 
-bitrates = OrderedDict([
-    (1000000, '1 MBit/s'),
-    (500000, '500 kBit/s'),
-    (250000, '250 kBit/s'),
-    (125000, '125 kBit/s')
-])
+bitrates = OrderedDict(
+    [
+        (1000000, "1 MBit/s"),
+        (500000, "500 kBit/s"),
+        (250000, "250 kBit/s"),
+        (125000, "125 kBit/s"),
+    ]
+)
 
 default_bitrate = 500000
 
@@ -41,73 +50,94 @@ def available_buses():
     valid = []
 
     for interface in can.interfaces.VALID_INTERFACES:
-        if interface == 'pcan':
+        if interface == "pcan":
             for n in range(1, 9):
-                channel = 'PCAN_USBBUS{}'.format(n)
+                channel = "PCAN_USBBUS{}".format(n)
                 try:
                     bus = can.interface.Bus(bustype=interface, channel=channel)
                 except:
                     pass
                 else:
                     bus.shutdown()
-                    valid.append({'interface': interface,
-                                  'channel': channel,
-                                  'changeable_bitrate': True})
+                    valid.append(
+                        {
+                            "interface": interface,
+                            "channel": channel,
+                            "changeable_bitrate": True,
+                        }
+                    )
 
             for n in range(1, 17):
-                channel = 'PCAN_LANBUS{}'.format(n)
+                channel = "PCAN_LANBUS{}".format(n)
                 try:
                     bus = can.interface.Bus(bustype=interface, channel=channel)
                 except:
                     pass
                 else:
                     bus.shutdown()
-                    valid.append({'interface': interface,
-                                  'channel': channel,
-                                  'changeable_bitrate': False})
+                    valid.append(
+                        {
+                            "interface": interface,
+                            "channel": channel,
+                            "changeable_bitrate": False,
+                        }
+                    )
 
-        elif interface == 'kvaser':
+        elif interface == "kvaser":
             # TODO: get the actual number of available devices rather
             #       than hard coding?
             #
             #       can.interfaces.kvaser.canGetNumberOfChannels())
             for channel in range(0, 8):
                 try:
-                    bus = can.interface.Bus(bustype=interface,
-                                            channel=channel)
+                    bus = can.interface.Bus(bustype=interface, channel=channel)
                 except:
                     pass
                 else:
                     bus.shutdown()
-                    valid.append({'interface': interface,
-                                  'channel': channel,
-                                  'changeable_bitrate': True})
-        elif interface == 'socketcan':
+                    valid.append(
+                        {
+                            "interface": interface,
+                            "channel": channel,
+                            "changeable_bitrate": True,
+                        }
+                    )
+        elif interface == "socketcan":
             for n in range(9):
-                channel = 'can{}'.format(n)
+                channel = "can{}".format(n)
                 try:
                     bus = can.interface.Bus(bustype=interface, channel=channel)
                 except:
                     pass
                 else:
                     bus.shutdown()
-                    valid.append({'interface': interface,
-                                  'channel': channel,
-                                  'changeable_bitrate': False})
+                    valid.append(
+                        {
+                            "interface": interface,
+                            "channel": channel,
+                            "changeable_bitrate": False,
+                        }
+                    )
             for n in range(9):
-                channel = 'vcan{}'.format(n)
+                channel = "vcan{}".format(n)
                 try:
                     bus = can.interface.Bus(bustype=interface, channel=channel)
                 except:
                     pass
                 else:
                     bus.shutdown()
-                    valid.append({'interface': interface,
-                                  'channel': channel,
-                                  'changeable_bitrate': False})
+                    valid.append(
+                        {
+                            "interface": interface,
+                            "channel": channel,
+                            "changeable_bitrate": False,
+                        }
+                    )
         else:
-            print('Availability check not implemented for {}'
-                  .format(interface), file=sys.stderr)
+            print(
+                "Availability check not implemented for {}".format(interface),
+                file=sys.stderr,
+            )
 
     return valid
 
@@ -121,28 +151,26 @@ class Bus(TreeNode):
         self.changeable_bitrate = changeable_bitrate
 
         self.bitrate = default_bitrate
-        self.separator = ' - '
+        self.separator = " - "
 
         if self.interface is not None:
-            name = '{}{}{}'.format(self.interface,
-                                   self.separator,
-                                   self.channel)
+            name = "{}{}{}".format(self.interface, self.separator, self.channel)
         else:
-            name = 'Offline'
+            name = "Offline"
 
-        self.fields = Columns(name=name,
-                              nickname='-',
-                              bitrate=bitrates[self.bitrate],
-                              transmit='')
+        self.fields = Columns(
+            name=name, nickname="-", bitrate=bitrates[self.bitrate], transmit=""
+        )
 
         self._checked = Columns.fill(Qt.Unchecked)
 
         self.bus = epyqlib.busproxy.BusProxy(
-            transmit=self.checked(Columns.indexes.transmit))
+            transmit=self.checked(Columns.indexes.transmit)
+        )
 
     def terminate(self):
         self.bus.terminate()
-        logging.debug('{} terminated'.format(object.__repr__(self)))
+        logging.debug("{} terminated".format(object.__repr__(self)))
 
     def set_data(self, data):
         for key, value in bitrates.items():
@@ -152,16 +180,15 @@ class Bus(TreeNode):
 
                 self.set_bus()
 
-        raise ValueError('{} not found in {}'.format(
-            data,
-            ', '.join(bitrates.values())
-        ))
+        raise ValueError(
+            "{} not found in {}".format(data, ", ".join(bitrates.values()))
+        )
 
     def enumeration_strings(self, include_values=False):
         return bitrates.values()
 
     def unique(self):
-        return '{} - {}'.format(self.interface, self.channel)
+        return "{} - {}".format(self.interface, self.channel)
 
     def append_child(self, child):
         TreeNode.append_child(self, child)
@@ -181,13 +208,11 @@ class Bus(TreeNode):
             if self._checked[column] == Qt.Checked:
                 for device in self.children:
                     if device.checked(column) != Qt.Unchecked:
-                        device.set_checked(checked=Qt.Checked,
-                                           column=column)
+                        device.set_checked(checked=Qt.Checked, column=column)
             elif self._checked[column] == Qt.Unchecked:
                 for device in self.children:
                     if device.checked(column) != Qt.Unchecked:
-                        device.set_checked(checked=Qt.PartiallyChecked,
-                                           column=column)
+                        device.set_checked(checked=Qt.PartiallyChecked, column=column)
 
             if column == Columns.indexes.name:
                 self.set_bus()
@@ -201,9 +226,9 @@ class Bus(TreeNode):
         self.bus.set_bus(None)
 
         if self._checked.name == Qt.Checked:
-            real_bus = can.interface.Bus(bustype=self.interface,
-                                         channel=self.channel,
-                                         bitrate=self.bitrate)
+            real_bus = can.interface.Bus(
+                bustype=self.interface, channel=self.channel, bitrate=self.bitrate
+            )
             # TODO: Yuck, but it helps recover after connecting to a bus with
             #       the wrong speed.  So, find a better way.
             time.sleep(0.5)
@@ -220,20 +245,17 @@ class Device(TreeNode):
     def __init__(self, device):
         TreeNode.__init__(self)
 
-        self.fields = Columns(name=device.name,
-                              nickname='-',
-                              bitrate='',
-                              transmit='')
+        self.fields = Columns(name=device.name, nickname="-", bitrate="", transmit="")
 
         self._checked = Columns.fill(Qt.Unchecked)
 
         self.device = device
         self.device.bus.transmit = self._checked.transmit == Qt.Checked
-        self.name = ''
+        self.name = ""
 
     def terminate(self):
         self.device.terminate()
-        logging.debug('{} terminated'.format(object.__repr__(self)))
+        logging.debug("{} terminated".format(object.__repr__(self)))
 
     def unique(self):
         return self.device
@@ -261,7 +283,8 @@ class Device(TreeNode):
 
             self.device.bus_status_changed(
                 online=self._checked.name == Qt.Checked,
-                transmit=self._checked.transmit == Qt.Checked)
+                transmit=self._checked.transmit == Qt.Checked,
+            )
 
             if column == Columns.indexes.name:
                 if self._checked[column] == Qt.Unchecked:
@@ -287,24 +310,26 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
     details_changed = pyqtSignal()
 
     def __init__(self, root, parent=None):
-        buses = [{
-            'interface': None,
-            'channel': None,
-            'changeable_bitrate': False,
-        }] + available_buses()
+        buses = [
+            {
+                "interface": None,
+                "channel": None,
+                "changeable_bitrate": False,
+            }
+        ] + available_buses()
         for bus in buses:
 
             bus = Bus(
-                interface=bus['interface'],
-                channel=bus['channel'],
-                changeable_bitrate=bus['changeable_bitrate'],
+                interface=bus["interface"],
+                channel=bus["channel"],
+                changeable_bitrate=bus["changeable_bitrate"],
             )
             root.append_child(bus)
             went_offline = functools.partial(self.went_offline, node=bus)
             bus.bus.went_offline.connect(went_offline)
 
         editable_columns = Columns.fill(False)
-        editable_columns.nickname= True
+        editable_columns.nickname = True
         editable_columns.bitrate = True
 
         checkbox_columns = Columns.fill(False)
@@ -312,13 +337,16 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         checkbox_columns.transmit = True
 
         epyqlib.pyqabstractitemmodel.PyQAbstractItemModel.__init__(
-                self, root=root, editable_columns=editable_columns,
-                checkbox_columns=checkbox_columns, parent=parent)
+            self,
+            root=root,
+            editable_columns=editable_columns,
+            checkbox_columns=checkbox_columns,
+            parent=parent,
+        )
 
-        self.headers = Columns(name='Bus/Device',
-                               nickname='Name',
-                               bitrate='Bitrate',
-                               transmit='Transmit')
+        self.headers = Columns(
+            name="Bus/Device", nickname="Name", bitrate="Bitrate", transmit="Transmit"
+        )
 
     def terminate(self):
         def terminate_devices(node, _):
@@ -331,15 +359,14 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         self.root.traverse(terminate_devices, internal_nodes=True)
         self.root.traverse(terminate_buses, internal_nodes=True)
-        logging.debug('{} terminated'.format(object.__repr__(self)))
+        logging.debug("{} terminated".format(object.__repr__(self)))
 
     def went_offline(self, node):
         # TODO: trigger gui update, or find a way that does it automatically
-        node.set_checked(checked=Qt.Unchecked,
-                         column=Columns.indexes.name)
-        self.changed(node, Columns.indexes.name,
-                     node, Columns.indexes.name,
-                     [Qt.CheckStateRole])
+        node.set_checked(checked=Qt.Unchecked, column=Columns.indexes.name)
+        self.changed(
+            node, Columns.indexes.name, node, Columns.indexes.name, [Qt.CheckStateRole]
+        )
 
     def setData(self, index, data, role=None):
         if index.column() == Columns.indexes.bitrate:
@@ -370,9 +397,13 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 # TODO: CAMPid 9349911217316754793971391349
                 children = len(node.children)
                 if children > 0:
-                    self.changed(node.children[0], Columns.indexes[0],
-                                 node.children[-1], Columns.indexes[-1],
-                                 [Qt.CheckStateRole])
+                    self.changed(
+                        node.children[0],
+                        Columns.indexes[0],
+                        node.children[-1],
+                        Columns.indexes[-1],
+                        [Qt.CheckStateRole],
+                    )
 
                 return True
 
@@ -415,7 +446,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         if len(matches) == 0:
             return None
 
-        device, = matches
+        (device,) = matches
 
         return device
 
@@ -430,8 +461,9 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         return flags
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

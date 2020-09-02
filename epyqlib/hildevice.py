@@ -43,19 +43,19 @@ supported_version = [2]
 def format_version_validator(instance, attribute, value):
     if value != supported_version:
         raise FormatVersionError(
-            'Only format_version {} is supported'.format(
-                '.'.join(str(v) for v in supported_version),
+            "Only format_version {} is supported".format(
+                ".".join(str(v) for v in supported_version),
             ),
         )
 
 
 def parse_units(unit_string):
     if unit_string is not None:
-        unit_string = unit_string.replace('%', ' percent ')
+        unit_string = unit_string.replace("%", " percent ")
         # TODO: this is terrible T1179
-        unit_string = unit_string.replace('nominal', '')
-        unit_string = unit_string.replace('Power', '')
-        unit_string = unit_string.replace('cos()', '')
+        unit_string = unit_string.replace("nominal", "")
+        unit_string = unit_string.replace("Power", "")
+        unit_string = unit_string.replace("cos()", "")
 
     return epyqlib.utils.units.registry.parse_units(unit_string)
 
@@ -84,7 +84,7 @@ class Definition:
     # nv_meta_enum = attr.ib()
 
     def load_can(self):
-        matrix, = canmatrix.formats.loadp(
+        (matrix,) = canmatrix.formats.loadp(
             str(self.base_path / self.can_path)
         ).values()
 
@@ -106,43 +106,40 @@ class Definition:
     def loads(cls, s, base_path):
         raw = json.loads(s)
 
-        access_level_path = raw.get('access_level_path')
+        access_level_path = raw.get("access_level_path")
         if access_level_path is not None:
-            access_level_path = access_level_path.split(';')
+            access_level_path = access_level_path.split(";")
 
-        access_password_path = raw.get('access_password_path')
+        access_password_path = raw.get("access_password_path")
         if access_password_path is not None:
-            access_password_path = access_password_path.split(';')
+            access_password_path = access_password_path.split(";")
 
         return Definition(
             base_path=base_path,
-            format_version=raw['format_version'],
-            can_path=base_path / raw['can_path'],
-            nv_configuration=raw['nv_configuration'],
-            node_id=raw.get('node_id'),
+            format_version=raw["format_version"],
+            can_path=base_path / raw["can_path"],
+            nv_configuration=raw["nv_configuration"],
+            node_id=raw.get("node_id"),
             node_id_type=raw.get(
-                'node_id_type',
+                "node_id_type",
                 next(iter(epyqlib.device.node_id_types)),
             ),
-            controller_id=raw.get('controller_id'),
+            controller_id=raw.get("controller_id"),
             access_level_path=access_level_path,
             access_password_path=access_password_path,
         )
 
 
 operator_map = {
-    '<': operator.lt,
-    '<=': operator.le,
-    '==': operator.eq,
-    '!=': operator.ne,
-    '>=': operator.ge,
-    '>': operator.gt,
+    "<": operator.lt,
+    "<=": operator.le,
+    "==": operator.eq,
+    "!=": operator.ne,
+    ">=": operator.ge,
+    ">": operator.gt,
 }
 
-reverse_operator_map = {
-    v: k
-    for k, v in operator_map.items()
-}
+reverse_operator_map = {v: k for k, v in operator_map.items()}
 
 
 @attr.s
@@ -212,8 +209,8 @@ class Signal:
             check=check,
             timeout=timeout,
             message=(
-                f'{self.signal.name} not {operator_string} {value} '
-                f'within {timeout:.1f} seconds'
+                f"{self.signal.name} not {operator_string} {value} "
+                f"within {timeout:.1f} seconds"
             ),
         )
 
@@ -224,15 +221,15 @@ class Signal:
         return self.signal.get_decimal_places()
 
     def f_string(self):
-        return f'.{self.decimal_places()}f'
+        return f".{self.decimal_places()}f"
 
     @contextlib.asynccontextmanager
     async def temporary_set(
-            self,
-            value=None,
-            read_context=None,
-            set_context=None,
-            restoration_context=None,
+        self,
+        value=None,
+        read_context=None,
+        set_context=None,
+        restoration_context=None,
     ):
         @contextlib.asynccontextmanager
         async def async_null_context(enter_result=None):
@@ -263,12 +260,12 @@ class Nv:
     device = attr.ib()
 
     async def set(
-            self,
-            value=None,
-            user_default=None,
-            factory_default=None,
-            minimum=None,
-            maximum=None,
+        self,
+        value=None,
+        user_default=None,
+        factory_default=None,
+        minimum=None,
+        maximum=None,
     ):
         values = {
             epyqlib.nv.MetaEnum.maximum: maximum,
@@ -278,11 +275,7 @@ class Nv:
             epyqlib.nv.MetaEnum.value: value,
         }
 
-        values = {
-            meta: value
-            for meta, value in values.items()
-            if value is not None
-        }
+        values = {meta: value for meta, value in values.items() if value is not None}
 
         for meta, value in values.items():
             await self.set_meta(value=value, meta=meta)
@@ -305,15 +298,15 @@ class Nv:
 
     @contextlib.asynccontextmanager
     async def temporary_set(
-            self,
-            value=None,
-            user_default=None,
-            factory_default=None,
-            minimum=None,
-            maximum=None,
-            read_context=None,
-            set_context=None,
-            restoration_context=None,
+        self,
+        value=None,
+        user_default=None,
+        factory_default=None,
+        minimum=None,
+        maximum=None,
+        read_context=None,
+        set_context=None,
+        restoration_context=None,
     ):
         @contextlib.asynccontextmanager
         async def async_null_context(enter_result=None):
@@ -335,11 +328,7 @@ class Nv:
             epyqlib.nv.MetaEnum.value: value,
         }
 
-        values = {
-            meta: value
-            for meta, value in values.items()
-            if value is not None
-        }
+        values = {meta: value for meta, value in values.items() if value is not None}
 
         original = {}
 
@@ -370,7 +359,6 @@ class Nv:
     def units(self):
         return parse_units(unit_string=self.nv.unit)
 
-
     @twisted.internet.defer.inlineCallbacks
     def wait_for(self, op, value, timeout, ignore_read_failures=False):
         op = operator_map.get(op, op)
@@ -392,8 +380,8 @@ class Nv:
             check=check,
             timeout=timeout,
             message=(
-                f'{self.nv.name} not {operator_string} {value} '
-                f'within {timeout:.1f} seconds'
+                f"{self.nv.name} not {operator_string} {value} "
+                f"within {timeout:.1f} seconds"
             ),
         )
 
@@ -418,7 +406,7 @@ class Device:
 
     def load(self):
         if self.definition is not None:
-            raise AlreadyLoadedError('The definition has already been loaded')
+            raise AlreadyLoadedError("The definition has already been loaded")
 
         with epyqlib.updateepc.updated(self.definition_path) as updated:
             self.definition = Definition.loadp(updated)
@@ -517,12 +505,12 @@ class Device:
 
     @twisted.internet.defer.inlineCallbacks
     def wait_for_nv_save_completion(self):
-        nv = self.nv('StatusWarnings', 'eeSaveInProgress')
+        nv = self.nv("StatusWarnings", "eeSaveInProgress")
 
         yield epyqlib.utils.twisted.sleep(2)
 
         yield nv.wait_for(
-            op='==',
+            op="==",
             value=0,
             timeout=120,
             ignore_read_failures=True,
@@ -548,7 +536,7 @@ class Device:
 
     async def get_check_limits(self):
         nv = self.nv_from_uuid(
-            uuid.UUID('bd7c3c96-bde9-4b4b-a646-e1d06a7cc24f'),
+            uuid.UUID("bd7c3c96-bde9-4b4b-a646-e1d06a7cc24f"),
         )
         value = await nv.get()
 
@@ -556,7 +544,7 @@ class Device:
 
     async def get_password(self):
         nv = self.nv_from_uuid(
-            uuid.UUID('cc438574-bec0-4443-8a25-785e41240c1b'),
+            uuid.UUID("cc438574-bec0-4443-8a25-785e41240c1b"),
         )
         value = await nv.get()
 
@@ -573,7 +561,7 @@ class Device:
         self.nvs.password_node.set_value(password)
         self.nvs.access_level_node.set_value(level)
         check_limits_nv = self.nv_from_uuid(
-            uuid.UUID('bd7c3c96-bde9-4b4b-a646-e1d06a7cc24f'),
+            uuid.UUID("bd7c3c96-bde9-4b4b-a646-e1d06a7cc24f"),
         )
         check_limits_nv.nv.set_value(check_limits)
 
@@ -594,16 +582,16 @@ class Device:
 
     @contextlib.asynccontextmanager
     async def temporary_access_level(
-            self,
-            level=None,
-            password=None,
-            check_limits=True,
+        self,
+        level=None,
+        password=None,
+        check_limits=True,
     ):
         access_level_parameter = self.nv(*self.definition.access_level_path[1:])
         original_access_level = await access_level_parameter.get()
 
         check_limits_nv = self.nv_from_uuid(
-            uuid.UUID('bd7c3c96-bde9-4b4b-a646-e1d06a7cc24f'),
+            uuid.UUID("bd7c3c96-bde9-4b4b-a646-e1d06a7cc24f"),
         )
         original_check_limits = await check_limits_nv.get()
 
@@ -630,12 +618,12 @@ class Device:
     async def reset(self, timeout=10, sleep=0):
         # SoftwareReset:InitiateReset
         reset_parameter = self.parameter_from_uuid(
-            uuid_=uuid.UUID('b582085d-7734-4260-ab97-47e50a41b06c'),
+            uuid_=uuid.UUID("b582085d-7734-4260-ab97-47e50a41b06c"),
         )
 
         # Serial Number
         a_parameter_that_can_be_read = self.parameter_from_uuid(
-            uuid_=uuid.UUID('390f27ea-6f28-4313-b183-5f37d007ccd1'),
+            uuid_=uuid.UUID("390f27ea-6f28-4313-b183-5f37d007ccd1"),
         )
 
         # TODO: just accept the 1s or whatever default timeout?  A set without
@@ -660,13 +648,13 @@ class Device:
 
     async def wait_through_power_on_reset(self):
         status_signal = self.signal_from_uuid(
-            uuid_=uuid.UUID('6392782a-b886-45a0-9642-dd4f47cd2a59'),
+            uuid_=uuid.UUID("6392782a-b886-45a0-9642-dd4f47cd2a59"),
         )
 
         await status_signal.wait_for(
-            op='!=',
+            op="!=",
             # TODO: stop comparing strings...
-            value='Power On Reset',
+            value="Power On Reset",
             timeout=60,
         )
 
@@ -676,49 +664,47 @@ class Device:
 
     async def get_serial_number(self):
         nv = self.nv_from_uuid(
-            uuid_=uuid.UUID('390f27ea-6f28-4313-b183-5f37d007ccd1'),
+            uuid_=uuid.UUID("390f27ea-6f28-4313-b183-5f37d007ccd1"),
         )
         value = await nv.get()
         return value
 
     async def clear_faults(self):
         clear_faults_signal = self.signal_from_uuid(
-            uuid_=uuid.UUID('62b6dc82-c93a-454a-a643-dd8a7b2a220e'),
+            uuid_=uuid.UUID("62b6dc82-c93a-454a-a643-dd8a7b2a220e"),
         )
         clear_faults_status_signal = self.signal_from_uuid(
-            uuid_=uuid.UUID('d84e5184-696d-487c-8850-cc904a7c018f'),
+            uuid_=uuid.UUID("d84e5184-696d-487c-8850-cc904a7c018f"),
         )
 
         clear_faults_signal.set(value=False)
         await clear_faults_status_signal.wait_for(
-            op='==',
-            value='Normal',
+            op="==",
+            value="Normal",
             timeout=1,
         )
 
         clear_faults_signal.set(value=True)
         await clear_faults_status_signal.wait_for(
-            op='==',
-            value='Clear Faults',
+            op="==",
+            value="Clear Faults",
             timeout=1,
         )
 
         clear_faults_signal.set(value=False)
         await clear_faults_status_signal.wait_for(
-            op='==',
-            value='Normal',
+            op="==",
+            value="Normal",
             timeout=1,
         )
 
 
-
-
 async def set_key_inplace(
-        key_nvs,
-        tag_nvs,
-        existing_key,
-        replacement_key,
-        serial_number,
+    key_nvs,
+    tag_nvs,
+    existing_key,
+    replacement_key,
+    serial_number,
 ):
     new_level_key = attr.evolve(existing_key, level=replacement_key)
     new_low_key = attr.evolve(
@@ -745,10 +731,10 @@ async def set_key_inplace(
         )
 
         async with temporary_set(
-                nvs_and_values=(
-                    (tag_nvs.low, tag.value.low_32()),
-                    (tag_nvs.high, tag.value.high_32()),
-                )
+            nvs_and_values=(
+                (tag_nvs.low, tag.value.low_32()),
+                (tag_nvs.high, tag.value.high_32()),
+            )
         ):
             await nv.set(value)
             print()
@@ -756,11 +742,11 @@ async def set_key_inplace(
 
 @contextlib.asynccontextmanager
 async def temporary_key(
-        key_nvs,
-        tag_nvs,
-        existing_key,
-        replacement_key,
-        serial_number,
+    key_nvs,
+    tag_nvs,
+    existing_key,
+    replacement_key,
+    serial_number,
 ):
     try:
         await set_key_inplace(
@@ -795,13 +781,13 @@ class KeyNvs:
 
         return cls(
             low=device.nv_from_uuid(
-                uuid_=uuid.UUID('f046a08b-9308-4da7-ae5e-b931d610b3f4'),
+                uuid_=uuid.UUID("f046a08b-9308-4da7-ae5e-b931d610b3f4"),
             ),
             high=device.nv_from_uuid(
-                uuid_=uuid.UUID('3e021694-d565-4636-8a5d-3e0976d1112c'),
+                uuid_=uuid.UUID("3e021694-d565-4636-8a5d-3e0976d1112c"),
             ),
             access_level=device.nv_from_uuid(
-                uuid_=uuid.UUID('07c45cff-0b95-413d-9aed-01a4f514e8da'),
+                uuid_=uuid.UUID("07c45cff-0b95-413d-9aed-01a4f514e8da"),
             ),
             index=index,
         )
@@ -816,8 +802,8 @@ class TagNvs:
     @classmethod
     def from_index(cls, index, device):
         return cls(
-            low=device.nv(f'AuthTag{index}Low32', 'Low32'),
-            high=device.nv(f'AuthTag{index}High32', 'High32'),
+            low=device.nv(f"AuthTag{index}Low32", "Low32"),
+            high=device.nv(f"AuthTag{index}High32", "High32"),
             index=index,
         )
 
@@ -854,11 +840,11 @@ class SunSpecNv:
 
     @contextlib.asynccontextmanager
     async def temporary_set(
-            self,
-            value,
-            read_context=None,
-            set_context=None,
-            restoration_context=None,
+        self,
+        value,
+        read_context=None,
+        set_context=None,
+        restoration_context=None,
     ):
         @contextlib.asynccontextmanager
         async def async_null_context(enter_result=None):
@@ -915,10 +901,11 @@ class SunSpecDevice:
     uuid_to_model = attr.ib(default=None)
     uuid = attr.ib(default=uuid.uuid4)
 
-    def load(self,
+    def load(
+        self,
         slave_id=1,
         device_type=sunspec.core.client.RTU,
-        name='/dev/ttyUSB0',
+        name="/dev/ttyUSB0",
         baudrate=115200,
         timeout=1,
         parity=sunspec.core.client.PARITY_NONE,
@@ -948,9 +935,10 @@ class SunSpecDevice:
                 trace=trace,
             )
 
-    def load_rtu(self,
+    def load_rtu(
+        self,
         slave_id=1,
-        name='/dev/ttyUSB0',
+        name="/dev/ttyUSB0",
         baudrate=115200,
         timeout=1,
         parity=sunspec.core.client.PARITY_NONE,
@@ -965,7 +953,8 @@ class SunSpecDevice:
                 parity=parity,
             )
 
-    def load_tcp(self,
+    def load_tcp(
+        self,
         ipaddr,
         slave_id=1,
         timeout=1,
@@ -1005,10 +994,10 @@ class SunSpecDevice:
                 if uuid is None:
                     return uuid
 
-                if block.type == 'fixed':
+                if block.type == "fixed":
                     return uuid
 
-                if block.type == 'repeating' and index == block.index - 1:
+                if block.type == "repeating" and index == block.index - 1:
                     return uuid
 
         points = [
@@ -1020,30 +1009,28 @@ class SunSpecDevice:
         ]
 
         self.uuid_to_point = {
-            get_uuid(block=block, point=point): point
-            for model, block, point in points
+            get_uuid(block=block, point=point): point for model, block, point in points
         }
 
         self.uuid_to_model = {
-            get_uuid(block=block, point=point): model
-            for model, block, point in points
+            get_uuid(block=block, point=point): model for model, block, point in points
         }
 
     async def get_access_level(self):
-        access_level_point = self.device.epc_control.model.points['AccLvl']
+        access_level_point = self.device.epc_control.model.points["AccLvl"]
 
         self.device.epc_control.read()
 
         return access_level_point.value
 
     async def get_check_limits(self):
-        point = self.device.epc_control.model.points['ChkLmts']
+        point = self.device.epc_control.model.points["ChkLmts"]
         self.device.epc_control.read()
 
         return point.value
 
     async def get_password(self):
-        point = self.device.epc_control.model.points['Passwd']
+        point = self.device.epc_control.model.points["Passwd"]
         self.device.epc_control.read()
 
         return point.value
@@ -1055,10 +1042,10 @@ class SunSpecDevice:
         if password is None:
             password = self.default_access_level_password
 
-        access_level_point = self.device.epc_control.model.points['AccLvl']
-        password_point = self.device.epc_control.model.points['Passwd']
-        check_limits_point = self.device.epc_control.model.points['ChkLmts']
-        submit_point = self.device.epc_control.model.points['SubAccLvl']
+        access_level_point = self.device.epc_control.model.points["AccLvl"]
+        password_point = self.device.epc_control.model.points["Passwd"]
+        check_limits_point = self.device.epc_control.model.points["ChkLmts"]
+        submit_point = self.device.epc_control.model.points["SubAccLvl"]
 
         epcsunspecdemo.demos.send_val(access_level_point, level)
         epcsunspecdemo.demos.send_val(password_point, password)
@@ -1068,12 +1055,12 @@ class SunSpecDevice:
 
     @contextlib.asynccontextmanager
     async def temporary_access_level(
-            self,
-            level=None,
-            password=None,
-            check_limits=True,
+        self,
+        level=None,
+        password=None,
+        check_limits=True,
     ):
-        check_limits_point = self.device.epc_control.model.points['ChkLmts']
+        check_limits_point = self.device.epc_control.model.points["ChkLmts"]
 
         original_access_level = await self.get_access_level()
         self.device.epc_control.read()
@@ -1096,12 +1083,12 @@ class SunSpecDevice:
     async def reset(self, timeout=10, sleep=0):
         # SoftwareReset:InitiateReset
         reset_parameter = self.parameter_from_uuid(
-            uuid_=uuid.UUID('b582085d-7734-4260-ab97-47e50a41b06c'),
+            uuid_=uuid.UUID("b582085d-7734-4260-ab97-47e50a41b06c"),
         )
 
         # Serial Number
         a_parameter_that_can_be_read = self.parameter_from_uuid(
-            uuid_=uuid.UUID('390f27ea-6f28-4313-b183-5f37d007ccd1'),
+            uuid_=uuid.UUID("390f27ea-6f28-4313-b183-5f37d007ccd1"),
         )
 
         # TODO: just accept the 1s or whatever default timeout?  A set without
@@ -1126,10 +1113,10 @@ class SunSpecDevice:
 
     async def to_nv(self, timeout=10):
         save_command_parameter = self.parameter_from_uuid(
-            uuid.UUID('2c768acc-f88e-431c-8fc1-ea8d5b2ba253'),
+            uuid.UUID("2c768acc-f88e-431c-8fc1-ea8d5b2ba253"),
         )
         save_in_progress_parameter = self.parameter_from_uuid(
-            uuid.UUID('5d623539-a564-4374-b00d-492a0fbb2f55'),
+            uuid.UUID("5d623539-a564-4374-b00d-492a0fbb2f55"),
         )
 
         await save_command_parameter.set(1)

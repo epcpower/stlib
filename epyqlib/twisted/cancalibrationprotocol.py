@@ -22,8 +22,10 @@ def endianness_swap_2byte(b):
 
     return itertools.chain(
         *(
-            (b, a) for a, b in zip(itertools.islice(b, 0, None, 2),
-                                   itertools.islice(b, 1, None, 2))
+            (b, a)
+            for a, b in zip(
+                itertools.islice(b, 0, None, 2), itertools.islice(b, 1, None, 2)
+            )
         )
     )
 
@@ -43,14 +45,18 @@ def chunkit(it, n):
 class HandlerBusy(RuntimeError):
     pass
 
+
 class HandlerUnknownState(RuntimeError):
     pass
+
 
 class UnexpectedMessageReceived(ValueError):
     pass
 
+
 class InvalidSection(ValueError):
     pass
+
 
 bootloader_can_id = 0x0B081880
 
@@ -73,8 +79,14 @@ class HandlerState(enum.Enum):
 class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
     messages_sent = pyqtSignal(int)
 
-    def __init__(self, endianness, tx_id=bootloader_can_id, rx_id=bootloader_can_id,
-                 extended=True, parent=None):
+    def __init__(
+        self,
+        endianness,
+        tx_id=bootloader_can_id,
+        rx_id=bootloader_can_id,
+        extended=True,
+        parent=None,
+    ):
         QObject.__init__(self, parent=parent)
         self._deferred = None
         self._stream_deferred = None
@@ -112,7 +124,7 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
 
     @state.setter
     def state(self, new_state):
-        logger.debug('Entering state {}'.format(new_state))
+        logger.debug("Entering state {}".format(new_state))
         self._previous_state = self._state
         self._state = new_state
 
@@ -121,78 +133,81 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
 
     def makeConnection(self, transport):
         self._transport = transport
-        logger.debug('Handler.makeConnection(): {}'.format(transport))
+        logger.debug("Handler.makeConnection(): {}".format(transport))
 
     def connect(self, station_address=1, timeout=None):
-        logger.debug('Entering connect()')
+        logger.debug("Entering connect()")
         if self._active:
-            raise Exception('self._active is True')
+            raise Exception("self._active is True")
         self._active = True
 
         self._new_deferred()
 
         if self.state is not HandlerState.idle:
-            self.errback(HandlerBusy(
-                'Connect requested while {}'.format(self.state.name)))
+            self.errback(
+                HandlerBusy("Connect requested while {}".format(self.state.name))
+            )
             return self._deferred
 
-        packet = HostCommand(code=CommandCode.connect,
-                             arbitration_id=self._tx_id)
+        packet = HostCommand(code=CommandCode.connect, arbitration_id=self._tx_id)
         # TODO: shouldn't be needed, just makes it agree with oz
         #       for cleaner diff
         # packet.payload[0:1] = station_address.to_bytes(2, 'little')
         packet.payload[0] = station_address
-        self._send(packet=packet,
-                   state=HandlerState.connecting,
-                   count_towards_total=False,
-                   timeout=timeout)
+        self._send(
+            packet=packet,
+            state=HandlerState.connecting,
+            count_towards_total=False,
+            timeout=timeout,
+        )
 
         return self._deferred
 
     def disconnect(self, end_of_session=0):
-        logger.debug('Entering disconnect()')
+        logger.debug("Entering disconnect()")
         if self._active:
-            raise Exception('self._active is True')
+            raise Exception("self._active is True")
         self._active = True
 
         self._new_deferred()
 
         if self.state is not HandlerState.connected:
-            self.errback(HandlerBusy(
-                'Disconnect requested while {}'.format(self.state.name)))
+            self.errback(
+                HandlerBusy("Disconnect requested while {}".format(self.state.name))
+            )
             return self._deferred
 
-        packet = HostCommand(code=CommandCode.disconnect,
-                             arbitration_id=self._tx_id)
+        packet = HostCommand(code=CommandCode.disconnect, arbitration_id=self._tx_id)
         # EndOfSession rather than a temporary disconnect
         packet.payload[0] = end_of_session
         self._send(packet, state=HandlerState.disconnecting)
 
-        logger.debug('disconnecting')
+        logger.debug("disconnecting")
         return self._deferred
 
     def set_mta(self, address_extension, address):
-        logger.debug('Entering set_mta()')
+        logger.debug("Entering set_mta()")
         if self._active:
-            raise Exception('self._active is True')
+            raise Exception("self._active is True")
         self._active = True
 
         self._new_deferred()
 
         if not isinstance(address_extension, AddressExtension):
-            self.errback(TypeError(
-                'Expected AddressExtension, got: {}'
-                    .format(type(address_extension))
-            ))
+            self.errback(
+                TypeError(
+                    "Expected AddressExtension, got: {}".format(type(address_extension))
+                )
+            )
             return self._deferred
 
         if self.state is not HandlerState.connected:
-            self.errback(HandlerBusy(
-                'Set MTA requested while {}'.format(self.state.name)))
+            self.errback(
+                HandlerBusy("Set MTA requested while {}".format(self.state.name))
+            )
             return self._deferred
 
-        packet = HostCommand(code=CommandCode.set_mta,
-                             arbitration_id=self._tx_id)
+        packet = HostCommand(code=CommandCode.set_mta, arbitration_id=self._tx_id)
         # always zero for Oz bootloader
         packet.payload[0] = 0
         packet.payload[1] = address_extension
@@ -203,21 +218,24 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
         return self._deferred
 
     def unlock(self, section):
-        logger.debug('Entering unlock()')
+        logger.debug("Entering unlock()")
         if self._active:
-            raise Exception('self._active is True')
+            raise Exception("self._active is True")
         self._active = True
 
         self._new_deferred()
 
         if not isinstance(section, Password):
-            self.errback(InvalidSection(
-                'Invalid section password specified: {} - {}'.format(
-                    section.name, section.value)))
+            self.errback(
+                InvalidSection(
+                    "Invalid section password specified: {} - {}".format(
+                        section.name, section.value
+                    )
+                )
+            )
             return self._deferred
 
-        packet = HostCommand(code=CommandCode.unlock,
-                             arbitration_id=self._tx_id)
+        packet = HostCommand(code=CommandCode.unlock, arbitration_id=self._tx_id)
         packet.payload[0] = 2
         packet.payload[1:3] = section.value.to_bytes(2, self.endianness)
 
@@ -226,10 +244,10 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
         return self._deferred
 
     def download(self, data):
-        logger.debug('Entering download()')
+        logger.debug("Entering download()")
 
         if self._active:
-            raise Exception('self._active is True')
+            raise Exception("self._active is True")
         self._active = True
 
         self._new_deferred()
@@ -238,50 +256,44 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
         #       in regard to odd-length data
         length = len(data)
         if length > 5 or length % 2 != 0:
-            self.errback(TypeError(
-                'Invalid data length {}'
-                    .format(length)
-            ))
+            self.errback(TypeError("Invalid data length {}".format(length)))
             return self._deferred
 
         if self.state is not HandlerState.connected:
-            self.errback(HandlerBusy(
-                'Download requested while {}'.format(self.state.name)))
+            self.errback(
+                HandlerBusy("Download requested while {}".format(self.state.name))
+            )
             return self._deferred
 
-        packet = HostCommand(code=CommandCode.download,
-                             arbitration_id=self._tx_id)
+        packet = HostCommand(code=CommandCode.download, arbitration_id=self._tx_id)
         swapped_data = tuple(endianness_swap_2byte(data))
         packet.payload[0] = len(swapped_data)
-        packet.payload[1:len(swapped_data)+1] = swapped_data
+        packet.payload[1 : len(swapped_data) + 1] = swapped_data
 
         self._send(packet=packet, state=HandlerState.downloading)
 
         return self._deferred
 
     def download_6(self, data):
-        logger.debug('Entering download_6()')
+        logger.debug("Entering download_6()")
 
         if self._active:
-            raise Exception('self._active is True')
+            raise Exception("self._active is True")
         self._active = True
 
         self._new_deferred()
 
         if len(data) != 6:
-            self.errback(TypeError(
-                'Invalid data length {}'
-                    .format(len(bytes))
-            ))
+            self.errback(TypeError("Invalid data length {}".format(len(bytes))))
             return self._deferred
 
         if self.state is not HandlerState.connected:
-            self.errback(HandlerBusy(
-                'Download requested while {}'.format(self.state.name)))
+            self.errback(
+                HandlerBusy("Download requested while {}".format(self.state.name))
+            )
             return self._deferred
 
-        packet = HostCommand(code=CommandCode.download_6,
-                             arbitration_id=self._tx_id)
+        packet = HostCommand(code=CommandCode.download_6, arbitration_id=self._tx_id)
         packet.payload[:] = endianness_swap_2byte(data)
 
         self._send(packet=packet, state=HandlerState.download_6ing)
@@ -290,10 +302,10 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
 
     # TODO: magic number 5!
     def upload(self, number_of_bytes=5, block_transfer=False):
-        logger.debug('Entering upload()')
+        logger.debug("Entering upload()")
 
         if self._active:
-            raise Exception('self._active is True')
+            raise Exception("self._active is True")
         self._active = True
 
         self._new_deferred()
@@ -302,17 +314,18 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
         maximum = 5 if not block_transfer else 255
 
         if not 1 <= number_of_bytes <= maximum:
-            self.errback(TypeError(
-                'Invalid byte count requested: {}'
-                    .format(number_of_bytes)
-            ))
+            self.errback(
+                TypeError("Invalid byte count requested: {}".format(number_of_bytes))
+            )
         else:
             if self.state is not HandlerState.connected:
-                self.errback(HandlerBusy(
-                    'Upload requested while {}'.format(self.state.name)))
+                self.errback(
+                    HandlerBusy("Upload requested while {}".format(self.state.name))
+                )
             else:
-                packet = HostCommand(code=CommandCode.upload,
-                                     arbitration_id=self._tx_id)
+                packet = HostCommand(
+                    code=CommandCode.upload, arbitration_id=self._tx_id
+                )
                 packet.payload[0] = number_of_bytes
                 self.request_memory = number_of_bytes, bytearray()
 
@@ -323,23 +336,27 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
     def build_checksum(self, checksum, length):
         # length is in bytes, not addresses
 
-        logger.debug('Entering build_checksum()')
+        logger.debug("Entering build_checksum()")
 
         if self._active:
-            raise Exception('self._active is True')
+            raise Exception("self._active is True")
         self._active = True
 
         self._new_deferred()
 
         if self.state is not HandlerState.connected:
-            self.errback(HandlerBusy(
-                'Build checksum requested while {}'.format(self.state.name)))
+            self.errback(
+                HandlerBusy("Build checksum requested while {}".format(self.state.name))
+            )
             return self._deferred
 
-        packet = HostCommand(code=CommandCode.build_checksum,
-                             arbitration_id=self._tx_id)
-        logger.debug('{}, {}'.format(type(length), type(checksum)))
-        logger.debug((length.to_bytes(4, self.endianness), checksum.to_bytes(2, self.endianness)))
+        packet = HostCommand(
+            code=CommandCode.build_checksum, arbitration_id=self._tx_id
+        )
+        logger.debug("{}, {}".format(type(length), type(checksum)))
+        logger.debug(
+            (length.to_bytes(4, self.endianness), checksum.to_bytes(2, self.endianness))
+        )
         packet.payload[:4] = length.to_bytes(4, self.endianness)
         packet.payload[4:] = checksum.to_bytes(2, self.endianness)
         logger.debug(packet)
@@ -349,22 +366,22 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
         return self._deferred
 
     def clear_memory(self):
-        logger.debug('Entering clear_memory()')
+        logger.debug("Entering clear_memory()")
         length = 0xFF
 
         if self._active:
-            raise Exception('self._active is True')
+            raise Exception("self._active is True")
         self._active = True
 
         self._new_deferred()
 
         if self.state is not HandlerState.connected:
-            self.errback(HandlerBusy(
-                'Clear memory requested while {}'.format(self.state.name)))
+            self.errback(
+                HandlerBusy("Clear memory requested while {}".format(self.state.name))
+            )
             return self._deferred
 
-        packet = HostCommand(code=CommandCode.clear_memory,
-                             arbitration_id=self._tx_id)
+        packet = HostCommand(code=CommandCode.clear_memory, arbitration_id=self._tx_id)
         packet.payload[:4] = length.to_bytes(4, self.endianness)
 
         self._send(packet=packet, state=HandlerState.clearing_memory)
@@ -372,10 +389,10 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
         return self._deferred
 
     def download_block(self, address_extension, address, data):
-        logger.debug('Entering download_block()')
+        logger.debug("Entering download_block()")
         # print('download_block(address_extension={}, address=0x{:08X})'.format(address_extension, address))
         if self._active:
-            raise Exception('self._active is True')
+            raise Exception("self._active is True")
 
         # self._stream_deferred = twisted.internet.defer.Deferred()
 
@@ -388,9 +405,10 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
 
         self._internal_deferred = self.set_mta(address_extension, address)
         self._internal_deferred.addCallback(
-            lambda _, address=address, address_extension=address_extension:
-            self._download_chunk(address=address,
-                                 address_extension=address_extension))
+            lambda _, address=address, address_extension=address_extension: self._download_chunk(
+                address=address, address_extension=address_extension
+            )
+        )
         # self._internal_deferred.addCallback(self._stream_deferred.callback)
         self._internal_deferred.addErrback(epyqlib.utils.twisted.logit)
 
@@ -398,7 +416,7 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
         return self._internal_deferred
 
     def _download_chunk(self, address, address_extension):
-        logger.debug('Entering _download_chunk()')
+        logger.debug("Entering _download_chunk()")
         try:
             chunk = next(self._chunkit)
         except StopIteration:
@@ -419,9 +437,10 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
         if download is not None:
             # TODO: OOP this
             self._crc = crc(data=endianness_swap_2byte(chunk), crc=self._crc)
-            self.continuous_crc = crc(data=endianness_swap_2byte(chunk),
-                                      crc=self.continuous_crc)
-            logger.debug('Continuous CRC: {:04X}'.format(self.continuous_crc))
+            self.continuous_crc = crc(
+                data=endianness_swap_2byte(chunk), crc=self.continuous_crc
+            )
+            logger.debug("Continuous CRC: {:04X}".format(self.continuous_crc))
             self._crc_length += len(chunk)
 
             self._download_block_counter += 1
@@ -432,35 +451,36 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
             address += length / 2
             if int(address) != address:
                 # TODO: do this better or at least a unique exception
-                raise Exception('ack')
+                raise Exception("ack")
             address = int(address)
             if self._download_block_counter == 0:
                 deferred.addCallback(
-                    lambda _, crc=self._crc, length=self._crc_length:
-                    self.build_checksum(checksum=crc, length=length))
+                    lambda _, crc=self._crc, length=self._crc_length: self.build_checksum(
+                        checksum=crc, length=length
+                    )
+                )
                 self._crc = None
                 self._crc_length = 0
                 deferred.addCallback(
-                    lambda _, address=address,
-                           address_extension=address_extension:
-                    self.set_mta(address=address,
-                                 address_extension=address_extension)
+                    lambda _, address=address, address_extension=address_extension: self.set_mta(
+                        address=address, address_extension=address_extension
+                    )
                 )
             # TODO: this just doesn't feel like good structure
             if download is not self.download:
                 deferred.addCallback(
-                    lambda _, address=address,
-                           address_extension=address_extension:
-                    self._download_chunk(address=address,
-                                 address_extension=address_extension)
+                    lambda _, address=address, address_extension=address_extension: self._download_chunk(
+                        address=address, address_extension=address_extension
+                    )
                 )
         else:
-            logger.debug('crc: {} {}'.format(type(self._crc), self._crc))
+            logger.debug("crc: {} {}".format(type(self._crc), self._crc))
             # l = lambda _: self._internal_deferred.callback(
             #         'Done downloading stream')
             if self._crc is not None:
-                deferred = self.build_checksum(checksum=self._crc,
-                                               length=self._crc_length)
+                deferred = self.build_checksum(
+                    checksum=self._crc, length=self._crc_length
+                )
             #     deferred.addCallback(l)
             # else:
             #     l()
@@ -473,16 +493,13 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
 
         return deferred
 
-            # # TODO: this smells...  really bad
+        # # TODO: this smells...  really bad
         # deferred.callback('Oh so smelly...')
         # return self._internal_deferred
 
     @twisted.internet.defer.inlineCallbacks
     def upload_block(self, address_extension, address, octets, progress=None):
-        yield self.set_mta(
-            address=address,
-            address_extension=address_extension
-        )
+        yield self.set_mta(address=address, address_extension=address_extension)
 
         data = bytearray()
 
@@ -492,8 +509,9 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
         while remaining > 0:
             # TODO: magic number 255!
             number_of_bytes = min(255, remaining)
-            block = yield self.upload(number_of_bytes=number_of_bytes,
-                                      block_transfer=True)
+            block = yield self.upload(
+                number_of_bytes=number_of_bytes, block_transfer=True
+            )
             remaining -= number_of_bytes
 
             if progress is not None:
@@ -517,7 +535,7 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
 
         self.state = state
 
-        logger.debug('Message to be sent: {}'.format(packet))
+        logger.debug("Message to be sent: {}".format(packet))
         self._transport.write(packet.message)
 
         if count_towards_total:
@@ -525,11 +543,12 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
             self.messages_sent.emit(self._messages_sent)
 
         self.setTimeout(timeout)
-        logger.debug('Timeout set to {}'.format(packet.command_code.timeout))
+        logger.debug("Timeout set to {}".format(packet.command_code.timeout))
 
     def dataReceived(self, msg):
-        if not (msg.arbitration_id == self._rx_id and
-                    bool(msg.id_type) == self._extended):
+        if not (
+            msg.arbitration_id == self._rx_id and bool(msg.id_type) == self._extended
+        ):
             return
 
         if not self._active:
@@ -540,34 +559,44 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
         packet = Packet.from_message(message=msg)
 
         if not isinstance(packet, BootloaderReply):
-            self.errback(UnexpectedMessageReceived(
-                'Not a bootloader reply: {}'.format(packet)))
+            self.errback(
+                UnexpectedMessageReceived("Not a bootloader reply: {}".format(packet))
+            )
             return
 
         if self.state not in [HandlerState.connecting, HandlerState.connected]:
             if packet.command_counter != self._send_counter:
-                self.errback(UnexpectedMessageReceived(
-                    'Reply out of sequence: expected {} but got {} - {}'
-                        .format(self._send_counter, packet.command_counter,
-                                packet)))
+                self.errback(
+                    UnexpectedMessageReceived(
+                        "Reply out of sequence: expected {} but got {} - {}".format(
+                            self._send_counter, packet.command_counter, packet
+                        )
+                    )
+                )
                 return
 
-        logger.debug('packet received: {}'.format(packet.command_return_code.name))
+        logger.debug("packet received: {}".format(packet.command_return_code.name))
 
         if self.state is HandlerState.connected:
-            logger.debug('Unexpected message received in state connected: {}'
-                         .format(packet))
+            logger.debug(
+                "Unexpected message received in state connected: {}".format(packet)
+            )
         elif self.state is HandlerState.connecting:
             if packet.command_return_code is not CommandStatus.acknowledge:
-                self.errback(UnexpectedMessageReceived(
-                    'Bootloader should ack when trying to connect, instead: {}'
-                        .format(packet)))
+                self.errback(
+                    UnexpectedMessageReceived(
+                        "Bootloader should ack when trying to connect, instead: {}".format(
+                            packet
+                        )
+                    )
+                )
                 return
 
-            logger.debug('Bootloader version: {major}.{minor}'.format(
-                major=packet.payload[0],
-                minor=packet.payload[1]
-            ))
+            logger.debug(
+                "Bootloader version: {major}.{minor}".format(
+                    major=packet.payload[0], minor=packet.payload[1]
+                )
+            )
 
             dsp_code = (int(packet.payload[2]) << 8) + int(packet.payload[3])
 
@@ -576,81 +605,113 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
             except ValueError:
                 pass
             else:
-                logger.debug('DSP Part ID: {}'.format(dsp_code.name))
+                logger.debug("DSP Part ID: {}".format(dsp_code.name))
 
             self.state = HandlerState.connected
-            self.callback('successfully connected')
+            self.callback("successfully connected")
         elif self.state is HandlerState.disconnecting:
             if packet.command_return_code is not CommandStatus.acknowledge:
-                self.errback(UnexpectedMessageReceived(
-                    'Bootloader should ack when trying to disconnect, instead: {}'
-                        .format(packet)))
+                self.errback(
+                    UnexpectedMessageReceived(
+                        "Bootloader should ack when trying to disconnect, instead: {}".format(
+                            packet
+                        )
+                    )
+                )
                 return
 
             self.state = HandlerState.idle
-            self.callback('successfully disconnected')
+            self.callback("successfully disconnected")
         elif self.state is HandlerState.setting_mta:
             if packet.command_return_code is not CommandStatus.acknowledge:
-                self.errback(UnexpectedMessageReceived(
-                    'Bootloader should ack when trying to set MTA, instead: {}'
-                        .format(packet)))
+                self.errback(
+                    UnexpectedMessageReceived(
+                        "Bootloader should ack when trying to set MTA, instead: {}".format(
+                            packet
+                        )
+                    )
+                )
                 return
 
             self.state = HandlerState.connected
-            self.callback('successfully set MTA')
+            self.callback("successfully set MTA")
         elif self.state is HandlerState.downloading:
             if packet.command_return_code is not CommandStatus.acknowledge:
-                self.errback(UnexpectedMessageReceived(
-                    'Bootloader should ack when trying to download, instead: {} - {}'
-                        .format(packet.command_return_code.name, packet)))
+                self.errback(
+                    UnexpectedMessageReceived(
+                        "Bootloader should ack when trying to download, instead: {} - {}".format(
+                            packet.command_return_code.name, packet
+                        )
+                    )
+                )
                 return
 
             self.state = HandlerState.connected
-            self.callback('successfully downloaded')
+            self.callback("successfully downloaded")
         elif self.state is HandlerState.download_6ing:
             if packet.command_return_code is not CommandStatus.acknowledge:
-                self.errback(UnexpectedMessageReceived(
-                    'Bootloader should ack when trying to download_6, instead: {}'
-                        .format(packet)))
+                self.errback(
+                    UnexpectedMessageReceived(
+                        "Bootloader should ack when trying to download_6, instead: {}".format(
+                            packet
+                        )
+                    )
+                )
                 return
 
             self.state = HandlerState.connected
-            self.callback('successfully download_6ed')
+            self.callback("successfully download_6ed")
         elif self.state is HandlerState.unlocking:
             if packet.command_return_code is not CommandStatus.acknowledge:
-                self.errback(UnexpectedMessageReceived(
-                    'Bootloader should ack when trying to unlock, instead: {}'
-                        .format(packet)))
+                self.errback(
+                    UnexpectedMessageReceived(
+                        "Bootloader should ack when trying to unlock, instead: {}".format(
+                            packet
+                        )
+                    )
+                )
                 return
 
             self.state = HandlerState.connected
-            self.callback('successfully unlocked {}'.format(packet.payload[1]))
+            self.callback("successfully unlocked {}".format(packet.payload[1]))
         elif self.state is HandlerState.building_checksum:
             if packet.command_return_code is not CommandStatus.acknowledge:
-                self.errback(UnexpectedMessageReceived(
-                    'Bootloader should ack when trying to build checksum, instead: {}'
-                        .format(packet)))
+                self.errback(
+                    UnexpectedMessageReceived(
+                        "Bootloader should ack when trying to build checksum, instead: {}".format(
+                            packet
+                        )
+                    )
+                )
                 return
 
             # TODO: consider verifying returned CRC data beyond just
             #       accepting the embedded side's decision to ack
 
             self.state = HandlerState.connected
-            self.callback('successfully unlocked {}'.format(packet.payload[1]))
+            self.callback("successfully unlocked {}".format(packet.payload[1]))
         elif self.state is HandlerState.clearing_memory:
             if packet.command_return_code is not CommandStatus.acknowledge:
-                self.errback(UnexpectedMessageReceived(
-                    'Bootloader should ack when trying to clear memory, instead: {} {}'
-                        .format(packet.command_return_code.name, packet)))
+                self.errback(
+                    UnexpectedMessageReceived(
+                        "Bootloader should ack when trying to clear memory, instead: {} {}".format(
+                            packet.command_return_code.name, packet
+                        )
+                    )
+                )
                 return
 
             self.state = HandlerState.connected
-            self.callback('successfully unlocked {}'.format(packet.payload[1]))
+            self.callback("successfully unlocked {}".format(packet.payload[1]))
         elif self.state is HandlerState.uploading:
             if packet.command_return_code is not CommandStatus.acknowledge:
-                self.errback(UnexpectedMessageReceived(
-                    'Module should ack when trying to upload, instead: {} {}'
-                        .format(packet.command_return_code.name, packet)))
+                self.errback(
+                    UnexpectedMessageReceived(
+                        "Module should ack when trying to upload, instead: {} {}".format(
+                            packet.command_return_code.name, packet
+                        )
+                    )
+                )
                 return
 
             number_of_bytes, data = self.request_memory
@@ -665,31 +726,30 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
                 self.callback(data)
             else:
                 self.request_memory = number_of_bytes, data
-                self.setTimeout(
-                    _command_code_properties[CommandCode.upload].timeout)
+                self.setTimeout(_command_code_properties[CommandCode.upload].timeout)
         else:
-            self.errback(HandlerUnknownState(
-                'Handler in unknown state: {}'.format(self.state)))
+            self.errback(
+                HandlerUnknownState("Handler in unknown state: {}".format(self.state))
+            )
             return
 
     def timeoutConnection(self):
-        message = 'Handler timed out while in state: {}'.format(self.state)
+        message = "Handler timed out while in state: {}".format(self.state)
         logger.debug(message)
         self._active = False
         if self._previous_state in [HandlerState.idle]:
             self.state = self._previous_state
-        self._deferred.errback(
-            epyqlib.utils.twisted.RequestTimeoutError(message))
+        self._deferred.errback(epyqlib.utils.twisted.RequestTimeoutError(message))
 
     def callback(self, payload):
         self._active = False
-        logger.debug('calling back for {}'.format(self._deferred))
+        logger.debug("calling back for {}".format(self._deferred))
         self._deferred.callback(payload)
 
     def errback(self, payload):
         self._active = False
-        logger.debug('erring back for {}'.format(self._deferred))
-        logger.debug('with payload {}'.format(payload))
+        logger.debug("erring back for {}".format(self._deferred))
+        logger.debug("with payload {}".format(payload))
         self._deferred.errback(payload)
 
     def cancel(self):
@@ -709,7 +769,7 @@ def crc(data, crc=None):
             if (crc & 0x0001) != 0:
                 crc = (crc >> 1) ^ 0xA001
             else:
-                crc = (crc >> 1)
+                crc = crc >> 1
 
     return crc
 
@@ -752,18 +812,25 @@ class WindowSlice:
 
 
 class Packet:
-    def __init__(self, counter_index, payload_start, extended_id=True,
-                 arbitration_id=bootloader_can_id, dlc=8, *args, **kwargs):
+    def __init__(
+        self,
+        counter_index,
+        payload_start,
+        extended_id=True,
+        arbitration_id=bootloader_can_id,
+        dlc=8,
+        *args,
+        **kwargs,
+    ):
         # TODO: avoid repetition of required values
         # TODO: block changing of required values
         if not extended_id:
-            raise IdentifierTypeError('Identifier type must be set to extended')
+            raise IdentifierTypeError("Identifier type must be set to extended")
 
         if dlc != 8:
-            raise MessageLengthError(
-                'Message length must be 8 but is {}'.format(dlc))
+            raise MessageLengthError("Message length must be 8 but is {}".format(dlc))
 
-        kwargs.setdefault('data', [0] * dlc)
+        kwargs.setdefault("data", [0] * dlc)
 
         self.message = can.Message(
             extended_id=extended_id,
@@ -795,13 +862,12 @@ class Packet:
             is_error_frame=message.is_error_frame,
             arbitration_id=message.arbitration_id,
             dlc=message.dlc,
-            data=message.data
+            data=message.data,
         )
 
     @property
     def command_counter(self):
         return self.message.data[self._counter_index]
-
 
     @command_counter.setter
     def command_counter(self, counter):
@@ -861,12 +927,7 @@ class CommandCode(enum.IntEnum):
         return _command_code_properties[self].timeout
 
 
-CommandCodeProperties = collections.namedtuple(
-    'CommandCodeProperties',
-    [
-        'timeout'
-    ]
-)
+CommandCodeProperties = collections.namedtuple("CommandCodeProperties", ["timeout"])
 
 
 _command_code_properties = {
@@ -879,7 +940,7 @@ _command_code_properties = {
     CommandCode.unlock: CommandCodeProperties(timeout=5),
     CommandCode.action_service: CommandCodeProperties(timeout=5),
     CommandCode.download_6: CommandCodeProperties(timeout=5),
-    CommandCode.upload: CommandCodeProperties(timeout=5)
+    CommandCode.upload: CommandCodeProperties(timeout=5),
 }
 
 
@@ -950,47 +1011,38 @@ class ErrorCategory(enum.Enum):
 
 
 ErrorCategoryProperties = collections.namedtuple(
-    'ErrorCategoryProperties',
-    [
-        'description',
-        'action',
-        'retries'
-    ]
+    "ErrorCategoryProperties", ["description", "action", "retries"]
 )
 
 
 _error_category_properties = {
     ErrorCategory.timeout: ErrorCategoryProperties(
-        description='No handshake message',
-        action='retry',
-        retries=2
+        description="No handshake message", action="retry", retries=2
     ),
     ErrorCategory.c0: ErrorCategoryProperties(
-        description='Warning',
-        action=None,
-        retries=None
+        description="Warning", action=None, retries=None
     ),
     ErrorCategory.c1: ErrorCategoryProperties(
-        description='Spurious (comm. Error, busy, ..)',
-        action='Wait (ACK or timeout)',
-        retries=2
+        description="Spurious (comm. Error, busy, ..)",
+        action="Wait (ACK or timeout)",
+        retries=2,
     ),
     ErrorCategory.c2: ErrorCategoryProperties(
-        description='Resolvable (temp, power loss, ..)',
-        action='reinitialize',
-        retries=1
+        description="Resolvable (temp, power loss, ..)",
+        action="reinitialize",
+        retries=1,
     ),
     ErrorCategory.c3: ErrorCategoryProperties(
-        description='Unresolvable (setup, overload, ..)',
-        action='terminate',
-        retries=None
-    )
+        description="Unresolvable (setup, overload, ..)",
+        action="terminate",
+        retries=None,
+    ),
 }
 
 
 @enum.unique
 class CommandStatus(enum.IntEnum):
-    acknowledge = 0x00 # no error
+    acknowledge = 0x00  # no error
     processor_busy = 0x10
     unknown_command = 0x30
     command_syntax = 0x31
@@ -1010,59 +1062,46 @@ class CommandStatus(enum.IntEnum):
 
 
 CommandStatusProperties = collections.namedtuple(
-    'CommandStatusProperties',
-    [
-        'error_category',
-        'state_transition_to'
-    ]
+    "CommandStatusProperties", ["error_category", "state_transition_to"]
 )
 
 
 _command_status_properties = {
     CommandStatus.acknowledge: CommandStatusProperties(
-        error_category=None,
-        state_transition_to=None
+        error_category=None, state_transition_to=None
     ),
     CommandStatus.processor_busy: CommandStatusProperties(
-        error_category=ErrorCategory.c1,
-        state_transition_to='Fault'
+        error_category=ErrorCategory.c1, state_transition_to="Fault"
     ),
     CommandStatus.unknown_command: CommandStatusProperties(
-        error_category=ErrorCategory.c3,
-        state_transition_to='Fault'
+        error_category=ErrorCategory.c3, state_transition_to="Fault"
     ),
     CommandStatus.command_syntax: CommandStatusProperties(
-        error_category=ErrorCategory.c3,
-        state_transition_to='Fault'
+        error_category=ErrorCategory.c3, state_transition_to="Fault"
     ),
     CommandStatus.parameters_out_of_range: CommandStatusProperties(
-        error_category=ErrorCategory.c3,
-        state_transition_to='Fault'
+        error_category=ErrorCategory.c3, state_transition_to="Fault"
     ),
     CommandStatus.access_denied: CommandStatusProperties(
-        error_category=ErrorCategory.c3,
-        state_transition_to='Fault'
+        error_category=ErrorCategory.c3, state_transition_to="Fault"
     ),
     CommandStatus.access_locked: CommandStatusProperties(
-        error_category=ErrorCategory.c3,
-        state_transition_to='Fault'
+        error_category=ErrorCategory.c3, state_transition_to="Fault"
     ),
     CommandStatus.resource_function_unavailable: CommandStatusProperties(
-        error_category=ErrorCategory.c3,
-        state_transition_to='Fault'
+        error_category=ErrorCategory.c3, state_transition_to="Fault"
     ),
     CommandStatus.operational_failure: CommandStatusProperties(
-        error_category=ErrorCategory.c3,
-        state_transition_to='Fault'
+        error_category=ErrorCategory.c3, state_transition_to="Fault"
     ),
 }
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
     import traceback
 
     def excepthook(excType, excValue, tracebackobj):
-        logger.debug('Uncaught exception hooked:')
+        logger.debug("Uncaught exception hooked:")
         traceback.print_exception(excType, excValue, tracebackobj)
 
     sys.excepthook = excepthook

@@ -10,7 +10,7 @@ import epyqlib.tests.common
 
 def test_range_override_hidden(qtbot):
     device = epyqlib.device.Device(
-        file=epyqlib.tests.common.devices['customer'],
+        file=epyqlib.tests.common.devices["customer"],
         node_id=247,
     )
 
@@ -26,7 +26,7 @@ def test_range_override_hidden(qtbot):
 @pytest.mark.factory
 def test_range_override_visible(qtbot):
     device = epyqlib.device.Device(
-        file=epyqlib.tests.common.devices['factory'],
+        file=epyqlib.tests.common.devices["factory"],
         node_id=247,
     )
 
@@ -41,10 +41,10 @@ def test_range_override_visible(qtbot):
 
 @pytest.mark.factory
 def test_secret_masked(qtbot):
-    secret_mask = '<secret>'
+    secret_mask = "<secret>"
 
     device = epyqlib.device.Device(
-        file=epyqlib.tests.common.devices['factory'],
+        file=epyqlib.tests.common.devices["factory"],
         node_id=247,
     )
 
@@ -52,13 +52,13 @@ def test_secret_masked(qtbot):
 
     assert len(secret_nv) > 0
     for nv in secret_nv:
-        nv.set_meta('1234', epyqlib.nv.MetaEnum.user_default)
+        nv.set_meta("1234", epyqlib.nv.MetaEnum.user_default)
         assert nv.fields.user_default == secret_mask
-        nv.set_meta('1234', epyqlib.nv.MetaEnum.factory_default)
+        nv.set_meta("1234", epyqlib.nv.MetaEnum.factory_default)
         assert nv.fields.factory_default == secret_mask
-        nv.set_meta('1234', epyqlib.nv.MetaEnum.value)
+        nv.set_meta("1234", epyqlib.nv.MetaEnum.value)
         assert nv.fields.value == secret_mask
 
 
 def logit(it):
-    logging.debug('logit(): ({}) {}'.format(type(it), it))
+    logging.debug("logit(): ({}) {}".format(type(it), it))

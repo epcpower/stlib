@@ -13,12 +13,15 @@ from epyqlib.tabs.files.sync_config import SyncConfig, Vars
 ## Async function that takes a bool whether or not the user was just logged in
 LoginListener = Callable[[bool], Coroutine]
 
-class AwsLoginManager():
+
+class AwsLoginManager:
     _instance = None
 
     def __init__(self):
         if self._instance is not None:
-            raise Exception("Tried to create another instance of AwsLoginManager although one already exists.")
+            raise Exception(
+                "Tried to create another instance of AwsLoginManager although one already exists."
+            )
         self._listeners: [LoginListener] = []
         self._cognito_helper = CognitoHelper(SyncConfig.get_env())
 
@@ -82,7 +85,6 @@ class AwsLoginManager():
             result = listener(self._cognito_helper.is_user_logged_in())
             if inspect.iscoroutine(result):
                 ensureDeferred(result)
-
 
     def register_listener(self, listener: LoginListener):
         self._listeners.append(listener)

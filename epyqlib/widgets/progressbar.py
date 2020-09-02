@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import epyqlib.widgets.abstractwidget
 import epyqlib.widgets.progressbar_ui
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class ProgressBar(epyqlib.widgets.abstractwidget.AbstractWidget):
@@ -41,19 +41,19 @@ class ProgressBar(epyqlib.widgets.abstractwidget.AbstractWidget):
         counts *= self._counts
         self.ui.progressBar.setValue(int(round(counts)))
         # TODO: quit hardcoding this and it's better implemented elsewhere
-        self.ui.progressBar.setFormat('{0:.2f}'.format(value))
+        self.ui.progressBar.setFormat("{0:.2f}".format(value))
 
     def set_range(self, min=None, max=None):
         if min * max < 0:
             # opposite signs and neither is zero
             # TODO: pick the right exception
-            raise Exception('Signs must match or one limit be zero')
+            raise Exception("Signs must match or one limit be zero")
         elif min == max:
             # TODO: pick the right exception
-            raise Exception('Min and max may not be the same')
+            raise Exception("Min and max may not be the same")
         elif min > max:
             # TODO: pick the right exception
-            raise Exception('Min must be less than max')
+            raise Exception("Min must be less than max")
 
         self._min = min
         self._max = max
@@ -61,9 +61,8 @@ class ProgressBar(epyqlib.widgets.abstractwidget.AbstractWidget):
         # self.ui.progressBar.setRange(self._min, self._max)
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

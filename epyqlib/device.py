@@ -3,6 +3,7 @@
 # TODO: get some docstrings in here!
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 import attr
@@ -13,12 +14,14 @@ import decimal
 import epyqlib.canneo
 import epyqlib.deviceextension
 import epyqlib.faultlogmodel
+
 # https://www.riverbankcomputing.com/pipermail/pyqt/2018-December/041218.html
 import epyqlib.tabs.files.filesview
+
 try:
     import epyqlib.resources.code
 except ImportError:
-    pass # we will catch the failure to open the file
+    pass  # we will catch the failure to open the file
 import epyqlib.nv
 import epyqlib.nvview
 import epyqlib.overlaylabel
@@ -44,6 +47,7 @@ import twisted.internet.task
 import uuid
 import zipfile
 from twisted.internet.defer import setDebugging
+
 setDebugging(True)
 
 from collections import OrderedDict
@@ -52,15 +56,30 @@ from epyqlib.busproxy import BusProxy
 import epyqlib.updateepc
 from epyqlib.widgets.abstractwidget import AbstractWidget
 from PyQt5 import uic
-from PyQt5.QtCore import (pyqtSlot, Qt, QFile, QFileInfo, QTextStream, QObject,
-                          QSortFilterProxyModel, QIODevice, QTimer)
+from PyQt5.QtCore import (
+    pyqtSlot,
+    Qt,
+    QFile,
+    QFileInfo,
+    QTextStream,
+    QObject,
+    QSortFilterProxyModel,
+    QIODevice,
+    QTimer,
+)
 from PyQt5.QtWidgets import (
-    QWidget, QMessageBox, QInputDialog, QLineEdit, QVBoxLayout, QStackedLayout)
+    QWidget,
+    QMessageBox,
+    QInputDialog,
+    QLineEdit,
+    QVBoxLayout,
+    QStackedLayout,
+)
 from PyQt5 import QtCore
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2018, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2018, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class CancelError(Exception):
@@ -127,10 +146,9 @@ def simple_node_id_adjust(message_id, device_id, to_device, controller_id):
     return message_id + device_id
 
 
-node_id_types = OrderedDict([
-    ('j1939', j1939_node_id_adjust),
-    ('simple', simple_node_id_adjust)
-])
+node_id_types = OrderedDict(
+    [("j1939", j1939_node_id_adjust), ("simple", simple_node_id_adjust)]
+)
 
 
 @attr.s
@@ -142,24 +160,32 @@ class CanConfiguration:
 
 
 can_configurations = {
-    'original': CanConfiguration(
-        data_logger_reset_signal_path=(
-            'CommandModeControl', 'ResetDatalogger'),
-        data_logger_recording_signal_path=(
-            'StatusBits', 'DataloggerRecording'),
+    "original": CanConfiguration(
+        data_logger_reset_signal_path=("CommandModeControl", "ResetDatalogger"),
+        data_logger_recording_signal_path=("StatusBits", "DataloggerRecording"),
         data_logger_configuration_is_valid_signal_path=(
-            'StatusBits', 'DataloggerConfigurationIsValid'),
-        monitor_frame='StatusBits',
+            "StatusBits",
+            "DataloggerConfigurationIsValid",
+        ),
+        monitor_frame="StatusBits",
     ),
-    'j1939': CanConfiguration(
+    "j1939": CanConfiguration(
         data_logger_reset_signal_path=(
-            'ParameterQuery', 'DataloggerConfig', 'ResetDatalogger'),
+            "ParameterQuery",
+            "DataloggerConfig",
+            "ResetDatalogger",
+        ),
         data_logger_recording_signal_path=(
-            'ParameterQuery', 'DataloggerStatus', 'DataloggerRecording'),
+            "ParameterQuery",
+            "DataloggerStatus",
+            "DataloggerRecording",
+        ),
         data_logger_configuration_is_valid_signal_path=(
-            'ParameterQuery', 'DataloggerStatus',
-            'DataloggerConfigurationIsValid'),
-        monitor_frame='StatusBits',
+            "ParameterQuery",
+            "DataloggerStatus",
+            "DataloggerConfigurationIsValid",
+        ),
+        monitor_frame="StatusBits",
     ),
 }
 
@@ -180,19 +206,18 @@ def ignore_timeout(failure):
     if failure.type in acceptable_errors:
         return None
 
-    return epyqlib.utils.twisted.errbackhook(
-        failure)
+    return epyqlib.utils.twisted.errbackhook(failure)
 
 
 def load_matrix(path):
     matrix = list(canmatrix.formats.loadp(path).values())[0]
 
-    if hasattr(matrix, 'load_errors'):
+    if hasattr(matrix, "load_errors"):
         # https://github.com/ebroecker/canmatrix/pull/199
         if len(matrix.load_errors) > 0:
             first_error = matrix.load_errors[0]
             raise Exception(
-                f'{type(first_error).__name__}: {first_error}',
+                f"{type(first_error).__name__}: {first_error}",
             ) from first_error
 
     return matrix
@@ -203,7 +228,7 @@ class Device:
         self.bus = None
         self.from_zip = False
 
-        if kwargs.get('file', None) is not None:
+        if kwargs.get("file", None) is not None:
             constructor = self._init_from_file
         else:
             constructor = self._init_from_parameters
@@ -241,7 +266,7 @@ class Device:
             for view in self.nv_views:
                 view.terminate()
 
-        terminate_extension = getattr(self.extension, 'terminate', None)
+        terminate_extension = getattr(self.extension, "terminate", None)
         if terminate_extension is not None:
             terminate_extension()
         self.extension.device = None
@@ -259,7 +284,7 @@ class Device:
         self.widget_nv_frames = None
         self.widget_nvs = None
 
-        logging.debug('{} terminated'.format(object.__repr__(self)))
+        logging.debug("{} terminated".format(object.__repr__(self)))
 
     def __del__(self):
         if self.bus is not None:
@@ -268,13 +293,13 @@ class Device:
     def _init_from_file(self, file, only_for_files=False, **kwargs):
         extension = os.path.splitext(file)[1].casefold()
 
-        if extension in ('.epz', '.zip'):
+        if extension in (".epz", ".zip"):
             zip_file = zipfile.ZipFile(file)
             self._init_from_zip(zip_file, **kwargs)
         else:
             try:
                 self.config_path = os.path.abspath(file)
-                file = open(file, 'r')
+                file = open(file, "r")
             except TypeError:
                 return
             else:
@@ -282,14 +307,17 @@ class Device:
                 final_file = file
                 if not epyqlib.updateepc.is_latest(file.name):
                     converted_directory = tempfile.TemporaryDirectory()
-                    final_file = open(epyqlib.updateepc.convert(
-                        file.name,
-                        converted_directory.name,
-                    ))
+                    final_file = open(
+                        epyqlib.updateepc.convert(
+                            file.name,
+                            converted_directory.name,
+                        )
+                    )
                 self.config_path = os.path.abspath(final_file.name)
 
-                self._load_config(file=final_file, only_for_files=only_for_files,
-                                  **kwargs)
+                self._load_config(
+                    file=final_file, only_for_files=only_for_files, **kwargs
+                )
 
                 if final_file is not file:
                     final_file.close()
@@ -297,9 +325,17 @@ class Device:
                 if converted_directory is not None:
                     converted_directory.cleanup()
 
-    def _load_config(self, file, elements=None,
-                     tabs=None, rx_interval=0, edit_actions=None,
-                     only_for_files=False, node_id=None, **kwargs):
+    def _load_config(
+        self,
+        file,
+        elements=None,
+        tabs=None,
+        rx_interval=0,
+        edit_actions=None,
+        only_for_files=False,
+        node_id=None,
+        **kwargs,
+    ):
         if tabs is None:
             tabs = Tabs.defaults()
 
@@ -313,30 +349,32 @@ class Device:
         s = file.read()
         d = json.loads(s, object_pairs_hook=OrderedDict)
         self.raw_dict = d
-        d.setdefault('nv_meta_enum', None)
-        d.setdefault('access_level_path', None)
+        d.setdefault("nv_meta_enum", None)
+        d.setdefault("access_level_path", None)
         d.setdefault(
-            'access_password_path',
-            'ParameterQuery;FactoryAccess;FactoryAccess',
+            "access_password_path",
+            "ParameterQuery;FactoryAccess;FactoryAccess",
         )
 
-        self.module_path = d.get('module', None)
+        self.module_path = d.get("module", None)
         self.plugin = None
         if self.module_path is None:
             module = epyqlib.deviceextension
         else:
             spec = importlib.util.spec_from_file_location(
-                'extension', self.absolute_path(self.module_path))
+                "extension", self.absolute_path(self.module_path)
+            )
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
 
         extension_class = module.DeviceExtension
 
         import weakref
+
         self.extension = extension_class(device=weakref.ref(self))
 
         path = os.path.dirname(file.name)
-        for ui_path_name in ['ui_path', 'ui_paths', 'menu']:
+        for ui_path_name in ["ui_path", "ui_paths", "menu"]:
             try:
                 json_ui_paths = d[ui_path_name]
                 break
@@ -350,7 +388,7 @@ class Device:
 
         self.ui_paths = json_ui_paths
 
-        hierarchy_path = d.get('parameter_hierarchy', None)
+        hierarchy_path = d.get("parameter_hierarchy", None)
         if hierarchy_path is None:
             hierarchy = None
         else:
@@ -359,7 +397,7 @@ class Device:
 
         for tab in Tabs:
             try:
-                value = d['tabs'][tab.name]
+                value = d["tabs"][tab.name]
             except KeyError:
                 pass
             else:
@@ -382,7 +420,7 @@ class Device:
 
         if Tabs.scripting not in tabs:
             self.elements.discard(Elements.scripting)
-            
+
         if Tabs.fault_log not in tabs:
             self.elements.discard(Elements.fault_log)
         else:
@@ -394,12 +432,13 @@ class Device:
         self.elements |= depended_on
 
         self.referenced_files = [
-            f for f in [
-                d.get('module', None),
-                d.get('can_path', None),
-                d.get('compatibility', None),
-                d.get('parameter_defaults', None),
-                d.get('parameter_hierarchy', None),
+            f
+            for f in [
+                d.get("module", None),
+                d.get("can_path", None),
+                d.get("compatibility", None),
+                d.get("parameter_defaults", None),
+                d.get("parameter_hierarchy", None),
                 *self.ui_paths.values(),
                 *module.referenced_files(self.raw_dict),
             ]
@@ -407,38 +446,38 @@ class Device:
         ]
 
         self.shas = []
-        compatibility_file = d.get('compatibility', None)
+        compatibility_file = d.get("compatibility", None)
         if compatibility_file is not None:
             compatibility_file = os.path.join(
-                os.path.dirname(self.config_path), compatibility_file)
+                os.path.dirname(self.config_path), compatibility_file
+            )
             with open(compatibility_file) as file:
                 s = file.read()
                 c = json.loads(s, object_pairs_hook=OrderedDict)
 
-            self.shas.extend(c.get('shas', []))
+            self.shas.extend(c.get("shas", []))
 
         if not only_for_files:
-            self.can_path = os.path.join(path, d['can_path'])
-            with open(self.can_path, 'rb') as f:
+            self.can_path = os.path.join(path, d["can_path"])
+            with open(self.can_path, "rb") as f:
                 self.can_contents = f.read()
 
-            self.node_id_type = d.get('node_id_type',
-                                      next(iter(node_id_types))).lower()
+            self.node_id_type = d.get("node_id_type", next(iter(node_id_types))).lower()
             if self.node_id is None:
-                self.node_id = d.get('node_id')
-            if self.node_id is None and self.node_id_type == 'j1939':
+                self.node_id = d.get("node_id")
+            if self.node_id is None and self.node_id_type == "j1939":
                 self.node_id, ok = QInputDialog.getInt(
                     None,
-                    *(('Converter Node ID',) * 2),
+                    *(("Converter Node ID",) * 2),
                     247,
                     0,
                     247,
                 )
 
                 if not ok:
-                    raise CancelError('User canceled node ID dialog')
+                    raise CancelError("User canceled node ID dialog")
             self.node_id = int(self.node_id)
-            self.controller_id = int(d.get('controller_id', 65))
+            self.controller_id = int(d.get("controller_id", 65))
             self.node_id_adjust = functools.partial(
                 node_id_types[self.node_id_type],
                 device_id=self.node_id,
@@ -447,22 +486,23 @@ class Device:
 
             self._init_from_parameters(
                 uis=self.ui_paths,
-                serial_number=d.get('serial_number', ''),
-                name=d.get('name', ''),
+                serial_number=d.get("serial_number", ""),
+                name=d.get("name", ""),
                 tabs=tabs,
                 rx_interval=rx_interval,
                 edit_actions=edit_actions,
-                nv_configuration=d.get('nv_configuration'),
-                can_configuration=d.get('can_configuration'),
+                nv_configuration=d.get("nv_configuration"),
+                can_configuration=d.get("can_configuration"),
                 hierarchy=hierarchy,
-                **kwargs)
+                **kwargs,
+            )
 
     def _init_from_zip(
-            self,
-            zip_file,
-            rx_interval=0,
-            archive_code=None,
-            **kwargs,
+        self,
+        zip_file,
+        rx_interval=0,
+        archive_code=None,
+        **kwargs,
     ):
         self.from_zip = True
         path = tempfile.mkdtemp()
@@ -470,7 +510,7 @@ class Device:
         code = epyqlib.utils.qt.get_code()
 
         if archive_code is not None:
-            code = archive_code.encode('ascii')
+            code = archive_code.encode("ascii")
             zip_file.extractall(path=path, pwd=code)
         else:
             while True:
@@ -478,15 +518,13 @@ class Device:
                     zip_file.extractall(path=path, pwd=code)
                 except RuntimeError:
                     code, ok = QInputDialog.getText(
-                        None,
-                        '.epz Password',
-                        '.epz Password',
-                        QLineEdit.Password)
+                        None, ".epz Password", ".epz Password", QLineEdit.Password
+                    )
 
                     if not ok:
-                        raise CancelError('User canceled password dialog')
+                        raise CancelError("User canceled password dialog")
 
-                    code = code.encode('ascii')
+                    code = code.encode("ascii")
                 else:
                     break
 
@@ -495,7 +533,7 @@ class Device:
         for directory, directories, files in os.walk(path):
             for f in files:
                 logger.info(f)
-                if os.path.splitext(f)[1] == '.epc':
+                if os.path.splitext(f)[1] == ".epc":
                     filename = os.path.join(path, directory, f)
                     break
 
@@ -510,7 +548,7 @@ class Device:
             file = epyqlib.updateepc.convert(filename, converted_directory.name)
             self.config_path = os.path.abspath(file)
 
-        with open(filename, 'r') as f:
+        with open(filename, "r") as f:
             self._load_config(f, rx_interval=rx_interval, **kwargs)
 
         if converted_directory is not None:
@@ -521,7 +559,7 @@ class Device:
         for key, value in dict_node.items():
             if isinstance(value, dict):
                 self.traverse(value)
-            elif value.endswith('.ui'):
+            elif value.endswith(".ui"):
                 path = value
                 try:
                     dict_node[key] = self.loaded_uis[path]
@@ -529,8 +567,8 @@ class Device:
                     # TODO: CAMPid 9549757292917394095482739548437597676742
                     if not QFileInfo(path).isAbsolute():
                         ui_file = os.path.join(
-                            QFileInfo.absolutePath(QFileInfo(self.config_path)),
-                            path)
+                            QFileInfo.absolutePath(QFileInfo(self.config_path)), path
+                        )
                     else:
                         ui_file = path
                     ui_file = QFile(ui_file)
@@ -541,15 +579,24 @@ class Device:
                     dict_node[key].file_name = path
                     self.loaded_uis[path] = dict_node[key]
 
-    def _init_from_parameters(self, uis, serial_number, name, bus=None,
-                              tabs=None, rx_interval=0, edit_actions=None,
-                              nv_configuration=None, can_configuration=None,
-                              hierarchy=None):
+    def _init_from_parameters(
+        self,
+        uis,
+        serial_number,
+        name,
+        bus=None,
+        tabs=None,
+        rx_interval=0,
+        edit_actions=None,
+        nv_configuration=None,
+        can_configuration=None,
+        hierarchy=None,
+    ):
         if tabs is None:
             tabs = Tabs.defaults()
 
         if can_configuration is None:
-            can_configuration = 'original'
+            can_configuration = "original"
 
         can_configuration = can_configurations[can_configuration]
 
@@ -566,18 +613,18 @@ class Device:
 
         self.rx_interval = rx_interval
         self.serial_number = serial_number
-        self.name = '{name} :{id}'.format(name=name,
-                                          id=self.node_id)
-        self.nickname = ''
+        self.name = "{name} :{id}".format(name=name, id=self.node_id)
+        self.nickname = ""
         self.auto_read_nv_widget_min_max = True
 
         self.nv_views = None
 
-        device_ui = 'device.ui'
+        device_ui = "device.ui"
         # TODO: CAMPid 9549757292917394095482739548437597676742
         if not QFileInfo(device_ui).isAbsolute():
             ui_file = os.path.join(
-                QFileInfo.absolutePath(QFileInfo(__file__)), device_ui)
+                QFileInfo.absolutePath(QFileInfo(__file__)), device_ui
+            )
         else:
             ui_file = device_ui
         ui_file = QFile(ui_file)
@@ -600,9 +647,9 @@ class Device:
             matrix = load_matrix(self.can_path)
             # TODO: this is icky
             if Elements.tx not in self.elements:
-                self.neo_frames = epyqlib.canneo.Neo(matrix=matrix,
-                                                  bus=self.bus,
-                                                  rx_interval=self.rx_interval)
+                self.neo_frames = epyqlib.canneo.Neo(
+                    matrix=matrix, bus=self.bus, rx_interval=self.rx_interval
+                )
 
                 notifiees.append(self.neo_frames)
 
@@ -628,14 +675,16 @@ class Device:
 
         if Elements.tx in self.elements:
             matrix_tx = load_matrix(self.can_path)
-            message_node_tx_partial = functools.partial(epyqlib.txrx.MessageNode,
-                                                        tx=True)
-            signal_node_tx_partial = functools.partial(epyqlib.txrx.SignalNode,
-                                                       tx=True)
-            neo_tx = epyqlib.canneo.Neo(matrix=matrix_tx,
-                                     frame_class=message_node_tx_partial,
-                                     signal_class=signal_node_tx_partial,
-                                     node_id_adjust=self.node_id_adjust)
+            message_node_tx_partial = functools.partial(
+                epyqlib.txrx.MessageNode, tx=True
+            )
+            signal_node_tx_partial = functools.partial(epyqlib.txrx.SignalNode, tx=True)
+            neo_tx = epyqlib.canneo.Neo(
+                matrix=matrix_tx,
+                frame_class=message_node_tx_partial,
+                signal_class=signal_node_tx_partial,
+                node_id_adjust=self.node_id_adjust,
+            )
             notifiees.extend(f for f in neo_tx.frames if f.mux_name is None)
 
             self.neo_frames = neo_tx
@@ -645,8 +694,7 @@ class Device:
             tx.changed.connect(tx_model.changed)
 
         # TODO: something with sets instead?
-        if (Elements.rx in self.elements or
-            Elements.tx in self.elements):
+        if Elements.rx in self.elements or Elements.tx in self.elements:
             txrx_views = self.ui.findChildren(epyqlib.txrxview.TxRxView)
             if len(txrx_views) > 0:
                 # TODO: actually find them and actually support multiple
@@ -664,10 +712,7 @@ class Device:
                         proxy.setSourceModel(model)
                         view.setModel(proxy)
                         view.set_sorting_enabled(True)
-                        view.sort_by_column(
-                            column=column,
-                            order=Qt.AscendingOrder
-                        )
+                        view.sort_by_column(column=column, order=Qt.AscendingOrder)
                     else:
                         view.setModel(model)
 
@@ -685,13 +730,13 @@ class Device:
             self.nv_looping_set = epyqlib.twisted.loopingset.Set()
             self.nv_tab_looping_set = epyqlib.twisted.loopingset.Set()
 
-            access_level_path = self.raw_dict['access_level_path']
+            access_level_path = self.raw_dict["access_level_path"]
             if access_level_path is not None:
-                access_level_path = access_level_path.split(';')
+                access_level_path = access_level_path.split(";")
 
-            access_password_path = self.raw_dict['access_password_path']
+            access_password_path = self.raw_dict["access_password_path"]
             if access_password_path is not None:
-                access_password_path = access_password_path.split(';')
+                access_password_path = access_password_path.split(";")
 
             def none_or_uuid(uuid_string):
                 if uuid_string is None:
@@ -699,13 +744,13 @@ class Device:
 
                 return uuid.UUID(uuid_string)
 
-            parameter_uuids = self.raw_dict.get('parameter_uuids', {})
+            parameter_uuids = self.raw_dict.get("parameter_uuids", {})
             serial_number_uuid = none_or_uuid(
-                parameter_uuids.get('serial_number'),
+                parameter_uuids.get("serial_number"),
             )
 
             # TODO: CAMPid 0794311304143707516085683164039671793972
-            if self.raw_dict['nv_meta_enum'] == 'Meta':
+            if self.raw_dict["nv_meta_enum"] == "Meta":
                 self.metas = epyqlib.nv.meta_limits_first
             else:
                 self.metas = (epyqlib.nv.MetaEnum.value,)
@@ -730,10 +775,10 @@ class Device:
                 if meta not in self.metas
             ]
 
-            if len(default_metas) > 0 and 'parameter_defaults' in self.raw_dict:
+            if len(default_metas) > 0 and "parameter_defaults" in self.raw_dict:
                 parameter_defaults_path = os.path.join(
                     os.path.dirname(self.config_path),
-                    self.raw_dict['parameter_defaults']
+                    self.raw_dict["parameter_defaults"],
                 )
                 with open(parameter_defaults_path) as f:
                     self.nvs.defaults_from_dict(
@@ -761,7 +806,7 @@ class Device:
                 matrix=matrix_nv,
                 frame_class=epyqlib.nv.Frame,
                 signal_class=epyqlib.nv.Nv,
-                node_id_adjust=self.node_id_adjust
+                node_id_adjust=self.node_id_adjust,
             )
             self.widget_nvs = epyqlib.nv.Nvs(
                 neo=self.widget_frames_nv,
@@ -800,16 +845,12 @@ class Device:
 
                     diff_proxy = epyqlib.utils.qt.DiffProxyModel(
                         columns=epyqlib.nv.diffable_columns,
-                        reference_column=(
-                            epyqlib.nv.Columns.indexes.user_default
-                        ),
+                        reference_column=(epyqlib.nv.Columns.indexes.user_default),
                         diff_highlights={
-                            QtCore.Qt.ItemDataRole.BackgroundRole:
-                                epyqlib.nv.diff_highlight,
+                            QtCore.Qt.ItemDataRole.BackgroundRole: epyqlib.nv.diff_highlight,
                         },
                         reference_highlights={
-                            QtCore.Qt.ItemDataRole.BackgroundRole:
-                                epyqlib.nv.reference_highlight,
+                            QtCore.Qt.ItemDataRole.BackgroundRole: epyqlib.nv.reference_highlight,
                         },
                     )
                     diff_proxy.setSourceModel(sort_proxy)
@@ -820,13 +861,10 @@ class Device:
 
                     view.set_metas(self.metas)
                     view.set_sorting_enabled(True)
-                    view.sort_by_column(
-                        column=column,
-                        order=Qt.AscendingOrder
-                    )
+                    view.sort_by_column(column=column, order=Qt.AscendingOrder)
 
                     nv_range_check_overridable = self.raw_dict.get(
-                        'nv_range_check_overridable',
+                        "nv_range_check_overridable",
                         False,
                     )
 
@@ -839,8 +877,8 @@ class Device:
                 nvs=self.nvs,
                 nv_model=nv_model,
                 bus=self.bus,
-                tx_id=self.neo_frames.frame_by_name('CCP').id,
-                rx_id=self.neo_frames.frame_by_name('CCPResponse').id
+                tx_id=self.neo_frames.frame_by_name("CCP").id,
+                rx_id=self.neo_frames.frame_by_name("CCPResponse").id,
             )
 
             column = epyqlib.variableselectionmodel.Columns.indexes.name
@@ -852,25 +890,19 @@ class Device:
             self.ui.variable_selection.set_model(proxy)
             self.ui.variable_selection.set_sorting_enabled(True)
             self.ui.variable_selection.sort_by_column(
-                column=column,
-                order=Qt.AscendingOrder
+                column=column, order=Qt.AscendingOrder
             )
             self.ui.variable_selection.set_signal_paths(
-                reset_signal_path=
-                    can_configuration.data_logger_reset_signal_path,
-                recording_signal_path=
-                    can_configuration.data_logger_recording_signal_path,
-                configuration_is_valid_signal_path=
-                    can_configuration.data_logger_configuration_is_valid_signal_path,
+                reset_signal_path=can_configuration.data_logger_reset_signal_path,
+                recording_signal_path=can_configuration.data_logger_recording_signal_path,
+                configuration_is_valid_signal_path=can_configuration.data_logger_configuration_is_valid_signal_path,
             )
 
         if Elements.fault_log in self.elements:
             fault_log = epyqlib.faultlogmodel.create_blank()
 
             nv_message_names = self.raw_dict["fault_log"]["nv_message_names"]
-            process_message_names = (
-                self.raw_dict["fault_log"]["process_message_names"]
-            )
+            process_message_names = self.raw_dict["fault_log"]["process_message_names"]
 
             fault_log.connect(
                 process_frames=self.neo_frames,
@@ -882,9 +914,7 @@ class Device:
 
         if Tabs.dashes in tabs:
             for i, (name, dash) in enumerate(self.dash_uis.items()):
-                self.ui.tabs.insertTab(i,
-                                       dash,
-                                       name)
+                self.ui.tabs.insertTab(i, dash, name)
         if Tabs.txrx not in tabs:
             self.ui.tabs.removeTab(self.ui.tabs.indexOf(self.ui.txrx))
         if Tabs.variables not in tabs:
@@ -930,8 +960,7 @@ class Device:
         for dash in flat:
             # TODO: CAMPid 99457281212789437474299
             children = dash.findChildren(QObject)
-            widgets = [c for c in children if
-                       isinstance(c, AbstractWidget)]
+            widgets = [c for c in children if isinstance(c, AbstractWidget)]
 
             dash.connected_frames = set()
             frames = dash.connected_frames
@@ -944,13 +973,12 @@ class Device:
                 except ValueError:
                     widget.set_value(0)
 
-                frame = widget.property('frame')
+                frame = widget.property("frame")
                 if frame is not None:
-                    signal = widget.property('signal')
+                    signal = widget.property("signal")
                     signal_path = (frame, signal)
                 else:
-                    signal_path = tuple(
-                        e for e in widget._signal_path if len(e) > 0)
+                    signal_path = tuple(e for e in widget._signal_path if len(e) > 0)
 
                 try:
                     signal = self.neo_frames.signal_by_path(*signal_path)
@@ -963,15 +991,16 @@ class Device:
                             p = p.parent()
 
                         self.dash_missing_signals.add(
-                            '{}:/{} - {}'.format(
+                            "{}:/{} - {}".format(
                                 (
                                     dash.file_name
-                                    if hasattr(dash, 'file_name')
-                                    else '<builtin>'
+                                    if hasattr(dash, "file_name")
+                                    else "<builtin>"
                                 ),
-                                '/'.join(widget_path),
-                                ':'.join(signal_path) if len(signal_path) > 0
-                                    else '<none specified>'
+                                "/".join(widget_path),
+                                ":".join(signal_path)
+                                if len(signal_path) > 0
+                                else "<none specified>",
                             )
                         )
                 else:
@@ -984,9 +1013,10 @@ class Device:
                         )
 
                         if nv_signal.multiplex not in self.nv_looping_reads:
+
                             def read(
-                                    nv_signal=nv_signal, 
-                                    read=self.nvs.protocol.read,
+                                nv_signal=nv_signal,
+                                read=self.nvs.protocol.read,
                             ):
                                 d = read(
                                     nv_signal=nv_signal,
@@ -1005,7 +1035,7 @@ class Device:
                                 request=epyqlib.twisted.loopingset.Request(
                                     f=self.nv_looping_reads[nv_signal.multiplex],
                                     period=1,
-                                )
+                                ),
                             )
                         else:
                             self.nv_looping_set.add_request(
@@ -1013,22 +1043,24 @@ class Device:
                                 request=epyqlib.twisted.loopingset.Request(
                                     f=self.nv_looping_reads[nv_signal.multiplex],
                                     period=1,
-                                )
+                                ),
                             )
 
-                        if hasattr(widget, 'tx') and widget.tx:
+                        if hasattr(widget, "tx") and widget.tx:
                             signal = self.widget_nvs.neo.signal_by_path(
-                                self.nvs.set_frames[0].name, *signal_path[1:])
+                                self.nvs.set_frames[0].name, *signal_path[1:]
+                            )
                         else:
                             signal = self.widget_nvs.neo.signal_by_path(
-                                self.nvs.status_frames[0].name, *signal_path[1:])
+                                self.nvs.status_frames[0].name, *signal_path[1:]
+                            )
 
                     frame = signal.frame
                     frames.add(frame)
                     self.dash_connected_signals.add(signal)
                     widget.set_signal(signal)
 
-                    if hasattr(widget, 'tx') and widget.tx:
+                    if hasattr(widget, "tx") and widget.tx:
                         self.first_nv_view.ui.enforce_range_limits_check_box.stateChanged.connect(
                             widget.set_check_range,
                         )
@@ -1038,12 +1070,10 @@ class Device:
 
                 if edit_actions is not None:
                     # TODO: CAMPid 97453289314763416967675427
-                    if widget.property('editable'):
+                    if widget.property("editable"):
                         for action in edit_actions:
                             if action[1](widget):
-                                action[0](dash=dash,
-                                          widget=widget,
-                                          signal=widget.edit)
+                                action[0](dash=dash, widget=widget, signal=widget.edit)
                                 break
 
         monitor_matrix = load_matrix(self.can_path)
@@ -1073,44 +1103,48 @@ class Device:
         all_signals = set()
         for frame in self.neo_frames.frames:
             for signal in frame.signals:
-                if signal.name != '__padding__':
+                if signal.name != "__padding__":
                     all_signals.add(signal)
 
         frame_signals = []
         for signal in all_signals - self.dash_connected_signals:
-            frame_signals.append('{} : {}'.format(signal.frame.name, signal.name))
+            frame_signals.append("{} : {}".format(signal.frame.name, signal.name))
 
         if Elements.nv in self.elements:
             nv_frame_signals = []
-            for frame in (list(self.nvs.set_frames.values())
-                              + list(self.nvs.status_frames.values())):
+            for frame in list(self.nvs.set_frames.values()) + list(
+                self.nvs.status_frames.values()
+            ):
                 for signal in frame.signals:
                     nv_frame_signals.append(
-                        '{} : {}'.format(signal.frame.name, signal.name))
+                        "{} : {}".format(signal.frame.name, signal.name)
+                    )
 
             frame_signals = list(set(frame_signals) - set(nv_frame_signals))
 
         if len(frame_signals) > 0:
-            logger.warning('\n === Signals not referenced by a widget')
+            logger.warning("\n === Signals not referenced by a widget")
             for frame_signal in sorted(frame_signals):
                 logger.warning(frame_signal)
 
         if len(self.dash_missing_signals) > 0:
-            logger.error('\n === Signals referenced by a widget but not defined')
+            logger.error("\n === Signals referenced by a widget but not defined")
             undefined_signals = sorted(self.dash_missing_signals)
-            logger.error('\n'.join(undefined_signals))
+            logger.error("\n".join(undefined_signals))
 
-            message = ('The following signals are referenced by the .ui '
-                       'files but were not found in the loaded CAN '
-                       'database.  The widgets will show `{}`.'
-                       .format(default_widget_value))
+            message = (
+                "The following signals are referenced by the .ui "
+                "files but were not found in the loaded CAN "
+                "database.  The widgets will show `{}`.".format(default_widget_value)
+            )
 
-            message = textwrap.dedent('''\
+            message = textwrap.dedent(
+                """\
             {message}
 
             {signals}
-            ''').format(message=message,
-                        signals='\n\n'.join(undefined_signals))
+            """
+            ).format(message=message, signals="\n\n".join(undefined_signals))
 
             epyqlib.utils.qt.dialog(
                 parent=None,
@@ -1136,10 +1170,7 @@ class Device:
         self.extension.post()
 
     def tab_changed(self, index):
-        tabs = {
-            self.ui.tabs.indexOf(x)
-            for x in (self.ui.nv, self.ui.scripting)
-        }
+        tabs = {self.ui.tabs.indexOf(x) for x in (self.ui.nv, self.ui.scripting)}
         if index in tabs:
             self.nv_looping_set.stop()
             self.nv_tab_looping_set.start()
@@ -1147,16 +1178,16 @@ class Device:
             self.nv_looping_set.start()
             self.nv_tab_looping_set.stop()
 
-        #TODO: Remove this and find a better way to manage when files view should fetch its list
+        # TODO: Remove this and find a better way to manage when files view should fetch its list
         if self.ui.tabs.indexOf(self.ui.files) == index:
             self.ui.files_view.tab_selected()
 
-    def absolute_path(self, path=''):
+    def absolute_path(self, path=""):
         # TODO: CAMPid 9549757292917394095482739548437597676742
         if not QFileInfo(path).isAbsolute():
             path = os.path.join(
-                QFileInfo.absolutePath(QFileInfo(self.config_path)),
-                path)
+                QFileInfo.absolutePath(QFileInfo(self.config_path)), path
+            )
 
         return path
 
@@ -1168,14 +1199,14 @@ class Device:
         self.bus_online = online
         self.bus_tx = transmit
 
-        style = epyqlib.overlaylabel.styles['red']
-        text = ''
+        style = epyqlib.overlaylabel.styles["red"]
+        text = ""
         if online:
             if not transmit:
-                text = 'passive'
-                style = epyqlib.overlaylabel.styles['blue']
+                text = "passive"
+                style = epyqlib.overlaylabel.styles["blue"]
         else:
-            text = 'offline'
+            text = "offline"
 
         self.ui.offline_overlay.ui.label.setText(text)
         self.ui.offline_overlay.setVisible(len(text) > 0)
@@ -1190,24 +1221,25 @@ class Device:
         if self.ui.tabs.indexOf(self.ui.files) != -1:
             self.ui.files_view.on_bus_status_changed()
 
-
     def read_nv_widget_min_max(self):
         if not self.auto_read_nv_widget_min_max:
             return
 
-        logger.info('bus_online', self.bus_online)
-        logger.info('bus_tx', self.bus_tx)
-        logger.info('present', self.connection_monitor.present)
-        active = all((
-            self.bus_online,
-            self.bus_tx,
-            self.connection_monitor.present,
-        ))
+        logger.info("bus_online", self.bus_online)
+        logger.info("bus_tx", self.bus_tx)
+        logger.info("present", self.connection_monitor.present)
+        active = all(
+            (
+                self.bus_online,
+                self.bus_tx,
+                self.connection_monitor.present,
+            )
+        )
 
         if not active:
             return
 
-        logger.info('reading min/max for nv widgets')
+        logger.info("reading min/max for nv widgets")
 
         metas = (
             epyqlib.nv.MetaEnum.minimum,
@@ -1226,9 +1258,9 @@ class Device:
     def connection_status_changed(self):
         present = self.connection_monitor.present
 
-        text = 'no status'
+        text = "no status"
         if present:
-            text = ''
+            text = ""
 
         self.ui.connection_monitor_overlay.ui.label.setText(text)
         self.ui.connection_monitor_overlay.setVisible(len(text) > 0)
@@ -1245,8 +1277,7 @@ class FrameTimeout(epyqlib.canneo.QtCanListener):
     lost = epyqlib.utils.qt.Signal()
     found = epyqlib.utils.qt.Signal()
 
-    def __init__(self, frame, relative=lambda t: 5 * t, absolute=0.5,
-                 parent=None):
+    def __init__(self, frame, relative=lambda t: 5 * t, absolute=0.5, parent=None):
         super().__init__(self.message_received, parent=parent)
 
         self.frame = frame
@@ -1294,16 +1325,16 @@ class DeviceInterface:
 
     async def get_serial_number(self) -> str:
         serial_number_signal = self.device.nvs.signal_from_names(
-            'SN',
-            'SerialNumber',
+            "SN",
+            "SerialNumber",
         )
 
         return await self._read_single_param(serial_number_signal)
 
     async def get_build_hash(self) -> str:
         serial_number_signal = self.device.nvs.signal_from_names(
-            'SoftwareHash',
-            'SoftwareHash',
+            "SoftwareHash",
+            "SoftwareHash",
         )
 
         return await self._read_single_param(serial_number_signal)
@@ -1319,15 +1350,16 @@ class DeviceInterface:
         return param
 
     def get_connected_status(self) -> TransmitStatus:
-        return DeviceInterface.TransmitStatus(connected=self.device.bus_online, transmitting=self.device.bus_tx)
+        return DeviceInterface.TransmitStatus(
+            connected=self.device.bus_online, transmitting=self.device.bus_tx
+        )
 
     def on_offline_bus(self):
         return self.device.on_offline_bus
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    logger.info('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    logger.info("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

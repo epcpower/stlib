@@ -65,9 +65,7 @@ class Cache:
     #         .discard(subscriber)
 
     def unsubscribe_by_reference(self, reference, chunk=None):
-        chunks = (self._subscribers.items()
-                  if chunk is None
-                  else [chunk])
+        chunks = self._subscribers.items() if chunk is None else [chunk]
 
         to_discard = set()
         for chunk, subscribers in chunks:
@@ -101,35 +99,40 @@ class Cache:
         data = bytearray([0] * variable.type.bytes * (self._bits_per_byte // 8))
         if reference is None:
             reference = variable
-        return Chunk(address=variable.address,
-                     bytes=data,
-                     bits_per_byte=self._bits_per_byte,
-                     reference=reference)
+        return Chunk(
+            address=variable.address,
+            bytes=data,
+            bits_per_byte=self._bits_per_byte,
+            reference=reference,
+        )
 
     def new_chunk(self, address, bytes, reference=None):
-        return Chunk(address=address,
-                     bytes=bytes,
-                     bits_per_byte=self._bits_per_byte,
-                     reference=reference)
+        return Chunk(
+            address=address,
+            bytes=bytes,
+            bits_per_byte=self._bits_per_byte,
+            reference=reference,
+        )
 
     def contiguous_chunks(self):
         chunks = []
 
         addresses = set()
         for chunk in self._chunks:
-            addresses.update(chunk._address + offset
-                             for offset in range(len(chunk._bytes) //
-                                                 (self._bits_per_byte // 8)))
+            addresses.update(
+                chunk._address + offset
+                for offset in range(len(chunk._bytes) // (self._bits_per_byte // 8))
+            )
 
         gen = epyqlib.utils.general.generate_ranges(sorted(addresses))
         for start, end in gen:
             print(start, end)
-            chunks.append(self.new_chunk(
-                address=start,
-                bytes=b'\x00'
-                      * (end - start + 1)
-                      * (self._bits_per_byte // 8)
-            ))
+            chunks.append(
+                self.new_chunk(
+                    address=start,
+                    bytes=b"\x00" * (end - start + 1) * (self._bits_per_byte // 8),
+                )
+            )
 
         return chunks
 
@@ -152,8 +155,7 @@ class Chunk:
 
     def bounds(self):
         # TODO: is this returning one too long?
-        return (self._address,
-                self._address + len(self) // (self._bits_per_byte // 8))
+        return (self._address, self._address + len(self) // (self._bits_per_byte // 8))
 
     def __lt__(self, other):
         if not isinstance(other, self.__class__):
@@ -161,7 +163,7 @@ class Chunk:
 
         return self._address < other._address or (
             self._address == other._address and len(self) < len(other)
-        ) 
+        )
 
     def set_bytes(self, new_bytes):
         if len(new_bytes) != len(self):
@@ -203,7 +205,7 @@ class Chunk:
             self._bytes[self_slice] = chunk._bytes[chunk_slice]
 
             return True
-        
+
         return False
 
 
@@ -219,37 +221,42 @@ def testit(filename):
     for variable in variables:
         chunk = cache.chunk_from_variable(variable)
         cache.add(chunk)
-        partial = functools.partial(testit_updated,
-                                    variable)
+        partial = functools.partial(testit_updated, variable)
         cache.subscribe(subscriber=partial, chunk=chunk)
-        print('added {}: {}'.format(variable.name, chunk))
+        print("added {}: {}".format(variable.name, chunk))
 
-    chunk = cache.chunk_from_variable(names['Vholdoff'])
+    chunk = cache.chunk_from_variable(names["Vholdoff"])
     new_bytes = [random.randint(0, 255) for _ in range(len(chunk))]
     chunk.set_bytes(new_bytes)
-    print('sending update: {}'.format(chunk))
+    print("sending update: {}".format(chunk))
     cache.update(chunk)
 
-    testStruct12 = names['testStruct12']
+    testStruct12 = names["testStruct12"]
     TestStruct12 = epyqlib.cmemoryparser.base_type(testStruct12)
-    members = ['sA', 'm10']
+    members = ["sA", "m10"]
     member, offset = TestStruct12.member_and_offset(members)
-    def all_set_byte(): return 255
-    def random_byte(): return random.randint(0, 255)
+
+    def all_set_byte():
+        return 255
+
+    def random_byte():
+        return random.randint(0, 255)
+
     chunk = cache.new_chunk(
         address=testStruct12.address + offset,
-        bytes=[random_byte() for _ in
-               range(member.bytes * (bits_per_byte // 8))]
+        bytes=[random_byte() for _ in range(member.bytes * (bits_per_byte // 8))],
     )
-    print('sending update: {}'.format(chunk))
+    print("sending update: {}".format(chunk))
     cache.update(chunk)
 
 
 def testit_updated(variable, bytes):
-    print('{} was updated: {} -> {}'.format(variable.name, bytes, variable.unpack(bytes)))
+    print(
+        "{} was updated: {} -> {}".format(variable.name, bytes, variable.unpack(bytes))
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
     sys.exit(testit(sys.argv[1]))

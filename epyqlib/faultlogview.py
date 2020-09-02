@@ -5,8 +5,8 @@ import epyqlib.utils.qt
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2018, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2018, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class FaultLogView(QtWidgets.QWidget):
@@ -34,8 +34,8 @@ class FaultLogView(QtWidgets.QWidget):
     def clear(self):
         answer = QtWidgets.QMessageBox.question(
             self,
-            'Clear Log',
-            'Are you sure you want to clear the log?',
+            "Clear Log",
+            "Are you sure you want to clear the log?",
         )
 
         if answer != QtWidgets.QMessageBox.Yes:

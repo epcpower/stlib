@@ -22,15 +22,15 @@ class MultipleFoundError(Exception):
     pass
 
 
-raw_template = pathlib.Path(epyqlib.autodevice.__file__).with_name('template')
+raw_template = pathlib.Path(epyqlib.autodevice.__file__).with_name("template")
 
 
 def create_template_archive(path):
-    with zipfile.ZipFile(path, 'w') as z:
+    with zipfile.ZipFile(path, "w") as z:
         for template_file in raw_template.iterdir():
             z.write(
                 filename=template_file,
-                arcname=pathlib.Path('autodevice')/template_file.name,
+                arcname=pathlib.Path("autodevice") / template_file.name,
             )
 
 
@@ -58,7 +58,7 @@ class Builder:
     def _(self):
         code = epyqlib.utils.qt.get_code()
         if code is not None:
-            code = code.decode('ascii')
+            code = code.decode("ascii")
 
         return code
 
@@ -66,12 +66,12 @@ class Builder:
         self.access_parameters = (
             AccessInput(
                 node=password_name,
-                description='Elevated Access Code',
+                description="Elevated Access Code",
                 secret=True,
             ),
             AccessInput(
                 node=access_level_name,
-                description='Elevated Access Level',
+                description="Elevated Access Level",
                 secret=False,
             ),
         )
@@ -84,9 +84,9 @@ class Builder:
             with zipfile.ZipFile(path) as z:
                 z.extractall(self._temporary_directory.name)
 
-            self._template_path, = pathlib.Path(
+            (self._template_path,) = pathlib.Path(
                 self._temporary_directory.name,
-            ).glob('**/*.epc')
+            ).glob("**/*.epc")
         else:
             self._template_path = path
 
@@ -95,10 +95,10 @@ class Builder:
             only_for_files=True,
         )
 
-        auto_value_set_key = 'auto_value_set'
+        auto_value_set_key = "auto_value_set"
         if auto_value_set_key not in self._template.raw_dict:
             raise InvalidAutoParametersDeviceError(
-                'Key {} not found'.format(auto_value_set_key)
+                "Key {} not found".format(auto_value_set_key)
             )
 
     def set_original_raw_dict(self, original_raw_dict):
@@ -108,7 +108,7 @@ class Builder:
         self._value_set = epyqlib.pm.valuesetmodel.loadp(path)
 
     def load_epp(self, parameters, can, can_suffix):
-        matrix, = canmatrix.formats.load(
+        (matrix,) = canmatrix.formats.load(
             can,
             import_type=can_suffix[1:],
         ).values()
@@ -120,7 +120,7 @@ class Builder:
         )
         nvs = epyqlib.nv.Nvs(
             neo=neo,
-            configuration=self._original_raw_dict['nv_configuration'],
+            configuration=self._original_raw_dict["nv_configuration"],
         )
         parameters = json.load(parameters)
         nvs.from_dict(parameters)
@@ -128,7 +128,7 @@ class Builder:
 
     def load_epp_paths(self, parameter_path, can_path):
         can_suffix = pathlib.Path(can_path).suffix
-        with open(can_path, 'rb') as can:
+        with open(can_path, "rb") as can:
             with open(parameter_path) as parameters:
                 self.load_epp(
                     can=can,
@@ -140,7 +140,7 @@ class Builder:
         try:
             nodes = self._value_set.model.root.nodes_by_attribute(
                 attribute_value=name,
-                attribute_name='name',
+                attribute_name="name",
             )
         except epyqlib.treenode.NotFoundError:
             node = epyqlib.pm.valuesetmodel.Parameter(
@@ -149,11 +149,11 @@ class Builder:
             self._value_set.model.root.append_child(node)
         else:
             try:
-                node, = nodes
+                (node,) = nodes
             except ValueError as e:
                 raise MultipleFoundError(
-                    'Found multiple nodes but expected only one when '
-                    'searching for {}'.format(repr(name))
+                    "Found multiple nodes but expected only one when "
+                    "searching for {}".format(repr(name))
                 )
 
         return node
@@ -175,17 +175,17 @@ class Builder:
 
                 node.value = access_input.value
 
-            self._value_set.path = directory_path / self._template.raw_dict[
-                'auto_value_set'
-            ]
+            self._value_set.path = (
+                directory_path / self._template.raw_dict["auto_value_set"]
+            )
             self._value_set.save()
 
-            can_path = self._template.raw_dict['can_path']
+            can_path = self._template.raw_dict["can_path"]
 
             for file_name in self._template.referenced_files:
                 skips = (
                     can_path,
-                    self._template.raw_dict['auto_value_set'],
+                    self._template.raw_dict["auto_value_set"],
                 )
                 if file_name in skips:
                     continue
@@ -193,7 +193,7 @@ class Builder:
                 file_path = pathlib.Path(file_name)
 
                 shutil.copy(
-                    self._template_path.parent/file_path.name,
+                    self._template_path.parent / file_path.name,
                     directory_path,
                 )
 
@@ -204,31 +204,27 @@ class Builder:
                 )
 
             keys_to_copy = (
-                'can_configuration',
-                'nv_configuration',
-                'node_id_type',
-                'access_level_path',
-                'access_password_path',
-                'nv_meta_enum',
+                "can_configuration",
+                "nv_configuration",
+                "node_id_type",
+                "access_level_path",
+                "access_password_path",
+                "nv_meta_enum",
             )
             for key in keys_to_copy:
                 if key in self._original_raw_dict:
                     raw_dict[key] = self._original_raw_dict[key]
 
             if isinstance(self.required_serial_number, decimal.Decimal):
-                raw_dict['required_serial_number'] = int(
-                    self.required_serial_number
-                )
+                raw_dict["required_serial_number"] = int(self.required_serial_number)
             else:
-                raw_dict['required_serial_number'] = (
-                    self.required_serial_number
-                )
+                raw_dict["required_serial_number"] = self.required_serial_number
 
             can_path = directory_path / can_path
-            with open(can_path, 'wb') as f:
+            with open(can_path, "wb") as f:
                 f.write(can_contents)
 
-            matrix, = canmatrix.formats.loadp(os.fspath(can_path)).values()
+            (matrix,) = canmatrix.formats.loadp(os.fspath(can_path)).values()
             neo = epyqlib.canneo.Neo(
                 matrix=matrix,
                 frame_class=epyqlib.nv.Frame,
@@ -237,27 +233,22 @@ class Builder:
             )
             nvs = epyqlib.nv.Nvs(
                 neo=neo,
-                configuration=self._original_raw_dict['nv_configuration'],
+                configuration=self._original_raw_dict["nv_configuration"],
             )
 
-            serial_nv, = [
+            (serial_nv,) = [
                 nv
                 for nv in nvs.all_nv()
-                if (
-                    'serial' in nv.name.casefold()
-                    and 'number' in nv.name.casefold()
-                )
+                if ("serial" in nv.name.casefold() and "number" in nv.name.casefold())
             ]
 
-            raw_dict['serial_number_names'] = (
+            raw_dict["serial_number_names"] = (
                 serial_nv.frame.mux_name,
                 serial_nv.name,
             )
 
-            target_epc_name = (
-                directory_path / 'auto_parameters.epc'
-            )
-            with open(target_epc_name, 'w') as f:
+            target_epc_name = directory_path / "auto_parameters.epc"
+            with open(target_epc_name, "w") as f:
                 json.dump(raw_dict, f, indent=4)
 
             backup_path = None
@@ -268,23 +259,23 @@ class Builder:
             try:
                 password_option = []
                 if len(self.archive_code) > 0:
-                    password_option = ['-p{}'.format(self.archive_code)]
+                    password_option = ["-p{}".format(self.archive_code)]
 
                 paths = (
-                    pathlib.Path('7z'),
+                    pathlib.Path("7z"),
                     (
-                        pathlib.Path('C:')
+                        pathlib.Path("C:")
                         / os.sep
-                        / 'Program Files'
-                        / '7-Zip'
-                        / '7z.exe'
+                        / "Program Files"
+                        / "7-Zip"
+                        / "7z.exe"
                     ),
                     (
-                        pathlib.Path('C:')
+                        pathlib.Path("C:")
                         / os.sep
-                        / 'Program Files (x86)'
-                        / '7-Zip'
-                        / '7z.exe'
+                        / "Program Files (x86)"
+                        / "7-Zip"
+                        / "7z.exe"
                     ),
                 )
                 for path in paths:
@@ -292,8 +283,8 @@ class Builder:
                         subprocess.run(
                             [
                                 os.fspath(path),
-                                'a',
-                                '-tzip',
+                                "a",
+                                "-tzip",
                                 os.fspath(self._target),
                                 os.fspath(directory_path),
                                 *password_option,
@@ -306,7 +297,7 @@ class Builder:
                         break
                 else:
                     raise Exception(
-                        'Unable to find 7z binary as any of: {}'.format(
+                        "Unable to find 7z binary as any of: {}".format(
                             paths,
                         )
                     )

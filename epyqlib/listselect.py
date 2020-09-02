@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import functools
 
@@ -12,8 +12,8 @@ import epyqlib.utils.qt
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class ListSelect(QtWidgets.QWidget):
@@ -28,10 +28,9 @@ class ListSelect(QtWidgets.QWidget):
         self.action = action
         self.items = {}
         self.ui.accept_button.clicked.connect(self.accept)
-        self.ui.cancel_button.clicked.connect(
-            functools.partial(self.exit, value=None))
+        self.ui.cancel_button.clicked.connect(functools.partial(self.exit, value=None))
 
-    def focus(self, value, action, items, label=''):
+    def focus(self, value, action, items, label=""):
         self.items = items
         root = epyqlib.listmenu.Node(text=label)
         model = epyqlib.listmenu.ListMenuModel(root=root)
@@ -51,7 +50,7 @@ class ListSelect(QtWidgets.QWidget):
 
         self.action = action
         parent = self.parent()
-        if hasattr(parent, 'setCurrentWidget'):
+        if hasattr(parent, "setCurrentWidget"):
             parent.setCurrentWidget(self)
         focused_widget = self.focusWidget()
         if focused_widget is not None:
@@ -70,8 +69,9 @@ class ListSelect(QtWidgets.QWidget):
     def exit(self, value):
         self.action(value=value)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

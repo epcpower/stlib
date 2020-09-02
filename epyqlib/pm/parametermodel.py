@@ -16,8 +16,8 @@ import epyqlib.utils.qt
 from natsort import natsorted
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2017, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2017, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 def create_abbreviation_attribute():
@@ -39,21 +39,27 @@ def create_read_only_attribute():
         ),
     )
 
+
 def sort_multiselect(node):
     if node.visibility is not None:
-        node.visibility = natsorted(node.visibility, key=lambda uuid: epyqlib.attrsmodel.name_from_uuid(node, uuid, node.find_root().model))
+        node.visibility = natsorted(
+            node.visibility,
+            key=lambda uuid: epyqlib.attrsmodel.name_from_uuid(
+                node, uuid, node.find_root().model
+            ),
+        )
 
 
 create_notes_attribute = epyqlib.attrsmodel.create_str_or_none_attribute
 
 
-@graham.schemify(tag='parameter')
+@graham.schemify(tag="parameter")
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Parameter(epyqlib.treenode.TreeNode):
     name = attr.ib(
-        default='New Parameter',
+        default="New Parameter",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
         ),
@@ -102,11 +108,11 @@ class Parameter(epyqlib.treenode.TreeNode):
     )
     epyqlib.attrsmodel.attrib(
         attribute=enumeration_uuid,
-        human_name='Enumeration',
+        human_name="Enumeration",
         data_display=epyqlib.attrsmodel.name_from_uuid,
         delegate=epyqlib.attrsmodel.RootDelegateCache(
-            list_selection_root='enumerations',
-        )
+            list_selection_root="enumerations",
+        ),
     )
 
     decimal_places = attr.ib(
@@ -157,9 +163,7 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.Integer(),
         ),
     )
-    reject_from_inactive_interfaces = (
-        epyqlib.attrsmodel.create_checkbox_attribute()
-    )
+    reject_from_inactive_interfaces = epyqlib.attrsmodel.create_checkbox_attribute()
 
     can_getter = epyqlib.attrsmodel.create_str_or_none_attribute()
     can_setter = epyqlib.attrsmodel.create_str_or_none_attribute()
@@ -172,9 +176,9 @@ class Parameter(epyqlib.treenode.TreeNode):
         default=None,
         allow_none=True,
         # converter=lambda x: x if x is None else AccessLevelsAccessLevel(x),
-        human_name='Access Level',
+        human_name="Access Level",
         data_display=epyqlib.attrsmodel.name_from_uuid,
-        list_selection_root='access level',
+        list_selection_root="access level",
     )
     parameter_uuid = epyqlib.attrsmodel.attr_uuid(
         default=None,
@@ -212,12 +216,12 @@ class Parameter(epyqlib.treenode.TreeNode):
     )
     epyqlib.attrsmodel.attrib(
         attribute=visibility,
-        human_name='Visibility',
+        human_name="Visibility",
         data_display=epyqlib.attrsmodel.names_from_uuid_list,
         delegate=epyqlib.attrsmodel.RootDelegateCache(
-            list_selection_root='visibility',
+            list_selection_root="visibility",
             multi_select=True,
-        )
+        ),
     )
 
     uuid = epyqlib.attrsmodel.attr_uuid()
@@ -228,24 +232,24 @@ class Parameter(epyqlib.treenode.TreeNode):
     def can_drop_on(self, node):
         return isinstance(node, tuple(self.addable_types().values()))
 
-    @PyQt5.QtCore.pyqtProperty('PyQt_PyObject')
+    @PyQt5.QtCore.pyqtProperty("PyQt_PyObject")
     def pyqtify_minimum(self):
-        return epyqlib.utils.qt.pyqtify_get(self, 'minimum')
+        return epyqlib.utils.qt.pyqtify_get(self, "minimum")
 
     @pyqtify_minimum.setter
     def pyqtify_minimum(self, value):
-        epyqlib.utils.qt.pyqtify_set(self, 'minimum', value)
+        epyqlib.utils.qt.pyqtify_set(self, "minimum", value)
         if None not in (value, self.maximum):
             if value > self.maximum:
                 self.maximum = value
 
-    @PyQt5.QtCore.pyqtProperty('PyQt_PyObject')
+    @PyQt5.QtCore.pyqtProperty("PyQt_PyObject")
     def pyqtify_maximum(self):
-        return epyqlib.utils.qt.pyqtify_get(self, 'maximum')
+        return epyqlib.utils.qt.pyqtify_get(self, "maximum")
 
     @pyqtify_maximum.setter
     def pyqtify_maximum(self, value):
-        epyqlib.utils.qt.pyqtify_set(self, 'maximum', value)
+        epyqlib.utils.qt.pyqtify_set(self, "maximum", value)
         if None not in (value, self.minimum):
             if value < self.minimum:
                 self.minimum = value
@@ -258,23 +262,28 @@ class Parameter(epyqlib.treenode.TreeNode):
         try:
             models.sunspec.root.nodes_by_attribute(
                 attribute_value=self.uuid,
-                attribute_name='parameter_uuid',
+                attribute_name="parameter_uuid",
             )
         except epyqlib.treenode.NotFoundError:
-            result.append_child(epyqlib.checkresultmodel.Result(
-                node=self,
-                severity=epyqlib.checkresultmodel.ResultSeverity.information,
-                message='No linked SunSpec data point found',
-            ))
+            result.append_child(
+                epyqlib.checkresultmodel.Result(
+                    node=self,
+                    severity=epyqlib.checkresultmodel.ResultSeverity.information,
+                    message="No linked SunSpec data point found",
+                )
+            )
 
         return result
 
     def uses_interface_item(self):
-        return any(v is not None for v in (
-            self.internal_variable,
-            self.getter_function,
-            self.setter_function,
-        ))
+        return any(
+            v is not None
+            for v in (
+                self.internal_variable,
+                self.getter_function,
+                self.setter_function,
+            )
+        )
 
     can_delete = epyqlib.attrsmodel.childless_can_delete
     remove_old_on_drop = epyqlib.attrsmodel.default_remove_old_on_drop
@@ -282,13 +291,13 @@ class Parameter(epyqlib.treenode.TreeNode):
     internal_move = epyqlib.attrsmodel.default_internal_move
 
 
-@graham.schemify(tag='group', register=True)
+@graham.schemify(tag="group", register=True)
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Group(epyqlib.treenode.TreeNode):
     name = attr.ib(
-        default='New Group',
+        default="New Group",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
@@ -305,13 +314,15 @@ class Group(epyqlib.treenode.TreeNode):
         cmp=False,
         repr=False,
         metadata=graham.create_metadata(
-            field=graham.fields.MixedList(fields=(
-                # TODO: would be nice to self reference without a name
-                marshmallow.fields.Nested('Group'),
-                marshmallow.fields.Nested('Array'),
-                marshmallow.fields.Nested('Table'),
-                marshmallow.fields.Nested(graham.schema(Parameter)),
-            )),
+            field=graham.fields.MixedList(
+                fields=(
+                    # TODO: would be nice to self reference without a name
+                    marshmallow.fields.Nested("Group"),
+                    marshmallow.fields.Nested("Array"),
+                    marshmallow.fields.Nested("Table"),
+                    marshmallow.fields.Nested(graham.schema(Parameter)),
+                )
+            ),
         ),
     )
     uuid = epyqlib.attrsmodel.attr_uuid()
@@ -334,13 +345,13 @@ class Group(epyqlib.treenode.TreeNode):
     check = epyqlib.attrsmodel.check_just_children
 
 
-@graham.schemify(tag='enumerations')
+@graham.schemify(tag="enumerations")
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Enumerations(epyqlib.treenode.TreeNode):
     name = attr.ib(
-        default='New Enumerations Group',
+        default="New Enumerations Group",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
@@ -350,11 +361,13 @@ class Enumerations(epyqlib.treenode.TreeNode):
         cmp=False,
         repr=False,
         metadata=graham.create_metadata(
-            field=graham.fields.MixedList(fields=(
-                # TODO: would be nice to self reference without a name
-                marshmallow.fields.Nested('Enumeration'),
-                marshmallow.fields.Nested('AccessLevels'),
-            )),
+            field=graham.fields.MixedList(
+                fields=(
+                    # TODO: would be nice to self reference without a name
+                    marshmallow.fields.Nested("Enumeration"),
+                    marshmallow.fields.Nested("AccessLevels"),
+                )
+            ),
         ),
     )
     uuid = epyqlib.attrsmodel.attr_uuid()
@@ -377,28 +390,28 @@ class Enumerations(epyqlib.treenode.TreeNode):
     check = epyqlib.attrsmodel.check_just_children
 
 
-@graham.schemify(tag='array_parameter_element')
+@graham.schemify(tag="array_parameter_element")
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @epyqlib.utils.qt.pyqtify_passthrough_properties(
-    original='original',
+    original="original",
     field_names=(
-        'nv_format',
-        'nv_factor',
-        'nv_cast',
-        'access_level_uuid',
-        'comment',
-        'decimal_places',
-        'display_hexadecimal',
-        'enumeration_uuid',
-        'units',
-        'visibility',
+        "nv_format",
+        "nv_factor",
+        "nv_cast",
+        "access_level_uuid",
+        "comment",
+        "decimal_places",
+        "display_hexadecimal",
+        "enumeration_uuid",
+        "units",
+        "visibility",
     ),
 )
 @attr.s(hash=False)
 class ArrayParameterElement(epyqlib.treenode.TreeNode):
     name = attr.ib(
-        default='New Array Parameter Element',
+        default="New Array Parameter Element",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
@@ -456,9 +469,9 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
         default=None,
         allow_none=True,
         # converter=lambda x: x if x is None else AccessLevelsAccessLevel(x),
-        human_name='Access Level',
+        human_name="Access Level",
         data_display=epyqlib.attrsmodel.name_from_uuid,
-        list_selection_root='access level',
+        list_selection_root="access level",
     )
     enumeration_uuid = epyqlib.attrsmodel.attr_uuid(
         default=None,
@@ -498,12 +511,12 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
     )
     epyqlib.attrsmodel.attrib(
         attribute=visibility,
-        human_name='Visibility',
+        human_name="Visibility",
         data_display=epyqlib.attrsmodel.names_from_uuid_list,
         delegate=epyqlib.attrsmodel.RootDelegateCache(
-            list_selection_root='visibility',
+            list_selection_root="visibility",
             multi_select=True,
-        )
+        ),
     )
     original = attr.ib(
         default=None,
@@ -532,13 +545,13 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
     check = epyqlib.attrsmodel.check_just_children
 
 
-@graham.schemify(tag='array_group_element')
+@graham.schemify(tag="array_group_element")
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class ArrayGroupElement(epyqlib.treenode.TreeNode):
     name = attr.ib(
-        default='New Array Group Element',
+        default="New Array Group Element",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
@@ -572,13 +585,13 @@ class InvalidArrayLength(Exception):
     pass
 
 
-@graham.schemify(tag='array', register=True)
+@graham.schemify(tag="array", register=True)
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Array(epyqlib.treenode.TreeNode):
     name = attr.ib(
-        default='New Array',
+        default="New Array",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
@@ -600,12 +613,14 @@ class Array(epyqlib.treenode.TreeNode):
         cmp=False,
         repr=False,
         metadata=graham.create_metadata(
-            field=graham.fields.MixedList(fields=(
-                marshmallow.fields.Nested(graham.schema(Parameter)),
-                marshmallow.fields.Nested(graham.schema(ArrayParameterElement)),
-                marshmallow.fields.Nested(graham.schema(Group)),
-                marshmallow.fields.Nested(graham.schema(ArrayGroupElement)),
-            )),
+            field=graham.fields.MixedList(
+                fields=(
+                    marshmallow.fields.Nested(graham.schema(Parameter)),
+                    marshmallow.fields.Nested(graham.schema(ArrayParameterElement)),
+                    marshmallow.fields.Nested(graham.schema(Group)),
+                    marshmallow.fields.Nested(graham.schema(ArrayGroupElement)),
+                )
+            ),
         ),
     )
     uuid = epyqlib.attrsmodel.attr_uuid()
@@ -623,7 +638,7 @@ class Array(epyqlib.treenode.TreeNode):
         for child in self.children[1:]:
             if self.children[0].uuid != child.original:
                 raise epyqlib.attrsmodel.ConsistencyError(
-                    'UUID mismatch: {} != {}'.format(
+                    "UUID mismatch: {} != {}".format(
                         self.children[0].uuid,
                         child.original,
                     )
@@ -633,16 +648,16 @@ class Array(epyqlib.treenode.TreeNode):
 
     @property
     def pyqtify_length(self):
-        return epyqlib.utils.qt.pyqtify_get(self, 'length')
+        return epyqlib.utils.qt.pyqtify_get(self, "length")
 
     @pyqtify_length.setter
     def pyqtify_length(self, value):
         if value < 1:
-            raise InvalidArrayLength('Length must be at least 1')
+            raise InvalidArrayLength("Length must be at least 1")
 
         if self.children is not None:
             if value < len(self.children):
-                for row in range(len(self.children) - 1, value - 1, - 1):
+                for row in range(len(self.children) - 1, value - 1, -1):
                     self.remove_child(row=row)
             elif 1 <= len(self.children) < value:
                 places = math.ceil(math.log10(value + 1))
@@ -650,11 +665,11 @@ class Array(epyqlib.treenode.TreeNode):
                     original = self.children[0]
                     type_ = self.element_types[type(original)]
                     new_child = type_(original=original)
-                    new_child.name = f'_{(index + 1):0{places}}'
-                    new_child.abbreviation = f'{self.abbreviation}{index + 1}'
+                    new_child.name = f"_{(index + 1):0{places}}"
+                    new_child.abbreviation = f"{self.abbreviation}{index + 1}"
                     self.append_child(new_child)
 
-        epyqlib.utils.qt.pyqtify_set(self, 'length', value)
+        epyqlib.utils.qt.pyqtify_set(self, "length", value)
 
     @classmethod
     def all_addable_types(cls):
@@ -684,7 +699,7 @@ class Array(epyqlib.treenode.TreeNode):
 
         if node not in self.children:
             raise epyqlib.attrsmodel.ConsistencyError(
-                'Specified node not found in children'
+                "Specified node not found in children"
             )
 
         if len(self.children) > 1:
@@ -698,29 +713,29 @@ class Array(epyqlib.treenode.TreeNode):
     check = epyqlib.attrsmodel.check_just_children
 
 
-@graham.schemify(tag='table_array_element', register=True)
+@graham.schemify(tag="table_array_element", register=True)
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @epyqlib.utils.qt.pyqtify_passthrough_properties(
-    original='original',
+    original="original",
     field_names=(
-        'name',
-        'abbreviation',
-        'notes',
-        'read_only',
-        'access_level_uuid',
-        'enumeration_uuid',
-        'minimum',
-        'maximum',
-        'nv_format',
-        'nv_factor',
-        'nv_cast',
-        'comment',
-        'units',
-        'visibility',
-        'display_hexadecimal',
-        'default',
-        'decimal_places',
+        "name",
+        "abbreviation",
+        "notes",
+        "read_only",
+        "access_level_uuid",
+        "enumeration_uuid",
+        "minimum",
+        "maximum",
+        "nv_format",
+        "nv_factor",
+        "nv_cast",
+        "comment",
+        "units",
+        "visibility",
+        "display_hexadecimal",
+        "default",
+        "decimal_places",
     ),
 )
 @attr.s(hash=False)
@@ -753,9 +768,9 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
         default=None,
         allow_none=True,
         # converter=lambda x: x if x is None else AccessLevelsAccessLevel(x),
-        human_name='Access Level',
+        human_name="Access Level",
         data_display=epyqlib.attrsmodel.name_from_uuid,
-        list_selection_root='access level',
+        list_selection_root="access level",
         no_graham=True,
     )
 
@@ -818,12 +833,12 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
     )
     epyqlib.attrsmodel.attrib(
         attribute=visibility,
-        human_name='Visibility',
+        human_name="Visibility",
         data_display=epyqlib.attrsmodel.names_from_uuid_list,
         delegate=epyqlib.attrsmodel.RootDelegateCache(
-            list_selection_root='visibility',
+            list_selection_root="visibility",
             multi_select=True,
-        )
+        ),
     )
     display_hexadecimal = attr.ib(
         default=False,
@@ -852,7 +867,7 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
         default=None,
         metadata=graham.create_metadata(
             field=marshmallow.fields.Integer(allow_none=False),
-        )
+        ),
     )
     epyqlib.attrsmodel.attrib(
         attribute=index,
@@ -890,12 +905,12 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
     check = epyqlib.attrsmodel.check_just_children
 
 
-@graham.schemify(tag='table_group_element', register=True)
+@graham.schemify(tag="table_group_element", register=True)
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @epyqlib.utils.qt.pyqtify_passthrough_properties(
-    original='original',
-    field_names=('name',),
+    original="original",
+    field_names=("name",),
 )
 @attr.s(hash=False)
 class TableGroupElement(epyqlib.treenode.TreeNode):
@@ -924,10 +939,12 @@ class TableGroupElement(epyqlib.treenode.TreeNode):
         cmp=False,
         repr=False,
         metadata=graham.create_metadata(
-            field=graham.fields.MixedList(fields=(
-                marshmallow.fields.Nested('TableGroupElement'),
-                marshmallow.fields.Nested(graham.schema(TableArrayElement)),
-            )),
+            field=graham.fields.MixedList(
+                fields=(
+                    marshmallow.fields.Nested("TableGroupElement"),
+                    marshmallow.fields.Nested(graham.schema(TableArrayElement)),
+                )
+            ),
         ),
     )
 
@@ -935,7 +952,7 @@ class TableGroupElement(epyqlib.treenode.TreeNode):
         default=None,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
-        )
+        ),
     )
     epyqlib.attrsmodel.attrib(
         attribute=axis,
@@ -947,7 +964,7 @@ class TableGroupElement(epyqlib.treenode.TreeNode):
         default=None,
         metadata=graham.create_metadata(
             field=marshmallow.fields.Integer(allow_none=True),
-        )
+        ),
     )
     epyqlib.attrsmodel.attrib(
         attribute=curve_index,
@@ -978,13 +995,13 @@ class TableGroupElement(epyqlib.treenode.TreeNode):
     check = epyqlib.attrsmodel.check_just_children
 
 
-@graham.schemify(tag='table_enumeration_reference')
+@graham.schemify(tag="table_enumeration_reference")
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class TableEnumerationReference(epyqlib.treenode.TreeNode):
     name = attr.ib(
-        default='New Enumeration Reference',
+        default="New Enumeration Reference",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
@@ -995,9 +1012,9 @@ class TableEnumerationReference(epyqlib.treenode.TreeNode):
     enumeration_uuid = epyqlib.attrsmodel.attr_uuid(
         default=None,
         allow_none=True,
-        human_name='Enumeration',
+        human_name="Enumeration",
         data_display=epyqlib.attrsmodel.name_from_uuid,
-        list_selection_root='enumerations',
+        list_selection_root="enumerations",
     )
 
     def __attrs_post_init__(self):
@@ -1017,13 +1034,13 @@ class TableEnumerationReference(epyqlib.treenode.TreeNode):
     check = epyqlib.attrsmodel.check_just_children
 
 
-@graham.schemify(tag='table', register=True)
+@graham.schemify(tag="table", register=True)
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Table(epyqlib.treenode.TreeNode):
     name = attr.ib(
-        default='New Table',
+        default="New Table",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
@@ -1066,9 +1083,11 @@ class Table(epyqlib.treenode.TreeNode):
                 fields=(
                     marshmallow.fields.Nested(graham.schema(Array)),
                     marshmallow.fields.Nested(graham.schema(Group)),
-                    marshmallow.fields.Nested(graham.schema(
-                        TableEnumerationReference,
-                    )),
+                    marshmallow.fields.Nested(
+                        graham.schema(
+                            TableEnumerationReference,
+                        )
+                    ),
                     marshmallow.fields.Nested(graham.schema(TableGroupElement)),
                 ),
             ),
@@ -1133,7 +1152,6 @@ class Table(epyqlib.treenode.TreeNode):
             slot=self.update,
         )
 
-
     def array_removed(self, array):
         if not isinstance(array, Array):
             return
@@ -1145,11 +1163,7 @@ class Table(epyqlib.treenode.TreeNode):
         for array in list(self.array_connections.keys()):
             self.array_removed(array)
 
-        arrays = [
-            child
-            for child in self.children
-            if isinstance(child, Array)
-        ]
+        arrays = [child for child in self.children if isinstance(child, Array)]
 
         for array in arrays:
             self.array_added(array)
@@ -1161,17 +1175,15 @@ class Table(epyqlib.treenode.TreeNode):
         self.update_array_connections()
 
         old_groups = [
-            child
-            for child in self.children
-            if isinstance(child, TableGroupElement)
+            child for child in self.children if isinstance(child, TableGroupElement)
         ]
 
         if len(old_groups) == 1:
-            old_group, = old_groups
+            (old_group,) = old_groups
         elif len(old_groups) < 1:
             old_group = None
         else:
-            raise Exception('Too many old groups found while updating ')
+            raise Exception("Too many old groups found while updating ")
 
         root = self.find_root()
 
@@ -1188,27 +1200,15 @@ class Table(epyqlib.treenode.TreeNode):
 
             enumerations.append(enumeration.children)
 
-        arrays = [
-            child
-            for child in self.children
-            if isinstance(child, (Array, Group))
-        ]
+        arrays = [child for child in self.children if isinstance(child, (Array, Group))]
         self.arrays_and_groups = arrays
-        self.arrays = [
-            child
-            for child in self.children
-            if isinstance(child, Array)
-        ]
-        self.groups = [
-            child
-            for child in self.children
-            if isinstance(child, Group)
-        ]
+        self.arrays = [child for child in self.children if isinstance(child, Array)]
+        self.groups = [child for child in self.children if isinstance(child, Group)]
 
         with self._ignore_children():
             if old_group is None:
                 old_group = TableGroupElement(
-                    name='Tree',
+                    name="Tree",
                 )
                 self.append_child(old_group)
 
@@ -1216,10 +1216,7 @@ class Table(epyqlib.treenode.TreeNode):
 
             nodes = old_group.recursively_remove_children()
 
-            old_by_path = {
-                node.path: node
-                for node in nodes
-            }
+            old_by_path = {node.path: node for node in nodes}
 
         product = list(itertools.product(*enumerations))
 
@@ -1230,7 +1227,7 @@ class Table(epyqlib.treenode.TreeNode):
                 tuple(
                     x
                     for x in itertools.takewhile(
-                        lambda y: y.tree_parent.name != 'Curves',
+                        lambda y: y.tree_parent.name != "Curves",
                         combination,
                     )
                 )
@@ -1262,7 +1259,7 @@ class Table(epyqlib.treenode.TreeNode):
                     if isinstance(current.original, uuid.UUID):
                         current.original = model.node_from_uuid(current.original)
 
-                if layer.tree_parent.name == 'Curves':
+                if layer.tree_parent.name == "Curves":
                     current.curve_index = int(layer.value)
 
                 if current.tree_parent is None:
@@ -1270,7 +1267,7 @@ class Table(epyqlib.treenode.TreeNode):
 
                 present = current
 
-            axes = ['x', 'y', 'z']
+            axes = ["x", "y", "z"]
             axes_iterator = iter(axes)
             for array in arrays:
                 if isinstance(array, Array):
@@ -1293,9 +1290,7 @@ class Table(epyqlib.treenode.TreeNode):
                     if current.original is None:
                         current.original = current.path[-1]
                     if isinstance(current.original, uuid.UUID):
-                        current.original = model.node_from_uuid(
-                            current.original
-                        )
+                        current.original = model.node_from_uuid(current.original)
 
                 current.axis = axis
 
@@ -1326,20 +1321,24 @@ class Table(epyqlib.treenode.TreeNode):
                         current.append_child(current_element)
 
     def addable_types(self):
-        return epyqlib.attrsmodel.create_addable_types((
-            TableEnumerationReference,
-            Array,
-            Group,
-        ))
+        return epyqlib.attrsmodel.create_addable_types(
+            (
+                TableEnumerationReference,
+                Array,
+                Group,
+            )
+        )
 
     @classmethod
     def all_addable_types(cls):
-        return epyqlib.attrsmodel.create_addable_types((
-            TableEnumerationReference,
-            Array,
-            Group,
-            TableGroupElement,
-        ))
+        return epyqlib.attrsmodel.create_addable_types(
+            (
+                TableEnumerationReference,
+                Array,
+                Group,
+                TableGroupElement,
+            )
+        )
 
     def can_drop_on(self, node):
         return isinstance(node, tuple(self.addable_types().values()))
@@ -1350,7 +1349,7 @@ class Table(epyqlib.treenode.TreeNode):
 
         if node not in self.children:
             raise epyqlib.attrsmodel.ConsistencyError(
-                'Specified node not found in children'
+                "Specified node not found in children"
             )
 
         return not isinstance(node, TableGroupElement)
@@ -1373,13 +1372,13 @@ class Table(epyqlib.treenode.TreeNode):
     check = epyqlib.attrsmodel.check_just_children
 
 
-@graham.schemify(tag='enumerator')
+@graham.schemify(tag="enumerator")
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Enumerator(epyqlib.treenode.TreeNode):
     name = attr.ib(
-        default='New Enumerator',
+        default="New Enumerator",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
@@ -1406,27 +1405,27 @@ class Enumerator(epyqlib.treenode.TreeNode):
     check = epyqlib.attrsmodel.check_just_children
 
 
-@graham.schemify(tag='sunspec_enumerator')
+@graham.schemify(tag="sunspec_enumerator")
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class SunSpecEnumerator(epyqlib.treenode.TreeNode):
     name = attr.ib(
-        default='New Sunspec Enumerator',
+        default="New Sunspec Enumerator",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
     )
     abbreviation = create_abbreviation_attribute()
     label = attr.ib(
-        default='',
+        default="",
         converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
     description = attr.ib(
-        default='',
+        default="",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
@@ -1440,7 +1439,7 @@ class SunSpecEnumerator(epyqlib.treenode.TreeNode):
         ),
     )
     type = attr.ib(
-        default='',
+        default="",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
@@ -1460,13 +1459,13 @@ class SunSpecEnumerator(epyqlib.treenode.TreeNode):
     check = epyqlib.attrsmodel.check_just_children
 
 
-@graham.schemify(tag='enumeration', register=True)
+@graham.schemify(tag="enumeration", register=True)
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Enumeration(epyqlib.treenode.TreeNode):
     name = attr.ib(
-        default='New Enumeration',
+        default="New Enumeration",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
@@ -1475,10 +1474,12 @@ class Enumeration(epyqlib.treenode.TreeNode):
         default=attr.Factory(list),
         repr=False,
         metadata=graham.create_metadata(
-            field=graham.fields.MixedList(fields=(
-                marshmallow.fields.Nested(graham.schema(Enumerator)),
-                marshmallow.fields.Nested(graham.schema(SunSpecEnumerator)),
-            )),
+            field=graham.fields.MixedList(
+                fields=(
+                    marshmallow.fields.Nested(graham.schema(Enumerator)),
+                    marshmallow.fields.Nested(graham.schema(SunSpecEnumerator)),
+                )
+            ),
         ),
     )
     # children = attr.ib(
@@ -1518,13 +1519,13 @@ class Enumeration(epyqlib.treenode.TreeNode):
     check = epyqlib.attrsmodel.check_just_children
 
 
-@graham.schemify(tag='access_level')
+@graham.schemify(tag="access_level")
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class AccessLevel(epyqlib.treenode.TreeNode):
     name = attr.ib(
-        default='New Access Level',
+        default="New Access Level",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
@@ -1551,13 +1552,13 @@ class AccessLevel(epyqlib.treenode.TreeNode):
     check = epyqlib.attrsmodel.check_just_children
 
 
-@graham.schemify(tag='access_levels', register=True)
+@graham.schemify(tag="access_levels", register=True)
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class AccessLevels(epyqlib.treenode.TreeNode):
     name = attr.ib(
-        default='New Access Levels',
+        default="New Access Levels",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
         ),
@@ -1566,9 +1567,9 @@ class AccessLevels(epyqlib.treenode.TreeNode):
         default=attr.Factory(list),
         repr=False,
         metadata=graham.create_metadata(
-            field=graham.fields.MixedList(fields=(
-                marshmallow.fields.Nested(graham.schema(AccessLevel)),
-            )),
+            field=graham.fields.MixedList(
+                fields=(marshmallow.fields.Nested(graham.schema(AccessLevel)),)
+            ),
         ),
     )
 
@@ -1595,10 +1596,8 @@ class AccessLevels(epyqlib.treenode.TreeNode):
         return True
 
     def by_name(self, name):
-        level, = (
-            level
-            for level in self.children
-            if level.name.casefold() == name.casefold()
+        (level,) = (
+            level for level in self.children if level.name.casefold() == name.casefold()
         )
 
         return level
@@ -1613,8 +1612,7 @@ class AccessLevels(epyqlib.treenode.TreeNode):
 
 
 Root = epyqlib.attrsmodel.Root(
-    default_name='Parameters',
-    valid_types=(Parameter, Group, Enumerations)
+    default_name="Parameters", valid_types=(Parameter, Group, Enumerations)
 )
 
 types = epyqlib.attrsmodel.Types(
@@ -1636,7 +1634,7 @@ types = epyqlib.attrsmodel.Types(
         TableArrayElement,
         TableGroupElement,
     ),
-    external_list_selection_roots={'sunspec types'},
+    external_list_selection_roots={"sunspec types"},
 )
 
 
@@ -1646,140 +1644,126 @@ def merge(name, *types):
 
 
 columns = epyqlib.attrsmodel.columns(
-    merge('name', *types.types.values()),
+    merge("name", *types.types.values()),
     merge(
-        'abbreviation',
+        "abbreviation",
         Parameter,
         ArrayParameterElement,
         TableArrayElement,
         Array,
         SunSpecEnumerator,
     ),
-    (
-        merge('type_name', Parameter, Group)
-        + merge('type', SunSpecEnumerator)
-    ),
-    merge('length', Array),
-    merge('named_enumerators', Array),
+    (merge("type_name", Parameter, Group) + merge("type", SunSpecEnumerator)),
+    merge("length", Array),
+    merge("named_enumerators", Array),
     merge(
-        'units',
+        "units",
         Parameter,
         ArrayParameterElement,
         TableArrayElement,
     ),
     merge(
-        'enumeration_uuid',
+        "enumeration_uuid",
         Parameter,
         TableEnumerationReference,
         ArrayParameterElement,
         TableArrayElement,
     ),
-
-    merge('value', Enumerator, SunSpecEnumerator, AccessLevel),
+    merge("value", Enumerator, SunSpecEnumerator, AccessLevel),
     merge(
-        'default',
+        "default",
         Parameter,
         ArrayParameterElement,
         TableArrayElement,
     ),
     merge(
-        'minimum',
+        "minimum",
         Parameter,
         ArrayParameterElement,
         TableArrayElement,
     ),
     merge(
-        'maximum',
+        "maximum",
         Parameter,
         ArrayParameterElement,
         TableArrayElement,
     ),
-
-    merge('label', SunSpecEnumerator),
-
-    merge('internal_variable', Parameter),
-    merge('getter_function', Parameter),
-    merge('setter_function', Parameter),
-    merge('rejected_callback', Parameter),
-    merge('internal_type', Parameter),
-    merge('internal_scale_factor', Parameter),
-    merge('reject_from_inactive_interfaces', Parameter),
-
-    merge('can_getter', Table, Parameter),
-    merge('can_setter', Table, Parameter),
-    merge('sunspec_getter', Parameter),
-    merge('sunspec_setter', Parameter),
-    merge('active_curve_getter', Table),
-    merge('active_curve_setter', Table),
+    merge("label", SunSpecEnumerator),
+    merge("internal_variable", Parameter),
+    merge("getter_function", Parameter),
+    merge("setter_function", Parameter),
+    merge("rejected_callback", Parameter),
+    merge("internal_type", Parameter),
+    merge("internal_scale_factor", Parameter),
+    merge("reject_from_inactive_interfaces", Parameter),
+    merge("can_getter", Table, Parameter),
+    merge("can_setter", Table, Parameter),
+    merge("sunspec_getter", Parameter),
+    merge("sunspec_setter", Parameter),
+    merge("active_curve_getter", Table),
+    merge("active_curve_setter", Table),
     merge(
-        'nv_format',
+        "nv_format",
         Parameter,
         ArrayParameterElement,
         TableArrayElement,
     ),
     merge(
-        'nv_factor',
+        "nv_factor",
         Parameter,
         TableArrayElement,
         ArrayParameterElement,
     ),
     merge(
-        'nv_cast',
+        "nv_cast",
         Parameter,
         TableArrayElement,
         ArrayParameterElement,
     ),
-    merge('read_only', Parameter, ArrayParameterElement, TableArrayElement),
+    merge("read_only", Parameter, ArrayParameterElement, TableArrayElement),
     merge(
-        'access_level_uuid',
+        "access_level_uuid",
         Parameter,
         TableArrayElement,
         ArrayParameterElement,
     ),
     merge(
-        'visibility',
-        Parameter,
-        ArrayParameterElement,
-        TableArrayElement,
-    ),
-
-    merge(
-        'display_hexadecimal',
+        "visibility",
         Parameter,
         ArrayParameterElement,
         TableArrayElement,
     ),
     merge(
-        'decimal_places',
+        "display_hexadecimal",
         Parameter,
         ArrayParameterElement,
         TableArrayElement,
     ),
-
+    merge(
+        "decimal_places",
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
     (
         merge(
-            'comment',
+            "comment",
             Parameter,
             ArrayParameterElement,
             TableArrayElement,
         )
-        +
-        merge('description', SunSpecEnumerator)
+        + merge("description", SunSpecEnumerator)
     ),
-
     merge(
-        'notes',
+        "notes",
         Parameter,
         SunSpecEnumerator,
         ArrayParameterElement,
         TableArrayElement,
     ),
-
-    merge('original_frame_name', Parameter),
-    merge('original_multiplexer_name', Parameter),
-    merge('original_signal_name', Parameter),
-
-    merge('parameter_uuid', Parameter),
-    merge('uuid', *types.types.values()),
-
+    merge("original_frame_name", Parameter),
+    merge("original_multiplexer_name", Parameter),
+    merge("original_signal_name", Parameter),
+    merge("parameter_uuid", Parameter),
+    merge("uuid", *types.types.values()),
 )

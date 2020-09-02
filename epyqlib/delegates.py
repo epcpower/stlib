@@ -49,11 +49,11 @@ class Dispatch(QtWidgets.QStyledItemDelegate):
 
 
 def default(model, node, column):
-    if hasattr(node, 'enumeration_strings'):
+    if hasattr(node, "enumeration_strings"):
         if len(node.enumeration_strings()) > 0:
             return Delegate(creator=create_combo)
 
-    if hasattr(node, 'secret'):
+    if hasattr(node, "secret"):
         if node.secret:
             return Delegate(modifier=modify_password)
 
@@ -153,11 +153,9 @@ def create_combo(index, node, parent):
     view = widget.view()
     view.setMinimumWidth(calculate_combo_view_width(widget))
 
-    event = QMouseEvent(QEvent.MouseButtonPress,
-                        QPoint(),
-                        Qt.LeftButton,
-                        Qt.LeftButton,
-                        Qt.NoModifier)
+    event = QMouseEvent(
+        QEvent.MouseButtonPress, QPoint(), Qt.LeftButton, Qt.LeftButton, Qt.NoModifier
+    )
     QCoreApplication.postEvent(widget, event)
 
     return widget

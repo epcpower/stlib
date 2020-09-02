@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 from PyQt5.QtCore import pyqtProperty
 from PyQt5 import QtWidgets
@@ -10,8 +10,8 @@ import epyqlib.utils.qt
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class IoPoint(QtWidgets.QWidget):
@@ -52,7 +52,7 @@ class IoPoint(QtWidgets.QWidget):
 
         # TODO: if not empty then do something
 
-    @pyqtProperty('QString')
+    @pyqtProperty("QString")
     def status_signal_path(self):
         return self.ui.status.signal_path
 
@@ -61,7 +61,7 @@ class IoPoint(QtWidgets.QWidget):
         self.ui.status.signal_path = value
         self.update_configuration()
 
-    @pyqtProperty('QString')
+    @pyqtProperty("QString")
     def set_signal_path(self):
         return self.ui.set.signal_path
 
@@ -70,7 +70,7 @@ class IoPoint(QtWidgets.QWidget):
         self.ui.set.signal_path = value
         self.update_configuration()
 
-    @pyqtProperty('QString')
+    @pyqtProperty("QString")
     def override_signal_path(self):
         return self.ui.override.signal_path
 
@@ -90,8 +90,8 @@ class IoPoint(QtWidgets.QWidget):
             self.ui.override_label.hide()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

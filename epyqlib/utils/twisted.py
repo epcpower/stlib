@@ -9,8 +9,8 @@ import twisted.internet.defer
 import epyqlib.utils.general
 import epyqlib.utils.qt
 
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class WaitForTimedOut(Exception):
 @twisted.internet.defer.inlineCallbacks
 def wait_for(check, period=0.1, timeout=10, message=None):
     if message is None:
-        message = f'Condition not satisfied within {timeout:.1f} seconds'
+        message = f"Condition not satisfied within {timeout:.1f} seconds"
 
     start = time.monotonic()
 
@@ -75,7 +75,7 @@ def errback_dialog(f):
 
 def errbackhook(error):
     epyqlib.utils.qt.custom_exception_message_box(
-        brief='{}\n{}'.format(error.type.__name__, error.value),
+        brief="{}\n{}".format(error.type.__name__, error.value),
         extended=error.getTraceback(),
     )
 
@@ -108,7 +108,7 @@ def detour_result(result, f, *args, **kwargs):
 
 
 def logit(it):
-    logger.debug('logit(): ({}) {}'.format(type(it), it))
+    logger.debug("logit(): ({}) {}".format(type(it), it))
 
     if isinstance(it, twisted.python.failure.Failure):
         it.printDetailedTraceback()
@@ -131,7 +131,7 @@ def retry(function, times, acceptable=None):
 
         remaining -= 1
 
-    raise Exception('out of retries')
+    raise Exception("out of retries")
 
 
 def timeout_retry(function, times=3, acceptable=None):
@@ -208,10 +208,10 @@ class DeferLaterChain:
 
     def pause(self):
         if self.canceled:
-            raise InvalidAction('attempted to pause while canceled')
+            raise InvalidAction("attempted to pause while canceled")
 
         if self.paused:
-            raise InvalidAction('attempted to pause while paused')
+            raise InvalidAction("attempted to pause while paused")
 
         self.deferred.pause()
         self.active.pause()
@@ -219,10 +219,10 @@ class DeferLaterChain:
 
     def unpause(self):
         if self.canceled:
-            raise InvalidAction('attempted to unpause while canceled')
+            raise InvalidAction("attempted to unpause while canceled")
 
         if not self.paused:
-            raise InvalidAction('attempted unpause while not paused')
+            raise InvalidAction("attempted unpause while not paused")
 
         self.active.unpause()
         self.deferred.unpause()
@@ -235,8 +235,7 @@ class DeferredRepeater:
         self.args = args
         self.kwargs = kwargs
 
-        self.public_deferred = twisted.internet.defer.Deferred(
-            canceller=self.cancel)
+        self.public_deferred = twisted.internet.defer.Deferred(canceller=self.cancel)
         self.private_deferred = None
 
     def repeat(self):
@@ -335,10 +334,12 @@ class Sequence:
         if len(self.events) > 0:
             last_time = self.events[-1].time
 
-        self.events.append(Event(
-            action=Action(f=f, args=args, kwargs=kwargs),
-            time=last_time + delay,
-        ))
+        self.events.append(
+            Event(
+                action=Action(f=f, args=args, kwargs=kwargs),
+                time=last_time + delay,
+            )
+        )
 
     def run(self, loop=False):
         self.run_deferred = self._run(loop=loop)
@@ -359,9 +360,9 @@ class Sequence:
                 while True:
                     delay = (base_time + event.time) - self.virtual_time
                     logger.debug(
-                        'self.virtual_time: {}'.format(self.virtual_time),
+                        "self.virtual_time: {}".format(self.virtual_time),
                     )
-                    logger.debug('delay: {}'.format(delay))
+                    logger.debug("delay: {}".format(delay))
                     if delay > self.tolerance:
                         self.deferred = epyqlib.utils.twisted.sleep(
                             delay - (self.tolerance / 2),

@@ -16,15 +16,15 @@ from typing import Optional
 
 import attr
 
-__copyright__ = 'Copyright 2017, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2017, EPC Power Corp."
+__license__ = "GPLv2+"
 
 logger = logging.getLogger()
 
 
 class ExpectedException(Exception):
     def expected_message(self):
-        return 'This is expected: {}'.format(str(self))
+        return "This is expected: {}".format(str(self))
 
 
 class UnmatchedSerialNumberError(Exception):
@@ -38,11 +38,8 @@ class Container:
 
 
 def multiparagraph_wrap(s, *args, **kwargs):
-    paragraphs = s.split('\n\n')
-    return '\n\n'.join(
-        '\n'.join(textwrap.wrap(p, *args, **kwargs))
-        for p in paragraphs
-    )
+    paragraphs = s.split("\n\n")
+    return "\n\n".join("\n".join(textwrap.wrap(p, *args, **kwargs)) for p in paragraphs)
 
 
 @attr.s
@@ -95,30 +92,29 @@ class AverageValueRate:
             return (final_value - self._deque[-1].value) / rate
 
 
-def write_device_to_zip(zip_path, epc_dir, referenced_files, code=None,
-                        sha=None, checkout_dir=None):
+def write_device_to_zip(
+    zip_path, epc_dir, referenced_files, code=None, sha=None, checkout_dir=None
+):
     # TODO: stdlib zipfile can't create an encrypted .zip
     #       make a good solution that will...
-    with zipfile.ZipFile(file=zip_path, mode='w') as zip:
+    with zipfile.ZipFile(file=zip_path, mode="w") as zip:
         for device_path in referenced_files:
             filename = os.path.join(epc_dir, device_path)
-            zip.write(filename=filename,
-                      arcname=os.path.relpath(filename, start=epc_dir))
+            zip.write(
+                filename=filename, arcname=os.path.relpath(filename, start=epc_dir)
+            )
 
         if sha is not None:
-            sha_file_name = 'sha'
+            sha_file_name = "sha"
             sha_file_path = os.path.join(checkout_dir, sha_file_name)
-            with open(sha_file_path, 'w') as sha_file:
-                sha_file.write(sha + '\n')
-            zip.write(
-                filename=sha_file_path,
-                arcname=sha_file_name
-            )
+            with open(sha_file_path, "w") as sha_file:
+                sha_file.write(sha + "\n")
+            zip.write(filename=sha_file_path, arcname=sha_file_name)
 
 
 # https://docs.python.org/3/library/itertools.html
 def pairwise(iterable):
-    's -> (s0,s1), (s1,s2), (s2, s3), ...'
+    "s -> (s0,s1), (s1,s2), (s2, s3), ..."
     a, b = itertools.tee(iterable)
     next(b, None)
     return zip(a, b)
@@ -184,7 +180,7 @@ class append_to_method:
             to_call(s)
 
         setattr(cls, self.name, f)
-        print('assigned {} to {}.{}'.format(f, cls.__name__, self.name))
+        print("assigned {} to {}.{}".format(f, cls.__name__, self.name))
 
         return cls
 
@@ -212,6 +208,7 @@ def enumerated_attrs(enumeration, **kwargs):
         cls.enumeration = enumeration
 
         return cls
+
     return inner
 
 
@@ -226,8 +223,8 @@ class TextTable:
         self.rows.append(row)
         widths = tuple(len(c) for c in row)
         self.widths = tuple(
-            max(a, b) for a, b
-            in itertools.zip_longest(self.widths, widths, fillvalue=0)
+            max(a, b)
+            for a, b in itertools.zip_longest(self.widths, widths, fillvalue=0)
         )
 
     def extend(self, rows):
@@ -236,18 +233,20 @@ class TextTable:
 
     def __str__(self):
         if len(self.rows) == 0:
-            return ''
+            return ""
 
         f = self.format
         if f is None:
-            f = ' '.join(('{{:{}}}',) * len(self.widths))
+            f = " ".join(("{{:{}}}",) * len(self.widths))
 
         f = f.format(*(max(w, 1) for w in self.widths))
 
-        return '\n'.join((
-            f.format(*(row + (('',) * (len(self.widths) - len(row)))))
-            for row in self.rows
-        ))
+        return "\n".join(
+            (
+                f.format(*(row + (("",) * (len(self.widths) - len(row)))))
+                for row in self.rows
+            )
+        )
 
 
 @attr.s
@@ -260,11 +259,13 @@ class Collector(list):
 
         def f(payload):
             payload_dict = {self.payload_attribute: payload}
-            s.append(self.cls(
-                *args,
-                **kwargs,
-                **{self.payload_attribute: payload},
-            ))
+            s.append(
+                self.cls(
+                    *args,
+                    **kwargs,
+                    **{self.payload_attribute: payload},
+                )
+            )
 
             return payload
 
@@ -272,9 +273,11 @@ class Collector(list):
 
 
 def exception_logger(excType, excValue, tracebackobj):
-    logger.error('Uncaught exception hooked:\n{}'.format(
-         ''.join(traceback.format_exception(excType, excValue, tracebackobj))
-    ))
+    logger.error(
+        "Uncaught exception hooked:\n{}".format(
+            "".join(traceback.format_exception(excType, excValue, tracebackobj))
+        )
+    )
 
 
 @attr.s
@@ -297,19 +300,25 @@ class TypeMap:
 
 
 def spaced_to_camel(name, upper):
-    segments = name.split(' ')
+    segments = name.split(" ")
 
     if not upper:
         segments[0] = segments[0].lower()
 
     segments = itertools.chain(
         segments[:1],
-        *(''.join(itertools.chain(
-            c[:1].upper(), c[1:],
-        )) for c in segments[1:]),
+        *(
+            "".join(
+                itertools.chain(
+                    c[:1].upper(),
+                    c[1:],
+                )
+            )
+            for c in segments[1:]
+        ),
     )
 
-    return ''.join(segments)
+    return "".join(segments)
 
 
 def spaced_to_lower_camel(name):
@@ -321,11 +330,11 @@ def spaced_to_upper_camel(name):
 
 
 def underscored_to_upper_camel(name):
-    return ''.join(w.title() for w in name.split('_'))
+    return "".join(w.title() for w in name.split("_"))
 
 
 def underscored_camel_to_upper_camel(name):
-    return ''.join(w[:1].upper() + w[1:] for w in name.split('_'))
+    return "".join(w[:1].upper() + w[1:] for w in name.split("_"))
 
 
 def cameled_to_spaced(name):
@@ -343,13 +352,9 @@ def cameled_to_spaced(name):
         )
     )
 
-    words = (
-        name[start:end]
-        for start, end in pairwise(word_indexes)
-        if end > start
-    )
+    words = (name[start:end] for start, end in pairwise(word_indexes) if end > start)
 
-    return ' '.join(word.strip() for word in words).strip()
+    return " ".join(word.strip() for word in words).strip()
 
 
 def underscored_camel_to_title_spaced(name):
@@ -360,9 +365,7 @@ def underscored_camel_to_title_spaced(name):
 
 
 def identifier_path(it):
-    return '__' + '_'.join(
-        it.__module__.split('.') + [it.__qualname__]
-    )
+    return "__" + "_".join(it.__module__.split(".") + [it.__qualname__])
 
 
 # TODO: CAMPid 0238493420143087667542054268097120437916848
@@ -397,7 +400,7 @@ def contiguous_groups(s):
 
 
 def path_and_line(o):
-    return '{}:{}'.format(
+    return "{}:{}".format(
         inspect.getsourcefile(o),
         inspect.getsourcelines(o)[1],
     )
@@ -421,24 +424,24 @@ def safe_get(dct: dict, keys) -> Optional[dict]:
 
 
 # TODO: CAMPid 073407143081341008467657184603164130
-def format_nested_lists(it, indent='    ', indentation=''):
+def format_nested_lists(it, indent="    ", indentation=""):
     result = []
 
     for item in it:
         if isinstance(item, list):
-            result.extend(format_nested_lists(
-                it=item,
-                indent=indent,
-                indentation=indentation + indent),
+            result.extend(
+                format_nested_lists(
+                    it=item, indent=indent, indentation=indentation + indent
+                ),
             )
-        elif item.strip() == '':
-            result.append('')
+        elif item.strip() == "":
+            result.append("")
         else:
             result.append(indentation + item)
 
-    if indentation == '':
-        result.append('')
-        return '\n'.join(result)
+    if indentation == "":
+        result.append("")
+        return "\n".join(result)
     else:
         return result
 
@@ -460,10 +463,7 @@ class Orderer:
 
     @classmethod
     def build(cls, ordered, key=lambda item: item):
-        indexes = {
-            item: index
-            for index, item in enumerate(ordered)
-        }
+        indexes = {item: index for index, item in enumerate(ordered)}
 
         return cls(
             ordered=ordered,

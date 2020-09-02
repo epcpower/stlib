@@ -47,25 +47,32 @@ Topic :: Scientific/Engineering
 """
 
 from setuptools import setup, find_packages
-exec(compile(open("canmatrix/version.py", "rb").read(), "canmatrix/version.py", "exec"), globals(), locals())
+
+exec(
+    compile(open("canmatrix/version.py", "rb").read(), "canmatrix/version.py", "exec"),
+    globals(),
+    locals(),
+)
 
 doclines = __doc__.split("\n")
 
 setup(
-    name = "canmatrix",
-    version = version,
-    maintainer = "Eduard Broecker",
-    maintainer_email = "eduard at gmx dot de",
-    url = "http://github.com/ebroecker/canmatrix",
-    classifiers = filter(None, classifiers.split("\n")),
-    description = doclines[0],
-    keywords = "CAN dbc arxml kcd dbf sym",
-    long_description = "\n".join(doclines[2:]),
-    license = "BSD",
-    platforms = ["any"],
-
-    packages = find_packages(),
-    entry_points={'console_scripts': ['cancompare = canmatrix.compare:main',
-                                      'canconvert = canmatrix.convert:main']}
+    name="canmatrix",
+    version=version,
+    maintainer="Eduard Broecker",
+    maintainer_email="eduard at gmx dot de",
+    url="http://github.com/ebroecker/canmatrix",
+    classifiers=filter(None, classifiers.split("\n")),
+    description=doclines[0],
+    keywords="CAN dbc arxml kcd dbf sym",
+    long_description="\n".join(doclines[2:]),
+    license="BSD",
+    platforms=["any"],
+    packages=find_packages(),
+    entry_points={
+        "console_scripts": [
+            "cancompare = canmatrix.compare:main",
+            "canconvert = canmatrix.convert:main",
+        ]
+    },
 )
-

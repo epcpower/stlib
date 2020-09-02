@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 from PyQt5.QtCore import pyqtProperty
 from PyQt5.QtWidgets import QWidget, QStackedLayout
@@ -12,15 +12,14 @@ import epyqlib.widgets.scale
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2017, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2017, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class DualScale(QWidget):
-
     def __init__(self, parent=None, in_designer=False):
 
-        QWidget.__init__(self, parent = parent)
+        QWidget.__init__(self, parent=parent)
 
         self.in_designer = in_designer
 
@@ -56,7 +55,7 @@ class DualScale(QWidget):
         # self.scale1.override_range = True
         # self.scale2.override_range = True
 
-    @pyqtProperty('QString')
+    @pyqtProperty("QString")
     def scale1_signal_path(self):
         return self.scale1.signal_path
 
@@ -72,8 +71,7 @@ class DualScale(QWidget):
     def scale1_label_visible(self, new_visible):
         self.scale1.label_visible = new_visible
 
-
-    @pyqtProperty('QString')
+    @pyqtProperty("QString")
     def scale2_signal_path(self):
         return self.scale2.signal_path
 
@@ -98,8 +96,6 @@ class DualScale(QWidget):
         self.d_vertically_flipped = value
         self.scale1.s_flipped = value
         self.scale2.s_flipped = value
-
-
 
     @pyqtProperty(float)
     def lower_red_breakpoint(self):

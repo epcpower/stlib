@@ -18,16 +18,16 @@ import epyqlib.utils.general
 import epyqlib.utils.qt
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2017, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2017, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
-@graham.schemify(tag='parameter')
+@graham.schemify(tag="parameter")
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Parameter(epyqlib.treenode.TreeNode):
-    name = attr.ib(default='New Parameter')
+    name = attr.ib(default="New Parameter")
     value = attr.ib(
         default=None,
         converter=epyqlib.attrsmodel.to_decimal_or_none,
@@ -47,17 +47,17 @@ class Parameter(epyqlib.treenode.TreeNode):
     check = epyqlib.attrsmodel.check_just_children
 
 
-@graham.schemify(tag='group')
+@graham.schemify(tag="group")
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Group(epyqlib.treenode.TreeNode):
-    name = attr.ib(default='New Group')
+    name = attr.ib(default="New Group")
     children = attr.ib(
         default=attr.Factory(list),
         cmp=False,
         init=False,
-        metadata={'valid_types': (Parameter, None)}
+        metadata={"valid_types": (Parameter, None)},
     )
     uuid = epyqlib.attrsmodel.attr_uuid()
 
@@ -80,8 +80,7 @@ class Group(epyqlib.treenode.TreeNode):
 
 
 Root = epyqlib.attrsmodel.Root(
-    default_name='Parameters',
-    valid_types=(Parameter, Group)
+    default_name="Parameters", valid_types=(Parameter, Group)
 )
 
 types = epyqlib.attrsmodel.Types(
@@ -99,11 +98,11 @@ def merge(name, *types):
 
 columns = epyqlib.attrsmodel.columns(
     (
-        (Parameter, 'name'),
-        (Group, 'name'),
+        (Parameter, "name"),
+        (Group, "name"),
     ),
-    ((Parameter, 'value'),),
-    merge('uuid', *types.types.values()),
+    ((Parameter, "value"),),
+    merge("uuid", *types.types.values()),
 )
 
 
@@ -120,7 +119,7 @@ def make_a_model(
     parameter_cls=Parameter,
     columns=columns,
 ):
-    root = root_cls(uuid='0f68fa9c-705d-4ba6-9ffa-406cb549a4dd')
+    root = root_cls(uuid="0f68fa9c-705d-4ba6-9ffa-406cb549a4dd")
 
     model = epyqlib.attrsmodel.Model(
         root=root,
@@ -128,28 +127,30 @@ def make_a_model(
     )
 
     group_a = group_cls(
-        name='Group A',
-        uuid='f5b7569e-9d7e-4433-a034-29c3e04d1ad4',
+        name="Group A",
+        uuid="f5b7569e-9d7e-4433-a034-29c3e04d1ad4",
     )
     parameter_a_a = parameter_cls(
-        name='Parameter A A',
-        uuid='df286eb3-67f0-42d6-b56a-8ee1ded49248',
+        name="Parameter A A",
+        uuid="df286eb3-67f0-42d6-b56a-8ee1ded49248",
     )
     group_a_b = group_cls(
-        name='Group A B',
-        uuid='aee15e15-c5df-4e73-ae1a-9a5d4eaa798a',
+        name="Group A B",
+        uuid="aee15e15-c5df-4e73-ae1a-9a5d4eaa798a",
     )
     parameter_b = parameter_cls(
-        name='Parameter B',
-        value=42, uuid='a1fd7abb-4760-472e-bc94-1ef4d2cfad62',
+        name="Parameter B",
+        value=42,
+        uuid="a1fd7abb-4760-472e-bc94-1ef4d2cfad62",
     )
     group_c = group_cls(
-        name='Group C',
-        uuid='2777e016-a3e6-470d-b20c-7a44904df710',
+        name="Group C",
+        uuid="2777e016-a3e6-470d-b20c-7a44904df710",
     )
     parameter_d = parameter_cls(
-        name='Parameter D',
-        value=42, uuid='97f1f9e1-5601-4304-a583-561df79c47be',
+        name="Parameter D",
+        value=42,
+        uuid="97f1f9e1-5601-4304-a583-561df79c47be",
     )
 
     root.append_child(group_a)
@@ -168,8 +169,8 @@ def make_a_model(
 def test_column_header_text(qtbot):
     model = make_a_model()
 
-    assert model.model.horizontalHeaderItem(0).text() == 'Name'
-    assert model.model.horizontalHeaderItem(1).text() == 'Value'
+    assert model.model.horizontalHeaderItem(0).text() == "Name"
+    assert model.model.horizontalHeaderItem(1).text() == "Value"
 
 
 def test_model(qtmodeltester):
@@ -179,7 +180,7 @@ def test_model(qtmodeltester):
 
 
 def test_search_column_0(qtbot):
-    search_in_column(0, 'Parameter B')
+    search_in_column(0, "Parameter B")
 
 
 def test_search_column_2(qtbot):
@@ -195,7 +196,7 @@ def search_in_column(column, target):
     view = PyQt5.QtWidgets.QTreeView()
     view.setModel(proxy)
 
-    index, = proxy.match(
+    (index,) = proxy.match(
         proxy.index(0, column),
         PyQt5.QtCore.Qt.DisplayRole,
         target,
@@ -205,11 +206,11 @@ def search_in_column(column, target):
 
 
 def test_proxy_search_column_0(qtbot):
-    proxy_search_in_column(0, 'Parameter B')
+    proxy_search_in_column(0, "Parameter B")
 
 
 def test_proxy_search_column_0_child(qtbot):
-    proxy_search_in_column(0, 'Parameter A A')
+    proxy_search_in_column(0, "Parameter A A")
 
 
 def test_proxy_search_column_2(qtbot):
@@ -225,7 +226,7 @@ def proxy_search_in_column(column, target):
     view = PyQt5.QtWidgets.QTreeView()
     view.setModel(proxy)
 
-    index, = proxy.match(
+    (index,) = proxy.match(
         proxy.index(0, column),
         PyQt5.QtCore.Qt.DisplayRole,
         target,
@@ -248,7 +249,7 @@ def proxy_search_in_column(column, target):
 
 
 def node_from_name(model, name):
-    index, = model.model.match(
+    (index,) = model.model.match(
         model.model.index(0, 0),
         PyQt5.QtCore.Qt.DisplayRole,
         name,
@@ -261,7 +262,7 @@ def node_from_name(model, name):
 
 @attr.s
 class DataChangedCollector(PyQt5.QtCore.QObject):
-    collected = PyQt5.QtCore.pyqtSignal('PyQt_PyObject')
+    collected = PyQt5.QtCore.pyqtSignal("PyQt_PyObject")
 
     model = attr.ib()
     parameter = attr.ib()
@@ -276,30 +277,34 @@ class DataChangedCollector(PyQt5.QtCore.QObject):
         #       must be changing rather than just being included in the
         #       range.
 
-        right_one = all((
-            self.parameter is self.model.node_from_index(top_left),
-            self.parameter is self.model.node_from_index(bottom_right),
-            self.column == top_left.column() == bottom_right.column(),
-            set(self.roles).issubset(roles),
-        ))
+        right_one = all(
+            (
+                self.parameter is self.model.node_from_index(top_left),
+                self.parameter is self.model.node_from_index(bottom_right),
+                self.column == top_left.column() == bottom_right.column(),
+                set(self.roles).issubset(roles),
+            )
+        )
 
         if right_one:
             parameter_name_index = top_left.siblingAtColumn(self.column)
 
-            self.collected.emit(parameter_name_index.data(
-                PyQt5.QtCore.Qt.DisplayRole,
-            ))
+            self.collected.emit(
+                parameter_name_index.data(
+                    PyQt5.QtCore.Qt.DisplayRole,
+                )
+            )
 
 
 def test_data_changed(qtbot):
     model = make_a_model()
 
-    parameter = node_from_name(model, 'Parameter B')
+    parameter = node_from_name(model, "Parameter B")
 
     values = epyqlib.tests.common.Values(
         initial=42,
         input=[42, 37],
-        expected=['37'],
+        expected=["37"],
     )
 
     parameter.value = values.initial
@@ -327,12 +332,12 @@ def test_data_changed(qtbot):
 def test_other_data_did_not_change(qtbot):
     model = make_a_model()
 
-    parameter = node_from_name(model, 'Parameter B')
+    parameter = node_from_name(model, "Parameter B")
 
     values = epyqlib.tests.common.Values(
         initial=42,
         input=[42, 37],
-        expected=['37'],
+        expected=["37"],
     )
 
     parameter.value = values.initial
@@ -344,7 +349,7 @@ def test_other_data_did_not_change(qtbot):
         roles=(PyQt5.QtCore.Qt.DisplayRole,),
     )
 
-    other_parameter = node_from_name(model, 'Parameter D')
+    other_parameter = node_from_name(model, "Parameter D")
 
     other_values = epyqlib.tests.common.Values(
         initial=12,
@@ -382,19 +387,19 @@ def test_local_drag_n_drop(qtbot):
     model = make_a_model()
     model.add_drop_sources(model)
 
-    parameter = node_from_name(model, 'Parameter B')
-    group = node_from_name(model, 'Group C')
+    parameter = node_from_name(model, "Parameter B")
+    group = node_from_name(model, "Group C")
 
     values = epyqlib.tests.common.Values(
         initial=42,
         input=[42, 37, 23],
-        expected=['37', '23'],
+        expected=["37", "23"],
     )
 
     values_after_drop = epyqlib.tests.common.Values(
         initial=int(values.expected[-1]),
         input=[11, 13],
-        expected=['11', '13'],
+        expected=["11", "13"],
     )
 
     parameter.value = values.initial
@@ -433,21 +438,18 @@ def test_local_drag_n_drop(qtbot):
 
     parameter.value += 1
 
-    assert (
-        tuple(values_after_drop.expected)
-        == tuple(values_after_drop.collected)
-    )
+    assert tuple(values_after_drop.expected) == tuple(values_after_drop.collected)
 
 
 def test_prepopulated_connections(qtbot):
     values = epyqlib.tests.common.Values(
         initial=42,
         input=[42, 37, 23],
-        expected=['37', '23'],
+        expected=["37", "23"],
     )
 
     parameter = Parameter(
-        name='Parameter A',
+        name="Parameter A",
         value=values.initial,
     )
 
@@ -479,11 +481,11 @@ def test_postpopulated_connections(qtbot):
     values = epyqlib.tests.common.Values(
         initial=42,
         input=[42, 37, 23],
-        expected=['37', '23'],
+        expected=["37", "23"],
     )
 
     parameter = Parameter(
-        name='Parameter A',
+        name="Parameter A",
         value=values.initial,
     )
 
@@ -512,15 +514,15 @@ def test_postpopulated_connections(qtbot):
 
 
 def test_with_pyqtpropertys(qtbot):
-    @graham.schemify(tag='pyqtproperty_parameter')
+    @graham.schemify(tag="pyqtproperty_parameter")
     @epyqlib.attrsmodel.ify()
     @epyqlib.utils.qt.pyqtify(
-        property_decorator=lambda: PyQt5.QtCore.pyqtProperty('PyQt_PyObject'),
+        property_decorator=lambda: PyQt5.QtCore.pyqtProperty("PyQt_PyObject"),
     )
     @attr.s(hash=False)
     class PyQtPropertyParameter(epyqlib.treenode.TreeNode):
-        type = attr.ib(default='test_parameter', init=False)
-        name = attr.ib(default='New Parameter')
+        type = attr.ib(default="test_parameter", init=False)
+        name = attr.ib(default="New Parameter")
         value = attr.ib(
             default=None,
             converter=epyqlib.attrsmodel.to_decimal_or_none,
@@ -531,13 +533,12 @@ def test_with_pyqtpropertys(qtbot):
             super().__init__()
 
     Root = epyqlib.attrsmodel.Root(
-        default_name='Parameters',
-        valid_types=(PyQtPropertyParameter, Group)
+        default_name="Parameters", valid_types=(PyQtPropertyParameter, Group)
     )
 
     columns = epyqlib.attrsmodel.columns(
-        ((PyQtPropertyParameter, 'name'),),
-        ((PyQtPropertyParameter, 'value'),),
+        ((PyQtPropertyParameter, "name"),),
+        ((PyQtPropertyParameter, "value"),),
     )
 
     model = make_a_model(
@@ -546,12 +547,12 @@ def test_with_pyqtpropertys(qtbot):
         columns=columns,
     )
 
-    parameter = node_from_name(model, 'Parameter B')
+    parameter = node_from_name(model, "Parameter B")
 
     values = epyqlib.tests.common.Values(
         initial=42,
         input=[42, 37],
-        expected=['37'],
+        expected=["37"],
     )
 
     parameter.value = values.initial
@@ -578,19 +579,19 @@ def test_with_pyqtpropertys(qtbot):
 
 def test_columns():
     columns = epyqlib.attrsmodel.columns(
-        ((Parameter, 'name'), (Group, 'name')),
-        ((Parameter, 'value'),),
+        ((Parameter, "name"), (Group, "name")),
+        ((Parameter, "value"),),
     )
 
     name_column = epyqlib.attrsmodel.Column(
-        name='Name',
-        fields={Parameter: 'name', Group: 'name'},
+        name="Name",
+        fields={Parameter: "name", Group: "name"},
     )
 
     assert columns[0] == name_column
     # TODO: using the human name?  seems kinda bad in code
-    assert columns['Name'] == name_column
-    assert columns[Parameter, 'name'] == name_column
+    assert columns["Name"] == name_column
+    assert columns[Parameter, "name"] == name_column
 
 
 def test_children_property_retained():
@@ -605,13 +606,13 @@ def test_children_property_retained():
 
     n = N()
 
-    assert isinstance(inspect.getattr_static(n, 'children'), property)
+    assert isinstance(inspect.getattr_static(n, "children"), property)
 
 
 def test_children_changed_signals():
     model = make_a_model()
 
-    group = node_from_name(model, 'Group C')
+    group = node_from_name(model, "Group C")
 
     added_items = []
 
@@ -636,12 +637,12 @@ def test_children_changed_signals():
     assert removed_items == [(group, parameter, 0)]
 
 
-@graham.schemify(tag='pass_through')
+@graham.schemify(tag="pass_through")
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @epyqlib.utils.qt.pyqtify_passthrough_properties(
-    original='original',
-    field_names=('value',),
+    original="original",
+    field_names=("value",),
 )
 @attr.s(hash=False)
 class PassThrough(epyqlib.treenode.TreeNode):
@@ -659,9 +660,9 @@ class PassThrough(epyqlib.treenode.TreeNode):
     def __attrs_post_init__(self):
         super().__init__()
 
+
 PassThroughRoot = epyqlib.attrsmodel.Root(
-    default_name='Pass Through',
-    valid_types=(Parameter, PassThrough)
+    default_name="Pass Through", valid_types=(Parameter, PassThrough)
 )
 
 
@@ -669,10 +670,10 @@ def test_original_signals(qtbot):
     root = PassThroughRoot()
 
     columns = epyqlib.attrsmodel.columns(
-        ((Parameter, 'name'),),
+        ((Parameter, "name"),),
         (
-            (Parameter, 'value'),
-            (PassThrough, 'value'),
+            (Parameter, "value"),
+            (PassThrough, "value"),
         ),
     )
 
@@ -689,20 +690,20 @@ def test_original_signals(qtbot):
     root.append_child(passthrough_a)
     root.append_child(passthrough_b)
 
-    common_expected = ['5']
+    common_expected = ["5"]
 
     values = {
-        'original': epyqlib.tests.common.Values(
+        "original": epyqlib.tests.common.Values(
             initial=None,
             input=None,
             expected=common_expected,
         ),
-        'a': epyqlib.tests.common.Values(
+        "a": epyqlib.tests.common.Values(
             initial=None,
             input=None,
             expected=common_expected,
         ),
-        'b': epyqlib.tests.common.Values(
+        "b": epyqlib.tests.common.Values(
             initial=None,
             input=None,
             expected=common_expected,
@@ -711,19 +712,19 @@ def test_original_signals(qtbot):
 
     column = 1
     collectors = {
-        'original': DataChangedCollector(
+        "original": DataChangedCollector(
             model=model,
             parameter=original,
             column=column,
             roles=(PyQt5.QtCore.Qt.DisplayRole,),
         ),
-        'a': DataChangedCollector(
+        "a": DataChangedCollector(
             model=model,
             parameter=passthrough_a,
             column=column,
             roles=(PyQt5.QtCore.Qt.DisplayRole,),
         ),
-        'b': DataChangedCollector(
+        "b": DataChangedCollector(
             model=model,
             parameter=passthrough_b,
             column=column,
@@ -748,35 +749,35 @@ def test_original_signals(qtbot):
 
 
 def test_to_decimal_or_none_re_locale():
-    decimal_string = '1,000.00'
+    decimal_string = "1,000.00"
 
-    with epyqlib.tests.common.use_locale(('C', None)):
+    with epyqlib.tests.common.use_locale(("C", None)):
         with pytest.raises(ValueError, match=repr(decimal_string)):
             epyqlib.attrsmodel.to_decimal_or_none(decimal_string)
 
-    with epyqlib.tests.common.use_locale(('en_US', 'utf8'), 'us'):
+    with epyqlib.tests.common.use_locale(("en_US", "utf8"), "us"):
         epyqlib.attrsmodel.to_decimal_or_none(decimal_string)
 
 
 def test_to_int_or_none_re_locale():
-    int_string = '1,000'
+    int_string = "1,000"
 
-    with epyqlib.tests.common.use_locale(('C', None)):
+    with epyqlib.tests.common.use_locale(("C", None)):
         with pytest.raises(ValueError, match=repr(int_string)):
             epyqlib.attrsmodel.to_int_or_none(int_string)
 
-    with epyqlib.tests.common.use_locale(('en_US', 'utf8'), 'us'):
+    with epyqlib.tests.common.use_locale(("en_US", "utf8"), "us"):
         epyqlib.attrsmodel.to_int_or_none(int_string)
 
 
 def test_two_state_checkbox():
-    @graham.schemify(tag='checkbox_parameter')
+    @graham.schemify(tag="checkbox_parameter")
     @epyqlib.attrsmodel.ify()
     @epyqlib.utils.qt.pyqtify()
     @attr.s(hash=False)
     class CheckboxParameter(epyqlib.treenode.TreeNode):
-        type = attr.ib(default='test_parameter', init=False)
-        name = attr.ib(default='New Parameter')
+        type = attr.ib(default="test_parameter", init=False)
+        name = attr.ib(default="New Parameter")
         value = attr.ib(
             default=None,
             converter=epyqlib.attrsmodel.two_state_checkbox,
@@ -787,16 +788,15 @@ def test_two_state_checkbox():
             super().__init__()
 
     Root = epyqlib.attrsmodel.Root(
-        default_name='Parameters',
-        valid_types=(CheckboxParameter, Group)
+        default_name="Parameters", valid_types=(CheckboxParameter, Group)
     )
 
     columns = epyqlib.attrsmodel.columns(
         (
-            (CheckboxParameter, 'name'),
-            (Group, 'name'),
+            (CheckboxParameter, "name"),
+            (Group, "name"),
         ),
-        ((CheckboxParameter, 'value'),),
+        ((CheckboxParameter, "value"),),
     )
 
     root = Root()
@@ -809,7 +809,7 @@ def test_two_state_checkbox():
     root.append_child(parameter)
 
     index = model.index_from_node(parameter)
-    column_index = columns.index_of('Value')
+    column_index = columns.index_of("Value")
     index = index.siblingAtColumn(column_index)
 
     flags = model.model.flags(index)
@@ -817,12 +817,12 @@ def test_two_state_checkbox():
 
 
 def test_enumeration(qtbot):
-    @graham.schemify(tag='leaf')
+    @graham.schemify(tag="leaf")
     @epyqlib.attrsmodel.ify()
     @epyqlib.utils.qt.pyqtify()
     @attr.s(hash=False)
     class TestEnumerationLeaf(epyqlib.treenode.TreeNode):
-        name = attr.ib(default='New Leaf')
+        name = attr.ib(default="New Leaf")
         enumeration_uuid = attr.ib(
             default=None,
             converter=epyqlib.attrsmodel.convert_uuid,
@@ -830,7 +830,7 @@ def test_enumeration(qtbot):
         epyqlib.attrsmodel.attrib(
             attribute=enumeration_uuid,
             delegate=epyqlib.attrsmodel.RootDelegateCache(
-                list_selection_root='test list_selection_root',
+                list_selection_root="test list_selection_root",
             ),
             converter=epyqlib.attrsmodel.convert_uuid,
         )
@@ -839,17 +839,17 @@ def test_enumeration(qtbot):
         def __attrs_post_init__(self):
             super().__init__()
 
-    @graham.schemify(tag='group')
+    @graham.schemify(tag="group")
     @epyqlib.attrsmodel.ify()
     @epyqlib.utils.qt.pyqtify()
     @attr.s(hash=False)
     class TestEnumerationGroup(epyqlib.treenode.TreeNode):
-        name = attr.ib(default='New Group')
+        name = attr.ib(default="New Group")
         children = attr.ib(
             default=attr.Factory(list),
             cmp=False,
             init=False,
-            metadata={'valid_types': (TestEnumerationLeaf,)}
+            metadata={"valid_types": (TestEnumerationLeaf,)},
         )
         uuid = epyqlib.attrsmodel.attr_uuid()
 
@@ -860,19 +860,18 @@ def test_enumeration(qtbot):
             return isinstance(node, tuple(self.addable_types().values()))
 
     Root = epyqlib.attrsmodel.Root(
-        default_name='Test',
-        valid_types=(TestEnumerationLeaf, TestEnumerationGroup)
+        default_name="Test", valid_types=(TestEnumerationLeaf, TestEnumerationGroup)
     )
 
     columns = epyqlib.attrsmodel.columns(
         (
-            (TestEnumerationLeaf, 'name'),
-            (TestEnumerationGroup, 'name'),
+            (TestEnumerationLeaf, "name"),
+            (TestEnumerationGroup, "name"),
         ),
-        ((TestEnumerationLeaf, 'enumeration_uuid'),),
+        ((TestEnumerationLeaf, "enumeration_uuid"),),
     )
 
-    root = Root(uuid='b05c413f-215c-4376-a107-5bce992ed7a3')
+    root = Root(uuid="b05c413f-215c-4376-a107-5bce992ed7a3")
     model = epyqlib.attrsmodel.Model(
         root=root,
         columns=columns,
@@ -880,31 +879,31 @@ def test_enumeration(qtbot):
     model.add_drop_sources(model)
 
     item = TestEnumerationLeaf(
-        name='Outside',
-        uuid='cdedbbd2-c596-42cc-be45-7eb7953cc5ad',
+        name="Outside",
+        uuid="cdedbbd2-c596-42cc-be45-7eb7953cc5ad",
     )
     root.append_child(item)
 
     group = TestEnumerationGroup(
-        name='Enumerations',
-        uuid='06c2a6ad-00b2-49ac-a836-057daa1ddc2f',
+        name="Enumerations",
+        uuid="06c2a6ad-00b2-49ac-a836-057daa1ddc2f",
     )
     root.append_child(group)
-    model.list_selection_roots['test list_selection_root'] = group
+    model.list_selection_roots["test list_selection_root"] = group
 
     enumerator_a = TestEnumerationLeaf(
-        name='Inside A',
-        uuid='1900f7e3-7230-40c1-9f5f-b838e2c33710',
+        name="Inside A",
+        uuid="1900f7e3-7230-40c1-9f5f-b838e2c33710",
     )
     group.append_child(enumerator_a)
     enumerator_b = TestEnumerationLeaf(
-        name='Inside B',
-        uuid='b9aeea0a-94ea-4fe6-a627-50caa942fbb5',
+        name="Inside B",
+        uuid="b9aeea0a-94ea-4fe6-a627-50caa942fbb5",
     )
     group.append_child(enumerator_b)
     enumerator_c = TestEnumerationLeaf(
-        name='Inside C',
-        uuid='a6a4e027-e128-4860-9f64-8be93708916e',
+        name="Inside C",
+        uuid="a6a4e027-e128-4860-9f64-8be93708916e",
     )
     group.append_child(enumerator_c)
 
@@ -914,7 +913,7 @@ def test_enumeration(qtbot):
 
     target_index = model.index_from_node(item)
     target_index = target_index.siblingAtColumn(
-        columns.index_of('Enumeration Uuid'),
+        columns.index_of("Enumeration Uuid"),
     )
 
     item.enumeration_uuid = enumerator_a.uuid
@@ -927,7 +926,7 @@ def test_enumeration(qtbot):
             PyQt5.QtWidgets.QAbstractItemView.AllEditTriggers,
             None,
         )
-        editor, = view.findChildren(epyqlib.attrsmodel.CustomMulti)
+        (editor,) = view.findChildren(epyqlib.attrsmodel.CustomMulti)
 
         editor.setCurrentRow(row)
 
@@ -948,7 +947,7 @@ def test_enumeration(qtbot):
 
 
 def test_all_selection_roots_avail():
-    @graham.schemify(tag='parameter')
+    @graham.schemify(tag="parameter")
     @epyqlib.attrsmodel.ify()
     @epyqlib.utils.qt.pyqtify()
     @attr.s(hash=False)
@@ -959,26 +958,26 @@ def test_all_selection_roots_avail():
         epyqlib.attrsmodel.attrib(
             attribute=c,
             delegate=epyqlib.attrsmodel.RootDelegateCache(
-                list_selection_root='c root',
+                list_selection_root="c root",
             ),
         )
         d = attr.ib(default=None)
         epyqlib.attrsmodel.attrib(
             attribute=d,
             delegate=epyqlib.attrsmodel.RootDelegateCache(
-                list_selection_root='d root',
+                list_selection_root="d root",
             ),
         )
 
         def __attrs_post_init__(self):
             super().__init__()
 
-    expected = {'c':'c root', 'd':'d root'}
-    assert  epyqlib.attrsmodel.list_selection_roots(C) == expected
+    expected = {"c": "c root", "d": "d root"}
+    assert epyqlib.attrsmodel.list_selection_roots(C) == expected
 
 
 def test_types_list_selection_roots():
-    @graham.schemify(tag='parameter')
+    @graham.schemify(tag="parameter")
     @epyqlib.attrsmodel.ify()
     @epyqlib.utils.qt.pyqtify()
     @attr.s(hash=False)
@@ -990,7 +989,7 @@ def test_types_list_selection_roots():
         epyqlib.attrsmodel.attrib(
             attribute=c,
             delegate=epyqlib.attrsmodel.RootDelegateCache(
-                list_selection_root='c root',
+                list_selection_root="c root",
             ),
         )
 
@@ -998,14 +997,14 @@ def test_types_list_selection_roots():
         epyqlib.attrsmodel.attrib(
             attribute=d,
             delegate=epyqlib.attrsmodel.RootDelegateCache(
-                list_selection_root='d root',
+                list_selection_root="d root",
             ),
         )
 
         def __attrs_post_init__(self):
             super().__init__()
 
-    @graham.schemify(tag='parameter')
+    @graham.schemify(tag="parameter")
     @epyqlib.attrsmodel.ify()
     @epyqlib.utils.qt.pyqtify()
     @attr.s(hash=False)
@@ -1017,7 +1016,7 @@ def test_types_list_selection_roots():
         epyqlib.attrsmodel.attrib(
             attribute=g,
             delegate=epyqlib.attrsmodel.RootDelegateCache(
-                list_selection_root='g root',
+                list_selection_root="g root",
             ),
         )
 
@@ -1025,7 +1024,7 @@ def test_types_list_selection_roots():
         epyqlib.attrsmodel.attrib(
             attribute=h,
             delegate=epyqlib.attrsmodel.RootDelegateCache(
-                list_selection_root='h root',
+                list_selection_root="h root",
             ),
         )
 
@@ -1035,10 +1034,10 @@ def test_types_list_selection_roots():
     types = epyqlib.attrsmodel.Types(types=(C, D))
 
     expected = {
-        'c root',
-        'd root',
-        'g root',
-        'h root',
+        "c root",
+        "d root",
+        "g root",
+        "h root",
     }
 
     assert set(types.list_selection_roots()) == expected
@@ -1052,7 +1051,7 @@ def test_noneditable_columns():
 
     base_index = model.index_from_node(group)
 
-    index = base_index.siblingAtColumn(columns.index_of('Value'))
+    index = base_index.siblingAtColumn(columns.index_of("Value"))
     item = model.model.itemFromIndex(index)
     assert not item.isEditable()
 
@@ -1065,7 +1064,7 @@ def test_editable_columns():
 
     base_index = model.index_from_node(group)
 
-    index = base_index.siblingAtColumn(columns.index_of('Name'))
+    index = base_index.siblingAtColumn(columns.index_of("Name"))
     item = model.model.itemFromIndex(index)
     assert item.isEditable()
 
@@ -1077,13 +1076,12 @@ def test_none_values_show_dash():
     assert isinstance(group, Group)
 
     base_index = model.index_from_node(group)
-    index = base_index.siblingAtColumn(columns.index_of('Name'))
+    index = base_index.siblingAtColumn(columns.index_of("Name"))
     item = model.model.itemFromIndex(index)
 
     group.name = "The Name"
     assert group.name == item.data(PyQt5.QtCore.Qt.DisplayRole)
     assert group.name == item.data(PyQt5.QtCore.Qt.EditRole)
-
 
     group.name = None
     # TODO: CAMPid 0794305784527546542452654254679680
@@ -1093,5 +1091,5 @@ def test_none_values_show_dash():
     # http://doc.qt.io/qt-5/qstandarditem.html#data
     #   The default implementation treats Qt::EditRole and Qt::DisplayRole
     #   as referring to the same data
-    assert '' == item.data(PyQt5.QtCore.Qt.DisplayRole)
-    assert '' == item.data(PyQt5.QtCore.Qt.EditRole)
+    assert "" == item.data(PyQt5.QtCore.Qt.DisplayRole)
+    assert "" == item.data(PyQt5.QtCore.Qt.EditRole)

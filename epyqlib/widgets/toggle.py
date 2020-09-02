@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 from PyQt5.QtCore import pyqtProperty, Qt, QEvent
 from PyQt5.QtGui import QMouseEvent
@@ -11,8 +11,8 @@ import epyqlib.widgets.toggle_ui
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class Toggle(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
@@ -48,9 +48,11 @@ class Toggle(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
 
     def eventFilter(self, qobject, qevent):
         if isinstance(qevent, QMouseEvent) and self.tx:
-            if (qevent.button() == Qt.LeftButton
-                    and qevent.type() == QEvent.MouseButtonRelease
-                    and self.rect().contains(qevent.localPos().toPoint())):
+            if (
+                qevent.button() == Qt.LeftButton
+                and qevent.type() == QEvent.MouseButtonRelease
+                and self.rect().contains(qevent.localPos().toPoint())
+            ):
                 self.toggle_released()
 
             return True
@@ -71,8 +73,8 @@ class Toggle(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
     def toggle_released(self):
         self.ui.value.triggerAction(
             PyQt5.QtWidgets.QAbstractSlider.SliderToMinimum
-            if self.ui.value.sliderPosition() else
-            PyQt5.QtWidgets.QAbstractSlider.SliderToMaximum
+            if self.ui.value.sliderPosition()
+            else PyQt5.QtWidgets.QAbstractSlider.SliderToMaximum
         )
 
     def action_triggered(self, action):
@@ -98,10 +100,11 @@ class Toggle(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
                 self.ui.on.setText(signal.enumeration[1])
                 signal.value_changed.connect(self.signal_value_changed)
             else:
-                self.ui.off.setText('-')
-                self.ui.on.setText('-')
+                self.ui.off.setText("-")
+                self.ui.on.setText("-")
         epyqlib.widgets.abstracttxwidget.AbstractTxWidget.set_signal(
-            self, signal, force_update=force_update)
+            self, signal, force_update=force_update
+        )
 
     def signal_value_changed(self, value):
         self.ui.value.setSliderPosition(bool(value))
@@ -110,8 +113,8 @@ class Toggle(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

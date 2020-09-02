@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 import attr
@@ -25,7 +26,7 @@ import itertools
 import json
 import epyqlib.pyqabstractitemmodel
 from epyqlib.treenode import TreeNode
-from PyQt5.QtCore import (Qt, QVariant, QModelIndex, pyqtSignal, pyqtSlot)
+from PyQt5.QtCore import Qt, QVariant, QModelIndex, pyqtSignal, pyqtSlot
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QFileDialog
 import qtawesome
@@ -38,26 +39,27 @@ import uuid
 import weakref
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class Columns(AbstractColumns):
     _members = [
-        'name',
-        'read_only',
-        'factory',
-        'value',
-        'saturate',
-        'reset',
-        'clear',
-        'scratch',
-        'user_default',
-        'factory_default',
-        'minimum',
-        'maximum',
-        'comment',
+        "name",
+        "read_only",
+        "factory",
+        "value",
+        "saturate",
+        "reset",
+        "clear",
+        "scratch",
+        "user_default",
+        "factory_default",
+        "minimum",
+        "maximum",
+        "comment",
     ]
+
 
 Columns.indexes = Columns.indexes()
 
@@ -71,10 +73,10 @@ diffable_columns = [
     Columns.indexes.maximum,
 ]
 
-diff_highlight = QtGui.QColor('orange')
+diff_highlight = QtGui.QColor("orange")
 diff_highlight.setAlphaF(0.4)
 
-reference_highlight = QtGui.QColor('green')
+reference_highlight = QtGui.QColor("green")
 reference_highlight.setAlphaF(0.2)
 
 
@@ -105,27 +107,28 @@ class Configuration:
     meta_signal = attr.ib()
     nv_save_in_progress_name = attr.ib()
 
+
 configurations = {
-    'original': Configuration(
-        set_frame='CommandSetNVParam',
-        status_frame='StatusNVParam',
-        to_nv_command='SaveToEE_command',
-        to_nv_status='SaveToEE_status',
-        read_write_signal='ReadParam_command',
-        read_write_status_signal='ReadParam_status',
+    "original": Configuration(
+        set_frame="CommandSetNVParam",
+        status_frame="StatusNVParam",
+        to_nv_command="SaveToEE_command",
+        to_nv_status="SaveToEE_status",
+        read_write_signal="ReadParam_command",
+        read_write_status_signal="ReadParam_status",
         meta_signal=None,
-        nv_save_in_progress_name = None,
+        nv_save_in_progress_name=None,
     ),
-    'j1939': Configuration(
-        set_frame='ParameterQuery',
-        status_frame='ParameterResponse',
-        to_nv_command='SaveToEE_command',
-        to_nv_status='SaveToEE_status',
-        read_write_signal='ReadParam_command',
-        read_write_status_signal = 'ReadParam_status',
-        meta_signal='Meta',
-        nv_save_in_progress_name = 'eeSaveInProgress',
-    )
+    "j1939": Configuration(
+        set_frame="ParameterQuery",
+        status_frame="ParameterResponse",
+        to_nv_command="SaveToEE_command",
+        to_nv_status="SaveToEE_status",
+        read_write_signal="ReadParam_command",
+        read_write_status_signal="ReadParam_status",
+        meta_signal="Meta",
+        nv_save_in_progress_name="eeSaveInProgress",
+    ),
 }
 
 
@@ -146,16 +149,11 @@ class MetaEnum(epyqlib.utils.general.AutoNumberIntEnum):
 
 
 meta_limits = (MetaEnum.minimum, MetaEnum.maximum)
-meta_limits_first = (
-    meta_limits + tuple(sorted(set(MetaEnum) - set(meta_limits)))
-)
+meta_limits_first = meta_limits + tuple(sorted(set(MetaEnum) - set(meta_limits)))
 
 MetaEnum.non_value = tuple(sorted(set(MetaEnum) - {MetaEnum.value}))
 
-meta_column_indexes = tuple(
-    getattr(Columns.indexes, meta.name)
-    for meta in MetaEnum
-)
+meta_column_indexes = tuple(getattr(Columns.indexes, meta.name) for meta in MetaEnum)
 
 
 dynamic_column_indexes_by_meta = {
@@ -165,17 +163,11 @@ dynamic_column_indexes_by_meta = {
         Columns.indexes.reset,
         Columns.indexes.clear,
     ],
-    **{
-        meta: [getattr(Columns.indexes, meta.name)]
-        for meta in MetaEnum.non_value
-    },
+    **{meta: [getattr(Columns.indexes, meta.name)] for meta in MetaEnum.non_value},
 }
 
 
-column_index_by_meta = {
-    meta: getattr(Columns.indexes, meta.name)
-    for meta in MetaEnum
-}
+column_index_by_meta = {meta: getattr(Columns.indexes, meta.name) for meta in MetaEnum}
 
 
 @attr.s
@@ -195,26 +187,36 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
     activity_started = epyqlib.utils.qt.Signal(str)
     activity_ended = epyqlib.utils.qt.Signal(str)
 
-    def __init__(self, neo, bus=None, stop_cyclic=None, start_cyclic=None,
-                 configuration=None, hierarchy=None, metas=(MetaEnum.value,),
-                 access_level_path=None, access_password_path=None,
-                 serial_number_uuid=None, parent=None):
+    def __init__(
+        self,
+        neo,
+        bus=None,
+        stop_cyclic=None,
+        start_cyclic=None,
+        configuration=None,
+        hierarchy=None,
+        metas=(MetaEnum.value,),
+        access_level_path=None,
+        access_password_path=None,
+        serial_number_uuid=None,
+        parent=None,
+    ):
         TreeNode.__init__(self)
         epyqlib.canneo.QtCanListener.__init__(self, parent=parent)
 
         if configuration is None:
-            configuration = 'original'
+            configuration = "original"
 
         self.stop_cyclic = stop_cyclic
         self.start_cyclic = start_cyclic
         self.configuration = configurations[configuration]
 
         from twisted.internet import reactor
+
         self.protocol = epyqlib.twisted.nvs.Protocol()
         self.transport = epyqlib.twisted.busproxy.BusProxy(
-            protocol=self.protocol,
-            reactor=reactor,
-            bus=bus)
+            protocol=self.protocol, reactor=reactor, bus=bus
+        )
 
         self.bus = bus
         self.neo = neo
@@ -229,8 +231,9 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         if access_password_path is not None:
             self.password_node = self.neo.signal_by_path(*access_password_path)
 
-        self.set_frames = [f for f in self.neo.frames
-                       if f.name == self.configuration.set_frame]
+        self.set_frames = [
+            f for f in self.neo.frames if f.name == self.configuration.set_frame
+        ]
         try:
             self.set_frames = self.set_frames[0]
         except IndexError:
@@ -239,8 +242,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
         self.set_frames = self.set_frames.multiplex_frames
         self.status_frames = [
-            f for f in self.neo.frames
-            if f.name == self.configuration.status_frame
+            f for f in self.neo.frames if f.name == self.configuration.status_frame
         ][0].multiplex_frames
 
         self.serial_number_node = None
@@ -259,7 +261,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             for signal in frame.signals:
                 if signal.name == self.configuration.to_nv_command:
                     for key, value in signal.enumeration.items():
-                        if value == 'Enable':
+                        if value == "Enable":
                             self.save_frame = frame
                             self.save_signal = signal
                             self.save_value = key
@@ -269,7 +271,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             for signal in frame.signals:
                 if signal.name == save_status_name:
                     for key, value in signal.enumeration.items():
-                        if value == 'Enable':
+                        if value == "Enable":
                             self.confirm_save_frame = frame
                             self.confirm_save_multiplex_value = signal.multiplex
                             self.confirm_save_signal = signal
@@ -284,24 +286,28 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             raise Exception(
                 "'{}' signal not found in NV parameter interface".format(
                     save_status_name
-                ))
+                )
+            )
 
         self.nv_by_path = {}
         # TODO: kind of an ugly manual way to connect this
         self.status_frames[0].set_frame = self.set_frames[0]
         for value, frame in self.set_frames.items():
             signals = [s for s in frame.signals]
-            signals = [s for s in signals if s.multiplex != 'Multiplexor']
+            signals = [s for s in signals if s.multiplex != "Multiplexor"]
             signals = [
-                s for s in signals
-                if s.name not in [
+                s
+                for s in signals
+                if s.name
+                not in [
                     self.configuration.read_write_signal,
                     self.configuration.meta_signal,
-                    '{}_MUX'.format(self.configuration.set_frame)
+                    "{}_MUX".format(self.configuration.set_frame),
                 ]
             ]
 
             if len(signals) > 0:
+
                 def ignore_timeout(failure):
                     acceptable_errors = (
                         epyqlib.twisted.nvs.RequestTimeoutError,
@@ -311,8 +317,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     if failure.type in acceptable_errors:
                         return None
 
-                    return epyqlib.utils.twisted.errbackhook(
-                        failure)
+                    return epyqlib.utils.twisted.errbackhook(failure)
 
                 def send(signals=None, all_signals=signals):
                     if signals is None:
@@ -322,11 +327,13 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     d.callback(None)
 
                     for enumerator in metas:
-                        d.addCallback(lambda _: self.protocol.write_multiple(
-                            nv_signals=signals,
-                            meta=enumerator,
-                            priority=epyqlib.twisted.nvs.Priority.user
-                        ))
+                        d.addCallback(
+                            lambda _: self.protocol.write_multiple(
+                                nv_signals=signals,
+                                meta=enumerator,
+                                priority=epyqlib.twisted.nvs.Priority.user,
+                            )
+                        )
                     d.addErrback(ignore_timeout)
 
                 frame._send.connect(send)
@@ -341,29 +348,35 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 try:
                     nv.frame.status_frame = self.status_frames[value]
                 except KeyError:
-                    raise Exception('Unable to find: {}:{} with mux id {}'.format(
-                        self.configuration.status_frame,
-                        frame.mux_name,
-                        frame.mux_value,
-                    ))
+                    raise Exception(
+                        "Unable to find: {}:{} with mux id {}".format(
+                            self.configuration.status_frame,
+                            frame.mux_name,
+                            frame.mux_value,
+                        )
+                    )
 
                 self.status_frames[value].set_frame = nv.frame
 
-                search = (s for s in self.status_frames[value].signals
-                          if s.start_bit == nv.start_bit and s.signal_size == nv.signal_size)
+                search = (
+                    s
+                    for s in self.status_frames[value].signals
+                    if s.start_bit == nv.start_bit and s.signal_size == nv.signal_size
+                )
                 try:
-                    nv.status_signal, = search
+                    (nv.status_signal,) = search
                 except ValueError:
                     raise Exception(
-                        'NV status signal not found for {}:{}'.format(nv.frame.mux_name, nv.name)
+                        "NV status signal not found for {}:{}".format(
+                            nv.frame.mux_name, nv.name
+                        )
                     )
                 nv.status_signal.set_signal = nv
 
-
         unreferenced_paths = set(self.nv_by_path)
         if hierarchy is not None:
-            def handle(children, tree_parent,
-                       unreferenced_paths=unreferenced_paths):
+
+            def handle(children, tree_parent, unreferenced_paths=unreferenced_paths):
                 unreferenced_groups = []
                 logger.info(children, tree_parent)
                 for child in children:
@@ -371,44 +384,45 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     if isinstance(child, dict):
                         group = Group(
                             fields=Columns(
-                                name=child['name'],
+                                name=child["name"],
                             )
                         )
                         tree_parent.append_child(group)
-                        logger.info('added group: {}'.format(group.fields.name))
-                        if child.get('unreferenced'):
+                        logger.info("added group: {}".format(group.fields.name))
+                        if child.get("unreferenced"):
                             unreferenced_groups.append(group)
                         else:
 
-                            unreferenced_groups.extend(handle(
-                                children=child.get('children', ()),
-                                tree_parent=group
-                            ))
+                            unreferenced_groups.extend(
+                                handle(
+                                    children=child.get("children", ()),
+                                    tree_parent=group,
+                                )
+                            )
                     else:
-                        path = ('ParameterQuery',) + tuple(child)
+                        path = ("ParameterQuery",) + tuple(child)
                         if path in unreferenced_paths:
                             tree_parent.append_child(self.nv_by_path[path])
                             unreferenced_paths.discard(path)
                         elif path not in self.nv_by_path:
-                            logger.info('Unknown parameter referenced: {}'
-                                  .format(path))
+                            logger.info("Unknown parameter referenced: {}".format(path))
                         else:
-                            raise Exception('Attempted to put parameter in '
-                                            'multiple groups: {}'.format(path))
+                            raise Exception(
+                                "Attempted to put parameter in "
+                                "multiple groups: {}".format(path)
+                            )
 
                 return tuple(g for g in unreferenced_groups if g is not None)
 
-            unreferenced_groups = handle(children=hierarchy['children'],
-                                      tree_parent=self)
-
-            logger.info('\\/ \\/ \\/ unreferenced parameter paths')
-            logger.info(
-                json.dumps(
-                    tuple(p[1:] for p in sorted(unreferenced_paths)),
-                    indent=4
-                )
+            unreferenced_groups = handle(
+                children=hierarchy["children"], tree_parent=self
             )
-            logger.info('/\\ /\\ /\\ unreferenced parameter paths')
+
+            logger.info("\\/ \\/ \\/ unreferenced parameter paths")
+            logger.info(
+                json.dumps(tuple(p[1:] for p in sorted(unreferenced_paths)), indent=4)
+            )
+            logger.info("/\\ /\\ /\\ unreferenced parameter paths")
         else:
             unreferenced_groups = (self,)
 
@@ -435,43 +449,52 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 duplicate_names.add(name)
 
         if len(duplicate_names) > 0:
-            raise Exception('Duplicate NV parameter names found: {}'.format(
-                ', '.join(duplicate_names)))
+            raise Exception(
+                "Duplicate NV parameter names found: {}".format(
+                    ", ".join(duplicate_names)
+                )
+            )
 
         missing_read_write_signals = []
 
         for i, set_frame in self.set_frames.items():
             status_frame = self.status_frames[i]
             try:
-                set_frame.command_signal, = (
+                (set_frame.command_signal,) = (
                     s
                     for s in set_frame.signals
                     if s.name == self.configuration.read_write_signal
                 )
             except ValueError:
-                missing_read_write_signals.append('{}:{}:{}'.format(
-                    set_frame.name,
-                    set_frame.mux_name,
-                    self.configuration.read_write_signal,
-                ))
+                missing_read_write_signals.append(
+                    "{}:{}:{}".format(
+                        set_frame.name,
+                        set_frame.mux_name,
+                        self.configuration.read_write_signal,
+                    )
+                )
 
             try:
-                status_frame.command_signal, = (
+                (status_frame.command_signal,) = (
                     s
                     for s in status_frame.signals
                     if s.name == self.configuration.read_write_status_signal
                 )
             except ValueError:
-                missing_read_write_signals.append('{}:{}:{}'.format(
-                    status_frame.name,
-                    status_frame.mux_name,
-                    self.configuration.read_write_status_signal,
-                ))
+                missing_read_write_signals.append(
+                    "{}:{}:{}".format(
+                        status_frame.name,
+                        status_frame.mux_name,
+                        self.configuration.read_write_status_signal,
+                    )
+                )
 
         if len(missing_read_write_signals) > 0:
-            raise Exception('Unable to find needed signals: {}'.format(
-                ', '.join(missing_read_write_signals),
-            ))
+            raise Exception(
+                "Unable to find needed signals: {}".format(
+                    ", ".join(missing_read_write_signals),
+                )
+            )
 
         self.cyclic_reader = CyclicReader(
             nvs=self.all_nv(),
@@ -479,10 +502,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             metas=metas,
         )
 
-        self.nv_from_uuid = {
-            nv.parameter_uuid: nv
-            for nv in self.all_nv()
-        }
+        self.nv_from_uuid = {nv.parameter_uuid: nv for nv in self.all_nv()}
 
     def terminate(self):
         self.cancel_cyclic_read_all()
@@ -520,15 +540,15 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         return nv
 
     def names(self):
-        return '\n'.join([n.fields.name for n in self.all_nv()])
+        return "\n".join([n.fields.name for n in self.all_nv()])
 
     def write_all_to_device(
-            self,
-            only_these=None,
-            values=(),
-            callback=None,
-            meta=None,
-            background=False,
+        self,
+        only_these=None,
+        values=(),
+        callback=None,
+        meta=None,
+        background=False,
     ):
         return self._read_write_all(
             read=False,
@@ -540,11 +560,11 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         )
 
     def read_all_from_device(
-            self,
-            only_these=None,
-            callback=None,
-            meta=None,
-            background=False,
+        self,
+        only_these=None,
+        callback=None,
+        meta=None,
+        background=False,
     ):
         return self._read_write_all(
             read=True,
@@ -555,22 +575,21 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         )
 
     def _read_write_all(
-            self,
-            read,
-            only_these=None,
-            values=(),
-            callback=None,
-            meta=None,
-            background=False,
+        self,
+        read,
+        only_these=None,
+        values=(),
+        callback=None,
+        meta=None,
+        background=False,
     ):
         if meta is None:
             meta = meta_limits_first
 
-        activity = ('Reading from device' if read
-                    else 'Writing to device')
+        activity = "Reading from device" if read else "Writing to device"
 
         if not background:
-            self.activity_started.emit('{}...'.format(activity))
+            self.activity_started.emit("{}...".format(activity))
 
         try:
             d = twisted.internet.defer.Deferred()
@@ -624,13 +643,11 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
             frames = set(nv.frame for nv in only_these)
             for frame in frames:
-                signals = tuple(nv for nv in only_these
-                                if nv.frame is frame)
+                signals = tuple(nv for nv in only_these if nv.frame is frame)
 
                 if read:
                     data = tuple(
-                        signal.some_packable_value()
-                        for signal in frame.signals
+                        signal.some_packable_value() for signal in frame.signals
                     )
                     frame.update_from_signals(data=data)
                 else:
@@ -644,25 +661,33 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     )
         finally:
             if not background:
-                d.addCallback(epyqlib.utils.twisted.detour_result,
-                              self.activity_ended.emit,
-                              'Finished {}...'.format(activity.lower()))
-                d.addErrback(epyqlib.utils.twisted.detour_result,
-                             self.activity_ended.emit,
-                             'Failed while {}...'.format(activity.lower()))
+                d.addCallback(
+                    epyqlib.utils.twisted.detour_result,
+                    self.activity_ended.emit,
+                    "Finished {}...".format(activity.lower()),
+                )
+                d.addErrback(
+                    epyqlib.utils.twisted.detour_result,
+                    self.activity_ended.emit,
+                    "Failed while {}...".format(activity.lower()),
+                )
 
         return d
 
     def message_received(self, msg):
-        if (msg.arbitration_id == self.status_frames[0].id
-                and msg.id_type == self.status_frames[0].extended):
-            multiplex_message, multiplex_value =\
-                self.neo.get_multiplex(msg)
+        if (
+            msg.arbitration_id == self.status_frames[0].id
+            and msg.id_type == self.status_frames[0].extended
+        ):
+            multiplex_message, multiplex_value = self.neo.get_multiplex(msg)
 
             if multiplex_message is None:
                 return
 
-            if multiplex_value is not None and multiplex_message in self.status_frames.values():
+            if (
+                multiplex_value is not None
+                and multiplex_message in self.status_frames.values()
+            ):
                 values = multiplex_message.unpack(msg.data, only_return=True)
 
                 if multiplex_message.meta_signal is not None:
@@ -685,7 +710,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
 
     def unique(self):
         # TODO: actually identify the object
-        return '-'
+        return "-"
 
     def to_dict(self, include_secrets=False):
         d = {}
@@ -710,9 +735,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 parameter = epyqlib.pm.valuesetmodel.Parameter(
                     name=child.fields.name,
                     value=value,
-                    user_default=child.meta.user_default.get_human_value(
-                        for_file=True
-                    ),
+                    user_default=child.meta.user_default.get_human_value(for_file=True),
                     factory_default=child.meta.factory_default.get_human_value(
                         for_file=True
                     ),
@@ -723,6 +746,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     parameter_uuid=child.parameter_uuid,
                 )
             elif include_secrets:
+
                 def format_float(value):
                     was_secret = child.secret
                     child.secret = False
@@ -757,12 +781,17 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 child.fields.scratch = child.scratch.full_string
                 only_in_file.remove(child.fields.name)
             else:
-                logger.info("Nv value named '{}' not found when loading from dict"
-                      .format(child.fields.name))
+                logger.info(
+                    "Nv value named '{}' not found when loading from dict".format(
+                        child.fields.name
+                    )
+                )
 
         for name in only_in_file:
-            logger.info("Unrecognized NV value named '{}' found when loading "
-                  "from dict".format(name))
+            logger.info(
+                "Unrecognized NV value named '{}' found when loading "
+                "from dict".format(name)
+            )
 
     def from_value_set(self, value_set):
         parameter_nodes = value_set.model.root.nodes_by_filter(
@@ -797,7 +826,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             )
 
             if len(parameters) == 1:
-                parameter, = parameters
+                (parameter,) = parameters
 
                 for meta in MetaEnum:
                     only_in_file.discard((name, meta))
@@ -805,7 +834,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 if parameter.value is not None:
                     child.set_human_value(parameter.value)
                 else:
-                    logger.info(not_found_format.format('value'))
+                    logger.info(not_found_format.format("value"))
 
                 for meta in MetaEnum:
                     if meta == MetaEnum.value:
@@ -832,13 +861,15 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 )
 
         for name, meta in sorted(only_in_file):
-            logger.info("Unrecognized NV value named '{}' ({}) found when loading "
-                  "from value set".format(name, meta.name))
+            logger.info(
+                "Unrecognized NV value named '{}' ({}) found when loading "
+                "from value set".format(name, meta.name)
+            )
 
     def defaults_from_dict(
-            self,
-            d,
-            default_metas=(MetaEnum.factory_default,),
+        self,
+        d,
+        default_metas=(MetaEnum.factory_default,),
     ):
         only_in_file = list(d.keys())
 
@@ -851,18 +882,25 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                         meta=meta,
                     )
                     self.changed.emit(
-                        child, meta_column_indexes[meta],
-                        child, meta_column_indexes[meta],
+                        child,
+                        meta_column_indexes[meta],
+                        child,
+                        meta_column_indexes[meta],
                         [Qt.DisplayRole],
                     )
                 only_in_file.remove(child.fields.name)
             else:
-                logger.info("Nv value named '{}' not found when loading from dict"
-                      .format(child.fields.name))
+                logger.info(
+                    "Nv value named '{}' not found when loading from dict".format(
+                        child.fields.name
+                    )
+                )
 
         for name in only_in_file:
-            logger.info("Unrecognized NV value named '{}' found when loading to "
-                  "defaults from dict".format(name))
+            logger.info(
+                "Unrecognized NV value named '{}' found when loading to "
+                "defaults from dict".format(name)
+            )
 
     async def module_to_nv(self):
         for value in [not self.save_value, self.save_value, not self.save_value]:
@@ -877,8 +915,8 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             save_signal_response = result[0]
             write_accepted = save_signal_response == value
             if not write_accepted:
-                raise Exception('Save to NV write rejected: {}'.format(
-                    save_signal_response)
+                raise Exception(
+                    "Save to NV write rejected: {}".format(save_signal_response)
                 )
 
         if self.nv_save_in_progress_signal is not None:
@@ -896,30 +934,31 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             await epyqlib.utils.twisted.sleep(0.5)
 
     def logger_set_frames(self):
-        frames = [frame for frame in self.set_frames.values()
-                  if frame.mux_name.startswith('LoggerChunk')]
+        frames = [
+            frame
+            for frame in self.set_frames.values()
+            if frame.mux_name.startswith("LoggerChunk")
+        ]
         frames.sort(key=lambda frame: frame.mux_name)
 
         return frames
 
     def signal_from_names(self, frame_name, value_name):
-        frame = [f for f in self.set_frames.values()
-                 if f.mux_name == frame_name]
+        frame = [f for f in self.set_frames.values() if f.mux_name == frame_name]
 
         try:
-            frame, = frame
+            (frame,) = frame
         except ValueError as e:
-            raise NotFoundError(
-                'Frame not found: {}'.format(frame_name)) from e
+            raise NotFoundError("Frame not found: {}".format(frame_name)) from e
 
-        signal = [s for s in frame.signals
-                   if s.name == value_name]
+        signal = [s for s in frame.signals if s.name == value_name]
 
         try:
-            signal, = signal
+            (signal,) = signal
         except ValueError as e:
             raise NotFoundError(
-                'Signal not found: {}:{}'.format(frame_name, value_name)) from e
+                "Signal not found: {}:{}".format(frame_name, value_name)
+            ) from e
 
         return signal
 
@@ -983,8 +1022,8 @@ class CyclicReader:
                             meta=(meta,),
                         )
                     except (
-                            epyqlib.twisted.nvs.CanceledError,
-                            epyqlib.twisted.nvs.SendFailedError,
+                        epyqlib.twisted.nvs.CanceledError,
+                        epyqlib.twisted.nvs.SendFailedError,
                     ):
                         continue
 
@@ -1017,8 +1056,7 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         base=True,
         for_remote_data=True,
     ):
-        epyqlib.canneo.Signal.__init__(self, signal=signal, frame=frame,
-                                    parent=parent)
+        epyqlib.canneo.Signal.__init__(self, signal=signal, frame=frame, parent=parent)
         TreeNode.__init__(self)
 
         if meta_value is None:
@@ -1031,7 +1069,7 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
             default = 0
 
         if self.frame is not None:
-            self.factory = '<factory>' in (self.comment + self.frame.comment)
+            self.factory = "<factory>" in (self.comment + self.frame.comment)
 
         self.reset_value = None
 
@@ -1042,7 +1080,7 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
             comment=self.comment,
         )
         if self.frame is not None:
-            self.fields.name = '{}:{}'.format(self.frame.mux_name, self.name)
+            self.fields.name = "{}:{}".format(self.frame.mux_name, self.name)
 
         if meta is None:
             self.meta = Meta()
@@ -1063,7 +1101,7 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
                 setattr(
                     self.meta,
                     meta.name,
-                    Nv(signal, frame=None, meta=self.meta, meta_value=meta, base=False)
+                    Nv(signal, frame=None, meta=self.meta, meta_value=meta, base=False),
                 )
 
             for meta in metas:
@@ -1091,16 +1129,19 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
 
         self.stale_role = Qt.ForegroundRole
 
-    def _changed(self, column_start=None, column_end=None, roles=(
-            Columns.indexes.value,)):
+    def _changed(
+        self, column_start=None, column_end=None, roles=(Columns.indexes.value,)
+    ):
         if column_start is None:
             column_start = Columns.indexes.value
         if column_end is None:
             column_end = column_start
 
         self.changed.emit(
-            self, column_start,
-            self, column_end,
+            self,
+            column_start,
+            self,
+            column_end,
             list(roles),
         )
 
@@ -1136,7 +1177,7 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
 
     def _get_signal_for_column(self, column):
         if not self.base:
-            raise Exception('This should only be called on the base signal')
+            raise Exception("This should only be called on the base signal")
 
         if column == Columns.indexes.value:
             return self
@@ -1225,16 +1266,16 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
 
         if self.meta is not None:
             if self.meta.minimum.value is None or self.meta_value in min_max:
-                extras['minimum'] = self.to_human(self.raw_minimum)
+                extras["minimum"] = self.to_human(self.raw_minimum)
             else:
-                extras['minimum'] = self.meta.minimum.to_human(
+                extras["minimum"] = self.meta.minimum.to_human(
                     self.meta.minimum.value,
                 )
 
             if self.meta.maximum.value is None or self.meta_value in min_max:
-                extras['maximum'] = self.to_human(self.raw_maximum)
+                extras["maximum"] = self.to_human(self.raw_maximum)
             else:
-                extras['maximum'] = self.meta.maximum.to_human(
+                extras["maximum"] = self.meta.maximum.to_human(
                     self.meta.maximum.value,
                 )
 
@@ -1259,16 +1300,16 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         if self.meta is not None:
             extras = {}
             if self.meta.minimum.value is None or self.meta_value in min_max:
-                extras['minimum'] = self.to_human(self.raw_minimum)
+                extras["minimum"] = self.to_human(self.raw_minimum)
             else:
-                extras['minimum'] = self.meta.minimum.to_human(
+                extras["minimum"] = self.meta.minimum.to_human(
                     self.meta.minimum.value,
                 )
 
             if self.meta.maximum.value is None or self.meta_value in min_max:
-                extras['maximum'] = self.to_human(self.raw_maximum)
+                extras["maximum"] = self.to_human(self.raw_maximum)
             else:
-                extras['maximum'] = self.meta.maximum.to_human(
+                extras["maximum"] = self.meta.maximum.to_human(
                     self.meta.maximum.value,
                 )
 
@@ -1315,8 +1356,8 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
     def check_meta(self, data, meta, *args, **kwargs):
         if meta == MetaEnum.value:
             extras = {}
-            if 'check_range' in kwargs:
-                extras['check_range'] = kwargs['check_range']
+            if "check_range" in kwargs:
+                extras["check_range"] = kwargs["check_range"]
             return self.check_data(data, *args, **extras)
 
         meta_signal = getattr(self.meta, meta.name)
@@ -1359,7 +1400,7 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
             return
 
         self.set_meta(None, meta=meta, mark_modified=mark_modified)
-        if hasattr(signal, 'status_signal'):
+        if hasattr(signal, "status_signal"):
             signal.status_signal.set_value(None)
 
     def is_factory(self):
@@ -1379,38 +1420,45 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
 
     def unique(self):
         # TODO: make it more unique
-        return str(self.fields.name) + '__'
+        return str(self.fields.name) + "__"
 
 
 class Frame(epyqlib.canneo.Frame, TreeNode):
     _send = epyqlib.utils.qt.Signal(tuple)
 
-    def __init__(self, message=None, tx=False, frame=None,
-                 multiplex_value=None, signal_class=Nv, mux_frame=None,
-                 parent=None, **kwargs):
-        epyqlib.canneo.Frame.__init__(self, frame=frame,
-                                   multiplex_value=multiplex_value,
-                                   signal_class=signal_class,
-                                   set_value_to_default=False,
-                                   mux_frame=mux_frame,
-                                   parent=parent,
-                                   **kwargs)
+    def __init__(
+        self,
+        message=None,
+        tx=False,
+        frame=None,
+        multiplex_value=None,
+        signal_class=Nv,
+        mux_frame=None,
+        parent=None,
+        **kwargs,
+    ):
+        epyqlib.canneo.Frame.__init__(
+            self,
+            frame=frame,
+            multiplex_value=multiplex_value,
+            signal_class=signal_class,
+            set_value_to_default=False,
+            mux_frame=mux_frame,
+            parent=parent,
+            **kwargs,
+        )
         TreeNode.__init__(self, parent)
 
-        meta_signals = [
-            signal
-            for signal in self.signals
-            if signal.name == 'Meta'
-        ]
+        meta_signals = [signal for signal in self.signals if signal.name == "Meta"]
 
         if len(meta_signals) == 0:
             self.meta_signal = None
         else:
             try:
-                self.meta_signal, = meta_signals
+                (self.meta_signal,) = meta_signals
             except ValueError as e:
                 raise TooManyMetaSignalsError(
-                    'Too many meta signals in {}:{}'.format(self.name, self.mux_name),
+                    "Too many meta signals in {}:{}".format(self.name, self.mux_name),
                 ) from e
 
         for signal in self.signals:
@@ -1425,12 +1473,13 @@ class Frame(epyqlib.canneo.Frame, TreeNode):
 
     def signal_path(self):
         if self.mux_name is None:
-            return self.name,
+            return (self.name,)
         else:
             return self.name, self.mux_name
 
-    def update_from_signals(self, for_read=False, data=None, function=None,
-                            only_return=False):
+    def update_from_signals(
+        self, for_read=False, data=None, function=None, only_return=False
+    ):
         return super().update_from_signals(
             data=data,
             function=function,
@@ -1442,7 +1491,7 @@ class Frame(epyqlib.canneo.Frame, TreeNode):
 
 
 def get_font_awesome():
-    return QtGui.QFont(qtawesome._instance().fontname['fa'])
+    return QtGui.QFont(qtawesome._instance().fontname["fa"])
 
 
 @attr.s
@@ -1471,34 +1520,39 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         editable_columns.scratch = True
 
         epyqlib.pyqabstractitemmodel.PyQAbstractItemModel.__init__(
-                self, root=root, editable_columns=editable_columns,
-                alignment=Qt.AlignVCenter | Qt.AlignLeft, parent=parent)
+            self,
+            root=root,
+            editable_columns=editable_columns,
+            alignment=Qt.AlignVCenter | Qt.AlignLeft,
+            parent=parent,
+        )
 
         self.check_range = True
 
-        self.headers = Columns(name='Name',
-                               value='Active',
-                               scratch='Scratch',
-                               minimum='Min',
-                               maximum='Max',
-                               user_default='User Default',
-                               factory_default='Factory Default',
-                               comment='Comment')
+        self.headers = Columns(
+            name="Name",
+            value="Active",
+            scratch="Scratch",
+            minimum="Min",
+            maximum="Max",
+            user_default="User Default",
+            factory_default="Factory Default",
+            comment="Comment",
+        )
 
         root.activity_started.connect(self.activity_started)
         root.activity_ended.connect(self.activity_ended)
 
         self.icons = Columns(
-            reset=Icon(character='\uf0e2', check='can_be_reset'),
-            clear=Icon(character='\uf057', check='can_be_cleared'),
-            saturate=Icon(character='\uf066', check='can_be_saturated'),
-            factory=Icon(character='\uf084', check='is_factory'),
-            read_only=Icon(character='\uf023', check='is_read_only')
+            reset=Icon(character="\uf0e2", check="can_be_reset"),
+            clear=Icon(character="\uf057", check="can_be_cleared"),
+            saturate=Icon(character="\uf066", check="can_be_saturated"),
+            factory=Icon(character="\uf084", check="is_factory"),
+            read_only=Icon(character="\uf023", check="is_read_only"),
         )
 
         self.meta_columns = {
-            getattr(Columns.indexes, enumerator.name)
-            for enumerator in MetaEnum
+            getattr(Columns.indexes, enumerator.name) for enumerator in MetaEnum
         }
 
         self.icon_columns = set(
@@ -1509,9 +1563,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         self.force_action_decorations = False
 
-        self.role_functions[epyqlib.utils.qt.UserRoles.sort] = (
-            self.data_sort
-        )
+        self.role_functions[epyqlib.utils.qt.UserRoles.sort] = self.data_sort
 
         self.transaction_actions = None
 
@@ -1536,8 +1588,8 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
     def data_sort(self, index):
         node = self.node_from_index(index)
 
-        return '{}{}'.format(
-            'a' if isinstance(node, Group) else 'b',
+        return "{}{}".format(
+            "a" if isinstance(node, Group) else "b",
             self.data_display(index),
         )
 
@@ -1580,7 +1632,8 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             if isinstance(node, epyqlib.nv.Nv):
                 if node.can_be_saturated():
                     return node.format_strings(
-                        value=node.from_human(node.saturation_value()))[0]
+                        value=node.from_human(node.saturation_value())
+                    )[0]
         if index.column() == Columns.indexes.reset:
             node = self.node_from_index(index)
             if isinstance(node, epyqlib.nv.Nv):
@@ -1591,15 +1644,15 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             if isinstance(node, epyqlib.nv.Nv):
                 comment = node.fields.comment
                 if comment is None:
-                    comment = ''
-                return '\n'.join(textwrap.wrap(comment, 60))
+                    comment = ""
+                return "\n".join(textwrap.wrap(comment, 60))
 
     def dynamic_columns_changed(
-            self,
-            node,
-            columns=None,
-            meta=MetaEnum.value,
-            roles=(Qt.DisplayRole,),
+        self,
+        node,
+        columns=None,
+        meta=MetaEnum.value,
+        roles=(Qt.DisplayRole,),
     ):
         if columns is None:
             columns = dynamic_column_indexes_by_meta[meta]
@@ -1654,13 +1707,13 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                         if callback is None:
                             callback = action.callback
                         elif action.callback != callback:
-                            raise Exception('ack')
+                            raise Exception("ack")
 
                     if action.meta is not None:
                         if meta is None:
                             meta = action.meta
                         elif action.meta != meta:
-                            raise Exception('ack')
+                            raise Exception("ack")
 
                     nodes = nodes.union(action.only_these)
 
@@ -1704,7 +1757,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
         column = index.column()
 
-        if data == '':
+        if data == "":
             data = None
 
         if column == Columns.indexes.scratch:
@@ -1793,8 +1846,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             QtWidgets.QApplication.instance().processEvents()
 
             model.dynamic_columns_changed(
-                signal,
-                columns=(getattr(epyqlib.nv.Columns.indexes, meta.name),)
+                signal, columns=(getattr(epyqlib.nv.Columns.indexes, meta.name),)
             )
 
     @pyqtSlot()
@@ -1804,9 +1856,9 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
     async def _module_to_nv(self):
         with self.activity_manager(
-                start='Requesting save to NV...',
-                success='Save to NV succeeded',
-                failure='Save to NV failed',
+            start="Requesting save to NV...",
+            success="Save to NV succeeded",
+            failure="Save to NV failed",
         ):
             await self.root.module_to_nv()
 
@@ -1825,26 +1877,20 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
     @pyqtSlot()
     def write_to_file(self, parent=None):
-        filters = [
-            ('EPC Parameters', ['epp']),
-            ('All Files', ['*'])
-        ]
-        filename = epyqlib.utils.qt.file_dialog(
-            filters, save=True, parent=parent)
+        filters = [("EPC Parameters", ["epp"]), ("All Files", ["*"])]
+        filename = epyqlib.utils.qt.file_dialog(filters, save=True, parent=parent)
 
         if filename is None:
             return
 
         if len(filename) > 0:
-            with open(filename, 'w') as file:
+            with open(filename, "w") as file:
                 d = self.root.to_dict()
                 s = json.dumps(d, sort_keys=True, indent=4)
                 file.write(s)
-                file.write('\n')
+                file.write("\n")
 
-                self.activity_ended.emit(
-                    'Saved to "{}"'.format(filename)
-                )
+                self.activity_ended.emit('Saved to "{}"'.format(filename))
 
     @pyqtSlot()
     def write_to_value_set_file(self, parent=None):
@@ -1863,7 +1909,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             try:
                 value_set.save()
             except epyqlib.pm.valuesetmodel.SaveCancelled:
-                message = 'Save cancelled'
+                message = "Save cancelled"
             else:
                 message = 'Saved to "{}"'.format(path)
 
@@ -1875,7 +1921,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         filters = fields.filters.default
 
         reference_path = epyqlib.utils.qt.file_dialog(
-            caption='Overlay Reference File',
+            caption="Overlay Reference File",
             filters=filters,
             save=False,
             parent=parent,
@@ -1887,7 +1933,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         reference_value_set = epyqlib.pm.valuesetmodel.loadp(reference_path)
 
         save_path = epyqlib.utils.qt.file_dialog(
-            caption='Overlay File',
+            caption="Overlay File",
             filters=filters,
             save=True,
             parent=parent,
@@ -1904,7 +1950,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         try:
             complete_value_set.save()
         except epyqlib.pm.valuesetmodel.SaveCancelled:
-            message = 'Save cancelled'
+            message = "Save cancelled"
         else:
             message = 'Saved to "{}"'.format(complete_value_set.path)
 
@@ -1916,7 +1962,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         filters = fields.filters.default
 
         save_path = epyqlib.utils.qt.file_dialog(
-            caption='Sparse File',
+            caption="Sparse File",
             filters=filters,
             save=True,
             parent=parent,
@@ -1931,10 +1977,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         drop_list = [
             parameter
             for parameter in value_set.model.root.children
-            if (
-                not parameter.writable
-                or parameter.value is None
-            )
+            if (not parameter.writable or parameter.value is None)
         ]
 
         for parameter in drop_list:
@@ -1943,7 +1986,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         try:
             value_set.save()
         except epyqlib.pm.valuesetmodel.SaveCancelled:
-            message = 'Save cancelled'
+            message = "Save cancelled"
         else:
             message = 'Saved to "{}"'.format(value_set.path)
 
@@ -1951,24 +1994,19 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
 
     @pyqtSlot()
     def read_from_file(self, parent=None):
-        filters = [
-            ('EPC Parameters', ['epp']),
-            ('All Files', ['*'])
-        ]
+        filters = [("EPC Parameters", ["epp"]), ("All Files", ["*"])]
         filename = epyqlib.utils.qt.file_dialog(filters, parent=parent)
 
         if filename is None:
             return
 
         if len(filename) > 0:
-            with open(filename, 'r') as file:
+            with open(filename, "r") as file:
                 s = file.read()
                 d = json.loads(s)
                 self.root.from_dict(d)
 
-                self.activity_ended.emit(
-                    'Loaded from "{}"'.format(filename)
-                )
+                self.activity_ended.emit('Loaded from "{}"'.format(filename))
 
     @contextlib.contextmanager
     def activity_manager(self, start, success, failure):
@@ -2056,7 +2094,7 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 )
 
                 if len(parameters) == 1:
-                    parameter, = parameters
+                    (parameter,) = parameters
 
                     index = self.index_from_node(child)
 
@@ -2087,12 +2125,14 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                     )
 
             for parameter, meta in sorted(only_in_file):
-                logger.warning("Unrecognized NV value named '{}' ({}) found when loading "
-                      "from value set".format(parameter.name, meta.name))
+                logger.warning(
+                    "Unrecognized NV value named '{}' ({}) found when loading "
+                    "from value set".format(parameter.name, meta.name)
+                )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    logger.info('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    logger.info("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

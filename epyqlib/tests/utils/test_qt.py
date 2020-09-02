@@ -22,16 +22,16 @@ class P(PyQt5.QtCore.QObject):
         self.get = None
         self.set = None
 
-    @PyQt5.QtCore.pyqtProperty('PyQt_PyObject')
+    @PyQt5.QtCore.pyqtProperty("PyQt_PyObject")
     def pyqtify_c(self):
-        x = epyqlib.utils.qt.pyqtify_get(self, 'c')
+        x = epyqlib.utils.qt.pyqtify_get(self, "c")
         self.get = True
         return x
 
     @pyqtify_c.setter
     def pyqtify_c(self, value):
         self.set = True
-        return epyqlib.utils.qt.pyqtify_set(self, 'c', value)
+        return epyqlib.utils.qt.pyqtify_set(self, "c", value)
 
 
 def test_types(qtbot):
@@ -41,8 +41,8 @@ def test_types(qtbot):
     # assert isinstance(P.a, attr.Attribute)
 
     assert isinstance(attr.fields(P).a, attr.Attribute)
-    assert isinstance(inspect.getattr_static(p, 'a'), property)
-    assert isinstance(inspect.getattr_static(p, 'c'), PyQt5.QtCore.pyqtProperty)
+    assert isinstance(inspect.getattr_static(p, "a"), property)
+    assert isinstance(inspect.getattr_static(p, "c"), PyQt5.QtCore.pyqtProperty)
 
 
 def assert_attrs_as_expected(x, values):
@@ -54,17 +54,17 @@ def assert_attrs_as_expected(x, values):
 
 def test_overall(qtbot):
     values = {
-        'a': epyqlib.tests.common.Values(
+        "a": epyqlib.tests.common.Values(
             initial=1,
             input=[12, 12, 13],
             expected=[12, 13],
         ),
-        'b': epyqlib.tests.common.Values(
+        "b": epyqlib.tests.common.Values(
             initial=2,
             input=[42, 42, 37],
             expected=[42, 37],
         ),
-        'c': epyqlib.tests.common.Values(
+        "c": epyqlib.tests.common.Values(
             initial=3,
             input=[4],
             expected=[4],
@@ -101,14 +101,14 @@ def test_overall(qtbot):
 
 
 def test_independence(qtbot):
-    ad = {'a': 1, 'b': 2, 'c': 3}
+    ad = {"a": 1, "b": 2, "c": 3}
     a = P(**ad)
 
-    bd = {'a': 10, 'b': 20, 'c': 30}
+    bd = {"a": 10, "b": 20, "c": 30}
     b = P(**bd)
 
-    assert(attr.asdict(a) == ad)
-    assert(attr.asdict(b) == bd)
+    assert attr.asdict(a) == ad
+    assert attr.asdict(b) == bd
 
 
 @epyqlib.utils.qt.pyqtify()
@@ -122,9 +122,9 @@ class Q(PyQt5.QtCore.QObject):
         self.get = None
         self.set = None
 
-    @PyQt5.QtCore.pyqtProperty('PyQt_PyObject')
+    @PyQt5.QtCore.pyqtProperty("PyQt_PyObject")
     def pyqtify_b(self):
-        return epyqlib.utils.qt.pyqtify_get(self, 'b')
+        return epyqlib.utils.qt.pyqtify_get(self, "b")
 
     @pyqtify_b.setter
     def pyqtify_b(self, value):
@@ -132,17 +132,17 @@ class Q(PyQt5.QtCore.QObject):
         if value < self.a:
             self.a = value
 
-        epyqlib.utils.qt.pyqtify_set(self, 'b', value)
+        epyqlib.utils.qt.pyqtify_set(self, "b", value)
 
 
 def test_property_cross_effect(qtbot):
     values = {
-        'a': epyqlib.tests.common.Values(
+        "a": epyqlib.tests.common.Values(
             initial=10,
             input=[],
             expected=[9],
         ),
-        'b': epyqlib.tests.common.Values(
+        "b": epyqlib.tests.common.Values(
             initial=20,
             input=[30, 10, 9, 20],
             expected=[30, 10, 9, 20],
@@ -168,7 +168,7 @@ def test_property_cross_effect(qtbot):
 
 
 def test_pyqtified_name():
-    assert Q.__name__ == 'Q'
+    assert Q.__name__ == "Q"
 
 
 def test_pyqtified_module():
@@ -187,7 +187,7 @@ def test_(qtbot):
     #       just access them to make sure they are available
     signals._pyqtify_signal_a
     signals.a
-    signals['a']
+    signals["a"]
 
 
 def test_resolve_index_to_model():
@@ -205,12 +205,14 @@ def test_resolve_index_to_model():
     view = PyQt5.QtWidgets.QListView()
     view.setModel(proxy)
 
-    assert (
-        epyqlib.utils.qt.resolve_models(model=view.model())
-        == [proxy, middle_proxy, back_proxy, model]
-    )
+    assert epyqlib.utils.qt.resolve_models(model=view.model()) == [
+        proxy,
+        middle_proxy,
+        back_proxy,
+        model,
+    ]
 
-    strings = ['a', 'b', 'c']
+    strings = ["a", "b", "c"]
     model.setStringList(strings)
     assert model.rowCount() == 3
     assert model.stringList() == strings
@@ -221,7 +223,7 @@ def test_resolve_index_to_model():
 
     target_data = model.data(model_first_index, PyQt5.QtCore.Qt.DisplayRole)
 
-    assert target_data == 'a'
+    assert target_data == "a"
 
     with pytest.raises(epyqlib.utils.qt.TargetModelNotReached):
         epyqlib.utils.qt.resolve_index_to_model(
@@ -244,9 +246,8 @@ def test_resolve_index_to_model():
         index=model_first_index,
     )
 
-    assert (
-        proxy.data(proxy_index, PyQt5.QtCore.Qt.DisplayRole)
-        == model.data(model_first_index, PyQt5.QtCore.Qt.DisplayRole)
+    assert proxy.data(proxy_index, PyQt5.QtCore.Qt.DisplayRole) == model.data(
+        model_first_index, PyQt5.QtCore.Qt.DisplayRole
     )
 
 
@@ -272,12 +273,12 @@ def test_signal_independence():
         b = epyqlib.utils.qt.Signal(int)
 
     value_checkers = {
-        'a': epyqlib.tests.common.Values(
+        "a": epyqlib.tests.common.Values(
             initial=None,
             input=[1, 2, 3],
             expected=[1, 2, 3],
         ),
-        'b': epyqlib.tests.common.Values(
+        "b": epyqlib.tests.common.Values(
             initial=None,
             input=[10, 20, 30],
             expected=[10, 20, 30],
@@ -304,12 +305,12 @@ def test_signal_chaining():
     input = [1, 2, 3]
 
     value_checkers = {
-        'a': epyqlib.tests.common.Values(
+        "a": epyqlib.tests.common.Values(
             initial=None,
             input=input,
             expected=input,
         ),
-        'b': epyqlib.tests.common.Values(
+        "b": epyqlib.tests.common.Values(
             initial=None,
             input=None,
             expected=input,
@@ -322,7 +323,7 @@ def test_signal_chaining():
     for name, checker in value_checkers.items():
         getattr(c, name).connect(checker.collect)
 
-    for value in value_checkers['a'].input:
+    for value in value_checkers["a"].input:
         c.a.emit(value)
 
     for name, checker in value_checkers.items():
@@ -384,10 +385,7 @@ class DiffProxy:
         ]
 
     def role_lists(self, fill=None):
-        return {
-            role: self.lists(fill=fill)
-            for role in self.roles()
-        }
+        return {role: self.lists(fill=fill) for role in self.roles()}
 
     def roles(self):
         return {*self.proxy.diff_highlights, *self.proxy.reference_highlights}
@@ -395,10 +393,7 @@ class DiffProxy:
     def collect(self):
         results = {
             self.proxy.diff_role: self.lists(),
-            **{
-                role: self.lists()
-                for role in self.roles()
-            },
+            **{role: self.lists() for role in self.roles()},
         }
 
         def collect(row, column, collected=results):
@@ -430,14 +425,10 @@ def diff_proxy_test_model():
     proxy = epyqlib.utils.qt.DiffProxyModel(
         columns=range(1, rows),
         diff_highlights={
-            PyQt5.QtCore.Qt.ItemDataRole.BackgroundRole: (
-                PyQt5.QtGui.QColor('orange')
-            )
+            PyQt5.QtCore.Qt.ItemDataRole.BackgroundRole: (PyQt5.QtGui.QColor("orange"))
         },
         reference_highlights={
-            PyQt5.QtCore.Qt.ItemDataRole.BackgroundRole: (
-                PyQt5.QtGui.QColor('green')
-            )
+            PyQt5.QtCore.Qt.ItemDataRole.BackgroundRole: (PyQt5.QtGui.QColor("green"))
         },
     )
     proxy.setSourceModel(model)
@@ -450,8 +441,7 @@ def test_diffproxymodel_no_reference_column(diff_proxy_test_model):
 
     results = diff_proxy_test_model.collect()
     results = {
-        role: results[role]
-        for role in diff_proxy_test_model.proxy.diff_highlights
+        role: results[role] for role in diff_proxy_test_model.proxy.diff_highlights
     }
 
     expected = diff_proxy_test_model.role_lists()
@@ -487,9 +477,7 @@ def test_diffproxymodel_some_differences(diff_proxy_test_model):
         for role, highlight in diff_highlights:
             expected[role][row][column] = highlight
 
-    reference_highlights = (
-        diff_proxy_test_model.proxy.reference_highlights.items()
-    )
+    reference_highlights = diff_proxy_test_model.proxy.reference_highlights.items()
     for row in range(rows):
         for role, highlight in reference_highlights:
             expected[role][row][reference_column] = highlight
@@ -498,8 +486,7 @@ def test_diffproxymodel_some_differences(diff_proxy_test_model):
 
     results = diff_proxy_test_model.collect()
     results = {
-        role: results[role]
-        for role in diff_proxy_test_model.proxy.diff_highlights
+        role: results[role] for role in diff_proxy_test_model.proxy.diff_highlights
     }
 
     assert expected == results
@@ -524,11 +511,13 @@ class DataChanges:
     changes = attr.ib(factory=list)
 
     def collect(self, start, end, roles):
-        self.changes.append(ChangedData(
-            start=start,
-            end=end,
-            roles=roles,
-        ))
+        self.changes.append(
+            ChangedData(
+                start=start,
+                end=end,
+                roles=roles,
+            )
+        )
 
     def results(self, container):
         for changed_data in self.changes:

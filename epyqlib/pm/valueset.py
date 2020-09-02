@@ -24,7 +24,7 @@ def to_list_of_pathlib(l):
     return [pathlib.Path(path) for path in l]
 
 
-@graham.schemify(tag='valueset_overlay_recipe')
+@graham.schemify(tag="valueset_overlay_recipe")
 @attr.s
 class OverlayRecipe:
     output_path = create_path_attribute()
@@ -37,13 +37,15 @@ class OverlayRecipe:
     )
 
 
-@graham.schemify(tag='valueset_overlay_configuration')
+@graham.schemify(tag="valueset_overlay_configuration")
 @attr.s
 class OverlayConfiguration:
     output_path = create_path_attribute()
     recipes = attr.ib(
         metadata=graham.create_metadata(
-            field=marshmallow.fields.List(marshmallow.fields.Nested(graham.schema(OverlayRecipe))),
+            field=marshmallow.fields.List(
+                marshmallow.fields.Nested(graham.schema(OverlayRecipe))
+            ),
         ),
     )
     reference_path = attr.ib(
@@ -56,7 +58,7 @@ class OverlayConfiguration:
     def load(cls, path):
         schema = graham.schema(cls)
 
-        configuration_text = path.read_text(encoding='utf-8')
+        configuration_text = path.read_text(encoding="utf-8")
         configuration = schema.loads(configuration_text).data
 
         configuration.path = path
@@ -72,10 +74,7 @@ class OverlayConfiguration:
         return self.reference_path / recipe.base_pmvs_path
 
     def recipe_overlay_pmvs_paths(self, recipe):
-        return [
-            self.reference_path / path
-            for path in recipe.overlay_pmvs_paths
-        ]
+        return [self.reference_path / path for path in recipe.overlay_pmvs_paths]
 
     def raw(self, echo=lambda *args, **kwargs: None):
         input_modification_times = []
@@ -85,7 +84,7 @@ class OverlayConfiguration:
 
         for recipe in self.recipes:
             output_path = self.recipe_output_path(recipe=recipe)
-            echo(f'Checking: {os.fspath(output_path)}')
+            echo(f"Checking: {os.fspath(output_path)}")
 
             try:
                 stat = recipe.output_path.stat()
@@ -105,7 +104,7 @@ class OverlayConfiguration:
         return min(output_modification_times) < max(input_modification_times)
 
 
-@click.group(name='value-sets')
+@click.group(name="value-sets")
 def group():
     pass
 
@@ -115,24 +114,23 @@ def recipes():
     pass
 
 
-@recipes.command(name='generate')
+@recipes.command(name="generate")
 @click.option(
-    '--input',
-    'value_set_path_strings',
+    "--input",
+    "value_set_path_strings",
     type=click.Path(dir_okay=False, readable=True, resolve_path=True),
     multiple=True,
     required=True,
 )
 @click.option(
-    '--common-output',
-    'common_output_path_string',
+    "--common-output",
+    "common_output_path_string",
     type=click.Path(dir_okay=False, readable=True, resolve_path=True),
     required=True,
 )
 def generate_recipes(value_set_path_strings, common_output_path_string):
     value_set_paths = [
-        pathlib.Path(path_string)
-        for path_string in value_set_path_strings
+        pathlib.Path(path_string) for path_string in value_set_path_strings
     ]
     common_output_path = pathlib.Path(common_output_path_string)
 
@@ -157,9 +155,7 @@ def generate_recipes(value_set_path_strings, common_output_path_string):
     common_and_equal_uuids = [
         uuid_
         for uuid_ in common_uuids
-        if 1 == len({
-            parameter.value for parameter in all_parameters_by_uuid[uuid_]
-        })
+        if 1 == len({parameter.value for parameter in all_parameters_by_uuid[uuid_]})
     ]
 
     for uuid_ in common_and_equal_uuids:
@@ -180,20 +176,20 @@ def generate_recipes(value_set_path_strings, common_output_path_string):
 
     common_value_set.save(path=common_output_path)
     for value_set in value_sets:
-        new_name = common_output_path.stem + '-' + value_set.path.name
+        new_name = common_output_path.stem + "-" + value_set.path.name
         path = common_output_path.parent / new_name
         value_set.save(path=path)
 
 
-@recipes.command(name='cook')
+@recipes.command(name="cook")
 @click.option(
-    '--configuration',
-    'configuration_path_string',
+    "--configuration",
+    "configuration_path_string",
     type=click.Path(dir_okay=False, readable=True, resolve_path=True),
 )
 @click.option(
-    '--if-raw/--assume-raw',
-    'only_if_raw',
+    "--if-raw/--assume-raw",
+    "only_if_raw",
     default=False,
 )
 def cli(configuration_path_string, only_if_raw):
@@ -204,18 +200,16 @@ def cli(configuration_path_string, only_if_raw):
     if only_if_raw:
         if not configuration.raw(echo=click.echo):
             click.echo(
-                'Generated files appear to be up to date, skipping cooking',
+                "Generated files appear to be up to date, skipping cooking",
             )
 
             return
 
-        click.echo(
-            'Generated files appear to be out of date, starting cooking'
-        )
+        click.echo("Generated files appear to be out of date, starting cooking")
 
     for recipe in configuration.recipes:
         output_path = configuration.recipe_output_path(recipe=recipe)
-        click.echo(f'Creating: {os.fspath(output_path)}')
+        click.echo(f"Creating: {os.fspath(output_path)}")
 
         base_pmvs_path = configuration.recipe_base_pmvs_path(recipe=recipe)
 
@@ -226,7 +220,7 @@ def cli(configuration_path_string, only_if_raw):
         all_pmvs_paths = [base_pmvs_path, *overlay_pmvs_paths]
 
         click.echo(
-            '\n'.join(f'    {os.fspath(path)}' for path in all_pmvs_paths),
+            "\n".join(f"    {os.fspath(path)}" for path in all_pmvs_paths),
         )
 
         result_value_set = epyqlib.pm.valuesetmodel.loadp(base_pmvs_path)

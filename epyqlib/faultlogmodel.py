@@ -25,7 +25,7 @@ def _post_load(fault_log, root=None):
         )
 
 
-@graham.schemify(tag='event')
+@graham.schemify(tag="event")
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
@@ -80,7 +80,7 @@ class Event(epyqlib.treenode.TreeNode):
 
 
 Root = epyqlib.attrsmodel.Root(
-    default_name='Event Log',
+    default_name="Event Log",
     valid_types=(Event,),
 )
 
@@ -97,19 +97,19 @@ class FaultLog:
     model = attr.ib(default=None)
 
     def connect(
-            self,
-            process_frames,
-            process_message_names,
-            nv_frames,
-            nv_message_names,
+        self,
+        process_frames,
+        process_message_names,
+        nv_frames,
+        nv_message_names,
     ):
         process_signals = []
         for name in process_message_names:
-                frame = process_frames.frame_by_name(name)
-                process_signals.extend(frame.signals)
+            frame = process_frames.frame_by_name(name)
+            process_signals.extend(frame.signals)
 
         for signal in process_signals:
-            description = ':'.join((signal.frame.name, signal.name))
+            description = ":".join((signal.frame.name, signal.name))
 
             def changed(value, *, signal=signal, description=description):
                 self.changed(
@@ -121,13 +121,11 @@ class FaultLog:
             signal.value_changed.connect(changed)
 
         nv_signals = [
-            nv
-            for nv in nv_frames.all_nv()
-            if nv.frame.mux_name in nv_message_names
+            nv for nv in nv_frames.all_nv() if nv.frame.mux_name in nv_message_names
         ]
 
         for signal in nv_signals:
-            description = ':'.join((signal.frame.mux_name, signal.name))
+            description = ":".join((signal.frame.mux_name, signal.name))
 
             def changed(value, *, signal=signal, description=description):
                 self.changed(
@@ -152,8 +150,8 @@ def merge(name, *types):
 
 
 columns = epyqlib.attrsmodel.columns(
-    merge('time', Event),
-    merge('value', Event),
-    merge('description', Event),
-    merge('uuid', *types.types.values()),
+    merge("time", Event),
+    merge("value", Event),
+    merge("description", Event),
+    merge("uuid", *types.types.values()),
 )

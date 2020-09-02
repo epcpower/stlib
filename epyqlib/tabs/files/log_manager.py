@@ -25,8 +25,9 @@ class PendingLog:
     notes = ""
     timestamp = datetime.now()
 
+
 class LogManager:
-    _instance: 'LogManager' = None
+    _instance: "LogManager" = None
     _tag = "[Log Manager]"
 
     class EventType(Enum):
@@ -57,7 +58,6 @@ class LogManager:
         LogManager._instance._read_pending_log_file()
         return LogManager._instance
 
-
     async def add_pending_log(self, file_path: str, build_id: str, serial_number: str):
         basename = os.path.basename(file_path)
         hash = self._md5(file_path)
@@ -76,7 +76,7 @@ class LogManager:
                 os.unlink(self._pending_logs_file)
             return
 
-        with open(self._pending_logs_file, 'w') as file:
+        with open(self._pending_logs_file, "w") as file:
             data = [attr.asdict(log) for log in self._pending_logs]
             json.dump(data, file, indent=2)
 
@@ -84,7 +84,7 @@ class LogManager:
         if not path.exists(self._pending_logs_file):
             return
 
-        with open(self._pending_logs_file, 'r') as file:
+        with open(self._pending_logs_file, "r") as file:
             data: List[dict] = json.load(file)
             for log in data:
                 self._pending_logs.append(PendingLog(**log))

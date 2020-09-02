@@ -11,8 +11,7 @@ def build_relatives(repo):
     children = {}
     parents = {}
 
-    heads = {n: s for n, s in repo.get_refs().items()
-             if n.startswith(b'refs/heads/')}
+    heads = {n: s for n, s in repo.get_refs().items() if n.startswith(b"refs/heads/")}
 
     for entry in repo.get_walker(include=list(heads.values())):
         for p in entry.commit.parents:
@@ -33,13 +32,12 @@ def build_relatives(repo):
 
 def interface_rev(repo, commit):
     tree = repo[commit.tree]
-    _, swrevs_sha = tree.lookup_path(
-        lambda sha: repo[sha], b'interface/swRevs.h')
+    _, swrevs_sha = tree.lookup_path(lambda sha: repo[sha], b"interface/swRevs.h")
     swrevs = repo[swrevs_sha]
 
     for line in swrevs.data.decode().splitlines():
-        if line.startswith('#define INTERFACE_SW_REV '):
-            return int(line.split('#define INTERFACE_SW_REV ')[1])
+        if line.startswith("#define INTERFACE_SW_REV "):
+            return int(line.split("#define INTERFACE_SW_REV ")[1])
 
     return None
 
@@ -69,7 +67,7 @@ def history(repo, base_commit, mappings, test, visited=None):
                 base_commit=commit,
                 mappings=mappings,
                 test=test,
-                visited=visited
+                visited=visited,
             )
 
     return revisions
@@ -79,19 +77,16 @@ def contiguous_commits(repo, base_commit, test):
     children, parents = build_relatives(repo=repo)
 
     return history(
-        repo=repo,
-        base_commit=base_commit,
-        mappings=(parents, children),
-        test=test
+        repo=repo, base_commit=base_commit, mappings=(parents, children), test=test
     )
 
 
 def parse_args(args):
     parser = argparse.ArgumentParser()
     # parser.add_argument('--verbose', '-v', action='count', default=0)
-    parser.add_argument('--sha', '-s', required=True)
-    parser.add_argument('--repository', '--repo', '-r', default='.')
-    parser.add_argument('--json', '-j', action='store_true')
+    parser.add_argument("--sha", "-s", required=True)
+    parser.add_argument("--repository", "--repo", "-r", default=".")
+    parser.add_argument("--json", "-j", action="store_true")
 
     return parser.parse_args(args)
 
@@ -104,13 +99,17 @@ def main(*args, logger):
     repo = dulwich.repo.Repo(args.repository)
 
     relatives = itertools.chain(*build_relatives(repo=repo))
-    found = {relative for relative in relatives
-             if relative.startswith(encoded_sha)}
+    found = {relative for relative in relatives if relative.startswith(encoded_sha)}
 
     if len(found) == 0:
-        raise Exception('No matches found for sha {}'.format(args.sha))
+        raise Exception("No matches found for sha {}".format(args.sha))
     elif len(found) > 1:
-        raise Exception('Multiple matches found for sha {}:\n\n{}'.format(args.sha, ''.join('\n\t'+s for s in (sha.decode() for sha in sorted(found)))))
+        raise Exception(
+            "Multiple matches found for sha {}:\n\n{}".format(
+                args.sha,
+                "".join("\n\t" + s for s in (sha.decode() for sha in sorted(found))),
+            )
+        )
 
     [sha] = found
 
@@ -119,7 +118,9 @@ def main(*args, logger):
     cc = contiguous_commits(
         repo=repo,
         base_commit=base_commit,
-        test=lambda commit: matches_rev(target_rev=target_rev, repo=repo, commit=commit)
+        test=lambda commit: matches_rev(
+            target_rev=target_rev, repo=repo, commit=commit
+        ),
     )
 
     h = sorted(cc, key=lambda c: c.commit_time, reverse=True)
@@ -128,7 +129,7 @@ def main(*args, logger):
     if args.json:
         print(json.dumps(list(h), indent=4))
     else:
-        print('\n'.join(h))
+        print("\n".join(h))
 
 
 def _entry_point():
@@ -136,14 +137,14 @@ def _entry_point():
 
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
     stream_handler = logging.StreamHandler()
-    file_handler = logging.FileHandler('contiguouscommits.log')
+    file_handler = logging.FileHandler("contiguouscommits.log")
 
     for handler in (stream_handler, file_handler):
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
-    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
 
     return main(*sys.argv[1:], logger=logger)

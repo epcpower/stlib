@@ -7,15 +7,13 @@ import epyqlib.utils.qt
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2018, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2018, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 styles = {
-    'red': "background-color: rgba(255, 255, 255, 0);"
-                           "color: rgba(255, 85, 85, 25);",
-    'blue': "background-color: rgba(255, 255, 255, 0);"
-                           "color: rgba(85, 85, 255, 25);"
+    "red": "background-color: rgba(255, 255, 255, 0);" "color: rgba(255, 85, 85, 25);",
+    "blue": "background-color: rgba(255, 255, 255, 0);" "color: rgba(85, 85, 255, 25);",
 }
 
 
@@ -28,7 +26,7 @@ class OverlayLabel(QtWidgets.QWidget):
         self._width_ratio = 0.8
         self._height_ratio = 0.8
 
-        self.setStyleSheet(styles['red'])
+        self.setStyleSheet(styles["red"])
 
         self.setAttribute(Qt.WA_TransparentForMouseEvents)
 
@@ -67,21 +65,22 @@ class OverlayLabel(QtWidgets.QWidget):
     def update_overlay_size(self, size):
         text = self.ui.label.text()
         if not text:
-            text = '-'
+            text = "-"
         font = self.ui.label.font()
         font.setPixelSize(1000)
         metric = QFontMetrics(font)
         rect = metric.boundingRect(text)
 
         pixel_size_width = (
-            font.pixelSize() *
-            (size.width() * self.width_ratio) / rect.width()
+            font.pixelSize() * (size.width() * self.width_ratio) / rect.width()
         )
 
         pixel_size_height = (
-            font.pixelSize() *
-            (size.height() * self.height_ratio) / rect.height()
+            font.pixelSize() * (size.height() * self.height_ratio) / rect.height()
         )
 
-        self.ui.label.setStyleSheet('font-size: {}px; font-weight: bold'.format(
-            round(min(pixel_size_width, pixel_size_height))))
+        self.ui.label.setStyleSheet(
+            "font-size: {}px; font-weight: bold".format(
+                round(min(pixel_size_width, pixel_size_height))
+            )
+        )

@@ -8,8 +8,8 @@ from PyQt5.QtCore import pyqtProperty, pyqtSlot, QRectF, Qt
 from PyQt5.QtGui import QPainter, QPen, QColor
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 def arc_angle(angle):
@@ -24,9 +24,9 @@ class RingBar(epyqlib.widgets.abstractwidget.AbstractWidget):
         self.in_designer = in_designer
         epyqlib.widgets.abstractwidget.AbstractWidget.__init__(self, parent=parent)
 
-        self._background_color = QColor('#474747')
+        self._background_color = QColor("#474747")
         self._clockwise = False
-        self._color = QColor('#39C550')
+        self._color = QColor("#39C550")
         self._maximum = 100
         self._minimum = 0
         self._thickness = 10
@@ -86,7 +86,7 @@ class RingBar(epyqlib.widgets.abstractwidget.AbstractWidget):
 
         self.update()
 
-    @pyqtProperty('QColor')
+    @pyqtProperty("QColor")
     def color(self):
         return self._color
 
@@ -96,7 +96,7 @@ class RingBar(epyqlib.widgets.abstractwidget.AbstractWidget):
 
         self.update()
 
-    @pyqtProperty('QColor')
+    @pyqtProperty("QColor")
     def background_color(self):
         return self._background_color
 
@@ -127,8 +127,7 @@ class RingBar(epyqlib.widgets.abstractwidget.AbstractWidget):
         diameter = self.dimension() - self.tweaked_thickness()
         radius = diameter / 2
 
-        rectangle = QRectF(-radius, -radius,
-                           diameter, diameter)
+        rectangle = QRectF(-radius, -radius, diameter, diameter)
 
         maximum = max(abs(self.maximum), abs(self.minimum))
 
@@ -152,9 +151,7 @@ class RingBar(epyqlib.widgets.abstractwidget.AbstractWidget):
         if qt_span == 0:
             qt_span = 1
 
-        painter.drawArc(rectangle,
-                        arc_angle(self.zero_angle),
-                        qt_span)
+        painter.drawArc(rectangle, arc_angle(self.zero_angle), qt_span)
 
     def update_layout(self):
         horizontal_margin = (self.width() - self.dimension()) / 2
@@ -163,10 +160,9 @@ class RingBar(epyqlib.widgets.abstractwidget.AbstractWidget):
         horizontal_margin += self.thickness
         vertical_margin += self.thickness
 
-        self.setContentsMargins(horizontal_margin,
-                                vertical_margin,
-                                horizontal_margin,
-                                vertical_margin)
+        self.setContentsMargins(
+            horizontal_margin, vertical_margin, horizontal_margin, vertical_margin
+        )
 
     def update(self):
         self.update_layout()
@@ -219,10 +215,10 @@ class RingBar(epyqlib.widgets.abstractwidget.AbstractWidget):
 
         if minimum == maximum:
             # TODO: pick the right exception
-            raise Exception('Min and max may not be the same')
+            raise Exception("Min and max may not be the same")
         elif minimum > maximum:
             # TODO: pick the right exception
-            raise Exception('Min must be less than max')
+            raise Exception("Min must be less than max")
 
         if minimum is not None:
             self.minimum = minimum
@@ -233,8 +229,8 @@ class RingBar(epyqlib.widgets.abstractwidget.AbstractWidget):
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
+    print("No script functionality here")
     sys.exit(1)  # non-zero is a failure

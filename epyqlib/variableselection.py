@@ -12,8 +12,8 @@ import epyqlib.variableselection_ui
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2017, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2017, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class VariableSelection(QtWidgets.QWidget):
@@ -33,14 +33,16 @@ class VariableSelection(QtWidgets.QWidget):
         self.ui.process_raw_log_button.setEnabled(False)
 
         self.ui.view.ui.tree_view.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.ui.view.ui.tree_view.customContextMenuRequested.connect(
-            self.context_menu
-        )
+        self.ui.view.ui.tree_view.customContextMenuRequested.connect(self.context_menu)
 
         self.progress = None
 
-    def set_signal_paths(self, reset_signal_path, recording_signal_path,
-                         configuration_is_valid_signal_path):
+    def set_signal_paths(
+        self,
+        reset_signal_path,
+        recording_signal_path,
+        configuration_is_valid_signal_path,
+    ):
         self.ui.reset_button.set_signal_path(reset_signal_path)
         self.ui.logging_led.set_signal_path(recording_signal_path)
         self.ui.configuration_is_valid_led.set_signal_path(
@@ -57,22 +59,15 @@ class VariableSelection(QtWidgets.QWidget):
         self.ui.view.sort_by_column(column=column, order=order)
 
     def save_selection(self):
-        filters = [
-            ('EPC Variable Selection', ['epv']),
-            ('All Files', ['*'])
-        ]
-        filename = epyqlib.utils.qt.file_dialog(
-            filters, save=True, parent=self)
+        filters = [("EPC Variable Selection", ["epv"]), ("All Files", ["*"])]
+        filename = epyqlib.utils.qt.file_dialog(filters, save=True, parent=self)
 
         if filename is not None:
             model = self.nonproxy_model()
             model.save_selection(filename=filename)
 
     def load_selection(self):
-        filters = [
-            ('EPC Variable Selection', ['epv']),
-            ('All Files', ['*'])
-        ]
+        filters = [("EPC Variable Selection", ["epv"]), ("All Files", ["*"])]
         filename = epyqlib.utils.qt.file_dialog(filters, parent=self)
 
         if filename is not None:
@@ -88,30 +83,28 @@ class VariableSelection(QtWidgets.QWidget):
         return model
 
     def load_binary(self):
-        filters = [
-            ('TICOFF Binaries', ['out']),
-            ('All Files', ['*'])
-        ]
+        filters = [("TICOFF Binaries", ["out"]), ("All Files", ["*"])]
         filename = epyqlib.utils.qt.file_dialog(filters, parent=self)
 
         if filename is not None:
             # TODO: CAMPid 9632763567954321696542754261546
             self.progress = epyqlib.utils.qt.progress_dialog(parent=self)
-            self.progress.setLabelText('Loading binary...')
+            self.progress.setLabelText("Loading binary...")
 
             model = self.nonproxy_model()
 
             self.progress.show()
 
             d = twisted.internet.threads.deferToThread(
-                epyqlib.cmemoryparser.process_file,
-                filename=filename
+                epyqlib.cmemoryparser.process_file, filename=filename
             )
             d.addCallback(model.update_from_loaded_binary)
-            d.addCallback(epyqlib.utils.twisted.detour_result,
-                          self.ui.process_raw_log_button.setEnabled, True)
-            d.addBoth(epyqlib.utils.twisted.detour_result,
-                          self.progress_cleanup)
+            d.addCallback(
+                epyqlib.utils.twisted.detour_result,
+                self.ui.process_raw_log_button.setEnabled,
+                True,
+            )
+            d.addBoth(epyqlib.utils.twisted.detour_result, self.progress_cleanup)
             d.addErrback(epyqlib.utils.twisted.errbackhook)
 
     def progress_cleanup(self):
@@ -124,37 +117,31 @@ class VariableSelection(QtWidgets.QWidget):
         model.update_parameters(parent=self)
 
     def process_raw_log(self):
-        filters = [
-            ('Raw', ['raw']),
-            ('All Files', ['*'])
-        ]
+        filters = [("Raw", ["raw"]), ("All Files", ["*"])]
         raw_filename = epyqlib.utils.qt.file_dialog(filters, parent=self)
 
         if raw_filename is not None:
-            filters = [
-                ('CSV', ['csv']),
-                ('All Files', ['*'])
-            ]
+            filters = [("CSV", ["csv"]), ("All Files", ["*"])]
             csv_guess = str(
-                pathlib.Path(raw_filename).with_suffix('.' + filters[0][1][0])
+                pathlib.Path(raw_filename).with_suffix("." + filters[0][1][0])
             )
             csv_filename = epyqlib.utils.qt.file_dialog(
-                filters, save=True, parent=self, dir=csv_guess)
+                filters, save=True, parent=self, dir=csv_guess
+            )
 
             if csv_filename is not None:
-                with open(raw_filename, 'rb') as f:
+                with open(raw_filename, "rb") as f:
                     data = f.read()
 
                 model = self.nonproxy_model()
 
                 self.progress = epyqlib.utils.qt.progress_dialog(parent=self)
-                self.progress.setLabelText('Processing Raw Log...')
+                self.progress.setLabelText("Processing Raw Log...")
 
                 self.progress.show()
 
                 d = model.parse_log(data=data, csv_path=csv_filename)
-                d.addBoth(epyqlib.utils.twisted.detour_result,
-                          self.progress_cleanup)
+                d.addBoth(epyqlib.utils.twisted.detour_result, self.progress_cleanup)
                 d.addErrback(epyqlib.utils.twisted.errbackhook)
 
     def context_menu(self, position):
@@ -167,10 +154,9 @@ class VariableSelection(QtWidgets.QWidget):
         node = self.nonproxy_model().node_from_index(index)
 
         menu = QtWidgets.QMenu()
-        read_action = menu.addAction('Read')
+        read_action = menu.addAction("Read")
 
-        action = menu.exec(
-            self.ui.view.ui.tree_view.viewport().mapToGlobal(position))
+        action = menu.exec(self.ui.view.ui.tree_view.viewport().mapToGlobal(position))
 
         if action is None:
             pass

@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import epyqlib.widgets.abstractwidget
 import epyqlib.widgets.lcd_ui
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class Lcd(epyqlib.widgets.abstractwidget.AbstractWidget):
@@ -30,16 +30,16 @@ class Lcd(epyqlib.widgets.abstractwidget.AbstractWidget):
                 value = self.signal_object.format_float()
         elif value is None:
             # TODO: quit hardcoding this and it's better implemented elsewhere
-            value = '{0:.2f}'.format(0)
+            value = "{0:.2f}".format(0)
         else:
             # TODO: quit hardcoding this and it's better implemented elsewhere
-            value = '{0:.2f}'.format(value)
+            value = "{0:.2f}".format(value)
 
         self.ui.lcd.display(value)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

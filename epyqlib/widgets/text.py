@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 from PyQt5.QtCore import QEvent, Qt
 
@@ -9,8 +9,8 @@ import epyqlib.widgets.text_ui
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class Text(epyqlib.widgets.abstractwidget.AbstractWidget):
@@ -30,25 +30,24 @@ class Text(epyqlib.widgets.abstractwidget.AbstractWidget):
             value *= self._conversion_multiplier
 
         if value is None:
-            value = '-'
+            value = "-"
         else:
             if self.signal_object is None:
-                value = '{0:.2f}'.format(value)
+                value = "{0:.2f}".format(value)
             elif len(self.signal_object.enumeration) > 0:
                 value = self.signal_object.short_string
             else:
-                decimal_places = (None
-                                  if self.decimal_places < 0
-                                  else self.decimal_places)
+                decimal_places = (
+                    None if self.decimal_places < 0 else self.decimal_places
+                )
                 value = self.signal_object.format_float(
-                    value=value,
-                    decimal_places=decimal_places)
+                    value=value, decimal_places=decimal_places
+                )
 
         self.ui.value.setText(value)
 
     def set_signal(self, *args, **kwargs):
-        epyqlib.widgets.abstractwidget.AbstractWidget.set_signal(
-            self, *args, **kwargs)
+        epyqlib.widgets.abstractwidget.AbstractWidget.set_signal(self, *args, **kwargs)
 
         self.update_layout()
 
@@ -59,9 +58,11 @@ class Text(epyqlib.widgets.abstractwidget.AbstractWidget):
             self.ui.value.setMinimumWidth(width)
 
         if self.signal_object is not None:
-            alignment = (Qt.AlignRight
-                         if len(self.signal_object.enumeration) == 0
-                         else Qt.AlignCenter)
+            alignment = (
+                Qt.AlignRight
+                if len(self.signal_object.enumeration) == 0
+                else Qt.AlignCenter
+            )
             alignment |= Qt.AlignVCenter
             self.ui.value.setAlignment(alignment)
 
@@ -83,31 +84,33 @@ class Text(epyqlib.widgets.abstractwidget.AbstractWidget):
 
         signal = self.signal_object
 
-        decimal_places = (self.decimal_places
-                          if self.decimal_places >= 0
-                          else None)
+        decimal_places = self.decimal_places if self.decimal_places >= 0 else None
 
         longer = max(
-            [signal.format_float(value=v * self._conversion_multiplier,
-                                 decimal_places=decimal_places)
-             for v in [signal.min, signal.max]],
-            key=len)
+            [
+                signal.format_float(
+                    value=v * self._conversion_multiplier, decimal_places=decimal_places
+                )
+                for v in [signal.min, signal.max]
+            ],
+            key=len,
+        )
 
         digits = len(longer)
 
-        if '.' in longer:
-            decimal = '.'
+        if "." in longer:
+            decimal = "."
             digits -= 1
         else:
-            decimal = ''
+            decimal = ""
 
         self.ui.value.setVisible(self.ui.value.isVisibleTo(self))
         metric = self.ui.value.fontMetrics()
-        chars = ['{:}'.format(i) for i in range(10)]
+        chars = ["{:}".format(i) for i in range(10)]
         widths = [metric.width(c) for c in chars]
         widest_width = max(widths)
         widest_char = chars[widths.index(widest_width)]
-        string = '{}'.format((widest_char * digits) + decimal)
+        string = "{}".format((widest_char * digits) + decimal)
 
         strings = signal.enumeration_strings()
         strings.append(string)
@@ -119,8 +122,8 @@ class Text(epyqlib.widgets.abstractwidget.AbstractWidget):
         return max([metric.width(s) for s in strings])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import canmatrix.formats
 import epyqlib.canneo
@@ -13,8 +13,8 @@ from PyQt5.QtCore import pyqtProperty, QTimer
 from PyQt5.QtWidgets import QWidget
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class EpcForm(QWidget):
@@ -23,7 +23,7 @@ class EpcForm(QWidget):
 
         QWidget.__init__(self, parent=parent)
 
-        self._can_file = ''
+        self._can_file = ""
         self.form_window = None
 
         self.neo = None
@@ -52,7 +52,7 @@ class EpcForm(QWidget):
 
     @update_from_can_file.setter
     def update_from_can_file(self, _):
-        print('updating now')
+        print("updating now")
 
         self.update()
 
@@ -68,24 +68,24 @@ class EpcForm(QWidget):
         can_file = self.can_file
 
         imported = ()
-        new_form_window = (
-            QDesignerFormWindowInterface.findFormWindow(self))
+        new_form_window = QDesignerFormWindowInterface.findFormWindow(self)
         if self.neo is None:
             if self.form_window is not None:
                 self.form_window.fileNameChanged.disconnect(
-                    self.form_window_file_name_changed)
+                    self.form_window_file_name_changed
+                )
 
             self.form_window = new_form_window
 
             if self.form_window is not None:
                 self.form_window.fileNameChanged.connect(
-                    self.form_window_file_name_changed)
+                    self.form_window_file_name_changed
+                )
 
             if self.form_window is not None:
                 if not os.path.isabs(can_file):
                     can_file = os.path.join(
-                        os.path.dirname(self.form_window.fileName()),
-                        can_file
+                        os.path.dirname(self.form_window.fileName()), can_file
                     )
 
             try:
@@ -105,8 +105,7 @@ class EpcForm(QWidget):
 
                 pass
 
-        widgets = self.findChildren(
-                epyqlib.widgets.abstractwidget.AbstractWidget)
+        widgets = self.findChildren(epyqlib.widgets.abstractwidget.AbstractWidget)
 
         if len(imported) > 0:
             self.neo = epyqlib.canneo.Neo(matrix=imported[0])
@@ -125,13 +124,12 @@ class EpcForm(QWidget):
             widget.set_range(min=0, max=100)
             widget.set_value(math.nan)
 
-            frame = widget.property('frame')
+            frame = widget.property("frame")
             if frame is not None:
-                signal = widget.property('signal')
+                signal = widget.property("signal")
                 signal_path = (frame, signal)
             else:
-                signal_path = tuple(
-                    e for e in widget._signal_path if len(e) > 0)
+                signal_path = tuple(e for e in widget._signal_path if len(e) > 0)
 
             try:
                 signal = self.neo.signal_by_path(*signal_path)
@@ -141,8 +139,8 @@ class EpcForm(QWidget):
                 widget.set_signal(signal)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

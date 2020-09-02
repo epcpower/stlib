@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 from PyQt5.QtCore import pyqtProperty, Qt
 from PyQt5.QtGui import QFocusEvent, QKeyEvent
@@ -11,23 +11,23 @@ import epyqlib.widgets.epc_ui
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class Epc(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
     def __init__(
-            self,
-            parent=None,
-            ui_class=epyqlib.widgets.epc_ui.Ui_Form,
-            in_designer=False,
+        self,
+        parent=None,
+        ui_class=epyqlib.widgets.epc_ui.Ui_Form,
+        in_designer=False,
     ):
         self._frame = None
         self._signal = None
 
         self._show_enumeration_value = True
 
-        self.isBlue = False # By default, the text color is black.
+        self.isBlue = False  # By default, the text color is black.
 
         super().__init__(
             ui_class=ui_class,
@@ -60,8 +60,7 @@ class Epc(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
 
     def cancel_edit(self):
         self.signal_object.set_human_value(
-            self.signal_object.get_human_value(),
-            force=True
+            self.signal_object.get_human_value(), force=True
         )
 
     def eventFilter(self, object, event):
@@ -89,12 +88,13 @@ class Epc(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
             value.setMinimumWidth(width)
 
         if self.signal_object is not None:
-            alignment = (Qt.AlignRight
-                         if len(self.signal_object.enumeration) == 0
-                         else Qt.AlignCenter)
+            alignment = (
+                Qt.AlignRight
+                if len(self.signal_object.enumeration) == 0
+                else Qt.AlignCenter
+            )
             alignment |= Qt.AlignVCenter
             self.ui.value.setAlignment(alignment)
-
 
     # TODO: CAMPid 989849193479134917954791341
     def calculate_max_value_width(self):
@@ -104,34 +104,33 @@ class Epc(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
         signal = self.signal_object
 
         longer = max(
-            [signal.format_float(v) for v in [signal.min, signal.max]],
-            key=len)
+            [signal.format_float(v) for v in [signal.min, signal.max]], key=len
+        )
 
         digits = len(longer)
 
-        if '.' in longer:
-            decimal = '.'
+        if "." in longer:
+            decimal = "."
             digits -= 1
         else:
-            decimal = ''
+            decimal = ""
 
         self.ui.value.setVisible(self.ui.value.isVisibleTo(self))
         metric = self.ui.value.fontMetrics()
-        chars = ['{:}'.format(i) for i in range(10)]
+        chars = ["{:}".format(i) for i in range(10)]
         widths = [metric.width(c) for c in chars]
         widest_width = max(widths)
         widest_char = chars[widths.index(widest_width)]
-        string = '{}'.format((widest_char * digits) + decimal)
+        string = "{}".format((widest_char * digits) + decimal)
 
         strings = signal.enumeration_strings()
         strings.append(string)
 
         # TODO: really figure out the spacing needed but for now
         #       just add a space on each side for buffer space
-        strings = [s + '   ' for s in strings]
+        strings = [s + "   " for s in strings]
 
         return max([metric.width(s) for s in strings])
-
 
     def widget_value_changed(self):
         super().widget_value_changed(self.ui.value.text())
@@ -139,17 +138,19 @@ class Epc(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
     def set_value(self, value):
         if self.signal_object is not None:
             if len(self.signal_object.enumeration) > 0:
-                value = (self.signal_object.full_string
-                         if self.show_enumeration_value
-                         else self.signal_object.enumeration_text)
+                value = (
+                    self.signal_object.full_string
+                    if self.show_enumeration_value
+                    else self.signal_object.enumeration_text
+                )
             else:
                 value = self.signal_object.short_string
         elif value is None:
             # TODO: quit hardcoding this and it's better implemented elsewhere
-            value = '{0:.2f}'.format(0)
+            value = "{0:.2f}".format(0)
         else:
             # TODO: quit hardcoding this and it's better implemented elsewhere
-            value = '{0:.2f}'.format(value)
+            value = "{0:.2f}".format(value)
 
         self.ui.value.setText(value)
 
@@ -179,8 +180,9 @@ class Epc(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
         else:
             self.ui.label.setStyleSheet("")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

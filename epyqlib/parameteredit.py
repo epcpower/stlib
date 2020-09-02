@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import functools
 import textwrap
@@ -13,13 +13,20 @@ import epyqlib.utils.qt
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class ParameterEdit(QtWidgets.QWidget):
-    def __init__(self, parent=None, in_designer=False, edit=None, nv=None,
-                 dialog=None, esc_action=None):
+    def __init__(
+        self,
+        parent=None,
+        in_designer=False,
+        edit=None,
+        nv=None,
+        dialog=None,
+        esc_action=None,
+    ):
         super().__init__(parent=parent)
 
         self.in_designer = in_designer
@@ -54,24 +61,25 @@ class ParameterEdit(QtWidgets.QWidget):
         self.nv.write_to_device()
 
     def save_to_nv(self):
-        focus_self = functools.partial(
-            self.parent().setCurrentWidget,
-            self
-        )
+        focus_self = functools.partial(self.parent().setCurrentWidget, self)
 
         # TODO: CAMPid 93849811216123127753953680713426
         def inverter_to_nv():
             self.nv.tree_parent.module_to_nv()
             focus_self()
 
-        self._dialog.focus(ok_action=inverter_to_nv,
-                         cancel_action=focus_self,
-                         label=textwrap.dedent('''\
-                             Save all parameters to NV?''')
-                         )
+        self._dialog.focus(
+            ok_action=inverter_to_nv,
+            cancel_action=focus_self,
+            label=textwrap.dedent(
+                """\
+                             Save all parameters to NV?"""
+            ),
+        )
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

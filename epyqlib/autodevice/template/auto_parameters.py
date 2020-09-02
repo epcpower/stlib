@@ -15,8 +15,8 @@ import epyqlib.utils.general
 import epyqlib.utils.qt
 import epyqlib.utils.twisted
 
-__copyright__ = 'Copyright 2017, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2017, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class ConfigurationError(Exception):
@@ -24,8 +24,8 @@ class ConfigurationError(Exception):
 
 
 class ValueTypes(enum.Enum):
-    parameters = 'auto_parameters'
-    value_set = 'auto_value_set'
+    parameters = "auto_parameters"
+    value_set = "auto_value_set"
 
 
 def value_file(raw_dict):
@@ -36,10 +36,10 @@ def value_file(raw_dict):
     }
 
     try:
-        (value_type, path), = paths.items()
+        ((value_type, path),) = paths.items()
     except ValueError as e:
         raise ConfigurationError(
-            'Expected one value file but got {}'.format(paths),
+            "Expected one value file but got {}".format(paths),
         ) from e
 
     return value_type, path
@@ -70,12 +70,10 @@ class DeviceExtension:
         self.value_type, parameter_path = value_file(self.device().raw_dict)
         parameter_path = self.device().absolute_path(parameter_path)
 
-        self.ui = self.device().uis['Factory']
-        self.ui.load_parameters_button.clicked.connect(
-            self.load_parameters)
+        self.ui = self.device().uis["Factory"]
+        self.ui.load_parameters_button.clicked.connect(self.load_parameters)
 
-        matrix_nv = list(
-            canmatrix.formats.loadp(self.device().can_path).values())[0]
+        matrix_nv = list(canmatrix.formats.loadp(self.device().can_path).values())[0]
         self.frames_nv = epyqlib.canneo.Neo(
             matrix=matrix_nv,
             frame_class=epyqlib.nv.Frame,
@@ -84,22 +82,18 @@ class DeviceExtension:
             strip_summary=False,
         )
 
-        self.required_serial_number = self.device().raw_dict[
-            'required_serial_number'
-        ]
-        self.serial_number_names = self.device().raw_dict[
-            'serial_number_names'
-        ]
+        self.required_serial_number = self.device().raw_dict["required_serial_number"]
+        self.serial_number_names = self.device().raw_dict["serial_number_names"]
 
-        access_level_path = self.device().raw_dict['access_level_path']
+        access_level_path = self.device().raw_dict["access_level_path"]
         if access_level_path is not None:
-            access_level_path = access_level_path.split(';')
-        access_password_path = self.device().raw_dict['access_password_path']
+            access_level_path = access_level_path.split(";")
+        access_password_path = self.device().raw_dict["access_password_path"]
         if access_password_path is not None:
-            access_password_path = access_password_path.split(';')
+            access_password_path = access_password_path.split(";")
 
         # TODO: CAMPid 0794311304143707516085683164039671793972
-        if self.device().raw_dict['nv_meta_enum'] == 'Meta':
+        if self.device().raw_dict["nv_meta_enum"] == "Meta":
             self.metas = epyqlib.nv.meta_limits_first
         else:
             self.metas = (epyqlib.nv.MetaEnum.value,)
@@ -107,36 +101,32 @@ class DeviceExtension:
         self.nvs = epyqlib.nv.Nvs(
             neo=self.frames_nv,
             bus=self.device().bus,
-            configuration=self.device().raw_dict['nv_configuration'],
+            configuration=self.device().raw_dict["nv_configuration"],
             metas=self.metas,
             access_level_path=access_level_path,
             access_password_path=access_password_path,
         )
         self.nv_protocol = epyqlib.twisted.nvs.Protocol()
         from twisted.internet import reactor
+
         self.transport = epyqlib.twisted.busproxy.BusProxy(
-            protocol=self.nv_protocol,
-            reactor=reactor,
-            bus=self.device().bus)
+            protocol=self.nv_protocol, reactor=reactor, bus=self.device().bus
+        )
 
         if self.value_type == ValueTypes.parameters:
-            with open(parameter_path, 'r') as file:
+            with open(parameter_path, "r") as file:
                 s = file.read()
                 self.parameter_dict = json.loads(
                     s, object_pairs_hook=collections.OrderedDict
                 )
 
             self.nvs.from_dict(self.parameter_dict)
-            self.parameter_names = [
-                k.split(':')
-                for k in self.parameter_dict.keys()
-            ]
+            self.parameter_names = [k.split(":") for k in self.parameter_dict.keys()]
         elif self.value_type == ValueTypes.value_set:
             value_set = epyqlib.pm.valuesetmodel.loadp(parameter_path)
             self.nvs.from_value_set(value_set)
             self.parameter_names = [
-                node.name.split(':')
-                for node in value_set.model.root.leaves()
+                node.name.split(":") for node in value_set.model.root.leaves()
             ]
 
     @twisted.internet.defer.inlineCallbacks
@@ -156,7 +146,7 @@ class DeviceExtension:
         self.progress = epyqlib.utils.qt.Progress()
         self.progress.connect(
             progress=epyqlib.utils.qt.progress_dialog(parent=self.device().ui),
-            label_text='Writing to device...',
+            label_text="Writing to device...",
         )
 
     def _ended(self):
@@ -167,28 +157,26 @@ class DeviceExtension:
     def _finished(self):
         epyqlib.utils.qt.dialog(
             parent=self.device().ui,
-            message=(
-                'Parameters successfully written to device and saved to NV'
-            ),
+            message=("Parameters successfully written to device and saved to NV"),
             icon=PyQt5.QtWidgets.QMessageBox.Information,
         )
 
     @twisted.internet.defer.inlineCallbacks
     def _check_serial_number(self):
         serial_nv = self.nvs.signal_from_names(
-            'SN',
-            'SerialNumber',
+            "SN",
+            "SerialNumber",
         )
         actual, _ = yield self.nv_protocol.read(
             nv_signal=serial_nv,
             meta=epyqlib.nv.MetaEnum.value,
         )
         actual = int(actual)
-        expected = self.device().raw_dict['required_serial_number']
+        expected = self.device().raw_dict["required_serial_number"]
 
         if actual != expected:
             raise epyqlib.utils.general.UnmatchedSerialNumberError(
-                f'Expected {expected} but found {actual}'
+                f"Expected {expected} but found {actual}"
             )
 
     @twisted.internet.defer.inlineCallbacks
@@ -206,8 +194,9 @@ class DeviceExtension:
         )
 
         import attr
+
         def s(node, f):
-            if f.name == 'value':
+            if f.name == "value":
                 meta = node
             else:
                 meta = getattr(node.meta, f.name)
@@ -215,15 +204,12 @@ class DeviceExtension:
             return str(meta.value)
 
         def p(nodes, i):
-            print('writing {}: '.format(i))
+            print("writing {}: ".format(i))
             for node in nodes:
                 print(
-                    '    {} --- {}'.format(
+                    "    {} --- {}".format(
                         node,
-                        ', '.join(
-                            s(node, f)
-                            for f in attr.fields(type(node.meta))
-                        ),
+                        ", ".join(s(node, f) for f in attr.fields(type(node.meta))),
                     )
                 )
 

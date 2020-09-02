@@ -12,13 +12,13 @@ if typing.TYPE_CHECKING:
     from epyqlib.tabs.files.aws_login_manager import AwsLoginManager
 
 Ui, UiBase = PyQt5.uic.loadUiType(
-   pathlib.Path(__file__).with_suffix('.ui'),
+    pathlib.Path(__file__).with_suffix(".ui"),
 )
 
 
 @attr.s
 class LoginDialog(UiBase):
-    login_manager: 'AwsLoginManager' = attr.ib()
+    login_manager: "AwsLoginManager" = attr.ib()
     ui = attr.ib(factory=Ui)
 
     invalid_input = False
@@ -68,7 +68,7 @@ class LoginDialog(UiBase):
         self.btn_login: QPushButton = self.ui.button_box.button(
             QDialogButtonBox.StandardButton.Ok
         )
-        self.btn_login.setText('Login')
+        self.btn_login.setText("Login")
 
         self.username.textChanged.connect(self._text_changed)
         self.password.textChanged.connect(self._text_changed)
@@ -76,13 +76,11 @@ class LoginDialog(UiBase):
         self.btn_cancel.clicked.connect(self._cancel_clicked)
         self.btn_login.clicked.connect(self._login_clicked)
 
-
     def _cancel_clicked(self):
         self.reject()
 
     def _login_clicked(self):
         self._clear_error_message()
-
 
         username = self.username.text()
         password = self.password.text()
@@ -100,11 +98,9 @@ class LoginDialog(UiBase):
         self.error_message.setText(None)
 
     def _show_error_message(self, err: str):
-        self.error_message.setText(f"<font color=\"red\">{err} Please try again.</font>")
+        self.error_message.setText(f'<font color="red">{err} Please try again.</font>')
 
     def _text_changed(self, new_text: str):
         if self.invalid_input:
             self.invalid_input = False
             self.btn_login.setEnabled(True)
-
-

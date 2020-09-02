@@ -5,7 +5,7 @@ from epyqlib.tabs.files.graphql import API
 
 
 @attr.s(slots=True, auto_attribs=True)
-class ActivitySyncer():
+class ActivitySyncer:
     activityLog: ActivityLog
     api: API
     _syncing: bool = attr.ib(default=False)
@@ -29,6 +29,3 @@ class ActivitySyncer():
                 self.activityLog.remove(event)
         finally:
             self._syncing = False
-
-
-

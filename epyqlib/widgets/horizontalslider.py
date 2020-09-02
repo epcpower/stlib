@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import epyqlib.mixins
 import epyqlib.widgets.abstracttxwidget
@@ -8,12 +8,13 @@ import epyqlib.widgets.horizontalslider_ui
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
-class HorizontalSlider(epyqlib.widgets.abstracttxwidget.AbstractTxWidget,
-                       epyqlib.mixins.OverrideRange):
+class HorizontalSlider(
+    epyqlib.widgets.abstracttxwidget.AbstractTxWidget, epyqlib.mixins.OverrideRange
+):
     def __init__(self, parent=None, in_designer=False):
         self._zero_count = None
         self._counts = 1000
@@ -26,18 +27,18 @@ class HorizontalSlider(epyqlib.widgets.abstracttxwidget.AbstractTxWidget,
             in_designer=in_designer,
         )
 
-        self.ui.value.setTickInterval(self._counts/4)
+        self.ui.value.setTickInterval(self._counts / 4)
         self.ui.value.setRange(0, self._counts)
 
         self.ui.value.valueChanged.connect(self.widget_value_changed)
 
-
     def widget_value_changed(self, counts):
-        value = (counts - self._zero_count)
+        value = counts - self._zero_count
         value *= (self._max - self._min) / self._counts
 
         epyqlib.widgets.abstracttxwidget.AbstractTxWidget.widget_value_changed(
-            self, value)
+            self, value
+        )
 
     def set_value(self, value):
         if value is None:
@@ -55,10 +56,10 @@ class HorizontalSlider(epyqlib.widgets.abstracttxwidget.AbstractTxWidget,
 
         if min == max:
             # TODO: pick the right exception
-            raise Exception('Min and max may not be the same')
+            raise Exception("Min and max may not be the same")
         elif min > max:
             # TODO: pick the right exception
-            raise Exception('Min must be less than max')
+            raise Exception("Min must be less than max")
 
         self._min = min
         self._max = max
@@ -68,15 +69,15 @@ class HorizontalSlider(epyqlib.widgets.abstracttxwidget.AbstractTxWidget,
             min_string = self.signal_object.format_float(self._min)
             max_string = self.signal_object.format_float(self._max)
         else:
-            min_string = ''
-            max_string = ''
+            min_string = ""
+            max_string = ""
 
         self.ui.min.setText(min_string)
         self.ui.max.setText(max_string)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

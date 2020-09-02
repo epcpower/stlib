@@ -1,11 +1,12 @@
 # See file COPYING in this source tree
-__copyright__ = ('\n'.join([
-    'Copyright (c) Twisted Matrix Laboratories',
-    # https://github.com/twisted/twisted/blob/4368c0b84b82f0791f6df52dc80328f7bd493547/src/twisted/internet/_posixserialport.py
-
-    'Copyright 2016, EPC Power Corp.'
-]))
-__license__ = 'GPLv2+'
+__copyright__ = "\n".join(
+    [
+        "Copyright (c) Twisted Matrix Laboratories",
+        # https://github.com/twisted/twisted/blob/4368c0b84b82f0791f6df52dc80328f7bd493547/src/twisted/internet/_posixserialport.py
+        "Copyright 2016, EPC Power Corp.",
+    ]
+)
+__license__ = "GPLv2+"
 
 
 import epyqlib.canneo
@@ -41,7 +42,6 @@ class BusProxy(epyqlib.canneo.QtCanListener):
         Some data's readable from serial device.
         """
         return self._protocol.dataReceived(message)
-
 
     def connectionLost(self, reason):
         """

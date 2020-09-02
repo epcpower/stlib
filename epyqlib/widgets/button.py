@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import epyqlib.widgets.abstracttxwidget
 import epyqlib.widgets.button_ui
@@ -8,8 +8,8 @@ from PyQt5.QtCore import pyqtProperty
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class Button(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
@@ -62,14 +62,15 @@ class Button(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
 
             if len(self.signal_object.enumeration):
                 widths = []
-                for text in [self.calculate_text(v) for v in
-                             self.signal_object.enumeration]:
+                for text in [
+                    self.calculate_text(v) for v in self.signal_object.enumeration
+                ]:
                     widths.append(get_text_width(button, text))
 
                 button.setMinimumWidth(1.3 * max(widths))
         else:
             if self.ui is not None:
-                self.ui.value.setText('')
+                self.ui.value.setText("")
 
     def set(self, value):
         self.widget_value_changed(value)
@@ -79,8 +80,9 @@ class Button(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
         if self.label_visible and self.signal_object is not None:
             # TODO: CAMPid 85478672616219005471279
             enum_string = self.signal_object.enumeration[value]
-            text = self.signal_object.enumeration_format_re['format'].format(
-                s=enum_string, v=value)
+            text = self.signal_object.enumeration_format_re["format"].format(
+                s=enum_string, v=value
+            )
 
             return text
         else:
@@ -106,8 +108,9 @@ class Button(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
         epyqlib.widgets.abstracttxwidget.AbstractTxWidget.showEvent(self, event)
         self.set(self.off_value)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import functools
 import epyqlib.utils.qt
@@ -10,8 +10,8 @@ from PyQt5.QtCore import QFileInfo, qDebug
 import sys
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class AbstractPlugin(QtDesigner.QPyDesignerCustomWidgetPlugin):
@@ -23,8 +23,9 @@ class AbstractPlugin(QtDesigner.QPyDesignerCustomWidgetPlugin):
         self.in_designer = in_designer
 
         self._group = "EPC - Signals"
-        self._icon = os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)),
-                             'icon.ico')
+        self._icon = os.path.join(
+            QFileInfo.absolutePath(QFileInfo(__file__)), "icon.ico"
+        )
         self._init = None
         self._module_path = None
         self._name = None
@@ -70,8 +71,8 @@ class AbstractPlugin(QtDesigner.QPyDesignerCustomWidgetPlugin):
         return self._module_path
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

@@ -18,12 +18,12 @@ from PyQt5 import QtWidgets
 import PyQt5.uic
 import twisted.internet.defer
 
-__copyright__ = 'Copyright 2017, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2017, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 # TODO: CAMPid 953295425421677545429542967596754
-log = os.path.join(os.getcwd(), 'epyq.log')
+log = os.path.join(os.getcwd(), "epyq.log")
 
 
 _version_tag = None
@@ -49,23 +49,22 @@ def exception_message_box(excType=None, excValue=None, tracebackobj=None):
     epyqlib.utils.general.exception_logger(excType, excValue, tracebackobj)
 
     def join(iterable):
-        return ''.join(iterable).strip()
+        return "".join(iterable).strip()
 
     expected = isinstance(excValue, epyqlib.utils.general.ExpectedException)
 
     if expected:
         brief = excValue.expected_message()
     else:
-        brief = join(traceback.format_exception_only(
-            etype=excType,
-            value=excValue
-        ))
+        brief = join(traceback.format_exception_only(etype=excType, value=excValue))
 
-    extended = join(traceback.format_exception(
-        etype=excType,
-        value=excValue,
-        tb=tracebackobj,
-    ))
+    extended = join(
+        traceback.format_exception(
+            etype=excType,
+            value=excValue,
+            tb=tracebackobj,
+        )
+    )
 
     if expected:
         box = raw_exception_message_box
@@ -79,14 +78,16 @@ def exception_message_box(excType=None, excValue=None, tracebackobj=None):
     )
 
 
-def custom_exception_message_box(brief, extended='', **kwargs):
+def custom_exception_message_box(brief, extended="", **kwargs):
     email = "kyle.altendorf@epcpower.com"
 
-    brief = textwrap.dedent('''\
+    brief = textwrap.dedent(
+        """\
         An unhandled exception occurred. Please report the problem via email to:
                         {email}
 
-        {brief}''').format(
+        {brief}"""
+    ).format(
         email=email,
         brief=brief,
     )
@@ -95,38 +96,40 @@ def custom_exception_message_box(brief, extended='', **kwargs):
 
 
 def raw_exception_message_box(brief, extended, stderr=True):
-    version = ''
+    version = ""
     if _version_tag is not None:
-        version = 'Version Tag: {}'.format(_version_tag)
+        version = "Version Tag: {}".format(_version_tag)
 
-    build = ''
+    build = ""
     if _build_tag is not None:
-        build = 'Build Tag: {}'.format(_build_tag)
+        build = "Build Tag: {}".format(_build_tag)
 
     info = (version, build)
-    info = '\n'.join(s for s in info if len(s) > 0)
+    info = "\n".join(s for s in info if len(s) > 0)
     if len(info) > 0:
-        info += '\n\n'
+        info += "\n\n"
 
     time_string = time.strftime("%Y-%m-%d, %H:%M:%S %Z")
 
-    details = textwrap.dedent('''\
+    details = textwrap.dedent(
+        """\
         {info}A log has been written to "{log}".
-        {time_string}''').format(
+        {time_string}"""
+    ).format(
         info=info,
         log=log,
         time_string=time_string,
     )
 
     if len(extended) > 0:
-        details = '\n'.join(s.strip() for s in (details, '-' * 70, extended))
+        details = "\n".join(s.strip() for s in (details, "-" * 70, extended))
 
     if stderr:
-        sys.stderr.write('\n'.join((brief, details, '')))
+        sys.stderr.write("\n".join((brief, details, "")))
 
     dialog(
         parent=_parent,
-        title='Exception',
+        title="Exception",
         message=brief,
         details=details,
         icon=QtWidgets.QMessageBox.Critical,
@@ -136,20 +139,20 @@ def raw_exception_message_box(brief, extended, stderr=True):
 # http://stackoverflow.com/a/35902894/228539
 def message_handler(mode, context, message):
     mode_strings = {
-        QtCore.QtInfoMsg: 'INFO',
-        QtCore.QtWarningMsg: 'WARNING',
-        QtCore.QtCriticalMsg: 'CRITICAL',
-        QtCore.QtFatalMsg: 'FATAL'
+        QtCore.QtInfoMsg: "INFO",
+        QtCore.QtWarningMsg: "WARNING",
+        QtCore.QtCriticalMsg: "CRITICAL",
+        QtCore.QtFatalMsg: "FATAL",
     }
 
-    mode = mode_strings.get(mode, 'DEBUG')
+    mode = mode_strings.get(mode, "DEBUG")
 
-    print('qt_message_handler: f:{file} l:{line} f():{function}'.format(
-        file=context.file,
-        line=context.line,
-        function=context.function
-    ))
-    print('  {}: {}\n'.format(mode, message))
+    print(
+        "qt_message_handler: f:{file} l:{line} f():{function}".format(
+            file=context.file, line=context.line, function=context.function
+        )
+    )
+    print("  {}: {}\n".format(mode, message))
 
 
 class Progress(QtCore.QObject):
@@ -160,9 +163,7 @@ class Progress(QtCore.QObject):
     failed = QtCore.pyqtSignal()
     canceled = QtCore.pyqtSignal()
 
-    default_progress_label = (
-        '{elapsed} seconds elapsed, {remaining} seconds remaining'
-    )
+    default_progress_label = "{elapsed} seconds elapsed, {remaining} seconds remaining"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -198,9 +199,9 @@ class Progress(QtCore.QObject):
             remaining = round(remaining)
         except:
             pass
-        self.progress.setLabelText(self._label_text_replace.format(
-                elapsed=round(time.monotonic() - self._start_time),
-                remaining=remaining
+        self.progress.setLabelText(
+            self._label_text_replace.format(
+                elapsed=round(time.monotonic() - self._start_time), remaining=remaining
             )
         )
 
@@ -230,7 +231,7 @@ class Progress(QtCore.QObject):
 
     def complete(self, message=None):
         if message is not None:
-            QtWidgets.QMessageBox.information(self.progress, 'EPyQ', message)
+            QtWidgets.QMessageBox.information(self.progress, "EPyQ", message)
 
         self.completed.emit()
 
@@ -246,27 +247,28 @@ class Progress(QtCore.QObject):
 
 
 def complete_filter_type(extension):
-    if extension == '*':
+    if extension == "*":
         return extension
 
-    return '*.' + extension
+    return "*." + extension
+
 
 def create_filter_string(name, extensions):
-    return '{} ({})'.format(
+    return "{} ({})".format(
         name,
-        ' '.join((complete_filter_type(e) for e in extensions)),
-     )
+        " ".join((complete_filter_type(e) for e in extensions)),
+    )
 
 
 def file_dialog(
-        filters,
-        default=0,
-        save=False,
-        multiple=False,
-        caption='',
-        parent=None,
-        path_factory=str,
-        **kwargs,
+    filters,
+    default=0,
+    save=False,
+    multiple=False,
+    caption="",
+    parent=None,
+    path_factory=str,
+    **kwargs,
 ):
     # TODO: CAMPid 9857216134675885472598426718023132
     # filters = [
@@ -279,7 +281,7 @@ def file_dialog(
         multiple = False
 
     filter_strings = [create_filter_string(f[0], f[1]) for f in filters]
-    filter_string = ';;'.join(filter_strings)
+    filter_string = ";;".join(filter_strings)
 
     if save:
         dialog = QtWidgets.QFileDialog.getSaveFileName
@@ -288,15 +290,15 @@ def file_dialog(
     else:
         dialog = QtWidgets.QFileDialog.getOpenFileName
 
-    if 'dir' in kwargs:
-        kwargs['directory'] = kwargs.pop('dir')
+    if "dir" in kwargs:
+        kwargs["directory"] = kwargs.pop("dir")
 
     selected = dialog(
         parent=parent,
         filter=filter_string,
         initialFilter=filter_strings[default],
         caption=caption,
-        **kwargs
+        **kwargs,
     )[0]
 
     if multiple:
@@ -311,10 +313,10 @@ def file_dialog(
 def get_code():
     code = None
 
-    code_file = QtCore.QFile(':/code')
+    code_file = QtCore.QFile(":/code")
     if code_file.open(QtCore.QIODevice.ReadOnly):
         code = bytes(code_file.readAll())
-        code = code.decode('ascii').strip().encode('ascii')
+        code = code.decode("ascii").strip().encode("ascii")
         code_file.close()
 
     return code
@@ -359,19 +361,23 @@ class FittedTextBrowser(QtWidgets.QTextBrowser):
             QtWidgets.QStyle.PM_ScrollBarExtent
         )
 
-        width = sum((
-            document_size.width(),
-            self.contentsMargins().left(),
-            self.contentsMargins().right(),
-            scrollbar_width,
-        ))
+        width = sum(
+            (
+                document_size.width(),
+                self.contentsMargins().left(),
+                self.contentsMargins().right(),
+                scrollbar_width,
+            )
+        )
 
-        height = sum((
-            document_size.height(),
-            self.contentsMargins().top(),
-            self.contentsMargins().bottom(),
-            scrollbar_width,
-        ))
+        height = sum(
+            (
+                document_size.height(),
+                self.contentsMargins().top(),
+                self.contentsMargins().bottom(),
+                scrollbar_width,
+            )
+        )
 
         return QtCore.QSize(width, height)
 
@@ -387,9 +393,9 @@ class DialogUi:
         self.show_details = QtWidgets.QPushButton(parent)
         self.buttons = QtWidgets.QDialogButtonBox(parent)
 
-        self.copy.setText('To Clipboard')
-        self.save.setText('To File')
-        self.show_details.setText('Details...')
+        self.copy.setText("To Clipboard")
+        self.save.setText("To File")
+        self.show_details.setText("Details...")
 
         self.layout.addWidget(self.icon, 0, 0, 2, 1)
         self.layout.addWidget(self.message, 0, 1, 1, 4)
@@ -403,16 +409,20 @@ class DialogUi:
 
 
 class Dialog(QtWidgets.QDialog):
-    def __init__(self, *args, cancellable=False, details=False,
-                 save_filters=None, save_caption=None, **kwargs):
+    def __init__(
+        self,
+        *args,
+        cancellable=False,
+        details=False,
+        save_filters=None,
+        save_caption=None,
+        **kwargs,
+    ):
         super().__init__(*args, **kwargs)
 
         self.save_filters = save_filters
         if self.save_filters is None:
-            self.save_filters = (
-                ('Text', ['txt']),
-                ('All Files', ['*'])
-            )
+            self.save_filters = (("Text", ["txt"]), ("All Files", ["*"]))
 
         self.save_caption = save_caption
 
@@ -454,16 +464,17 @@ class Dialog(QtWidgets.QDialog):
         details = self.ui.details.toPlainText().strip()
 
         if len(details) == 0:
-            return message + '\n'
+            return message + "\n"
 
-        return textwrap.dedent('''\
+        return textwrap.dedent(
+            """\
             {message}
 
              - - - - Details:
 
             {details}
-            '''
-                            ).format(
+            """
+        ).format(
             message=message,
             details=details,
         )
@@ -474,7 +485,7 @@ class Dialog(QtWidgets.QDialog):
     def save(self):
         extras = {}
         if self.save_caption is not None:
-            extras['caption'] = self.save_caption
+            extras["caption"] = self.save_caption
 
         path = epyqlib.utils.qt.file_dialog(
             filters=self.save_filters,
@@ -486,7 +497,7 @@ class Dialog(QtWidgets.QDialog):
         if path is None:
             return
 
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             f.write(self.all_as_text())
 
     def show_details(self):
@@ -535,9 +546,18 @@ class Dialog(QtWidgets.QDialog):
         self.ui.icon.setPixmap(QtWidgets.QMessageBox.standardIcon(icon))
 
 
-def dialog(parent, message, title=None, icon=None,
-           rich_text=False, details='', details_rich_text=False,
-           cancellable=False, modal=True, **kwargs):
+def dialog(
+    parent,
+    message,
+    title=None,
+    icon=None,
+    rich_text=False,
+    details="",
+    details_rich_text=False,
+    cancellable=False,
+    modal=True,
+    **kwargs,
+):
     box = Dialog(
         parent=parent,
         cancellable=cancellable,
@@ -564,11 +584,12 @@ def dialog(parent, message, title=None, icon=None,
         parent_title = QtWidgets.QApplication.instance().applicationName()
 
         if len(parent_title) > 0:
-            title = ' - '.join((
-                parent_title,
-                title,
-            ))
-
+            title = " - ".join(
+                (
+                    parent_title,
+                    title,
+                )
+            )
 
         box.setWindowTitle(title)
 
@@ -589,11 +610,13 @@ def dialog_from_file(parent, title, file_name):
     #
     # So, we'll just try different encodings and hope one of them works.
 
-    encodings = [None, 'utf-8']
+    encodings = [None, "utf-8"]
 
     for encoding in encodings:
         try:
-            with open(os.path.join('Licenses', file_name), encoding=encoding) as in_file:
+            with open(
+                os.path.join("Licenses", file_name), encoding=encoding
+            ) as in_file:
                 message = in_file.read()
         except UnicodeDecodeError:
             pass
@@ -619,18 +642,10 @@ class PySortFilterProxyModel(QtCore.QSortFilterProxyModel):
 
     def lessThan(self, left, right):
         left_model = left.model()
-        left_data = (
-            left_model.data(left, self.sortRole())
-            if left_model else
-            None
-        )
+        left_data = left_model.data(left, self.sortRole()) if left_model else None
 
         right_model = right.model()
-        right_data = (
-            right_model.data(right, self.sortRole())
-            if right_model else
-            None
-        )
+        right_data = right_model.data(right, self.sortRole()) if right_model else None
 
         return left_data < right_data
 
@@ -639,10 +654,10 @@ class PySortFilterProxyModel(QtCore.QSortFilterProxyModel):
         # http://doc.qt.io/qt-5/qsortfilterproxymodel.html#invalidateFilter
 
         pattern = self.filterRegExp().pattern()
-        if pattern == '':
+        if pattern == "":
             return True
 
-        pattern = '*{}*'.format(pattern)
+        pattern = "*{}*".format(pattern)
 
         model = self.sourceModel()
         result = False
@@ -692,15 +707,13 @@ class PySortFilterProxyModel(QtCore.QSortFilterProxyModel):
                 index.parent(),
             )
 
-        if text == '':
+        if text == "":
             return None
 
-        text = '*{}*'.format(text)
+        text = "*{}*".format(text)
 
         flags = (
-            QtCore.Qt.MatchContains
-            | QtCore.Qt.MatchRecursive
-            | QtCore.Qt.MatchWildcard
+            QtCore.Qt.MatchContains | QtCore.Qt.MatchRecursive | QtCore.Qt.MatchWildcard
         )
 
         wrapped = False
@@ -720,7 +733,7 @@ class PySortFilterProxyModel(QtCore.QSortFilterProxyModel):
             )
 
             if len(next_indexes) > 0:
-                next_index, = next_indexes
+                (next_index,) = next_indexes
 
                 if not next_index.isValid():
                     break
@@ -732,7 +745,7 @@ class PySortFilterProxyModel(QtCore.QSortFilterProxyModel):
             search_from, wrapped = self.next_index(search_from)
 
         # TODO: report not found and/or wrap
-        print('reached end')
+        print("reached end")
         return None
 
 
@@ -752,10 +765,7 @@ class DiffProxyModel(QtCore.QIdentityProxyModel):
         column = index.column()
 
         if self.reference_column is not None:
-            if (
-                column == self.reference_column
-                and role in self.reference_highlights
-            ):
+            if column == self.reference_column and role in self.reference_highlights:
                 return self.reference_highlights[role]
             elif (
                 column != self.reference_column
@@ -804,10 +814,7 @@ class DiffProxyModel(QtCore.QIdentityProxyModel):
             if self.hasChildren(parent):
                 row_count = self.rowCount(parent)
 
-                indexes.extend([
-                    self.index(row, 0, parent)
-                    for row in range(row_count)
-                ])
+                indexes.extend([self.index(row, 0, parent) for row in range(row_count)])
 
                 for start, end in self.column_group_limits():
                     self.dataChanged.emit(
@@ -845,7 +852,7 @@ def load_ui(filepath, base_instance):
 
 
 def search_view(view, text, column):
-    if text == '':
+    if text == "":
         return
 
     model = view.model()
@@ -854,13 +861,13 @@ def search_view(view, text, column):
 
     while model is not None:
         models.append(model)
-        search = getattr(model, 'search', None)
+        search = getattr(model, "search", None)
         if search is not None:
             break
 
         model = model.sourceModel()
     else:
-        raise Exception('ack')
+        raise Exception("ack")
 
     index = search(
         text=text,
@@ -904,10 +911,7 @@ class PyQtifyInstance:
     def fill(cls, display_name, attrs_class):
         return cls(
             display_name=display_name,
-            values={
-                field.name: None
-                for field in attr.fields(attrs_class)
-            },
+            values={field.name: None for field in attr.fields(attrs_class)},
         )
 
 
@@ -938,17 +942,17 @@ def pyqtify(name=None, property_decorator=lambda: property):
             return getattr(self, signal_name(name))
 
         def signal_name(name):
-            return '_pyqtify_signal_{}'.format(name)
+            return "_pyqtify_signal_{}".format(name)
 
         SignalContainer = type(
-            'SignalContainer',
+            "SignalContainer",
             (PyQt5.QtCore.QObject,),
             {
-                'names': names,
-                '__getattr__': __getattr__,
-                '__getitem__': __getitem__,
+                "names": names,
+                "__getattr__": __getattr__,
+                "__getitem__": __getitem__,
                 **{
-                    signal_name(name): PyQt5.QtCore.pyqtSignal('PyQt_PyObject')
+                    signal_name(name): PyQt5.QtCore.pyqtSignal("PyQt_PyObject")
                     for name in names
                 },
             },
@@ -968,19 +972,22 @@ def pyqtify(name=None, property_decorator=lambda: property):
                 old_init(self, *args, **kwargs)
             except TypeError as e:
                 raise TypeError(
-                    '.'.join((
-                        type(self).__module__,
-                        type(self).__qualname__,
-                        e.args[0],
-                    )),
+                    ".".join(
+                        (
+                            type(self).__module__,
+                            type(self).__qualname__,
+                            e.args[0],
+                        )
+                    ),
                 ) from e
 
         cls.__init__ = __init__
 
         for name_ in names:
-            property_ = getattr(cls, 'pyqtify_{}'.format(name_), None)
+            property_ = getattr(cls, "pyqtify_{}".format(name_), None)
 
             if property_ is None:
+
                 @property_decorator()
                 def property_(self, name=name_):
                     return pyqtify_get(self, name)
@@ -1033,8 +1040,8 @@ def pyqtify_passthrough_properties(original, field_names):
                 signals = epyqlib.utils.qt.pyqtify_signals(self)
 
                 try:
-                    new_original_signals = (
-                        epyqlib.utils.qt.pyqtify_signals(new_original)
+                    new_original_signals = epyqlib.utils.qt.pyqtify_signals(
+                        new_original
                     )
                 except NotAPyQtifyInstance:
                     pass
@@ -1048,6 +1055,7 @@ def pyqtify_passthrough_properties(original, field_names):
         cls.__init__ = __init__
 
         for name in field_names:
+
             @property
             def property_(self, name=name):
                 original_ = getattr(self, original)
@@ -1064,7 +1072,7 @@ def pyqtify_passthrough_properties(original, field_names):
                 else:
                     setattr(original_, name, value)
 
-            setattr(cls, 'pyqtify_' + name, property_)
+            setattr(cls, "pyqtify_" + name, property_)
 
         return cls
 
@@ -1200,7 +1208,7 @@ class Signal:
 
     def qobject_host(self, instance):
         """Return the QObject which hosts the pyqtSignal on the passed instance.
-                
+
         ``TheClass.the_signal.qobject_host(an_instance)`` will return the ``QObject``
         instance used to host the signal ``an_instance.the_signal``.
         """
@@ -1281,7 +1289,7 @@ def indented_text_from_model(model, index=None):
         recurse=True,
     )
     lines = [
-        'Root',
+        "Root",
         lines,
     ]
 
@@ -1306,6 +1314,7 @@ class DeferredForSignal:
 
         if timeout is not None:
             import twisted.internet.reactor
+
             self.timeout_call = twisted.internet.reactor.callLater(
                 timeout,
                 self.time_out,

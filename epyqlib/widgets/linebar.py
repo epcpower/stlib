@@ -8,8 +8,8 @@ from PyQt5.QtCore import pyqtProperty, pyqtSlot, QSizeF, QRectF, Qt
 from PyQt5.QtGui import QPainter, QColor
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 def centered_rectangle(width, height):
@@ -21,8 +21,8 @@ class LineBar(epyqlib.widgets.abstractwidget.AbstractWidget):
         self.in_designer = in_designer
         super().__init__(parent=parent, in_designer=in_designer)
 
-        self._background_color = QColor('#474747')
-        self._color = QColor('#39C550')
+        self._background_color = QColor("#474747")
+        self._color = QColor("#39C550")
         self._maximum = 100
         self._minimum = 0
         self._thickness = 10
@@ -72,7 +72,7 @@ class LineBar(epyqlib.widgets.abstractwidget.AbstractWidget):
 
         self.update_layout()
 
-    @pyqtProperty('QColor')
+    @pyqtProperty("QColor")
     def color(self):
         return self._color
 
@@ -82,7 +82,7 @@ class LineBar(epyqlib.widgets.abstractwidget.AbstractWidget):
 
         self.update()
 
-    @pyqtProperty('QColor')
+    @pyqtProperty("QColor")
     def background_color(self):
         return self._background_color
 
@@ -99,27 +99,30 @@ class LineBar(epyqlib.widgets.abstractwidget.AbstractWidget):
         painter.setRenderHint(QPainter.Antialiasing, True)
         painter.translate(self.width() / 2, self.height() / 2)
 
-        painter.fillRect(centered_rectangle(self.thickness, self.height()),
-                         self.background_color)
+        painter.fillRect(
+            centered_rectangle(self.thickness, self.height()), self.background_color
+        )
 
-        reference = QRectF(-self.thickness / 2, -self.height() / 2,
-                           self.thickness, self.height())
+        reference = QRectF(
+            -self.thickness / 2, -self.height() / 2, self.thickness, self.height()
+        )
 
         painter.fillRect(
             centered_rectangle(
                 self.thickness + 2 * self.reference_marker_size.width(),
-                self.reference_marker_size.height()
+                self.reference_marker_size.height(),
             ),
-            self.color
+            self.color,
         )
 
-        height = ((self.height() / 2)
-                  * (self.value - self.reference_value)
-                  / (self.maximum - self.reference_value))
+        height = (
+            (self.height() / 2)
+            * (self.value - self.reference_value)
+            / (self.maximum - self.reference_value)
+        )
 
         painter.fillRect(
-            QRectF(-self.thickness / 2, 0, self.thickness, -height),
-            self.color
+            QRectF(-self.thickness / 2, 0, self.thickness, -height), self.color
         )
 
     @pyqtSlot(float)
@@ -168,10 +171,10 @@ class LineBar(epyqlib.widgets.abstractwidget.AbstractWidget):
 
         if minimum == maximum:
             # TODO: pick the right exception
-            raise Exception('Min and max may not be the same')
+            raise Exception("Min and max may not be the same")
         elif minimum > maximum:
             # TODO: pick the right exception
-            raise Exception('Min must be less than max')
+            raise Exception("Min must be less than max")
 
         if minimum is not None:
             self._minimum = minimum
@@ -188,8 +191,8 @@ class LineBar(epyqlib.widgets.abstractwidget.AbstractWidget):
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
+    print("No script functionality here")
     sys.exit(1)  # non-zero is a failure

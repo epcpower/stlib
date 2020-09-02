@@ -5,14 +5,16 @@ import pytest
 from twisted.internet.defer import ensureDeferred
 
 from epyqlib.tabs.files.activity_log import ActivityLog, Event
+
 # noinspection PyUnresolvedReferences
 from epyqlib.tests.utils.test_fixtures import temp_dir
+
 
 @pytest.inlineCallbacks
 def test_activity_log(temp_dir):
     activity_log = ActivityLog(temp_dir)
 
-    class Listener():
+    class Listener:
         def __init__(self):
             self.type = ""
 
@@ -26,11 +28,12 @@ def test_activity_log(temp_dir):
 
     assert listener.type == "push-to-inverter"
 
+
 @pytest.inlineCallbacks
 def test_removing(temp_dir):
     activity_log = ActivityLog(temp_dir)
 
-    class RemovingListener():
+    class RemovingListener:
         def event(self, event: Event):
             activity_log.remove(event)
 
@@ -57,6 +60,7 @@ def test_writing_to_file(temp_dir):
 
     assert os.path.exists(cache_file)
 
+
 @pytest.inlineCallbacks
 def test_writing_and_reading_from_file(temp_dir):
     activity_log = ActivityLog(temp_dir)
@@ -71,6 +75,7 @@ def test_writing_and_reading_from_file(temp_dir):
 
     event2 = activity_log.read_oldest_event()
     assert event1.inverter_id == event2.inverter_id
+
 
 @pytest.inlineCallbacks
 @pytest.mark.skip("Just here for benchmarking to make sure it's not too slow")
@@ -98,9 +103,3 @@ def test_benchmark_mass_writes(temp_dir):
     activity_log._read_cache_file()
     elapsed = time.time() - start
     print(f"Reading 1001 events took {elapsed:.2f}")
-
-
-
-
-
-

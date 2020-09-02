@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 from PyQt5.QtCore import pyqtProperty
 from PyQt5.QtGui import QColor
@@ -11,8 +11,8 @@ import epyqlib.utils.qt
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class CompoundToggle(QWidget):
@@ -40,7 +40,7 @@ class CompoundToggle(QWidget):
     def box_title(self, title):
         self.ui.box.setTitle(title)
 
-    @pyqtProperty('QString')
+    @pyqtProperty("QString")
     def command_signal_path(self):
         return self.ui.command.signal_path
 
@@ -48,7 +48,7 @@ class CompoundToggle(QWidget):
     def command_signal_path(self, value):
         self.ui.command.signal_path = value
 
-    @pyqtProperty('QString')
+    @pyqtProperty("QString")
     def status_signal_path(self):
         return self.ui.status_off.signal_path
 
@@ -119,14 +119,14 @@ class CompoundToggle(QWidget):
     @pyqtProperty(QColor)
     def status_off_manual_off_color(self):
         return self.ui.status_off.manual_off_color
-    
+
     @status_off_manual_off_color.setter
     def status_off_manual_off_color(self, new_color):
         self.ui.status_off.manual_off_color = new_color
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

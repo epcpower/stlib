@@ -30,8 +30,8 @@ import epyqlib.utils.general
 import epyqlib.utils.qt
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2017, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2017, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 logger = logging.getLogger()
@@ -45,7 +45,7 @@ class MultipleFoundError(Exception):
     pass
 
 
-def create_str_attribute(default=''):
+def create_str_attribute(default=""):
     return attr.ib(
         default=default,
         converter=str,
@@ -116,10 +116,10 @@ class NotAllowedCharacterError(Exception):
         not_allowed = set(value) - set(allowed)
 
         return cls(
-            'Characters {!r} from {!r} are not in allowed set {!r}'.format(
-                ''.join(sorted(not_allowed)),
+            "Characters {!r} from {!r} are not in allowed set {!r}".format(
+                "".join(sorted(not_allowed)),
                 value,
-                ''.join(sorted(allowed)),
+                "".join(sorted(allowed)),
             )
         )
 
@@ -128,9 +128,9 @@ class NotAllowedFirstCharacterError(Exception):
     @classmethod
     def build(cls, first_character, allowed):
         return cls(
-            'First character {!r} not allowed, must be one of {!r}'.format(
+            "First character {!r} not allowed, must be one of {!r}".format(
                 first_character,
-                ''.join(sorted(allowed)),
+                "".join(sorted(allowed)),
             )
         )
 
@@ -163,23 +163,18 @@ class LimitedStringConverter:
             )
 
         if not value_set.issubset(self.allowed):
-            raise NotAllowedCharacterError.build(
-                value=value,
-                allowed=self.allowed
-            )
+            raise NotAllowedCharacterError.build(value=value, allowed=self.allowed)
 
         return value
 
     def suggest(self, value):
-        suggestion = ''.join(
-            character
-            for character in value
-            if character in self.allowed
+        suggestion = "".join(
+            character for character in value if character in self.allowed
         )
 
         if suggestion[:1] not in self.allowed_first_character:
-            if '_' in self.allowed_first_character:
-                suggestion = '_' + suggestion
+            if "_" in self.allowed_first_character:
+                suggestion = "_" + suggestion
             else:
                 while suggestion[:1] not in self.allowed_first_character:
                     suggestion = suggestion[1:]
@@ -205,7 +200,7 @@ def create_limited_string_attribute(default, allowed, not_allowed_first):
 def create_code_identifier_string_attribute(default):
     return create_limited_string_attribute(
         default=default,
-        allowed=string.ascii_letters + string.digits + '_',
+        allowed=string.ascii_letters + string.digits + "_",
         not_allowed_first=string.digits,
     )
 
@@ -237,7 +232,7 @@ def names_from_uuid_list(node, value, model):
 
 def name_from_enumerator(node, value, model):
     if value is None:
-        return ''
+        return ""
 
     return value.name
 
@@ -282,10 +277,7 @@ def ify():
     def inner(cls):
         class Fields:
             def __iter__(self):
-                return (
-                    getattr(self, field.name)
-                    for field in attr.fields(type(self))
-                )
+                return (getattr(self, field.name) for field in attr.fields(type(self)))
 
         for field in attr.fields(cls):
             setattr(Fields, field.name, attr.ib())
@@ -297,8 +289,8 @@ def ify():
             metadata = field.metadata.get(metadata_key)
 
             extras = {}
-            if field.name == 'children':
-                extras['no_column'] = True
+            if field.name == "children":
+                extras["no_column"] = True
 
             if metadata is None:
                 metadata = Metadata(name=field.name, **extras)
@@ -332,6 +324,7 @@ def attributes(cls):
 
 def fields(cls):
     return attributes(cls).fields
+
 
 def list_selection_roots(cls):
     d = {}
@@ -368,18 +361,12 @@ class Columns:
 
     def __getitem__(self, item):
         if isinstance(item, str):
-            column, = (
-                column
-                for column in self.columns
-                if column.name == item
-            )
+            (column,) = (column for column in self.columns if column.name == item)
             return column
 
         if isinstance(item, tuple):
-            column, = (
-                column
-                for column in self.columns
-                if column.fields[item[0]] == item[1]
+            (column,) = (
+                column for column in self.columns if column.fields[item[0]] == item[1]
             )
             return column
 
@@ -387,13 +374,13 @@ class Columns:
 
     def index_of(self, item):
         if isinstance(item, str):
-            index, = (
+            (index,) = (
                 index
                 for index, column in enumerate(self.columns)
                 if column.name == item
             )
         elif isinstance(item, tuple):
-            index, = (
+            (index,) = (
                 index
                 for index, column in enumerate(self.columns)
                 if column.fields[item[0]] == item[1]
@@ -410,15 +397,12 @@ def columns(*columns):
         name = field.human_name
 
         if name is None:
-            name = field_name.replace('_', ' ').title()
+            name = field_name.replace("_", " ").title()
 
         return name
 
     return Columns(
-        columns=tuple(
-            Column(name=_name(c[0]), fields=dict(c))
-            for c in columns
-        ),
+        columns=tuple(Column(name=_name(c[0]), fields=dict(c)) for c in columns),
     )
 
 
@@ -426,8 +410,7 @@ def columns(*columns):
 class Types:
     types = attr.ib(
         converter=(
-            lambda types:
-            collections.OrderedDict((t.__name__, t) for t in types)
+            lambda types: collections.OrderedDict((t.__name__, t) for t in types)
         ),
         default=(),
     )
@@ -451,7 +434,7 @@ class Types:
             return type_.data_class
 
         return type_
-    
+
     def list_selection_roots(self):
         roots = set(self.external_list_selection_roots)
         for v in self.types.values():
@@ -462,20 +445,22 @@ class Types:
 
 
 def create_addable_types(types):
-    return collections.OrderedDict((
+    return collections.OrderedDict(
         (
-            type_.__name__,
-            type_,
+            (
+                type_.__name__,
+                type_,
+            )
+            for type_ in types
         )
-        for type_ in types
-    ))
+    )
 
 
-def add_addable_types(cls, attribute_name='children', types=None):
+def add_addable_types(cls, attribute_name="children", types=None):
     if types is None:
         types = Types()
 
-    if hasattr(cls, 'addable_types') or hasattr(cls, 'all_addable_types'):
+    if hasattr(cls, "addable_types") or hasattr(cls, "all_addable_types"):
         return
 
     @classmethod
@@ -486,8 +471,7 @@ def add_addable_types(cls, attribute_name='children', types=None):
                 return {}
 
             resolved_types = tuple(
-                types.resolve(type_=t.nested, default=cls)
-                for t in field.instances
+                types.resolve(type_=t.nested, default=cls) for t in field.instances
             )
 
             cls.addable_types_cache = create_addable_types(resolved_types)
@@ -509,21 +493,14 @@ def check_just_children(self, models):
     if len(self.children) == 0:
         return None
 
-    child_results = [
-        child.check(models=models)
-        for child in self.children
-    ]
-    child_results = [
-        results
-        for results in child_results
-        if results is not None
-    ]
+    child_results = [child.check(models=models) for child in self.children]
+    child_results = [results for results in child_results if results is not None]
 
     if len(child_results) == 0:
         return None
 
     return epyqlib.checkresultmodel.Node.build(
-        name=getattr(self, 'name', ''),
+        name=getattr(self, "name", ""),
         node=self,
         child_results=child_results,
     )
@@ -538,7 +515,7 @@ def check_children(f):
 
         if result is None:
             result = epyqlib.checkresultmodel.Node.build(
-                name=getattr(self, 'name', ''),
+                name=getattr(self, "name", ""),
                 node=self,
             )
 
@@ -553,7 +530,7 @@ def check_children(f):
 
 
 def Root(default_name, valid_types):
-    @graham.schemify(tag='root')
+    @graham.schemify(tag="root")
     @ify()
     @epyqlib.utils.qt.pyqtify()
     @attr.s(hash=False)
@@ -571,12 +548,14 @@ def Root(default_name, valid_types):
         )
         graham.attrib(
             attribute=children,
-            field=graham.fields.MixedList(fields=(
-                marshmallow.fields.Nested(graham.schema(type_))
-                for type_ in valid_types
-                # marshmallow.fields.Nested('Group'),
-                # marshmallow.fields.Nested(graham.schema(Leaf)),
-            )),
+            field=graham.fields.MixedList(
+                fields=(
+                    marshmallow.fields.Nested(graham.schema(type_))
+                    for type_ in valid_types
+                    # marshmallow.fields.Nested('Group'),
+                    # marshmallow.fields.Nested(graham.schema(Leaf)),
+                )
+            ),
         )
 
         model = attr.ib(default=None)
@@ -622,7 +601,7 @@ def Root(default_name, valid_types):
 
 
 def convert_uuid(x):
-    if x == '':
+    if x == "":
         return None
 
     if x is None or isinstance(x, uuid.UUID):
@@ -646,13 +625,13 @@ def convert_uuid_list(x):
 
 
 def attr_uuid_list(
-        metadata=None,
-        human_name='UUID List',
-        data_display=None,
-        list_selection_root=None,
-        no_graham=False,
-        default=attr.Factory(list),
-        **field_options,
+    metadata=None,
+    human_name="UUID List",
+    data_display=None,
+    list_selection_root=None,
+    no_graham=False,
+    default=attr.Factory(list),
+    **field_options,
 ):
     if metadata is None:
         metadata = {}
@@ -665,7 +644,9 @@ def attr_uuid_list(
     if not no_graham:
         graham.attrib(
             attribute=attribute,
-            field=marshmallow.fields.List(marshmallow.fields.UUID(**field_options), **field_options),
+            field=marshmallow.fields.List(
+                marshmallow.fields.UUID(**field_options), **field_options
+            ),
         )
     attrib(
         attribute=attribute,
@@ -681,17 +662,17 @@ def attr_uuid_list(
 
 
 def attr_uuid(
-        metadata=None,
-        human_name='UUID',
-        data_display=None,
-        list_selection_root=None,
-        list_selection_path=None,
-        override_delegate=None,
-        no_graham=False,
-        default=attr.Factory(uuid.uuid4),
-        editable=True,
-        no_column=False,
-        **field_options,
+    metadata=None,
+    human_name="UUID",
+    data_display=None,
+    list_selection_root=None,
+    list_selection_path=None,
+    override_delegate=None,
+    no_graham=False,
+    default=attr.Factory(uuid.uuid4),
+    editable=True,
+    no_column=False,
+    **field_options,
 ):
     if metadata is None:
         metadata = {}
@@ -710,7 +691,7 @@ def attr_uuid(
     if list_selection_path is not None:
         if list_selection_root is not None:
             raise MultipleFoundError(
-                    'list_selection_path and list_selection_root both definded'
+                "list_selection_path and list_selection_root both definded"
             )
         else:
             attrib(
@@ -729,9 +710,7 @@ def attr_uuid(
             attribute=attribute,
             human_name=human_name,
             data_display=data_display,
-            delegate=RootDelegateCache(
-                list_selection_root=list_selection_root
-            ),
+            delegate=RootDelegateCache(list_selection_root=list_selection_root),
             editable=editable,
             no_column=no_column,
         )
@@ -752,7 +731,7 @@ def to_decimal_or_none(s):
     try:
         result = decimal.Decimal(s)
     except decimal.InvalidOperation as e:
-        raise ValueError('Invalid number: {}'.format(repr(s))) from e
+        raise ValueError("Invalid number: {}".format(repr(s))) from e
 
     return result
 
@@ -783,7 +762,7 @@ def to_int_or_none(s):
     try:
         result = int(s)
     except ValueError as e:
-        raise ValueError('Invalid number: {}'.format(repr(s))) from e
+        raise ValueError("Invalid number: {}".format(repr(s))) from e
 
     return result
 
@@ -803,7 +782,7 @@ def check_uuids(*roots):
     def collect(node, uuids):
         if node.uuid is not None:
             if node.uuid in uuids:
-                raise Exception('Duplicate uuid found: {}'.format(node.uuid))
+                raise Exception("Duplicate uuid found: {}".format(node.uuid))
 
             uuids.add(node.uuid)
 
@@ -826,9 +805,7 @@ def check_uuids(*roots):
 
 def childless_can_delete(self, node=None):
     if node is not None:
-        raise ConsistencyError(
-            'No children to be considered'
-        )
+        raise ConsistencyError("No children to be considered")
 
     return self.tree_parent.can_delete(node=self)
 
@@ -895,7 +872,7 @@ def hide_popup(self):
 @attr.s
 class RootDelegateCache:
     list_selection_root = attr.ib()
-    text_column_name = attr.ib(default='Name')
+    text_column_name = attr.ib(default="Name")
     cached_delegate = attr.ib(default=None)
     multi_select = attr.ib(default=False)
 
@@ -903,9 +880,7 @@ class RootDelegateCache:
         if self.cached_delegate is not None:
             return self.cached_delegate
 
-        root_node = model.list_selection_roots[
-            self.list_selection_root
-        ]
+        root_node = model.list_selection_roots[self.list_selection_root]
 
         delegate = EnumerationDelegate
         if self.multi_select:
@@ -924,14 +899,14 @@ class RootDelegateCache:
 class CustomDelegate:
     list_selection_path = attr.ib(default=None)
     override_delegate = attr.ib(default=None)
-    text_column_name = attr.ib(default='Name')
+    text_column_name = attr.ib(default="Name")
 
     def get_delegate(self, node, parent):
         root_node = node
         for element in self.list_selection_path:
-            if element == '/':
+            if element == "/":
                 root_node = root_node.find_root()
-            elif element == '..':
+            elif element == "..":
                 root_node = root_node.tree_parent
             else:
                 root_node = root_node.child_by_name(element)
@@ -953,7 +928,6 @@ class DelegateSelector:
         self.regular = QtWidgets.QStyledItemDelegate(parent)
         self.enumerations = {}
 
-
     def select(self, index):
         index = to_source_model(index)
         model = index.model()
@@ -963,7 +937,7 @@ class DelegateSelector:
         model = item.data(epyqlib.utils.qt.UserRoles.attrs_model)
 
         metadata = getattr(fields(type(node)), field_name)
-        
+
         if metadata.delegate is not None:
             node_or_model = model
             if isinstance(metadata.delegate, epyqlib.attrsmodel.CustomDelegate):
@@ -1024,9 +998,9 @@ class EnumerationDelegate(QtWidgets.QStyledItemDelegate):
         selected_items = editor.selectedItems()
 
         if len(selected_items) == 0:
-            selected_uuid = ''
+            selected_uuid = ""
         else:
-            selected_item, = selected_items
+            (selected_item,) = selected_items
             selected_uuid = selected_item.data(epyqlib.utils.qt.UserRoles.raw)
             selected_uuid = str(selected_uuid)
 
@@ -1093,14 +1067,14 @@ class PyQStandardItemModel(QtGui.QStandardItemModel):
 
     @classmethod
     def build(
-            cls,
-            *args,
-            can_drop_mime_data,
-            mime_types,
-            mime_data,
-            drop_mime_data,
-            supported_drop_actions,
-            **kwargs,
+        cls,
+        *args,
+        can_drop_mime_data,
+        mime_types,
+        mime_data,
+        drop_mime_data,
+        supported_drop_actions,
+        **kwargs,
     ):
         model = cls(*args, **kwargs)
         model.can_drop_mime_data = can_drop_mime_data
@@ -1133,12 +1107,11 @@ class Model:
             epyqlib.utils.qt.UserRoles.attrs_model,
         )
 
-        self.mime_type = 'application/com.epcpower.pm.attrsmodel'
+        self.mime_type = "application/com.epcpower.pm.attrsmodel"
 
         self.columns = columns
         self.header_items = [
-            QtGui.QStandardItem(column.name)
-            for column in self.columns
+            QtGui.QStandardItem(column.name) for column in self.columns
         ]
 
         for i, item in enumerate(self.header_items):
@@ -1159,10 +1132,7 @@ class Model:
 
     def add_drop_sources(self, *sources):
         self.droppable_from.update(sources)
-        roots = [
-            model.root
-            for model in {self} | self.droppable_from
-        ]
+        roots = [model.root for model in {self} | self.droppable_from]
 
         check_uuids(*roots)
 
@@ -1212,18 +1182,14 @@ class Model:
             else:
                 this_parent = node.tree_parent
 
-            nodes.append({'parent': this_parent, 'child': node})
+            nodes.append({"parent": this_parent, "child": node})
 
         nodes = []
         child.traverse(call_this=visit, payload=nodes, internal_nodes=True)
 
-        self.uuid_to_node.update({
-            child.uuid: child
-            for child in (
-                d['child']
-                for d in nodes
-            )
-        })
+        self.uuid_to_node.update(
+            {child.uuid: child for child in (d["child"] for d in nodes)}
+        )
 
         for kwargs in nodes:
             self._pyqtify_connect(**kwargs)
@@ -1241,13 +1207,15 @@ class Model:
         connections = {}
         connection_id = get_connection_id(parent=parent, child=child)
         if connection_id in self.connected_signals:
-            raise ConsistencyError('already connected: {}'.format((parent.uuid, child.uuid)))
+            raise ConsistencyError(
+                "already connected: {}".format((parent.uuid, child.uuid))
+            )
         self.connected_signals[connection_id] = connections
 
         if child is self.root:
             root_item = self.model.invisibleRootItem()
             root_item.setData(child, epyqlib.utils.qt.UserRoles.node)
-            root_item.setText('root')
+            root_item.setText("root")
         else:
             if parent is self.root:
                 parent_item = self.model.invisibleRootItem()
@@ -1259,11 +1227,13 @@ class Model:
 
             changed_signals = epyqlib.utils.qt.pyqtified(child).changed
 
-            uneditable_highlight = QtGui.QColor('grey')
+            uneditable_highlight = QtGui.QColor("grey")
             uneditable_highlight.setAlphaF(0.4)
-            droppable_highlight = QtGui.QColor('orange')
+            droppable_highlight = QtGui.QColor("orange")
             droppable_highlight.setAlphaF(0.4)
-            droppable_row = hasattr(row, 'addable_types') or hasattr(row, 'all_addable_types')
+            droppable_row = hasattr(row, "addable_types") or hasattr(
+                row, "all_addable_types"
+            )
 
             for i, column in enumerate(self.columns):
                 field_name = column.fields.get(type(child))
@@ -1291,10 +1261,12 @@ class Model:
                         )
 
                 if i == 0:
-                    self._all_items_dict[(
-                        item.data(epyqlib.utils.qt.UserRoles.node),
-                        item.column(),
-                    )] = item
+                    self._all_items_dict[
+                        (
+                            item.data(epyqlib.utils.qt.UserRoles.node),
+                            item.column(),
+                        )
+                    ] = item
                     self.node_to_item[child] = item
                 item.setData(child, epyqlib.utils.qt.UserRoles.node)
                 item.setData(i, epyqlib.utils.qt.UserRoles.column_index)
@@ -1315,10 +1287,10 @@ class Model:
                     item.setCheckable(checkable)
 
                     def slot(
-                            datum,
-                            item=item,
-                            field_name=field_name,
-                            editable=editable,
+                        datum,
+                        item=item,
+                        field_name=field_name,
+                        editable=editable,
                     ):
                         node = item.data(epyqlib.utils.qt.UserRoles.node)
                         model = node.find_root().model
@@ -1338,7 +1310,7 @@ class Model:
                                     model=model,
                                 )
                             elif field_metadata.converter == two_state_checkbox:
-                                display_datum = ''
+                                display_datum = ""
 
                             if display_datum is None:
                                 # TODO: CAMPid 0794305784527546542452654254679680
@@ -1349,10 +1321,10 @@ class Model:
                                 #   The default implementation treats Qt::EditRole
                                 #   and Qt::DisplayRole as referring to the same
                                 #   data
-                                display_text = ''
+                                display_text = ""
                                 # edit_text = ''
                                 if editable:
-                                    decoration = QtGui.QColor('green')
+                                    decoration = QtGui.QColor("green")
                                     decoration.setAlphaF(0.4)
                                 else:
                                     decoration = None
@@ -1374,7 +1346,9 @@ class Model:
                         finally:
                             field_metadata.updating = False
 
-                    connections[getattr(changed_signals, '_pyqtify_signal_' + field_name)] = slot
+                    connections[
+                        getattr(changed_signals, "_pyqtify_signal_" + field_name)
+                    ] = slot
 
                     slot(getattr(child, field_name))
 
@@ -1395,7 +1369,7 @@ class Model:
             else:
                 this_parent = node.tree_parent
 
-            nodes.append({'parent': this_parent, 'child': node})
+            nodes.append({"parent": this_parent, "child": node})
 
         nodes = []
         child.traverse(call_this=visit, payload=nodes, internal_nodes=True)
@@ -1432,10 +1406,12 @@ class Model:
         self.node_to_item.pop(node)
         for taken_item in taken_items:
             try:
-                del self._all_items_dict[(
-                    taken_item.data(epyqlib.utils.qt.UserRoles.node),
-                    taken_item.column(),
-                )]
+                del self._all_items_dict[
+                    (
+                        taken_item.data(epyqlib.utils.qt.UserRoles.node),
+                        taken_item.column(),
+                    )
+                ]
             except KeyError:
                 pass
         self.pyqtify_disconnect(parent, node)
@@ -1473,24 +1449,29 @@ class Model:
         return m
 
     def dropMimeData(self, data, action, row, column, parent):
-        logger.debug('entering dropMimeData()')
+        logger.debug("entering dropMimeData()")
         logger.debug((data, action, row, column, parent))
 
         node, new_parent, source_row = self.source_target_for_drop(
-            column, data, parent, row)
+            column, data, parent, row
+        )
 
         node_to_insert_before = None
         if row != -1:
             node_to_insert_before = new_parent.child_at_row(row)
 
         if action == QtCore.Qt.MoveAction:
-            logger.debug('node name: {}'.format(
-                getattr(node, 'name', '<missing attribute>'),
-            ))
+            logger.debug(
+                "node name: {}".format(
+                    getattr(node, "name", "<missing attribute>"),
+                )
+            )
             logger.debug((data, action, row, column, parent))
-            logger.debug('dropped on: {}'.format(
-                getattr(new_parent, 'name', '<no name attribute>'),
-            ))
+            logger.debug(
+                "dropped on: {}".format(
+                    getattr(new_parent, "name", "<no name attribute>"),
+                )
+            )
 
             moved = False
 
@@ -1536,7 +1517,7 @@ class Model:
             if node is not None:
                 return node
 
-        raise NotFoundError('''UUID '{}' not found'''.format(u))
+        raise NotFoundError("""UUID '{}' not found""".format(u))
 
     def nodes_from_uuid_list(self, u):
         nodes = []
@@ -1545,24 +1526,26 @@ class Model:
                 target_node = self.node_from_uuid(i)
             except NotFoundError:
                 target_node = str(u)
-            
+
             nodes.append(target_node)
 
         return nodes
 
     def canDropMimeData(self, mime, action, row, column, parent):
-        node, new_parent, _ = self.source_target_for_drop(
-            column, mime, parent, row)
+        node, new_parent, _ = self.source_target_for_drop(column, mime, parent, row)
         can_drop = new_parent.can_drop_on(node=node)
 
-        logger.debug('canDropMimeData: {}: {}, {}'.format(
-            getattr(new_parent, 'name', '<no name attribute>'), row, can_drop))
+        logger.debug(
+            "canDropMimeData: {}: {}, {}".format(
+                getattr(new_parent, "name", "<no name attribute>"), row, can_drop
+            )
+        )
 
         return can_drop
 
     def update_nodes(self):
         def visit(node, _):
-            update = getattr(node, 'update', None)
+            update = getattr(node, "update", None)
 
             if update is not None:
                 update()
@@ -1594,12 +1577,12 @@ def columns_to_code(c):
         elif len(types) == 1:
             code.append(f"(({types[0].__name__}, '{name}'),),")
         else:
-            type_code = ', '.join(sorted(cls.__name__ for cls in types))
-            type_code = f'({type_code})'
+            type_code = ", ".join(sorted(cls.__name__ for cls in types))
+            type_code = f"({type_code})"
             code.append(f"tuple((x, '{name}') for x in {type_code}),")
 
     # with this you can copy/paste to fill in the missing columns
-    return '\n' + '\n'.join(code)
+    return "\n" + "\n".join(code)
 
 
 class Tests:
@@ -1618,10 +1601,7 @@ class Tests:
 
         columns_list = [
             tuple(x)
-            for x in itertools.chain(*(
-                column.items()
-                for column in self.columns
-            ))
+            for x in itertools.chain(*(column.items() for column in self.columns))
             if x[0] is not self.root_type
         ]
 
@@ -1637,38 +1617,38 @@ class Tests:
 
     def test_all_have_can_drop_on(self):
         self.assert_incomplete_types(
-            name='can_drop_on',
-            signature=['node'],
+            name="can_drop_on",
+            signature=["node"],
         )
 
     def test_all_have_can_delete(self):
         self.assert_incomplete_types(
-            name='can_delete',
-            signature=['node'],
+            name="can_delete",
+            signature=["node"],
         )
 
     def test_all_have_remove_old_on_drop(self):
         self.assert_incomplete_types(
-            name='remove_old_on_drop',
-            signature=['node'],
+            name="remove_old_on_drop",
+            signature=["node"],
         )
 
     def test_all_have_child_from(self):
         self.assert_incomplete_types(
-            name='child_from',
-            signature=['node'],
+            name="child_from",
+            signature=["node"],
         )
 
     def test_all_have_internal_move(self):
         self.assert_incomplete_types(
-            name='internal_move',
-            signature=['node', 'node_to_insert_before'],
+            name="internal_move",
+            signature=["node", "node_to_insert_before"],
         )
 
     def test_all_have_check(self):
         self.assert_incomplete_types(
-            name='check',
-            signature=['models'],
+            name="check",
+            signature=["models"],
         )
 
     def test_all_addable_also_in_types(self):
@@ -1676,10 +1656,7 @@ class Tests:
         # admittedly only checks the addable types on default instances.
         for cls in self.types.types.values():
             addable_types = cls.all_addable_types().values()
-            assert (
-                (set(addable_types) - set(self.types))
-                 == set()
-             )
+            assert (set(addable_types) - set(self.types)) == set()
 
     def test_hashability(self):
         expected = []
@@ -1688,13 +1665,13 @@ class Tests:
             instance = cls()
             try:
                 hash(instance)
-            except TypeError :
+            except TypeError:
                 bad.append(cls)
 
-        sys.stderr.write('\n')
+        sys.stderr.write("\n")
         for cls in bad:
             sys.stderr.write(
-                '{path}  {name}\n'.format(
+                "{path}  {name}\n".format(
                     path=epyqlib.utils.general.path_and_line(cls),
                     name=cls.__name__,
                 ),
@@ -1704,7 +1681,7 @@ class Tests:
 
     def test_has_uuid(self):
         for cls in self.types:
-            assert hasattr(cls, 'uuid')
+            assert hasattr(cls, "uuid")
 
     def assert_incomplete_types(self, name, signature=None):
         missing = []
@@ -1719,9 +1696,9 @@ class Tests:
                 if isinstance(cls.__dict__[name], staticmethod):
                     tweaked_signature = signature
                 elif isinstance(cls.__dict__[name], classmethod):
-                    tweaked_signature = ['cls', *signature]
+                    tweaked_signature = ["cls", *signature]
                 else:
-                    tweaked_signature = ['self', *signature]
+                    tweaked_signature = ["self", *signature]
 
                 actual_signature = inspect.signature(attribute)
                 actual_signature = actual_signature.parameters.keys()
@@ -1732,10 +1709,10 @@ class Tests:
                     )
                     continue
 
-        sys.stderr.write('\n')
+        sys.stderr.write("\n")
         for cls, attribute in missing:
             sys.stderr.write(
-                '{path}  {name} is missing: {attribute}\n'.format(
+                "{path}  {name} is missing: {attribute}\n".format(
                     path=epyqlib.utils.general.path_and_line(cls),
                     name=cls,
                     attribute=attribute,
@@ -1743,9 +1720,8 @@ class Tests:
             )
         for cls, expected, actual in bad_signature:
             sys.stderr.write(
-                '{path}  {name} has signature {actual}, should be {expected}\n'.format(
-                    path=epyqlib.utils.general.path_and_line(
-                        getattr(cls, name)),
+                "{path}  {name} has signature {actual}, should be {expected}\n".format(
+                    path=epyqlib.utils.general.path_and_line(getattr(cls, name)),
                     name=cls,
                     actual=actual,
                     expected=expected,
@@ -1757,11 +1733,11 @@ class Tests:
 
 def build_tests(types, root_type, columns):
     return type(
-        'BuiltTests',
+        "BuiltTests",
         (Tests,),
         {
-            'types': types,
-            'root_type': root_type,
-            'columns': columns,
+            "types": types,
+            "root_type": root_type,
+            "columns": columns,
         },
     )

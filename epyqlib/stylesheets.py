@@ -3,11 +3,11 @@
 # TODO: get some docstrings in here!
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
-application = '''
+application = """
 QWidget {{
     font-size: {base_font_size_px}px;
     qproperty-focusPolicy: NoFocus;
@@ -109,9 +109,9 @@ QSlider::handle {{
     margin: 0 -8px;
     background-color: {blue};
 }}
-'''
+"""
 
-small = '''
+small = """
 QWidget[fontawesome=false] {{
     font-size: 15px;
 }}
@@ -123,10 +123,10 @@ QPushButton[fontawesome=false] {{
 QLineEdit, QPushButton {{
     border-radius: 5px;
 }}
-'''
+"""
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

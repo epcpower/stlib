@@ -14,15 +14,16 @@ from PyQt5 import QtCore
 from PyQt5.QtWidgets import QApplication
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class BusProxy:
     went_offline = epyqlib.utils.qt.Signal()
 
-    def __init__(self, bus=None, timeout=0.1, transmit=True, filters=None,
-                 auto_disconnect=True):
+    def __init__(
+        self, bus=None, timeout=0.1, transmit=True, filters=None, auto_disconnect=True
+    ):
         self.filters = filters
         self.auto_disconnect = auto_disconnect
 
@@ -150,7 +151,7 @@ class BusProxy:
             # No bus, nothing to go wrong with it... ?
             ok = True
         else:
-            if hasattr(self.bus, 'StatusOk'):
+            if hasattr(self.bus, "StatusOk"):
                 ok = self.bus.StatusOk()
 
                 if not ok:
@@ -158,7 +159,7 @@ class BusProxy:
             else:
                 ok = True
                 # TODO: support socketcan
-                if hasattr(self.bus, 'verify_bus_ok'):
+                if hasattr(self.bus, "verify_bus_ok"):
                     ok = self.bus.verify_bus_ok()
 
         return ok
@@ -178,7 +179,7 @@ class BusProxy:
 
     def terminate(self):
         self.set_bus()
-        logging.debug('{} terminated'.format(object.__repr__(self)))
+        logging.debug("{} terminated".format(object.__repr__(self)))
 
     def set_bus(self, bus=None):
         was_online = self.bus is not None
@@ -197,9 +198,8 @@ class BusProxy:
             self.set_filters(self.filters)
             if isinstance(self.bus, can.BusABC):
                 self.real_notifier = can.Notifier(
-                    bus=self.bus,
-                    listeners=[self.notifier],
-                    timeout=self.timeout)
+                    bus=self.bus, listeners=[self.notifier], timeout=self.timeout
+                )
             else:
                 self.bus.notifier.add(self.notifier)
                 self.bus.tx_notifier.add(self.tx_notifier)
@@ -231,14 +231,14 @@ class BusProxy:
                 time.sleep(0.500)
             else:
                 # TODO: support socketcan
-                if hasattr(self.bus, 'reset'):
+                if hasattr(self.bus, "reset"):
                     self.bus.reset()
 
     def set_filters(self, filters):
         self.filters = filters
         real_bus = self.bus
         if real_bus is not None:
-            if hasattr(real_bus, 'setFilters'):
+            if hasattr(real_bus, "setFilters"):
                 real_bus.setFilters(can_filters=filters)
 
 
@@ -255,8 +255,7 @@ class NotifierProxy(QtCanListener):
             self.filtered_ids = set(filtered_ids)
 
     def message_received(self, message):
-        if (self.filtered_ids is None or
-                message.arbitration_id in self.filtered_ids):
+        if self.filtered_ids is None or message.arbitration_id in self.filtered_ids:
             for listener in tuple(self.listeners):
                 listener.message_received_signal.emit(message)
 
@@ -270,8 +269,8 @@ class NotifierProxy(QtCanListener):
         self.listeners.remove(listener)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

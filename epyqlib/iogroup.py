@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 from epyqlib.iopoint import IoPoint
 from PyQt5.QtCore import pyqtProperty
@@ -11,8 +11,8 @@ import epyqlib.utils.qt
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class IoGroup(QtWidgets.QWidget):
@@ -21,12 +21,12 @@ class IoGroup(QtWidgets.QWidget):
 
         self.in_designer = in_designer
 
-        self._status_frame = ''
-        self._status_signal_format = ''
-        self._set_frame = ''
-        self._set_signal_format = ''
-        self._override_frame = ''
-        self._override_signal_format = ''
+        self._status_frame = ""
+        self._status_signal_format = ""
+        self._set_frame = ""
+        self._set_signal_format = ""
+        self._override_frame = ""
+        self._override_signal_format = ""
 
         self._quantity = 0
         self._tx = True
@@ -139,14 +139,13 @@ class IoGroup(QtWidgets.QWidget):
             point.set_frame = self.set_frame
             point.set_signal = self.set_signal_format.format(point.index)
             point.override_frame = self.override_frame
-            point.override_signal = self.override_signal_format.format(
-                point.index)
+            point.override_signal = self.override_signal_format.format(point.index)
             self.ui.layout.addWidget(point)
             self.points.append(point)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

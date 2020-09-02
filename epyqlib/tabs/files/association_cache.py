@@ -8,7 +8,7 @@ from epyqlib.tabs.files.files_utils import ensure_dir
 
 class AssociationCache:
 
-    _instance: 'AssociationCache' = None
+    _instance: "AssociationCache" = None
     _tag = "[Associations Cache]"
 
     def __init__(self, files_dir: str):
@@ -35,11 +35,11 @@ class AssociationCache:
 
     def _read_file(self):
         if os.path.exists(self._cache_file):
-             with open(self._cache_file, 'r') as cache_file:
+            with open(self._cache_file, "r") as cache_file:
                 self._associations = json.load(cache_file)
 
     def _write_file(self):
-        with open(self._cache_file, 'w') as cache_file:
+        with open(self._cache_file, "w") as cache_file:
             json.dump(self._associations, cache_file, indent=2)
 
     def clear(self):
@@ -59,13 +59,12 @@ class AssociationCache:
 
         for serial, association_list in self._associations.items():
             for association in association_list:
-                if association['file'] is None:
+                if association["file"] is None:
                     continue
 
-                if association['file']['type'] == 'Log':
+                if association["file"]["type"] == "Log":
                     continue
 
-                hashes.add(association['file']['hash'])
+                hashes.add(association["file"]["hash"])
 
         return hashes
-

@@ -21,7 +21,7 @@ class Elapsed:
 
     def number_string(self):
         now = time.monotonic() - self.start
-        return now, 'T+ {:.1f}s'.format(now)
+        return now, "T+ {:.1f}s".format(now)
 
 
 @attr.s
@@ -52,7 +52,7 @@ class ActionLogger:
 @pytest.fixture(
     params=[
         pytest.param(
-            'flaky',
+            "flaky",
             marks=pytest.mark.flaky(reruns=5),
         ),
     ],
@@ -69,9 +69,9 @@ class Observer:
         self.failures = []
 
     def __call__(self, event_dict):
-        is_error = event_dict.get('isError')
-        s = 'Unhandled error in Deferred'.casefold()
-        is_unhandled = s in event_dict.get('log_format', '').casefold()
+        is_error = event_dict.get("isError")
+        s = "Unhandled error in Deferred".casefold()
+        is_unhandled = s in event_dict.get("log_format", "").casefold()
 
         if is_error and is_unhandled:
             self.failures.append(event_dict)
@@ -183,7 +183,11 @@ def test_sequence_pause_event(action_logger, assert_no_unhandled_errbacks):
     t = 0
     delay = 0.3
     for n in range(3):
-        sequence.add_delayed(delay, action_logger.action, n, )
+        sequence.add_delayed(
+            delay,
+            action_logger.action,
+            n,
+        )
         t += delay
         action_logger.expected.append(Result(time=t, data=n))
 
@@ -210,7 +214,7 @@ def test_sequence_pause_event(action_logger, assert_no_unhandled_errbacks):
     pause_duration = 1
     unpause_time = pause_time + pause_duration
 
-    for expected in action_logger.expected[pause_before + 1:]:
+    for expected in action_logger.expected[pause_before + 1 :]:
         expected.time += pause_duration
 
     deferred = sequence.run()

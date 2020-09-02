@@ -3,16 +3,16 @@ import pytest
 
 def pytest_addoption(parser):
     parser.addoption(
-        '--device-present',
-        action='store_true',
+        "--device-present",
+        action="store_true",
         default=False,
-        help='Run tests that require a device be connected'
+        help="Run tests that require a device be connected",
     )
     parser.addoption(
-        '--run-factory',
-        action='store_true',
+        "--run-factory",
+        action="store_true",
         default=False,
-        help='Run tests that require a factory device file'
+        help="Run tests that require a factory device file",
     )
 
 

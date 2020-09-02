@@ -4,15 +4,15 @@ import attr
 import siphash
 
 
-struct_format = '<I16sHq'
+struct_format = "<I16sHq"
 
 
 def high_32(value):
-    return (value >> 32) & 0xffffffff
+    return (value >> 32) & 0xFFFFFFFF
 
 
 def low_32(value):
-    return value & 0xffffffff
+    return value & 0xFFFFFFFF
 
 
 @attr.s(frozen=True)
@@ -32,7 +32,7 @@ class Uint64:
     def high_32(self):
         return high_32(self.value)
 
-    def to_bytes(self, byteorder='little'):
+    def to_bytes(self, byteorder="little"):
         return self.value.to_bytes(8, byteorder)
 
     def evolve_low(self, low):
@@ -76,11 +76,11 @@ def pack(serial_number, parameter_uuid, meta_index, value):
 
 def build_tag(key, message):
     output_bytes = siphash.half_siphash_64(
-        key=key.to_bytes(byteorder='little'),
+        key=key.to_bytes(byteorder="little"),
         data=message,
     )
 
-    tag = int.from_bytes(output_bytes, byteorder='little')
+    tag = int.from_bytes(output_bytes, byteorder="little")
 
     return tag
 

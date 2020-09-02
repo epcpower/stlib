@@ -1,8 +1,8 @@
 import PyQt5.QtCore
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class NotFoundError(Exception):
@@ -14,14 +14,14 @@ class MultipleFoundError(Exception):
 
 
 class Signals(PyQt5.QtCore.QObject):
-    child_added = PyQt5.QtCore.pyqtSignal('PyQt_PyObject', int)
-    child_added_complete = PyQt5.QtCore.pyqtSignal('PyQt_PyObject')
+    child_added = PyQt5.QtCore.pyqtSignal("PyQt_PyObject", int)
+    child_added_complete = PyQt5.QtCore.pyqtSignal("PyQt_PyObject")
     child_removed = PyQt5.QtCore.pyqtSignal(
-        'PyQt_PyObject',
-        'PyQt_PyObject',
+        "PyQt_PyObject",
+        "PyQt_PyObject",
         int,
     )
-    child_removed_complete = PyQt5.QtCore.pyqtSignal('PyQt_PyObject')
+    child_removed_complete = PyQt5.QtCore.pyqtSignal("PyQt_PyObject")
 
 
 class TreeNode:
@@ -38,11 +38,11 @@ class TreeNode:
         # TODO: this isn't a good way to handle predefined children
         #       in an inherited class
         if children is None:
-            if hasattr(self, 'children'):
+            if hasattr(self, "children"):
                 children = self.children
 
         if children is None:
-                self.children = []
+            self.children = []
         else:
             children = self.children
             self.children = []
@@ -107,7 +107,7 @@ class TreeNode:
         self.traverse(
             call_this=lambda node, payload: payload.append(node),
             payload=leaves,
-            internal_nodes=False
+            internal_nodes=False,
         )
 
         return leaves
@@ -148,7 +148,7 @@ class TreeNode:
 
         if len(nodes) == 0 and raise_:
             raise NotFoundError(
-                '''Attribute '{}' with value '{}' not found'''.format(
+                """Attribute '{}' with value '{}' not found""".format(
                     attribute_name,
                     attribute_value,
                 )
@@ -167,27 +167,19 @@ class TreeNode:
         if collection is None:
             collection = set()
 
-        self.traverse(
-            call_this=visit,
-            payload=collection,
-            internal_nodes=True
-        )
+        self.traverse(call_this=visit, payload=collection, internal_nodes=True)
 
         return collection
 
     def recursively_remove_children(self):
         nodes = []
         self.traverse(
-            call_this = lambda node, payload: payload.append(node),
+            call_this=lambda node, payload: payload.append(node),
             payload=nodes,
             internal_nodes=True,
         )
 
-        nodes = [
-            node
-            for node in nodes
-            if node != self
-        ]
+        nodes = [node for node in nodes if node != self]
 
         bottom_up = sorted(
             nodes,
@@ -203,20 +195,18 @@ class TreeNode:
         sentinel = object()
 
         children = [
-            child
-            for child in self.children
-            if getattr(child, 'name', sentinel) == name
+            child for child in self.children if getattr(child, "name", sentinel) == name
         ]
 
         if len(children) == 0:
-            raise NotFoundError(f'Child with name {name!r} not found')
+            raise NotFoundError(f"Child with name {name!r} not found")
 
         if len(children) > 1:
             raise MultipleFoundError(
-                f'Multiple children found with name {name!r}',
+                f"Multiple children found with name {name!r}",
             )
 
-        child, = children
+        (child,) = children
 
         return child
 
@@ -228,8 +218,8 @@ class TreeNode:
         return node
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

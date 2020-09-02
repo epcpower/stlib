@@ -1,13 +1,13 @@
 from PyQt5 import QtCore, QtWidgets
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2017, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2017, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class TreeView(QtWidgets.QTreeView):
     def __init__(self, *args, **kwargs):
-        kwargs.pop('in_designer', None)
+        kwargs.pop("in_designer", None)
         super().__init__(*args, **kwargs)
 
         self.row_columns = set()

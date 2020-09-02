@@ -1,24 +1,36 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import weakref
 
 from epyqlib.treenode import TreeNode
 import epyqlib.utils.qt
-from PyQt5.QtCore import (Qt, QAbstractItemModel, QVariant,
-                          QModelIndex, pyqtSignal, pyqtSlot)
+from PyQt5.QtCore import (
+    Qt,
+    QAbstractItemModel,
+    QVariant,
+    QModelIndex,
+    pyqtSignal,
+    pyqtSlot,
+)
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class PyQAbstractItemModel(QAbstractItemModel):
     root_changed = pyqtSignal(TreeNode)
 
-    def __init__(self, root, checkbox_columns=None, editable_columns=None,
-                 alignment=None, parent=None):
+    def __init__(
+        self,
+        root,
+        checkbox_columns=None,
+        editable_columns=None,
+        alignment=None,
+        parent=None,
+    ):
         QAbstractItemModel.__init__(self, parent=parent)
 
         self.root = root
@@ -29,7 +41,6 @@ class PyQAbstractItemModel(QAbstractItemModel):
             self.alignment = alignment
         else:
             self.alignment = Qt.AlignTop | Qt.AlignLeft
-
 
         self.index_from_node_cache = weakref.WeakKeyDictionary()
 
@@ -69,23 +80,23 @@ class PyQAbstractItemModel(QAbstractItemModel):
         if self.checkbox_columns is not None:
             if self.checkbox_columns[index.column()]:
                 node = index.internalPointer()
-                if hasattr(node, 'checked'):
+                if hasattr(node, "checked"):
                     return node.checked(index.column())
 
                 return None
 
     def data_edit(self, index):
         node = index.internalPointer()
-        if hasattr(node, 'get_human_value'):
+        if hasattr(node, "get_human_value"):
             if callable(node.get_human_value):
                 value = node.get_human_value(column=index.column())
             else:
-                value = ''
+                value = ""
         else:
             value = node.fields[index.column()]
 
         if value is None:
-            value = ''
+            value = ""
         else:
             value = str(value)
 
@@ -194,7 +205,7 @@ class PyQAbstractItemModel(QAbstractItemModel):
         row = grandparent.row_of_child(parent)
 
         if row == -1:
-            raise Exception('row == -1')
+            raise Exception("row == -1")
 
         return self.createIndex(row, 0, parent)
 
@@ -215,7 +226,7 @@ class PyQAbstractItemModel(QAbstractItemModel):
                 index = self.index(
                     row=node.tree_parent.row_of_child(node),
                     column=0,
-                    parent=self.index_from_node(node.tree_parent)
+                    parent=self.index_from_node(node.tree_parent),
                 )
 
                 self.index_from_node_cache[node] = index
@@ -269,8 +280,8 @@ class PyQAbstractItemModel(QAbstractItemModel):
         self.root_changed.emit(root)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

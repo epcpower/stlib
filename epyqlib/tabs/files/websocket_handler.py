@@ -11,9 +11,9 @@ SocketCloseHandler = Callable[[], Coroutine]
 OnMessageHandler = Callable[[str, Dict], Coroutine]
 
 
-class WebSocketHandler():
+class WebSocketHandler:
     def __init__(self):
-        self._tag = '[Graphql Websocket]'
+        self._tag = "[Graphql Websocket]"
         self._on_message_handler: OnMessageHandler = None
         self._on_close_handler: SocketCloseHandler = None
         self.loopingCall: LoopingCall = None
@@ -22,7 +22,12 @@ class WebSocketHandler():
 
         self.resubscribe = False
 
-    def connect(self, response: Dict, on_message: Callable[[str, Dict], Coroutine], on_close: SocketCloseHandler = None) -> None:
+    def connect(
+        self,
+        response: Dict,
+        on_message: Callable[[str, Dict], Coroutine],
+        on_close: SocketCloseHandler = None,
+    ) -> None:
         """
         Makes WebSocket connection and starts looping
         :param response JSON body response from a subscription call to AppSync
@@ -33,21 +38,23 @@ class WebSocketHandler():
         self._on_message_handler = on_message
         self._on_close_handler = on_close
 
-        new_subscriptions = response['extensions']['subscription']['newSubscriptions']
-        mqtt_connections = response['extensions']['subscription']['mqttConnections']
+        new_subscriptions = response["extensions"]["subscription"]["newSubscriptions"]
+        mqtt_connections = response["extensions"]["subscription"]["mqttConnections"]
 
         new_connections = {}
         for [action, details] in new_subscriptions.items():
-            mqtt_connection = next(c for c in mqtt_connections if details['topic'] in c['topics'])
-            topic = details['topic']
+            mqtt_connection = next(
+                c for c in mqtt_connections if details["topic"] in c["topics"]
+            )
+            topic = details["topic"]
 
-            if mqtt_connection['url'] not in new_connections:
-                new_connections[mqtt_connection['url']] = {
-                    'connection': mqtt_connection,
-                    'topics': set()
+            if mqtt_connection["url"] not in new_connections:
+                new_connections[mqtt_connection["url"]] = {
+                    "connection": mqtt_connection,
+                    "topics": set(),
                 }
 
-            new_connections[mqtt_connection['url']]['topics'].add(topic)
+            new_connections[mqtt_connection["url"]]["topics"].add(topic)
 
         self._mqtt_connections = new_connections
         self._do_connect()
@@ -59,8 +66,8 @@ class WebSocketHandler():
 
     def _do_connect(self):
         for connection in self._mqtt_connections.values():
-            client_id = connection['connection']['client']
-            url = connection['connection']['url']
+            client_id = connection["connection"]["client"]
+            url = connection["connection"]["url"]
 
             urlparts = urlparse(url)
 
@@ -72,14 +79,15 @@ class WebSocketHandler():
             client.on_log = self._on_log
             client.on_socket_close = self._on_socket_close
 
-            client.ws_set_options(path="{}?{}".format(urlparts.path, urlparts.query), headers=headers)
+            client.ws_set_options(
+                path="{}?{}".format(urlparts.path, urlparts.query), headers=headers
+            )
             client.tls_set()
 
-            client.user_data_set({'topics': connection['topics']})
+            client.user_data_set({"topics": connection["topics"]})
 
             client.connect(urlparts.netloc, port=443)
             self.clients.append(client)
-
 
     def loop(self):
         # if not self.is_subscribed():
@@ -108,7 +116,7 @@ class WebSocketHandler():
         return len(self.clients) > 0
 
     def _on_connect(self, client: mqtt.Client, userdata: Dict, flags, rc):
-        topics: set[str] = userdata['topics']
+        topics: set[str] = userdata["topics"]
         sub_list = list(map(lambda topic: (topic, 1), topics))
         client.subscribe(sub_list)
 
@@ -117,31 +125,38 @@ class WebSocketHandler():
 
     def _on_message(self, client, userdata, msg: mqtt.MQTTMessage):
         try:
-            payload = msg.payload.decode('ascii')
+            payload = msg.payload.decode("ascii")
             payload_json = json.loads(payload)
             print(f"{self._tag} Message received: {payload}")
         except Exception as e:
-            print(f"{self._tag} Error converting payload to JSON: " + msg.payload.decode('ascii'))
+            print(
+                f"{self._tag} Error converting payload to JSON: "
+                + msg.payload.decode("ascii")
+            )
             print(e)
             return
 
         # We *should* only get one payload, but just in case...
         try:
-            for action, payload in payload_json['data'].items():
+            for action, payload in payload_json["data"].items():
                 result = self._on_message_handler(action, payload)
                 if inspect.iscoroutine(result):
                     ensureDeferred(result)
         except Exception as e:
-            print(f"{self._tag} Error iterating over payload: " + json.dumps(payload_json))
+            print(
+                f"{self._tag} Error iterating over payload: " + json.dumps(payload_json)
+            )
             print(e)
 
     def _on_socket_close(self, client: mqtt.Client, userdata: Dict, socket):
         if self.resubscribe:
             status = client.reconnect()
-            if (status == 0):
+            if status == 0:
                 return
             else:
-                print(f'{self._tag} Error reconnecting to websocket: {self.error_lookup[status]}. Aborting reconnect.')
+                print(
+                    f"{self._tag} Error reconnecting to websocket: {self.error_lookup[status]}. Aborting reconnect."
+                )
 
         self.clients.remove(client)
         # print(f"Socket closed. Connection to topics ${userdata.get('topics')} closed.")
@@ -164,11 +179,12 @@ class WebSocketHandler():
     error_lookup = {
         mqtt.CONNACK_ACCEPTED: "Connection successful",
         mqtt.CONNACK_REFUSED_PROTOCOL_VERSION: "Connection refused - incorrect protocol version",
-        mqtt.CONNACK_REFUSED_IDENTIFIER_REJECTED: 'Connection refused - invalid client',
-        mqtt.CONNACK_REFUSED_SERVER_UNAVAILABLE: 'Connection refused - server unavailable',
-        mqtt.CONNACK_REFUSED_BAD_USERNAME_PASSWORD: 'Connection refused - bad username or password',
-        mqtt.CONNACK_REFUSED_NOT_AUTHORIZED: 'Connection refused - not authorised',
+        mqtt.CONNACK_REFUSED_IDENTIFIER_REJECTED: "Connection refused - invalid client",
+        mqtt.CONNACK_REFUSED_SERVER_UNAVAILABLE: "Connection refused - server unavailable",
+        mqtt.CONNACK_REFUSED_BAD_USERNAME_PASSWORD: "Connection refused - bad username or password",
+        mqtt.CONNACK_REFUSED_NOT_AUTHORIZED: "Connection refused - not authorised",
     }
+
 
 # Example of the format of `response`:
 # {

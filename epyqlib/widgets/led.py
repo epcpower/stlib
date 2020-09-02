@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import os
 import re
@@ -15,8 +15,8 @@ import epyqlib.widgets.led_ui
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 darker_factor = 400
@@ -32,46 +32,48 @@ class FontChangeEventSignal(QtCore.QObject):
         return False
 
 
-def set_attribute_recursive(element, tag_name, attribute,
-                            new_color):
+def set_attribute_recursive(element, tag_name, attribute, new_color):
     if element.tagName() == tag_name:
         text = element.attribute(attribute)
-        text = re.sub('(?<=fill:#)[0-9A-F]{6}', new_color, text)
+        text = re.sub("(?<=fill:#)[0-9A-F]{6}", new_color, text)
         element.setAttribute(attribute, text)
 
     child_nodes = element.childNodes()
     children = [child_nodes.at(i) for i in range(child_nodes.length())]
     for child in children:
         if child.isElement():
-            set_attribute_recursive(element=child.toElement(),
-                                    tag_name=tag_name,
-                                    attribute=attribute,
-                                    new_color=new_color)
+            set_attribute_recursive(
+                element=child.toElement(),
+                tag_name=tag_name,
+                attribute=attribute,
+                new_color=new_color,
+            )
 
 
 def make_color(svg_string, new_color):
     doc = QDomDocument()
     doc.setContent(svg_string)
-    set_attribute_recursive(element=doc.documentElement(),
-                            tag_name="circle",
-                            attribute="style",
-                            new_color=new_color)
+    set_attribute_recursive(
+        element=doc.documentElement(),
+        tag_name="circle",
+        attribute="style",
+        new_color=new_color,
+    )
 
     return doc.toByteArray()
 
 
 def rgb_string(color):
-    return ('{:02X}' * 3).format(*color.getRgb())
+    return ("{:02X}" * 3).format(*color.getRgb())
 
 
 class Led(epyqlib.widgets.abstractwidget.AbstractWidget):
     def __init__(self, parent=None, in_designer=False):
-        file_name = 'led.svg'
+        file_name = "led.svg"
 
         # TODO: CAMPid 9549757292917394095482739548437597676742
         if not QFileInfo(file_name).isAbsolute():
-            file = os.path.join(
-                QFileInfo.absolutePath(QFileInfo(__file__)), file_name)
+            file = os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)), file_name)
         else:
             file = file_name
         file = QFile(file)
@@ -84,11 +86,7 @@ class Led(epyqlib.widgets.abstractwidget.AbstractWidget):
         self._label_from_enumeration = False
 
         self._value = False
-        self.svg = {
-            'on': None,
-            'automatic_off': None,
-            'manual_off': None
-        }
+        self.svg = {"on": None, "automatic_off": None, "manual_off": None}
 
         self._last_loaded_svg = object()
 
@@ -102,7 +100,7 @@ class Led(epyqlib.widgets.abstractwidget.AbstractWidget):
             in_designer=in_designer,
         )
 
-        self.ui.value.main_element = 'led'
+        self.ui.value.main_element = "led"
         self.update_svg()
 
         self.on_color = QColor("#20C020")
@@ -118,11 +116,10 @@ class Led(epyqlib.widgets.abstractwidget.AbstractWidget):
 
     @label_from_enumeration.setter
     def label_from_enumeration(self, from_enumeration):
-        self._label_from_enumeration =  bool(from_enumeration)
+        self._label_from_enumeration = bool(from_enumeration)
 
         # TODO: this is a hacky way to trigger an update
-        self.set_signal(signal=self.signal_object,
-                        force_update=True)
+        self.set_signal(signal=self.signal_object, force_update=True)
 
     @pyqtProperty(int)
     def on_value(self):
@@ -136,8 +133,7 @@ class Led(epyqlib.widgets.abstractwidget.AbstractWidget):
             self.update_svg()
 
             # TODO: this is a hacky way to trigger an update
-            self.set_signal(signal=self.signal_object,
-                            force_update=True)
+            self.set_signal(signal=self.signal_object, force_update=True)
 
     @pyqtProperty(bool)
     def automatic_off_color(self):
@@ -158,12 +154,11 @@ class Led(epyqlib.widgets.abstractwidget.AbstractWidget):
     def on_color(self, new_color):
         self._on_color = QColor(new_color)
 
-        self.svg['on'] = make_color(self.svg_string, rgb_string(self._on_color))
+        self.svg["on"] = make_color(self.svg_string, rgb_string(self._on_color))
 
         if self.automatic_off_color:
-            self.svg['automatic_off'] = make_color(
-                self.svg_string,
-                rgb_string(self._on_color.darker(factor=darker_factor))
+            self.svg["automatic_off"] = make_color(
+                self.svg_string, rgb_string(self._on_color.darker(factor=darker_factor))
             )
 
         self.update_svg()
@@ -176,7 +171,9 @@ class Led(epyqlib.widgets.abstractwidget.AbstractWidget):
     def manual_off_color(self, new_color):
         self._manual_off_color = QColor(new_color)
 
-        self.svg['manual_off'] = make_color(self.svg_string, rgb_string(self._manual_off_color))
+        self.svg["manual_off"] = make_color(
+            self.svg_string, rgb_string(self._manual_off_color)
+        )
 
         self.update_svg()
 
@@ -197,21 +194,21 @@ class Led(epyqlib.widgets.abstractwidget.AbstractWidget):
         else:
             value = value
 
-        self._value = (value == self.on_value)
+        self._value = value == self.on_value
 
         self.update_svg()
 
     def update_svg(self):
         if self._value:
-            svg = self.svg['on']
+            svg = self.svg["on"]
         elif self.automatic_off_color:
-            svg = self.svg['automatic_off']
+            svg = self.svg["automatic_off"]
         else:
-            svg = self.svg['manual_off']
+            svg = self.svg["manual_off"]
 
         if svg is not self._last_loaded_svg:
             if svg is None:
-                self.ui.value.load(b'')
+                self.ui.value.load(b"")
             else:
                 self.ui.value.load(svg)
             self._last_loaded_svg = svg
@@ -260,8 +257,8 @@ class Led(epyqlib.widgets.abstractwidget.AbstractWidget):
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

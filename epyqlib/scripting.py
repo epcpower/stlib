@@ -20,18 +20,18 @@ class TimeParseError(Exception):
 
 class NoEventsError(epyqlib.utils.general.ExpectedException):
     def expected_message(self):
-        return 'No script events found.'
+        return "No script events found."
 
 
 class NoDevicesError(epyqlib.utils.general.ExpectedException):
     def expected_message(self):
-        return 'No devices found.'
+        return "No devices found."
 
 
 class MissingDevicesError(epyqlib.utils.general.ExpectedException):
     def expected_message(self):
-        return 'Unable to find devices named: {}'.format(
-            ', '.join(repr(name) for name in sorted(self.args[0]))
+        return "Unable to find devices named: {}".format(
+            ", ".join(repr(name) for name in sorted(self.args[0]))
         )
 
 
@@ -59,8 +59,8 @@ class Device:
 
 
 operators = {
-    '+': operator.add,
-    '-': operator.sub,
+    "+": operator.add,
+    "-": operator.sub,
 }
 
 
@@ -72,7 +72,7 @@ class Action:
 
     def __call__(self, nvs=None):
         if self is pause_sentinel:
-            print('pausing')
+            print("pausing")
             return
 
         if self.is_nv:
@@ -81,11 +81,11 @@ class Action:
             return self.standard_handler()
 
     def standard_handler(self):
-        print('standard setting:', self.signal.name, self.value)
+        print("standard setting:", self.signal.name, self.value)
         self.signal.set_human_value(self.value)
 
     def set_nv_value(self):
-        print('nv setting:', self.signal.name, self.value)
+        print("nv setting:", self.signal.name, self.value)
         self.signal.set_human_value(self.value)
 
     def nv_handler(self, nvs):
@@ -98,7 +98,7 @@ class Action:
         # TODO: CAMPid 079320743340327834208
         is_nv = signal.frame.id == device.nvs.set_frames[0].id
         if is_nv:
-            print('switching', self.signal)
+            print("switching", self.signal)
             signal = device.nvs.neo.signal_by_path(*self.signal)
 
         return attr.evolve(
@@ -133,10 +133,7 @@ class CompoundAction:
     def resolve(self, device):
         return attr.evolve(
             inst=self,
-            actions=tuple(
-                action.resolve(device=device)
-                for action in self.actions
-            )
+            actions=tuple(action.resolve(device=device) for action in self.actions),
         )
 
 
@@ -149,40 +146,31 @@ def compound_event_from_events(events):
     )
 
 
-
 pause_sentinel = Action(signal=[], value=0)
 
 
-special_leading_characters = set('#')
+special_leading_characters = set("#")
+
 
 def csv_load(f, devices):
     events = []
 
-    lines = tuple(
-        line.strip()
-        for line in f.readlines()
-    )
+    lines = tuple(line.strip() for line in f.readlines())
 
     device_names = None
 
     for line in lines:
-        if line[0] == '@':
+        if line[0] == "@":
             s = line.split()
             command = s[0][1:]
             arguments = s[1:]
 
         # add commands here if needed
 
-
-    device_map = {
-        device.name: device
-        for device in devices
-    }
+    device_map = {device.name: device for device in devices}
 
     reader = csv.reader(
-        line
-        for line in lines
-        if line[0] not in special_leading_characters
+        line for line in lines if line[0] not in special_leading_characters
     )
 
     last_event_time = 0
@@ -200,7 +188,7 @@ def csv_load(f, devices):
             event_time = decimal.Decimal(raw_event_time)
         except decimal.InvalidOperation as e:
             raise TimeParseError(
-                'Unable to parse as a time (line {number}): {string}'.format(
+                "Unable to parse as a time (line {number}): {string}".format(
                     number=i,
                     string=raw_event_time,
                 )
@@ -212,12 +200,14 @@ def csv_load(f, devices):
         raw_actions = [x.strip() for x in row[1:] if len(x) > 0]
 
         try:
-            events_group = tuple(events_from_raw_actions(
-                device_map=device_map,
-                event_time=event_time,
-                events=events,
-                raw_actions=raw_actions,
-            ))
+            events_group = tuple(
+                events_from_raw_actions(
+                    device_map=device_map,
+                    event_time=event_time,
+                    events=events,
+                    raw_actions=raw_actions,
+                )
+            )
         except MissingDevicesError as e:
             missing_device_names |= e.args[0]
             continue
@@ -244,7 +234,7 @@ def events_from_raw_actions(device_map, event_time, events, raw_actions):
     missing_device_names = set()
 
     for path, value in epyqlib.utils.general.grouper(raw_actions, n=2):
-        if path == 'pause':
+        if path == "pause":
             yield Event(
                 time=event_time,
                 action=pause_sentinel,
@@ -252,8 +242,8 @@ def events_from_raw_actions(device_map, event_time, events, raw_actions):
             )
             continue
 
-        device_name, *signal = path.split(';')
-        if device_name == '':
+        device_name, *signal = path.split(";")
+        if device_name == "":
             device_name = None
 
         try:
@@ -268,7 +258,7 @@ def events_from_raw_actions(device_map, event_time, events, raw_actions):
             action=Action(
                 signal=signal,
                 value=decimal.Decimal(value),
-            )
+            ),
         )
 
     if len(missing_device_names) > 0:
@@ -295,9 +285,11 @@ def run(events, pause, loop):
 
     for p, n in epyqlib.utils.general.pairwise(zero_padded):
         if n.action is pause_sentinel:
+
             def action(n=n):
                 n.action()
                 pause()
+
             kwargs = {}
         else:
             action = n.action
@@ -336,9 +328,6 @@ class Model:
         if len(events) == 0:
             raise NoEventsError()
 
-        events = [
-            event.resolve()
-            for event in events
-        ]
+        events = [event.resolve() for event in events]
 
         return run(events=events, pause=pause, loop=loop)

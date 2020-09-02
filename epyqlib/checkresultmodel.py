@@ -8,7 +8,7 @@ import epyqlib.attrsmodel
 import epyqlib.treenode
 
 
-@graham.schemify(tag='node')
+@graham.schemify(tag="node")
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
@@ -16,7 +16,6 @@ class Node(epyqlib.treenode.TreeNode):
     name = epyqlib.attrsmodel.create_name_attribute()
     epyqlib.attrsmodel.attrib(
         attribute=name,
-
     )
 
     node = attr.ib(default=None)
@@ -36,10 +35,7 @@ class Node(epyqlib.treenode.TreeNode):
 
     @classmethod
     def build(cls, name, node, local_results=[], child_results=[]):
-        results = [
-            Result(node=node, message=result)
-            for result in local_results
-        ]
+        results = [Result(node=node, message=result) for result in local_results]
 
         node = cls(
             name=name,
@@ -74,7 +70,7 @@ class ResultSeverity(enum.Enum):
     error = 2
 
 
-@graham.schemify(tag='result')
+@graham.schemify(tag="result")
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
@@ -123,7 +119,7 @@ class Result(epyqlib.treenode.TreeNode):
 
 
 Root = epyqlib.attrsmodel.Root(
-    default_name='Check Results',
+    default_name="Check Results",
     valid_types=(
         Node,
         Result,
@@ -146,16 +142,16 @@ def merge(name, *types):
 
 
 columns = epyqlib.attrsmodel.columns(
-    merge('name', Node),
-    merge('severity', Result),
-    merge('message', Result),
+    merge("name", Node),
+    merge("severity", Result),
+    merge("message", Result),
 )
 
 
 # TODO: CAMPid 075454679961754906124539691347967
 @attr.s
 class ReferencedUuidNotifier:
-    changed = epyqlib.utils.qt.Signal('PyQt_PyObject')
+    changed = epyqlib.utils.qt.Signal("PyQt_PyObject")
 
     view = attr.ib(default=None)
     selection_model = attr.ib(default=None)

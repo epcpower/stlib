@@ -17,7 +17,7 @@ def create():
 
 @create.command()
 @click.option(
-    '--zip',
+    "--zip",
     type=click.Path(dir_okay=False, resolve_path=True),
     required=True,
 )

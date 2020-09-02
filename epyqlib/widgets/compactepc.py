@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import epyqlib.utils.qt
 import epyqlib.widgets.compactepc_ui
@@ -8,8 +8,8 @@ import epyqlib.widgets.epc
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class CompactEpc(epyqlib.widgets.epc.Epc):
@@ -21,8 +21,8 @@ class CompactEpc(epyqlib.widgets.epc.Epc):
         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

@@ -56,38 +56,38 @@ def _post_load(value_set, root=None):
 
 
 def copy_parameter_data(
-        value_set,
-        human_names=True,
-        base_node=None,
-        calculate_unspecified_min_max=False,
-        can_root=None,
+    value_set,
+    human_names=True,
+    base_node=None,
+    calculate_unspecified_min_max=False,
+    can_root=None,
 ):
     def traverse(node, _):
         if isinstance(node, epyqlib.pm.parametermodel.Parameter):
             if human_names:
                 name = node.name
             else:
-                name = ':'.join((
-                    node.original_multiplexer_name,
-                    node.original_signal_name,
-                ))
+                name = ":".join(
+                    (
+                        node.original_multiplexer_name,
+                        node.original_signal_name,
+                    )
+                )
 
             minimum = node.minimum
             maximum = node.maximum
 
             if calculate_unspecified_min_max and None in (minimum, maximum):
-                query_multiplexed_message, = can_root.nodes_by_attribute(
-                    attribute_value='Parameter Query',
-                    attribute_name='name',
+                (query_multiplexed_message,) = can_root.nodes_by_attribute(
+                    attribute_value="Parameter Query",
+                    attribute_name="name",
                 )
-                signal, = query_multiplexed_message.nodes_by_attribute(
+                (signal,) = query_multiplexed_message.nodes_by_attribute(
                     attribute_value=node.uuid,
-                    attribute_name='parameter_uuid',
+                    attribute_name="parameter_uuid",
                 )
 
-                calculated_minimum, calculated_maximum = (
-                     signal.calculated_min_max()
-                )
+                calculated_minimum, calculated_maximum = signal.calculated_min_max()
 
                 if minimum is None:
                     minimum = calculated_minimum
@@ -124,22 +124,22 @@ def decimal_attrib(load_only=False, **kwargs):
     graham.attrib(
         attribute=attrib,
         field=marshmallow.fields.Decimal(
-            allow_none=kwargs.get('default', False) is None,
+            allow_none=kwargs.get("default", False) is None,
             as_string=True,
             load_only=load_only,
         ),
     )
-    
+
     return attrib
 
 
-@graham.schemify(tag='parameter')
+@graham.schemify(tag="parameter")
 @epyqlib.attrsmodel.ify()
 @epyqlib.utils.qt.pyqtify()
 @attr.s(hash=False)
 class Parameter(epyqlib.treenode.TreeNode):
     name = attr.ib(
-        default='New Parameter',
+        default="New Parameter",
         converter=str,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
@@ -159,7 +159,7 @@ class Parameter(epyqlib.treenode.TreeNode):
 
     epyqlib.attrsmodel.attrib(
         attribute=parameter_uuid,
-        human_name='Parameter UUID',
+        human_name="Parameter UUID",
     )
 
     readable = attr.ib(
@@ -191,7 +191,7 @@ class Parameter(epyqlib.treenode.TreeNode):
 
 
 Root = epyqlib.attrsmodel.Root(
-    default_name='Value Set',
+    default_name="Value Set",
     valid_types=(Parameter,),
 )
 
@@ -210,8 +210,8 @@ class ValueSet:
     path = attr.ib(default=None)
     filters = attr.ib(
         default=(
-            ('Parameter Value Set', ['pmvs']),
-            ('All Files', ['*']),
+            ("Parameter Value Set", ["pmvs"]),
+            ("All Files", ["*"]),
         )
     )
 
@@ -224,7 +224,7 @@ class ValueSet:
                 filters=self.filters,
                 parent=parent,
                 save=True,
-                caption='Save Value Set As',
+                caption="Save Value Set As",
             )
 
             if path is None:
@@ -234,26 +234,23 @@ class ValueSet:
 
         sorted_children = sorted(self.model.root.children)
 
-        sorted_root = attr.evolve(
-            self.model.root,
-            children=sorted_children
-        )
+        sorted_root = attr.evolve(self.model.root, children=sorted_children)
 
         s = graham.dumps(sorted_root, indent=4).data
 
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             f.write(s)
 
-            if not s.endswith('\n'):
-                f.write('\n')
+            if not s.endswith("\n"):
+                f.write("\n")
 
     def overlay(self, overlay):
         attribute_names = [
-            'value',
-            'user_default',
-            'factory_default',
-            'minimum',
-            'maximum',
+            "value",
+            "user_default",
+            "factory_default",
+            "minimum",
+            "maximum",
         ]
 
         parameter_from_parameter_uuid = {
@@ -313,14 +310,14 @@ def merge(name, *types):
 
 
 columns = epyqlib.attrsmodel.columns(
-    merge('name', *types.types.values()),
-    merge('value', Parameter),
-    merge('user_default', Parameter),
-    merge('factory_default', Parameter),
-    merge('minimum', Parameter),
-    merge('maximum', Parameter),
-    merge('readable', Parameter),
-    merge('writable', Parameter),
-    merge('parameter_uuid', Parameter),
-    merge('uuid', *types.types.values()),
+    merge("name", *types.types.values()),
+    merge("value", Parameter),
+    merge("user_default", Parameter),
+    merge("factory_default", Parameter),
+    merge("minimum", Parameter),
+    merge("maximum", Parameter),
+    merge("readable", Parameter),
+    merge("writable", Parameter),
+    merge("parameter_uuid", Parameter),
+    merge("uuid", *types.types.values()),
 )

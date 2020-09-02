@@ -6,8 +6,8 @@ import epyqlib.utils.qt
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2017, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2017, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class SearchBox(QtWidgets.QWidget):
@@ -33,11 +33,11 @@ class SearchBox(QtWidgets.QWidget):
         self.search_shortcut = None
         self.view = None
 
-        self.ui.search_text.setPlaceholderText('Search...')
+        self.ui.search_text.setPlaceholderText("Search...")
         self.ui.search_text.textChanged.connect(self.search_text_changed)
         self.ui.search_text.returnPressed.connect(self.search_requested)
 
-        self.ui.filter_text.setPlaceholderText('Filter...')
+        self.ui.filter_text.setPlaceholderText("Filter...")
         self.ui.filter_text.textChanged.connect(self.filter_text_changed)
         self.ui.filter_text.textChanged.connect(self.filter_requested)
 
@@ -85,10 +85,12 @@ class SearchBox(QtWidgets.QWidget):
                 text=self.search_text,
                 column=column,
             )
+
         self.search_requested.connect(_search)
 
         def _filter():
             view.model().setFilterWildcard(self.filter_text)
+
         self.filter_requested.connect(_filter)
 
         self.search_shortcut = QtWidgets.QShortcut(view)

@@ -10,7 +10,7 @@ import epyqlib.cmemoryparser
 import epyqlib.variableselectionmodel
 
 
-project_name = 'epyqlib'
+project_name = "epyqlib"
 
 
 @click.group()
@@ -47,16 +47,16 @@ def dss(binary, ccxml, ccs_base_path):
                 print()
 
             for comparison in traverser.failures():
-                print('FAILED:', comparison.node.qualified_name(), comparison)
+                print("FAILED:", comparison.node.qualified_name(), comparison)
 
             print()
     except Exception as e:
         print()
 
 
-@main.command(name='json')
+@main.command(name="json")
 @ccstudiodss.cli.create_binary_option(project_name=project_name)
-@click.option('--json', 'json_file', type=click.File('r'), required=True)
+@click.option("--json", "json_file", type=click.File("r"), required=True)
 def json_command(binary, json_file):
     model = epyqlib.variableselectionmodel.VariableModel(
         nvs=None,
@@ -78,7 +78,7 @@ def json_command(binary, json_file):
             print()
 
         for comparison in traverser.failures():
-            print('FAILED:', comparison.node.qualified_name(), comparison)
+            print("FAILED:", comparison.node.qualified_name(), comparison)
 
         print()
     except Exception as e:
@@ -121,7 +121,7 @@ class Traverser:
 
         try:
             dss_address = self.session.debug_session.expression.evaluate(
-                '&' + node.qualified_name()
+                "&" + node.qualified_name()
             )
         except javabridge.JavaException as e:
             comparison = Comparison(node=node, exception=e)
@@ -131,11 +131,7 @@ class Traverser:
         self.collected.append(comparison)
 
     def failures(self):
-        return [
-            comparison
-            for comparison in self.collected
-            if not comparison.matches()
-        ]
+        return [comparison for comparison in self.collected if not comparison.matches()]
 
 
 @attr.s
@@ -162,8 +158,4 @@ class JsonTraverser:
         self.collected.append(comparison)
 
     def failures(self):
-        return [
-            comparison
-            for comparison in self.collected
-            if not comparison.matches()
-        ]
+        return [comparison for comparison in self.collected if not comparison.matches()]

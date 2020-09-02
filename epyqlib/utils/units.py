@@ -2,7 +2,7 @@ import pint
 
 
 registry = pint.UnitRegistry()
-registry.define('percent = 0.01*count = %')
+registry.define("percent = 0.01*count = %")
 
 
 def to_unitless(value, unit):

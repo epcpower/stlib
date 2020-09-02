@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import argparse
 import csv
 import logging
-#import math
+
+# import math
 import signal
 import sys
 
 from PyQt5 import QtChart, QtCore, QtGui, QtWidgets
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2017, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2017, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 logger = logging.getLogger(__name__)
@@ -21,8 +22,8 @@ logger = logging.getLogger(__name__)
 
 def parse_args(args):
     parser = argparse.ArgumentParser()
-    parser.add_argument('--verbose', '-v', action='count', default=0)
-    parser.add_argument('--file', '-f', type=argparse.FileType('r'), required=True)
+    parser.add_argument("--verbose", "-v", action="count", default=0)
+    parser.add_argument("--file", "-f", type=argparse.FileType("r"), required=True)
 
     return parser.parse_args(args)
 
@@ -45,7 +46,7 @@ def main(args=None):
 
 
 def read_csv(filename):
-    with open(filename, 'r') as f:
+    with open(filename, "r") as f:
         reader = csv.DictReader(f)
 
         data = {name: [] for name in reader.fieldnames}
@@ -74,8 +75,10 @@ class DoubleClickSignal(QtCore.QObject):
     triggered = QtCore.pyqtSignal()
 
     def eventFilter(self, _, event):
-        if (isinstance(event, QtGui.QMouseEvent)
-                and event.button() == QtCore.Qt.RightButton):
+        if (
+            isinstance(event, QtGui.QMouseEvent)
+            and event.button() == QtCore.Qt.RightButton
+        ):
             if event.type() == QtCore.QEvent.MouseButtonDblClick:
                 self.triggered.emit()
                 return True
@@ -87,16 +90,11 @@ class DoubleClickSignal(QtCore.QObject):
 
 class ModifierKeySignal(QtCore.QObject):
     triggered = QtCore.pyqtSignal(int, int)
-    keys = (QtCore.Qt.Key_Control,
-            QtCore.Qt.Key_Shift,
-            QtCore.Qt.Key_Alt)
+    keys = (QtCore.Qt.Key_Control, QtCore.Qt.Key_Shift, QtCore.Qt.Key_Alt)
 
     def eventFilter(self, _, event):
         if isinstance(event, QtGui.QKeyEvent) and event.key() in self.keys:
-            self.triggered.emit(
-                event.key(),
-                event.type() == QtCore.QEvent.KeyPress
-            )
+            self.triggered.emit(event.key(), event.type() == QtCore.QEvent.KeyPress)
 
         return False
 
@@ -166,7 +164,7 @@ class CheckableChart:
         view_size_policy.setVerticalPolicy(view_size_policy.Minimum)
 
         self._name = None
-        self.name = '<unnamed>'
+        self.name = "<unnamed>"
 
         self.data = ()
 
@@ -204,10 +202,9 @@ class CheckableChart:
     def update(self):
         scale = self.scaling_spin_box.value()
 
-        self.series.replace(QtGui.QPolygonF((
-            QtCore.QPointF(x, y * scale)
-            for x, y in self.data
-        )))
+        self.series.replace(
+            QtGui.QPolygonF((QtCore.QPointF(x, y * scale) for x, y in self.data))
+        )
 
         if len(self.data) > 0:
             y_minimum = min(y for _, y in self.data) * scale
@@ -247,10 +244,8 @@ class QtChartWindow(QtWidgets.QMainWindow):
         self.scroll_area = QtWidgets.QScrollArea()
         # http://stackoverflow.com/a/27840674/228539
         self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setHorizontalScrollBarPolicy(
-            QtCore.Qt.ScrollBarAlwaysOff)
-        self.scroll_area.setVerticalScrollBarPolicy(
-            QtCore.Qt.ScrollBarAlwaysOn)
+        self.scroll_area.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scroll_area.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         self.central_widget.setLayout(self.central_widget_layout)
         self.central_widget_layout.addWidget(self.scroll_area)
         self.scroll_widget = QtWidgets.QWidget()
@@ -265,10 +260,12 @@ class QtChartWindow(QtWidgets.QMainWindow):
 
         width = QtWidgets.QApplication.desktop().screenGeometry().width()
         size = self.size()
-        size.setWidth(QtWidgets.QDesktopWidget()
-                      .availableGeometry(self).size().width() * 0.7)
-        size.setHeight(QtWidgets.QDesktopWidget()
-                      .availableGeometry(self).size().height() * 0.9)
+        size.setWidth(
+            QtWidgets.QDesktopWidget().availableGeometry(self).size().width() * 0.7
+        )
+        size.setHeight(
+            QtWidgets.QDesktopWidget().availableGeometry(self).size().height() * 0.9
+        )
         self.resize(size)
 
         # self.charts = []
@@ -280,7 +277,7 @@ class QtChartWindow(QtWidgets.QMainWindow):
         self.checkable_charts = []
 
         for name, values in sorted(data.items()):
-            if name == '.time':
+            if name == ".time":
                 continue
 
             checkable_chart = CheckableChart()
@@ -292,22 +289,11 @@ class QtChartWindow(QtWidgets.QMainWindow):
             layout.addWidget(checkable_chart.scaling_spin_box)
             checkable_chart.scaling_spin_box.setSizePolicy(
                 QtWidgets.QSizePolicy.Fixed,
-                checkable_chart.scaling_spin_box.sizePolicy().verticalPolicy()
+                checkable_chart.scaling_spin_box.sizePolicy().verticalPolicy(),
             )
 
-            self.grid_layout.addLayout(
-                layout,
-                row,
-                0,
-                1,
-                1,
-                QtCore.Qt.AlignLeft
-            )
-            self.grid_layout.addWidget(
-                checkable_chart.view,
-                row,
-                1
-            )
+            self.grid_layout.addLayout(layout, row, 0, 1, 1, QtCore.Qt.AlignLeft)
+            self.grid_layout.addWidget(checkable_chart.view, row, 1)
 
             chart = checkable_chart.chart
             chart.legend().hide()
@@ -316,8 +302,8 @@ class QtChartWindow(QtWidgets.QMainWindow):
             view.setRubberBand(QtChart.QChartView.HorizontalRubberBand)
             view.setRenderHint(QtGui.QPainter.Antialiasing)
 
-            if '.time' in data:
-                d = zip(data['.time'], values)
+            if ".time" in data:
+                d = zip(data[".time"], values)
             else:
                 d = enumerate(values)
             checkable_chart.set_data(data=d)
@@ -327,7 +313,7 @@ class QtChartWindow(QtWidgets.QMainWindow):
         for axis in self.x_axes:
             axis.rangeChanged.connect(self.axis_range_changed)
 
-    @QtCore.pyqtSlot('qreal', 'qreal')
+    @QtCore.pyqtSlot("qreal", "qreal")
     def axis_range_changed(self, min, max):
         for axis in self.x_axes:
             axis.setRange(min, max)
@@ -347,10 +333,10 @@ def qtc(data):
 def _entry_point():
     import traceback
 
-    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s')
+    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s")
 
     def excepthook(excType, excValue, tracebackobj):
-        logger.error('Uncaught exception hooked:')
+        logger.error("Uncaught exception hooked:")
         traceback.print_exception(excType, excValue, tracebackobj)
 
     sys.excepthook = excepthook
@@ -359,5 +345,5 @@ def _entry_point():
     return main()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(_entry_point())

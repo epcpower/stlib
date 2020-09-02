@@ -17,7 +17,7 @@ def test_init(qtbot):
 
     assert view.parent() is None
     assert isinstance(view.ui, epyqlib.tabs.files.filesview.Ui)
-    assert not hasattr(view.ui, 'something')
+    assert not hasattr(view.ui, "something")
 
 
 def test_build(qtbot):
@@ -29,5 +29,4 @@ def test_build(qtbot):
 
     assert view.parent() is None
     assert isinstance(view.ui, epyqlib.tabs.files.filesview.Ui)
-    assert hasattr(view.ui, 'files_grid')
-
+    assert hasattr(view.ui, "files_grid")

@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import epyqlib.widgets.abstracttxwidget
 import epyqlib.widgets.enum_ui
 
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class Enum(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
@@ -32,10 +32,10 @@ class Enum(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
             else:
                 value = self.signal_object.format_float()
         elif value is None:
-            value = '-'
+            value = "-"
         else:
             # TODO: quit hardcoding this and it's better implemented elsewhere
-            value = '{0:.2f}'.format(value)
+            value = "{0:.2f}".format(value)
 
         self.ui.value.setCurrentText(value)
 
@@ -45,22 +45,24 @@ class Enum(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
                 self.ui.value.clear()
             if signal is not None:
 
-
                 full_strings = []
                 # TODO: CAMPid 94562754956589992752348667
                 for value in sorted(signal.enumeration.keys()):
                     # TODO: CAMPid 85478672616219005471279
                     enum_string = signal.enumeration[value]
-                    full_strings.append(signal.enumeration_format_re['format'].format(
-                        s=enum_string, v=value))
+                    full_strings.append(
+                        signal.enumeration_format_re["format"].format(
+                            s=enum_string, v=value
+                        )
+                    )
 
                 self.ui.value.addItems(full_strings)
 
         super().set_signal(signal, force_update=force_update)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

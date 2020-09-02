@@ -53,29 +53,29 @@ def test_main():
     # TODO: CAMPid 03127876954165421679215396954697
     # https://github.com/kivy/kivy/issues/4182#issuecomment-253159955
     # fix for pyinstaller packages app to avoid ReactorAlreadyInstalledError
-    if 'twisted.internet.reactor' in sys.modules:
-        del sys.modules['twisted.internet.reactor']
+    if "twisted.internet.reactor" in sys.modules:
+        del sys.modules["twisted.internet.reactor"]
 
     import qt5reactor
+
     qt5reactor.install()
 
     from twisted.internet import reactor
-    real_bus = can.interface.Bus(bustype='socketcan', channel='can0')
+
+    real_bus = can.interface.Bus(bustype="socketcan", channel="can0")
     bus = epyqlib.busproxy.BusProxy(bus=real_bus)
 
     device = epyqlib.device.Device(
-        file=epyqlib.tests.common.devices['customer'],
+        file=epyqlib.tests.common.devices["customer"],
         node_id=247,
     )
 
-    tx_signal = device.neo_frames.signal_by_path(
-        'CCP', 'Connect', 'CommandCounter'
-    )
+    tx_signal = device.neo_frames.signal_by_path("CCP", "Connect", "CommandCounter")
     rx_signal = device.neo_frames.signal_by_path(
-        'CCPResponse', 'Connect', 'CommandCounter'
+        "CCPResponse", "Connect", "CommandCounter"
     )
     protocol = ccp.Handler(
-        endianness='little' if tx_signal.little_endian else 'big',
+        endianness="little" if tx_signal.little_endian else "big",
         tx_id=tx_signal.frame.id,
         rx_id=rx_signal.frame.id,
     )
@@ -86,26 +86,27 @@ def test_main():
     )
 
     d = protocol.connect()
-    d.addCallback(lambda _: protocol.set_mta(
-        address_extension=ccp.AddressExtension.flash_memory,
-        address=0x310000,
-    ))
+    d.addCallback(
+        lambda _: protocol.set_mta(
+            address_extension=ccp.AddressExtension.flash_memory,
+            address=0x310000,
+        )
+    )
     d.addCallback(lambda _: protocol.disconnect())
     d.addBoth(logit)
 
-    logging.debug('---------- started')
+    logging.debug("---------- started")
     QTimer.singleShot(3000, reactor.stop)
     reactor.run()
 
 
 def logit(it):
-    logging.debug('logit(): ({}) {}'.format(type(it), it))
+    logging.debug("logit(): ({}) {}".format(type(it), it))
 
 
 def test_identifier_type_error():
     with pytest.raises(ccp.IdentifierTypeError):
-        ccp.HostCommand(code=ccp.CommandCode.connect,
-                        extended_id=False)
+        ccp.HostCommand(code=ccp.CommandCode.connect, extended_id=False)
 
 
 def test_payload_assignment_error():
@@ -116,5 +117,4 @@ def test_payload_assignment_error():
 
 def test_message_length_error():
     with pytest.raises(ccp.MessageLengthError):
-        ccp.HostCommand(code=ccp.CommandCode.connect,
-                        dlc=5)
+        ccp.HostCommand(code=ccp.CommandCode.connect, dlc=5)

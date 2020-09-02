@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import functools
 import math
@@ -14,8 +14,8 @@ import epyqlib.listmenuview_ui
 import epyqlib.utils.qt
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class ListMenuView(QtWidgets.QWidget):
@@ -31,13 +31,11 @@ class ListMenuView(QtWidgets.QWidget):
 
         scroll_bar = self.ui.list_view.verticalScrollBar()
         up = functools.partial(
-            scroll_bar.triggerAction,
-            QAbstractSlider.SliderPageStepSub
+            scroll_bar.triggerAction, QAbstractSlider.SliderPageStepSub
         )
         self.ui.up_button.clicked.connect(up)
         down = functools.partial(
-            scroll_bar.triggerAction,
-            QAbstractSlider.SliderPageStepAdd
+            scroll_bar.triggerAction, QAbstractSlider.SliderPageStepAdd
         )
         self.ui.down_button.clicked.connect(down)
 
@@ -103,12 +101,16 @@ class ListMenuView(QtWidgets.QWidget):
         self.ui.esc_button.setDisabled(node.tree_parent is None)
 
     def set_padding(self, padding):
-        self.setStyleSheet('''
+        self.setStyleSheet(
+            """
             QListView::item
             {{
                 padding: {}px;
             }}
-        '''.format(padding))
+        """.format(
+                padding
+            )
+        )
 
     def update_calculated_layout(self):
         minimum_padding = 0
@@ -118,18 +120,17 @@ class ListMenuView(QtWidgets.QWidget):
         model = self.model
 
         list = view.contentsRect().height()
-        item = view.itemDelegate().sizeHint(
-            view.viewOptions(),
-            model.index_from_node(
-                model.root)).height()
+        item = (
+            view.itemDelegate()
+            .sizeHint(view.viewOptions(), model.index_from_node(model.root))
+            .height()
+        )
         most_items = math.floor(list / item)
         remainder = list % item
         padding = minimum_padding + (remainder / most_items) / 2
         self.set_padding(padding)
 
-        for button in [self.ui.down_button,
-                       self.ui.up_button,
-                       self.ui.esc_button]:
+        for button in [self.ui.down_button, self.ui.up_button, self.ui.esc_button]:
             # TODO: CAMPid 98754713241621231778985432
             button.setMaximumWidth(button.height())
 
@@ -142,8 +143,8 @@ class ListMenuView(QtWidgets.QWidget):
         self.ui.list_view.setCurrentIndex(self.model.index_from_node(node))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure

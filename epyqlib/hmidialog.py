@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#TODO: """DocString if there is one"""
+# TODO: """DocString if there is one"""
 
 import functools
 import io
@@ -12,8 +12,8 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QLabel, QHBoxLayout, QWidget
 
 # See file COPYING in this source tree
-__copyright__ = 'Copyright 2016, EPC Power Corp.'
-__license__ = 'GPLv2+'
+__copyright__ = "Copyright 2016, EPC Power Corp."
+__license__ = "GPLv2+"
 
 
 class HmiDialog(QWidget):
@@ -22,13 +22,11 @@ class HmiDialog(QWidget):
 
         self.in_designer = in_designer
 
-        ui = os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)),
-                          'hmidialog.ui')
+        ui = os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)), "hmidialog.ui")
 
         # TODO: CAMPid 9549757292917394095482739548437597676742
         if not QFileInfo(ui).isAbsolute():
-            ui_file = os.path.join(
-                QFileInfo.absolutePath(QFileInfo(__file__)), ui)
+            ui_file = os.path.join(QFileInfo.absolutePath(QFileInfo(__file__)), ui)
         else:
             ui_file = ui
         ui_file = QFile(ui_file)
@@ -44,8 +42,7 @@ class HmiDialog(QWidget):
 
         self.label.setWordWrap(True)
 
-    def focus(self, label, ok_action=None, cancel_action=None,
-              enable_delay=1500):
+    def focus(self, label, ok_action=None, cancel_action=None, enable_delay=1500):
         self.ok_action = ok_action
         self.ui.ok_button.setVisible(ok_action is not None)
         self.cancel_action = cancel_action
@@ -62,11 +59,7 @@ class HmiDialog(QWidget):
 
         if enable_delay > 0:
             QTimer.singleShot(
-                enable_delay,
-                functools.partial(
-                    self.enable_buttons,
-                    enable=True
-                )
+                enable_delay, functools.partial(self.enable_buttons, enable=True)
             )
 
     def enable_buttons(self, enable):
@@ -80,8 +73,8 @@ class HmiDialog(QWidget):
         self.cancel_action()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
 
-    print('No script functionality here')
-    sys.exit(1)     # non-zero is a failure
+    print("No script functionality here")
+    sys.exit(1)  # non-zero is a failure
