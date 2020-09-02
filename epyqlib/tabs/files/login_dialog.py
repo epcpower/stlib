@@ -1,4 +1,5 @@
 import pathlib
+import typing
 
 import PyQt5.uic
 import attr
