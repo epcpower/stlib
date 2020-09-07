@@ -637,9 +637,11 @@ class Device:
 
         end = time.monotonic() + timeout
         while True:
+            self.bus.reset()
+            await epyqlib.utils.twisted.sleep(1)
             try:
                 await a_parameter_that_can_be_read.get()
-            except epyqlib.twisted.nvs.RequestTimeoutError:
+            except (epyqlib.twisted.nvs.RequestTimeoutError, epyqlib.twisted.nvs.SendFailedError):
                 if time.monotonic() > end:
                     raise
                 continue
