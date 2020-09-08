@@ -541,7 +541,9 @@ class FilesController:
             self.aws_login_manager.refresh(force=True)
             self.api.set_id_token(self.aws_login_manager.get_id_token())
             deferLater(
-                twisted.internet.reactor, self.aws_login_manager._cognito_helper._expires_in, _refresh
+                twisted.internet.reactor,
+                self.aws_login_manager._cognito_helper._expires_in,
+                _refresh,
             )
 
         _refresh()
