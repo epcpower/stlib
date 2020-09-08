@@ -5,7 +5,7 @@ from enum import Enum
 import treq
 from epyqlib.tabs.files.activity_log import Event
 from epyqlib.tabs.files.websocket_handler import WebSocketHandler
-from twisted.internet import reactor
+import twisted.internet
 from twisted.internet.defer import ensureDeferred
 from twisted.python.failure import Failure
 from twisted.web.iweb import IResponse
@@ -482,7 +482,7 @@ def err(error: Failure):
     print(error.type)
     print(error.value)
     print(error.getBriefTraceback())
-    reactor.stop()
+    twisted.internet.reactor.stop()
 
 
 if __name__ == "__main__":
@@ -502,4 +502,4 @@ if __name__ == "__main__":
     d.addCallback(succ)
     d.addErrback(err)
     # ensureDeferred(api.test_connection())
-    reactor.run()
+    twisted.internet.reactor.run()

@@ -20,7 +20,7 @@ bitstruct==6.0.0          # via -r requirements/base.in, canmatrix
 black==20.8b1             # via -r requirements/base.in
 boto3-type-annotations==0.3.1  # via -r requirements/base.in
 boto3==1.14.41.0          # via -r requirements/base.in
-botocore==1.17.55         # via boto3, s3transfer
+botocore==1.17.57         # via boto3, s3transfer
 canmatrix==0.9.1          # via -r requirements/base.in
 certifi==2020.6.20        # via -r requirements/base.in, requests
 cffi==1.14.2              # via cryptography, siphash-cffi
@@ -36,7 +36,7 @@ gitdb2==2.0.6             # via gitpython
 gitpython==2.1.15         # via -r requirements/base.in
 graham==0.1.11            # via -r requirements/base.in
 greenlet==0.4.16          # via pytest-twisted
-hyperlink==20.0.1         # via twisted
+hyperlink==20.0.1         # via treq, twisted
 idna==2.10                # via hyperlink, requests, twisted
 importlib-metadata==1.7.0  # via pluggy, pytest
 incremental==17.5.0       # via treq, twisted
@@ -91,8 +91,8 @@ smmap==3.0.4              # via smmap2
 toml==0.10.1              # via black
 toolz==0.10.0             # via epcsunspecdemo
 tqdm==4.48.2              # via epcsunspecdemo
-treq==18.6.0              # via -r requirements/base.in
-twisted[tls]==19.7.0      # via -r requirements/base.in, qt5reactor, treq
+https://github.com/altendky/treq/archive/19b287f3f059259eea919ac95127b7ee97588df9.zip#egg=treq  # via -r requirements/base.in
+https://github.com/twisted/twisted/archive/820c3eb261bdee44652dcbce849c04fc13f68db9.zip#egg=twisted[tls]  # via -r requirements/base.in, qt5reactor, treq
 typed-ast==1.4.1          # via black
 typing-extensions==3.7.4.3  # via black
 urllib3==1.25.10          # via botocore, requests

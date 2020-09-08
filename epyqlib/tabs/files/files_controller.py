@@ -16,7 +16,7 @@ from epyqlib.tabs.files.filesview import Cols, get_values
 from epyqlib.tabs.files.log_manager import LogManager, PendingLog
 from epyqlib.tabs.files.sync_config import SyncConfig, Vars
 from epyqlib.utils.twisted import errbackhook
-from twisted.internet import reactor
+import twisted.internet
 from twisted.internet.error import DNSLookupError
 from twisted.internet.task import deferLater
 from typing import Dict
@@ -541,7 +541,7 @@ class FilesController:
             self.aws_login_manager.refresh(force=True)
             self.api.set_id_token(self.aws_login_manager.get_id_token())
             deferLater(
-                reactor, self.aws_login_manager._cognito_helper._expires_in, _refresh
+                twisted.internet.reactor, self.aws_login_manager._cognito_helper._expires_in, _refresh
             )
 
         _refresh()

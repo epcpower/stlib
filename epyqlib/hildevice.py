@@ -921,7 +921,7 @@ class SunSpecDevice:
             + " removed in the future. Use SunSpecDevice.load_rtu()"
             + " or SunSpecDevice.load_tcp() instead."
         )
-        warnings.warn(message=message, category=warnings.DeprecationWarning)
+        warnings.warn(message=message, category=DeprecationWarning)
 
         with epcsunspecdemo.utils.fresh_smdx_path(self.model_path):
             self.device = sunspec.core.client.SunSpecClientDevice(
