@@ -85,7 +85,8 @@ class Definition:
 
     def load_can(self):
         (matrix,) = canmatrix.formats.loadp(
-            str(self.base_path / self.can_path)
+            str(self.base_path / self.can_path),
+            symImportEncoding='utf-8',
         ).values()
 
         return matrix
