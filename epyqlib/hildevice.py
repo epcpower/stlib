@@ -5,6 +5,7 @@ import itertools
 import json
 import operator
 import pathlib
+import sys
 import time
 import uuid
 import warnings
@@ -448,6 +449,15 @@ class Device:
         if self.bus is not None:
             raise BusAlreadySetError()
 
+        # TODO: take the next step on this hack
+        if sys.platform == 'win32':
+            import can.interfaces.pcan.basic
+            bus.bus.m_objPCANBasic.SetValue(
+                bus.bus.m_PcanHandle,
+                can.interfaces.pcan.basic.PCAN_BUSOFF_AUTORESET,
+                True,
+            )
+
         try:
             self.neo.set_bus(bus=bus)
             self.nvs.set_bus(bus=bus)
@@ -630,16 +640,22 @@ class Device:
         # TODO: just accept the 1s or whatever default timeout?  A set without
         #       waiting for the response could be nice.  (or embedded sending
         #       a response)
+
         with contextlib.suppress(epyqlib.twisted.nvs.RequestTimeoutError):
             await reset_parameter.set(value=1)
+
+        self.bus.transmit = False
+        self.bus.reset()
 
         if sleep > 0:
             await epyqlib.utils.twisted.sleep(sleep)
 
         end = time.monotonic() + timeout
         while True:
+            self.bus.transmit = False
             self.bus.reset()
-            await epyqlib.utils.twisted.sleep(1)
+            await epyqlib.utils.twisted.sleep(0.1)
+            self.bus.transmit = True
             try:
                 await a_parameter_that_can_be_read.get()
             except (
