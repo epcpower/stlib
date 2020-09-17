@@ -450,8 +450,9 @@ class Device:
             raise BusAlreadySetError()
 
         # TODO: take the next step on this hack
-        if sys.platform == 'win32':
+        if sys.platform == "win32":
             import can.interfaces.pcan.basic
+
             bus.bus.m_objPCANBasic.SetValue(
                 bus.bus.m_PcanHandle,
                 can.interfaces.pcan.basic.PCAN_BUSOFF_AUTORESET,
