@@ -1,7 +1,7 @@
 [tool.black]
 target-version =  ['py37']
 include = '''
-/(
+^/(
     setup.py
     | canmatrix.setup.py
     | deploy_win.py
