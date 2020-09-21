@@ -44,8 +44,8 @@ class SyncConfig:
 
     @staticmethod
     def get_env() -> str:
-        # return "client"
-        return "internal"
+        return "client"
+        # return "internal"
 
     @staticmethod
     def get_instance():
