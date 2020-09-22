@@ -38,6 +38,10 @@ class BusAlreadySetError(Exception):
     pass
 
 
+class RestartTimeoutError(Exception):
+    pass
+
+
 supported_version = [2]
 
 
@@ -614,7 +618,7 @@ class Device:
                     password=password,
                 )
 
-    async def reset(self, timeout=10, sleep=0):
+    async def reset(self, timeout=20, sleep=5):
         # SoftwareReset:InitiateReset
         reset_parameter = self.parameter_from_uuid(
             uuid_=uuid.UUID("b582085d-7734-4260-ab97-47e50a41b06c"),
@@ -645,13 +649,15 @@ class Device:
             await epyqlib.utils.twisted.sleep(0.1)
             self.bus.transmit = True
             try:
-                await a_parameter_that_can_be_read.get()
+                for _ in range(5):
+                    await epyqlib.utils.twisted.sleep(0.2)
+                    await a_parameter_that_can_be_read.get()
             except (
                 epyqlib.twisted.nvs.RequestTimeoutError,
                 epyqlib.twisted.nvs.SendFailedError,
-            ):
+            ) as e:
                 if time.monotonic() > end:
-                    raise
+                    raise RestartTimeoutError() from e
                 continue
             else:
                 break
@@ -1090,7 +1096,7 @@ class SunSpecDevice:
                 check_limits=original_check_limits,
             )
 
-    async def reset(self, timeout=10, sleep=0):
+    async def reset(self, timeout=20, sleep=5):
         # SoftwareReset:InitiateReset
         reset_parameter = self.parameter_from_uuid(
             uuid_=uuid.UUID("b582085d-7734-4260-ab97-47e50a41b06c"),
@@ -1113,10 +1119,12 @@ class SunSpecDevice:
         end = time.monotonic() + timeout
         while True:
             try:
-                await a_parameter_that_can_be_read.get()
-            except sunspec.core.client.SunSpecClientError:
+                for _ in range(5):
+                    await epyqlib.utils.twisted.sleep(0.2)
+                    await a_parameter_that_can_be_read.get()
+            except sunspec.core.client.SunSpecClientError as e:
                 if time.monotonic() > end:
-                    raise
+                    raise RestartTimeoutError() from e
                 continue
             else:
                 break
