@@ -87,9 +87,9 @@ class OverlayConfiguration:
             echo(f"Checking: {os.fspath(output_path)}")
 
             try:
-                stat = recipe.output_path.stat()
+                stat = output_path.stat()
             except FileNotFoundError:
-                output_modification_time = math.inf
+                output_modification_time = -math.inf
             else:
                 output_modification_time = stat.st_mtime
             output_modification_times.append(output_modification_time)
