@@ -503,7 +503,7 @@ class Device:
         await self.save_nv.set(value=self.save_nv_value)
 
         if wait:
-            yield self.wait_for_nv_save_completion()
+            await self.wait_for_nv_save_completion()
 
     async def wait_for_nv_save_completion(self):
         nv = self.nv("StatusWarnings", "eeSaveInProgress")
