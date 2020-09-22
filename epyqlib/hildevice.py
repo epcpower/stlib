@@ -149,24 +149,22 @@ class Signal:
     signal = attr.ib()
     device = attr.ib()
 
-    @twisted.internet.defer.inlineCallbacks
-    def _get_raw(self, stale_after=0.1, timeout=1):
+    async def _get_raw(self, stale_after=0.1, timeout=1):
         # TODO: uh...  why not time.monotonic()?
         start = time.time()
 
         last_received = self.signal.last_received()
 
         if last_received is None or last_received <= start - stale_after:
-            yield epyqlib.utils.qt.signal_as_deferred(
+            await epyqlib.utils.qt.signal_as_deferred(
                 self.signal.value_set,
                 timeout=timeout,
             )
 
         return self.signal.value
 
-    @twisted.internet.defer.inlineCallbacks
-    def get(self, stale_after=0.1, timeout=1, enumeration_as_string=True):
-        yield self._get_raw(stale_after=stale_after, timeout=timeout)
+    async def get(self, stale_after=0.1, timeout=1, enumeration_as_string=True):
+        await self._get_raw(stale_after=stale_after, timeout=timeout)
 
         return self._to_human(enumeration_as_string=enumeration_as_string)
 
@@ -197,17 +195,15 @@ class Signal:
     def cyclic_send(self, period):
         self.device.cyclic_send_signal(self, period=period)
 
-    @twisted.internet.defer.inlineCallbacks
-    def wait_for(self, op, value, timeout):
+    async def wait_for(self, op, value, timeout):
         op = operator_map.get(op, op)
         operator_string = reverse_operator_map.get(op, str(op))
 
-        @twisted.internet.defer.inlineCallbacks
-        def check():
-            present_value = yield self.get()
+        async def check():
+            present_value = await self.get()
             return op(present_value, value)
 
-        yield epyqlib.utils.twisted.wait_for(
+        await epyqlib.utils.twisted.wait_for(
             check=check,
             timeout=timeout,
             message=(
@@ -349,9 +345,8 @@ class Nv:
                 for meta, value in original.items():
                     await self.set_meta(value=value, meta=meta)
 
-    @twisted.internet.defer.inlineCallbacks
-    def get(self, meta=epyqlib.nv.MetaEnum.value):
-        value, _meta = yield self.device.nvs.protocol.read(
+    async def get(self, meta=epyqlib.nv.MetaEnum.value):
+        value, _meta = await self.device.nvs.protocol.read(
             nv_signal=self.nv,
             meta=meta,
         )
@@ -361,15 +356,13 @@ class Nv:
     def units(self):
         return parse_units(unit_string=self.nv.unit)
 
-    @twisted.internet.defer.inlineCallbacks
-    def wait_for(self, op, value, timeout, ignore_read_failures=False):
+    async def wait_for(self, op, value, timeout, ignore_read_failures=False):
         op = operator_map.get(op, op)
         operator_string = reverse_operator_map.get(op, str(op))
 
-        @twisted.internet.defer.inlineCallbacks
-        def check():
+        async def check():
             try:
-                own_value = yield self.get()
+                own_value = await self.get()
             except epyqlib.twisted.nvs.RequestTimeoutError:
                 if ignore_read_failures:
                     return False
@@ -378,7 +371,7 @@ class Nv:
 
             return op(own_value, value)
 
-        yield epyqlib.utils.twisted.wait_for(
+        await epyqlib.utils.twisted.wait_for(
             check=check,
             timeout=timeout,
             message=(
@@ -505,23 +498,19 @@ class Device:
         except KeyError:
             return self.signal_from_uuid(uuid_=uuid_)
 
-    @twisted.internet.defer.inlineCallbacks
-    def active_to_nv(self, wait=False):
+    async def active_to_nv(self, wait=False):
         # TODO: dedupe 8795477695t46542676781543768139
-        yield twisted.internet.defer.ensureDeferred(
-            self.save_nv.set(value=self.save_nv_value),
-        )
+        await self.save_nv.set(value=self.save_nv_value)
 
         if wait:
             yield self.wait_for_nv_save_completion()
 
-    @twisted.internet.defer.inlineCallbacks
-    def wait_for_nv_save_completion(self):
+    async def wait_for_nv_save_completion(self):
         nv = self.nv("StatusWarnings", "eeSaveInProgress")
 
-        yield epyqlib.utils.twisted.sleep(2)
+        await epyqlib.utils.twisted.sleep(2)
 
-        yield nv.wait_for(
+        await nv.wait_for(
             op="==",
             value=0,
             timeout=120,
@@ -540,10 +529,9 @@ class Device:
         for frame in self.cyclic_frames:
             frame.cyclic_request(self.uuid, None)
 
-    @twisted.internet.defer.inlineCallbacks
-    def get_access_level(self):
+    async def get_access_level(self):
         nv = Nv(nv=self.nvs.access_level_node, device=self)
-        access_level = yield nv.get()
+        access_level = await nv.get()
         return access_level
 
     async def get_check_limits(self):
@@ -562,8 +550,7 @@ class Device:
 
         return value
 
-    @twisted.internet.defer.inlineCallbacks
-    def set_access_level(self, level=None, password=None, check_limits=True):
+    async def set_access_level(self, level=None, password=None, check_limits=True):
         if level is None:
             level = self.default_elevated_access_level
 
@@ -587,7 +574,7 @@ class Device:
             if node is not None
         )
 
-        yield self.nvs.write_all_to_device(
+        await self.nvs.write_all_to_device(
             only_these=selected_nodes,
             meta=[epyqlib.nv.MetaEnum.value],
         )
