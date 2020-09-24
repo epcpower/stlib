@@ -24,22 +24,21 @@ class WaitForTimedOut(Exception):
     pass
 
 
-@twisted.internet.defer.inlineCallbacks
-def wait_for(check, period=0.1, timeout=10, message=None):
+async def wait_for(check, period=0.1, timeout=10, message=None):
     if message is None:
         message = f"Condition not satisfied within {timeout:.1f} seconds"
 
     start = time.monotonic()
 
     while True:
-        done = yield check()
+        done = await check()
         if done:
             return
 
         if time.monotonic() - start > timeout:
             raise WaitForTimedOut(message)
 
-        yield epyqlib.utils.twisted.sleep(period)
+        await epyqlib.utils.twisted.sleep(period)
 
 
 def ignore_cancelled(f):

@@ -17,6 +17,7 @@ import epcsunspecdemo.utils
 import sunspec.core.client
 import twisted.internet.defer
 
+import epyqlib.busproxy
 import epyqlib.canneo
 import epyqlib.device
 import epyqlib.nv
@@ -395,7 +396,7 @@ class Device:
     canmatrix = attr.ib(default=None)
     neo = attr.ib(default=None)
     nvs = attr.ib(default=None)
-    bus = attr.ib(default=None)
+    bus: epyqlib.busproxy.BusProxy = attr.ib(default=None)
     cyclic_frames = attr.ib(default=attr.Factory(set))
     default_elevated_access_level = attr.ib(default=None)
     default_access_level_password = attr.ib(default=None)
@@ -445,16 +446,6 @@ class Device:
     def set_bus(self, bus):
         if self.bus is not None:
             raise BusAlreadySetError()
-
-        # TODO: take the next step on this hack
-        if sys.platform == "win32":
-            import can.interfaces.pcan.basic
-
-            bus.bus.m_objPCANBasic.SetValue(
-                bus.bus.m_PcanHandle,
-                can.interfaces.pcan.basic.PCAN_BUSOFF_AUTORESET,
-                True,
-            )
 
         try:
             self.neo.set_bus(bus=bus)
@@ -645,7 +636,7 @@ class Device:
         end = time.monotonic() + timeout
         while True:
             self.bus.transmit = False
-            self.bus.reset()
+            self.bus.reconnect()
             await epyqlib.utils.twisted.sleep(0.1)
             self.bus.transmit = True
             try:

@@ -234,6 +234,27 @@ class BusProxy:
                 if hasattr(self.bus, "reset"):
                     self.bus.reset()
 
+    def inner_proxy(self):
+        maybe = self
+        while True:
+            if isinstance(maybe.bus, can.BusABC):
+                return maybe
+
+    def reconnect(self):
+        inner = self.inner_proxy()
+        # TODO: yucky hardcode
+        bustype = 'pcan'
+        channel = inner.bus.channel_info
+
+        inner.set_bus()
+
+        new_real_bus = can.interface.Bus(
+            bustype=bustype,
+            channel=channel,
+            bitrate=500_000,
+        )
+        inner.set_bus(bus=new_real_bus)
+
     def set_filters(self, filters):
         self.filters = filters
         real_bus = self.bus
