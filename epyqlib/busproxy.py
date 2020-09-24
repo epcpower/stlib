@@ -243,7 +243,7 @@ class BusProxy:
     def reconnect(self):
         inner = self.inner_proxy()
         # TODO: yucky hardcode
-        bustype = 'pcan'
+        bustype = "pcan"
         channel = inner.bus.channel_info
 
         inner.set_bus()
