@@ -633,8 +633,9 @@ class Device:
         if sleep > 0:
             await epyqlib.utils.twisted.sleep(sleep)
 
-        end = time.monotonic() + timeout
-        while True:
+        start = time.monotonic()
+        end = start + timeout
+        for retry in itertools.count():
             self.bus.transmit = False
             self.bus.reconnect()
             await epyqlib.utils.twisted.sleep(0.1)
@@ -647,8 +648,11 @@ class Device:
                 epyqlib.twisted.nvs.RequestTimeoutError,
                 epyqlib.twisted.nvs.SendFailedError,
             ) as e:
-                if time.monotonic() > end:
-                    raise RestartTimeoutError() from e
+                now = time.monotonic()
+                if now > end:
+                    raise RestartTimeoutError(
+                        f"Failed on retry {retry} after {now - start} seconds"
+                    ) from e
                 continue
             else:
                 break

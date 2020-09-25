@@ -5,7 +5,9 @@
 import contextlib
 import logging
 import time
+import typing
 
+import attr
 import can
 import can.interfaces.pcan
 from epyqlib.canneo import QtCanListener
@@ -16,6 +18,25 @@ from PyQt5.QtWidgets import QApplication
 # See file COPYING in this source tree
 __copyright__ = "Copyright 2016, EPC Power Corp."
 __license__ = "GPLv2+"
+
+
+@attr.s(auto_attribs=True)
+class BusSettings:
+    type: str
+    channel: str
+    bitrate: int
+
+    @classmethod
+    def from_bus(cls, real_bus):
+        # TODO: yucky hardcode
+        return cls(type="pcan", channel=real_bus.channel_info, bitrate=500_000)
+
+    def create_bus(self):
+        return can.interface.Bus(
+            bustype=self.type,
+            channel=self.channel,
+            bitrate=self.bitrate,
+        )
 
 
 class BusProxy:
@@ -31,7 +52,8 @@ class BusProxy:
         self.notifier = NotifierProxy(self)
         self.real_notifier = None
         self.tx_notifier = NotifierProxy(None)
-        self.bus = None
+        self.bus: typing.Optional[BusSettings] = None
+        self.bus_settings = None
         self.set_bus(bus)
 
         self._transmit = transmit
@@ -192,6 +214,13 @@ class BusProxy:
                 self.bus.notifier.remove(self.notifier)
                 self.bus.tx_notifier.remove(self.tx_notifier)
             self.bus.shutdown()
+
+        if isinstance(bus, can.BusABC):
+            self.bus_settings = BusSettings.from_bus(real_bus=bus)
+        elif bus is not None:
+            # is being set to a proxy
+            self.bus_settings = None
+
         self.bus = bus
 
         if self.bus is not None:
@@ -237,23 +266,16 @@ class BusProxy:
     def inner_proxy(self):
         maybe = self
         while True:
-            if isinstance(maybe.bus, can.BusABC):
+            if maybe.bus is None or isinstance(maybe.bus, can.BusABC):
                 return maybe
+
+            maybe = maybe.bus
 
     def reconnect(self):
         inner = self.inner_proxy()
-        # TODO: yucky hardcode
-        bustype = "pcan"
-        channel = inner.bus.channel_info
 
         inner.set_bus()
-
-        new_real_bus = can.interface.Bus(
-            bustype=bustype,
-            channel=channel,
-            bitrate=500_000,
-        )
-        inner.set_bus(bus=new_real_bus)
+        inner.set_bus(bus=self.bus_settings.create_bus())
 
     def set_filters(self, filters):
         self.filters = filters
