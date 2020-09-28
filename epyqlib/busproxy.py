@@ -32,11 +32,13 @@ class BusSettings:
         return cls(type="pcan", channel=real_bus.channel_info, bitrate=500_000)
 
     def create_bus(self):
-        return can.interface.Bus(
+        real_bus = can.interface.Bus(
             bustype=self.type,
             channel=self.channel,
             bitrate=self.bitrate,
         )
+        time.sleep(0.500)
+        return real_bus
 
 
 class BusProxy:
