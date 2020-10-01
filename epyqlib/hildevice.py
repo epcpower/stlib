@@ -615,11 +615,6 @@ class Device:
             uuid_=uuid.UUID("b582085d-7734-4260-ab97-47e50a41b06c"),
         )
 
-        # Serial Number
-        a_parameter_that_can_be_read = self.parameter_from_uuid(
-            uuid_=uuid.UUID("390f27ea-6f28-4313-b183-5f37d007ccd1"),
-        )
-
         # TODO: just accept the 1s or whatever default timeout?  A set without
         #       waiting for the response could be nice.  (or embedded sending
         #       a response)
@@ -633,13 +628,24 @@ class Device:
         if sleep > 0:
             await epyqlib.utils.twisted.sleep(sleep)
 
+        await self.reconnect(timeout=timeout)
+
+    async def reconnect(self, timeout=5):
+        # Serial Number
+        a_parameter_that_can_be_read = self.parameter_from_uuid(
+            uuid_=uuid.UUID("390f27ea-6f28-4313-b183-5f37d007ccd1"),
+        )
+
         start = time.monotonic()
         end = start + timeout
         for retry in itertools.count():
             self.bus.transmit = False
+            self.bus.reset()
             self.bus.reconnect()
-            await epyqlib.utils.twisted.sleep(0.1)
+            await epyqlib.utils.twisted.sleep(0.500)
+            self.bus.reset()
             self.bus.transmit = True
+
             try:
                 for _ in range(5):
                     await epyqlib.utils.twisted.sleep(0.2)

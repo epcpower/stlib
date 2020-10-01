@@ -37,7 +37,7 @@ class BusSettings:
             channel=self.channel,
             bitrate=self.bitrate,
         )
-        time.sleep(0.500)
+
         return real_bus
 
 
