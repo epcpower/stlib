@@ -1103,11 +1103,6 @@ class SunSpecDevice:
             uuid_=uuid.UUID("b582085d-7734-4260-ab97-47e50a41b06c"),
         )
 
-        # Serial Number
-        a_parameter_that_can_be_read = self.parameter_from_uuid(
-            uuid_=uuid.UUID("390f27ea-6f28-4313-b183-5f37d007ccd1"),
-        )
-
         # TODO: just accept the 1s or whatever default timeout?  A set without
         #       waiting for the response could be nice.  (or embedded sending
         #       a response)
@@ -1116,6 +1111,14 @@ class SunSpecDevice:
 
         if sleep > 0:
             await epyqlib.utils.twisted.sleep(sleep)
+
+        await self.reconnect(timeout=timeout)
+
+    async def reconnect(self, timeout=20):
+        # Serial Number
+        a_parameter_that_can_be_read = self.parameter_from_uuid(
+            uuid_=uuid.UUID("390f27ea-6f28-4313-b183-5f37d007ccd1"),
+        )
 
         end = time.monotonic() + timeout
         while True:
