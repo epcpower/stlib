@@ -4,6 +4,7 @@
 
 import contextlib
 import logging
+import sys
 import time
 import typing
 
@@ -28,8 +29,12 @@ class BusSettings:
 
     @classmethod
     def from_bus(cls, real_bus):
-        # TODO: yucky hardcode
-        return cls(type="pcan", channel=real_bus.channel_info, bitrate=500_000)
+        available_bus_types = {
+            getattr(sys.modules[module_string], name): id
+            for id, [module_string, name] in can.interface.BACKENDS.items()
+            if module_string in sys.modules
+        }
+        return cls(type=available_bus_types[type(real_bus)], channel=real_bus.channel, bitrate=500_000)
 
     def create_bus(self):
         real_bus = can.interface.Bus(

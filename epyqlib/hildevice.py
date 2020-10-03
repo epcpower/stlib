@@ -1097,7 +1097,7 @@ class SunSpecDevice:
                 check_limits=original_check_limits,
             )
 
-    async def reset(self, timeout=20, sleep=5):
+    async def reset(self, timeout=20, sleep=25):
         # SoftwareReset:InitiateReset
         reset_parameter = self.parameter_from_uuid(
             uuid_=uuid.UUID("b582085d-7734-4260-ab97-47e50a41b06c"),
@@ -1133,7 +1133,7 @@ class SunSpecDevice:
             else:
                 break
 
-    async def to_nv(self, timeout=10):
+    async def to_nv(self, timeout=30):
         save_command_parameter = self.parameter_from_uuid(
             uuid.UUID("2c768acc-f88e-431c-8fc1-ea8d5b2ba253"),
         )
