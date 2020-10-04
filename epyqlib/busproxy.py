@@ -34,7 +34,17 @@ class BusSettings:
             for id, [module_string, name] in can.interface.BACKENDS.items()
             if module_string in sys.modules
         }
-        return cls(type=available_bus_types[type(real_bus)], channel=real_bus.channel, bitrate=500_000)
+
+        for attribute_name in ["channel", "channel_info"]:
+            channel = getattr(real_bus, attribute_name, None)
+            if channel is not None:
+                break
+        else:
+            raise Exception(f"{real_bus}")
+
+        return cls(
+            type=available_bus_types[type(real_bus)], channel=channel, bitrate=500_000
+        )
 
     def create_bus(self):
         real_bus = can.interface.Bus(
