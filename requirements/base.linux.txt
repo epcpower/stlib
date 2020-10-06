@@ -20,14 +20,14 @@ bitstruct==6.0.0          # via -r requirements/base.in, canmatrix
 black==20.8b1             # via -r requirements/base.in
 boto3-type-annotations==0.3.1  # via -r requirements/base.in
 boto3==1.14.41.0          # via -r requirements/base.in
-botocore==1.17.57         # via boto3, s3transfer
+botocore==1.17.63         # via boto3, s3transfer
 canmatrix==0.9.1          # via -r requirements/base.in
 certifi==2020.6.20        # via -r requirements/base.in, requests
-cffi==1.14.2              # via cryptography, siphash-cffi
+cffi==1.14.3              # via cryptography, siphash-cffi
 chardet==3.0.4            # via requests
 click==7.1.2              # via -r requirements/base.in, alqtendpy, black, canmatrix, epcsunspecdemo, pip-tools, romp
 constantly==15.1.0        # via twisted
-cryptography==3.1         # via pyopenssl, service-identity
+cryptography==3.1.1       # via pyopenssl, service-identity
 docutils==0.15.2          # via botocore
 future==0.18.2            # via canmatrix
 gitdb2==2.0.6             # via gitpython
@@ -64,7 +64,7 @@ python-dotenv==0.9.1      # via -r requirements/base.in
 qt5reactor==0.5           # via -r requirements/base.in
 qtawesome==0.6.0          # via -r requirements/base.in
 qtpy==1.9.0               # via qtawesome
-regex==2020.7.14          # via black
+regex==2020.9.27          # via black
 requests==2.24.0          # via romp, treq
 romp==2020.3              # via -r requirements/pre.in
 s3transfer==0.3.3         # via boto3
@@ -74,16 +74,16 @@ six==1.15.0               # via automat, cryptography, pathlib2, pip-tools, pyop
 smmap2==3.0.1             # via gitdb2
 smmap==3.0.4              # via smmap2
 toml==0.10.1              # via black
-toolz==0.10.0             # via epcsunspecdemo
-tqdm==4.48.2              # via epcsunspecdemo
-https://github.com/altendky/treq/archive/19b287f3f059259eea919ac95127b7ee97588df9.zip#egg=treq  # via -r requirements/base.in
+toolz==0.11.1             # via epcsunspecdemo
+tqdm==4.50.0              # via epcsunspecdemo
+treq==20.9.0              # via -r requirements/base.in
 https://github.com/twisted/twisted/archive/820c3eb261bdee44652dcbce849c04fc13f68db9.zip#egg=twisted[tls]  # via -r requirements/base.in, qt5reactor, treq
 typed-ast==1.4.1          # via black
 typing-extensions==3.7.4.3  # via black
 urllib3==1.25.10          # via botocore, requests
 wheel==0.34.2             # via -r requirements/pre.in
 wrapt==1.12.1             # via python-can
-zope.interface==5.1.0     # via twisted
+zope.interface==5.1.2     # via twisted
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
