@@ -10,4 +10,4 @@ def cli():
 
 
 cli.add_command(epyqlib.pm.valueset.group)
-cli.add_command(epyqlib.cli.audit.create_command(), name='audit')
+cli.add_command(epyqlib.cli.audit.create_command(), name="audit")

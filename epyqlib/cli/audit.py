@@ -16,7 +16,7 @@ def reference_to_sha(repository, reference):
     maybe_refs = {
         ref: hash
         for ref, hash in references.items()
-        if ref.split(b'/')[-1] == reference
+        if ref.split(b"/")[-1] == reference
     }
 
     [hash] = maybe_refs.values()
@@ -47,32 +47,32 @@ def get_all_commits(phab, hashes):
 
     while True:
         result = phab.request(
-            'diffusion.commit.search',
+            "diffusion.commit.search",
             {
-                'after': after,
-                'constraints': {
-                    'identifiers': [hash.decode('ascii') for hash in hashes],
+                "after": after,
+                "constraints": {
+                    "identifiers": [hash.decode("ascii") for hash in hashes],
                 },
-            }
+            },
         )
-        collected.extend(result['data'])
-        after = result['cursor']['after']
+        collected.extend(result["data"])
+        after = result["cursor"]["after"]
         if after is None:
             break
 
     result = phab.request(
-        'phid.lookup',
+        "phid.lookup",
         {
             "names": [
-                *[data['phid'] for data in collected],
-                *[data['fields']['repositoryPHID'] for data in collected],
+                *[data["phid"] for data in collected],
+                *[data["fields"]["repositoryPHID"] for data in collected],
             ],
         },
     )
 
     for data in collected:
-        data['uri'] = result[data['phid']]['uri']
-        data['fullName'] = result[data['fields']['repositoryPHID']]['fullName']
+        data["uri"] = result[data["phid"]]["uri"]
+        data["fullName"] = result[data["fields"]["repositoryPHID"]]["fullName"]
 
     return collected
 
@@ -81,12 +81,12 @@ def create_command(default_phabricator_url=None):
     phabricator_option_extras = {}
 
     if default_phabricator_url is not None:
-        phabricator_option_extras['default'] = default_phabricator_url
+        phabricator_option_extras["default"] = default_phabricator_url
 
     @click.command()
     @click.option(
-        '--target',
-        'targets',
+        "--target",
+        "targets",
         help="path to the repository root, old reference, new reference",
         multiple=True,
         type=(
@@ -97,14 +97,14 @@ def create_command(default_phabricator_url=None):
         required=True,
     )
     @click.option(
-        '--phabricator-url',
+        "--phabricator-url",
         help="The base URL for the Phabricator server.",
         type=str,
         required=True,
         **phabricator_option_extras,
     )
     @click.option(
-        '--api-token',
+        "--api-token",
         help="""
             Your phabricator API token.
             These are managed under your user settings then 'Conduit API Tokens'.
@@ -118,8 +118,8 @@ def create_command(default_phabricator_url=None):
         for target_path, old_reference, new_reference in targets:
             target_path = pathlib.Path(target_path)
 
-            old_reference = old_reference.encode('utf-8')
-            new_reference = new_reference.encode('utf-8')
+            old_reference = old_reference.encode("utf-8")
+            new_reference = new_reference.encode("utf-8")
 
             all_hashes.extend(
                 get_hash_list(
@@ -131,7 +131,7 @@ def create_command(default_phabricator_url=None):
 
         phab = phabricator.Phabricator(
             phabricator_url,
-            'altendky',
+            "altendky",
             token=api_token,
         )
 
@@ -139,27 +139,27 @@ def create_command(default_phabricator_url=None):
         commits = get_all_commits(phab=phab, hashes=all_hashes)
 
         for commit in commits:
-            fields = commit['fields']
-            full_hash = fields['identifier']
-            audit_status = fields['auditStatus']['value']
+            fields = commit["fields"]
+            full_hash = fields["identifier"]
+            audit_status = fields["auditStatus"]["value"]
             full_name = commit["fullName"]
             uri = commit["uri"]
 
-            link = f'[[ {uri} | {full_name} {full_hash} ]]'
+            link = f"[[ {uri} | {full_name} {full_hash} ]]"
 
             results[audit_status].append(link)
 
         sorted_results = dict(sorted(results.items()))
         for status, links in sorted_results.items():
-            print(f'- {status}: {len(links)}')
+            print(f"- {status}: {len(links)}")
 
         print()
 
         for status, links in sorted_results.items():
-            print(f'- {status}:')
+            print(f"- {status}:")
 
             for link in links:
-                print(f'  - {link}')
+                print(f"  - {link}")
 
             print()
 
