@@ -2,38 +2,26 @@ import collections
 import pathlib
 
 import click
+import dulwich.objectspec
 import dulwich.repo
 import phabricator
-
-
-def reference_to_sha(repository, reference):
-    references = repository.get_refs()
-
-    maybe_hash = references.get(reference)
-    if maybe_hash is not None:
-        return maybe_hash
-
-    maybe_refs = {
-        ref: hash
-        for ref, hash in references.items()
-        if ref.split(b"/")[-1] == reference
-    }
-
-    [hash] = maybe_refs.values()
-    return hash
 
 
 def get_hash_list(path, old_reference, new_reference):
     repository = dulwich.repo.Repo(path)
 
-    old_hash = reference_to_sha(repository=repository, reference=old_reference)
-    new_hash = reference_to_sha(repository=repository, reference=new_reference)
+    old_hash = dulwich.objectspec.parse_commit(
+        repo=repository, committish=old_reference
+    )
+    new_hash = dulwich.objectspec.parse_commit(
+        repo=repository, committish=new_reference
+    )
 
-    old_walker = repository.get_walker(include=[old_hash])
+    old_walker = repository.get_walker(include=[old_hash.id])
     old_parents = next(iter(old_walker)).commit.parents
 
     walker = repository.get_walker(
-        include=[new_hash],
+        include=[new_hash.id],
         exclude=old_parents,
     )
     hashes = [entry.commit.id for entry in walker]
@@ -117,9 +105,6 @@ def create_command(default_phabricator_url=None):
 
         for target_path, old_reference, new_reference in targets:
             target_path = pathlib.Path(target_path)
-
-            old_reference = old_reference.encode("utf-8")
-            new_reference = new_reference.encode("utf-8")
 
             all_hashes.extend(
                 get_hash_list(
