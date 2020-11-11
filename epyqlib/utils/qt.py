@@ -79,7 +79,7 @@ def exception_message_box(excType=None, excValue=None, tracebackobj=None):
 
 
 def custom_exception_message_box(brief, extended="", **kwargs):
-    email = "kyle.altendorf@epcpower.com"
+    email = "service@epcpower.com"
 
     brief = textwrap.dedent(
         """\
