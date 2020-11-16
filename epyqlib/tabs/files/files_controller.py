@@ -639,6 +639,8 @@ class FilesController:
         else:
             self.view.show_logged_in_status(True, self.aws_login_manager.get_username())
 
+        self.view.btn_sync_now.setDisabled(is_offline)
+
     async def _get_id_for_serial_number(self, serial_number: str):
         if serial_number not in self._inverter_id_lookup and not self._is_offline:
             inverter = await self.api.get_inverter_by_serial(serial_number)
