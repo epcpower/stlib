@@ -400,6 +400,8 @@ class FilesView(UiBase):
             self._render_firmware_menu(menu_pos, item)
         elif parent is self.section_headers.params:
             self._render_param_file_menu(menu_pos, item)
+        elif parent is self.section_headers.pmvs:
+            self._render_pmvs_file_menu(menu_pos, item)
 
     def _render_firmware_menu(self, menu_pos: QPoint, item: QTreeWidgetItem):
         menu = QMenu(self.files_grid)
@@ -452,6 +454,17 @@ class FilesView(UiBase):
         elif action is active:
             pass
         elif action is inverter:
+            pass
+        elif action is save_as:
+            ensureDeferred(self.controller.save_file_as_clicked(item))
+
+    def _render_pmvs_file_menu(self, menu_pos: QPoint, item: QTreeWidgetItem):
+        menu = QMenu(self.files_grid)
+        save_as = menu.addAction("Save file as...")
+
+        action = menu.exec(menu_pos)
+
+        if action is None:
             pass
         elif action is save_as:
             ensureDeferred(self.controller.save_file_as_clicked(item))
