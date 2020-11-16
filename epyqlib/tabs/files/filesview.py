@@ -535,7 +535,7 @@ class FilesView(UiBase):
             message = f"Logged in as {username}. " + message
 
         self.lbl_login_status.setText(message)
-        self._show_login_bar_widgets(True)
+        self._show_login_bar_widgets(connected)
 
     def _show_login_bar_widgets(self, enabled: bool):
         self.btn_login.setHidden(enabled)
