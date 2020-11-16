@@ -328,6 +328,11 @@ class FilesController:
             print(f"{self._tag} Unable to login to AWS. Setting offline mode to true.")
             self.set_offline(True)
 
+    async def logout_clicked(self):
+        self.aws_login_manager.log_user_out()
+        print(f"{self._tag} Logging out from AWS. Setting offline mode to true.")
+        self.set_offline(True)
+
     def open_file(self, row: QTreeWidgetItem):
         file_hash = self._get_mapping_for_row(row).association["file"]["hash"]
         file_path = self.cache_manager.get_file_path(file_hash)

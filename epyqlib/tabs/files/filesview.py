@@ -141,6 +141,7 @@ class FilesView(UiBase):
 
         self.lbl_login_status: QLabel = self.ui.lbl_login_status
         self.btn_login: QPushButton = self.ui.login
+        self.btn_logout: QPushButton = self.ui.logout
 
         self.lbl_serial_number: QLabel = self.ui.lbl_serial_number
         self.serial_number: QLineEdit = self.ui.serial_number
@@ -167,6 +168,7 @@ class FilesView(UiBase):
 
         # Bind click events
         self.btn_login.clicked.connect(self._login_clicked)
+        self.btn_logout.clicked.connect(self._logout_clicked)
         self.serial_number.returnPressed.connect(self._serial_number_entered)
 
         self.files_grid.itemClicked.connect(self.controller.file_item_clicked)
@@ -356,6 +358,9 @@ class FilesView(UiBase):
     def _login_clicked(self):
         ensureDeferred(self.controller.login_clicked()).addErrback(open_error_dialog)
 
+    def _logout_clicked(self):
+        ensureDeferred(self.controller.logout_clicked()).addErrback(open_error_dialog)
+
     def _notes_changed(self):
         changed = self.controller.notes_modified(
             self.description.text(), self.notes.toPlainText()
@@ -539,6 +544,7 @@ class FilesView(UiBase):
 
     def _show_login_bar_widgets(self, enabled: bool):
         self.btn_login.setHidden(enabled)
+        self.btn_logout.setHidden(not enabled)
 
         self.lbl_serial_number.setHidden(not enabled)
         self.serial_number.setHidden(not enabled)
