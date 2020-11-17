@@ -486,6 +486,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QPushButton" name="serial_number_from_parameters">
+         <property name="text">
+          <string>From Parameters</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QLabel" name="lbl_inverter_error">
          <property name="text">
           <string>&lt;font color=&quot;red&quot;&gt;(inverter error here)&lt;/font&gt;</string>

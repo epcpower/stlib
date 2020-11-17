@@ -1331,6 +1331,14 @@ class DeviceInterface:
 
         return await self._read_single_param(serial_number_signal)
 
+    def get_serial_number_from_parameters(self) -> str:
+        serial_number_signal = self.device.nvs.signal_from_names(
+            "SN",
+            "SerialNumber",
+        )
+
+        return str(serial_number_signal.scaled_value)
+
     async def get_build_hash(self) -> str:
         serial_number_signal = self.device.nvs.signal_from_names(
             "SoftwareHash",

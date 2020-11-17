@@ -333,6 +333,11 @@ class FilesController:
         print(f"{self._tag} Logging out from AWS. Setting offline mode to true.")
         self.set_offline(True)
 
+    async def serial_number_from_parameters_clicked(self):
+        self._serial_number = self._device_interface.get_serial_number_from_parameters()
+        self.view.serial_number.setText(self._serial_number)
+        await self._get_id_for_serial_number(self._serial_number)
+
     def open_file(self, row: QTreeWidgetItem):
         file_hash = self._get_mapping_for_row(row).association["file"]["hash"]
         file_path = self.cache_manager.get_file_path(file_hash)
