@@ -145,7 +145,9 @@ class FilesView(UiBase):
 
         self.lbl_serial_number: QLabel = self.ui.lbl_serial_number
         self.serial_number: QLineEdit = self.ui.serial_number
-        self.serial_number_from_parameters: QPushButton = self.ui.serial_number_from_parameters
+        self.serial_number_from_parameters: QPushButton = (
+            self.ui.serial_number_from_parameters
+        )
         self.inverter_error: QLabel = self.ui.lbl_inverter_error
 
         self.files_grid: QTreeWidget = self.ui.files_grid
@@ -171,7 +173,9 @@ class FilesView(UiBase):
         self.btn_login.clicked.connect(self._login_clicked)
         self.btn_logout.clicked.connect(self._logout_clicked)
         self.serial_number.returnPressed.connect(self._serial_number_entered)
-        self.serial_number_from_parameters.clicked.connect(self._serial_number_from_parameters_clicked)
+        self.serial_number_from_parameters.clicked.connect(
+            self._serial_number_from_parameters_clicked
+        )
 
         self.files_grid.itemClicked.connect(self.controller.file_item_clicked)
 
@@ -364,7 +368,9 @@ class FilesView(UiBase):
         ensureDeferred(self.controller.logout_clicked()).addErrback(open_error_dialog)
 
     def _serial_number_from_parameters_clicked(self):
-        ensureDeferred(self.controller.serial_number_from_parameters_clicked()).addErrback(open_error_dialog)
+        ensureDeferred(
+            self.controller.serial_number_from_parameters_clicked()
+        ).addErrback(open_error_dialog)
 
     def _notes_changed(self):
         changed = self.controller.notes_modified(
