@@ -177,7 +177,7 @@ def tabulate_signals(signals):
     for signal in signals:
         # if len(signal.unit) == 0 and signal.factor != 1:
         # table.append(('***',) * 5)
-        startbit = signal.getStartbit()
+        startbit = signal.start_bit
         rows.append(
             (
                 "",
@@ -202,7 +202,7 @@ def doc_signals(signals):
     rows = []
 
     for signal in signals:
-        startbit = signal.getStartbit()
+        startbit = signal.start_bit
         enumeration = signal.enumeration if signal.enumeration is not None else ""
         rows.append(
             (
@@ -358,7 +358,7 @@ def main(can, template, output, verbose):
     enumeration_table = epyqlib.utils.general.TextTable()
     enumeration_table.append("Name", "", "Value")
     widths = (1.5, None)
-    for name, values in sorted(matrix.valueTables.items()):
+    for name, values in sorted(matrix.value_tables.items()):
         a_et = Table(
             title=name,
             headings=enum_table_header,
