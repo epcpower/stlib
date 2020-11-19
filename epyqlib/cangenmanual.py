@@ -286,9 +286,7 @@ def main(can, template, output, verbose):
         )
         frame_tables.append(a_ft)
 
-        mux_table.append(
-            "{} ({})".format(frame.name, id_string(message_id))
-        )
+        mux_table.append("{} ({})".format(frame.name, id_string(message_id)))
 
         multiplex_signal = frame.signals[0]
         if multiplex_signal.multiplex is None:
