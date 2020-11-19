@@ -167,8 +167,8 @@ class Table:
             table.rows[0].cells[0].merge(table.rows[0].cells[-1])
 
 
-def id_string(id):
-    return "0x{:08X}".format(id)
+def id_string(message_id):
+    return "0x{:08X}".format(message_id)
 
 
 def tabulate_signals(signals):
