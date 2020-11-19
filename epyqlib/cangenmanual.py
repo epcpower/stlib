@@ -294,7 +294,7 @@ def main(can, template, output, verbose):
         mux_table.append(
             "{} ({})".format(
                 frame.name,
-                id_string(frame.arbitration_id).id,
+                id_string(frame.arbitration_id.id),
             )
         )
 
