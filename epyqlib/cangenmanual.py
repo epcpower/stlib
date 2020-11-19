@@ -275,16 +275,11 @@ def main(can, template, output, verbose):
     enumeration_tables = []
 
     for frame in sorted(matrix.frames, key=lambda f: f.name):
-        frame_table.append(
-            frame.name,
-            id_string(frame.arbitration_id.id),
-        )
+        message_id = frame.arbitration_id.id
+        frame_table.append(frame.name, id_string(message_id))
 
         a_ft = Table(
-            title="{} ({})".format(
-                frame.name,
-                id_string(frame.arbitration_id.id),
-            ),
+            title="{} ({})".format(frame.name, id_string(message_id)),
             comment=frame.comment,
             headings=frame_table_header,
             widths=widths,
@@ -292,10 +287,7 @@ def main(can, template, output, verbose):
         frame_tables.append(a_ft)
 
         mux_table.append(
-            "{} ({})".format(
-                frame.name,
-                id_string(frame.arbitration_id.id),
-            )
+            "{} ({})".format(frame.name, id_string(message_id))
         )
 
         multiplex_signal = frame.signals[0]
@@ -323,7 +315,10 @@ def main(can, template, output, verbose):
 
                 a_mt = Table(
                     title="{} ({}) - {} ({})".format(
-                        frame.name, id_string(frame.arbitration_id.id), name, value
+                        frame.name,
+                        id_string(message_id),
+                        name,
+                        value,
                     ),
                     # comment=frame.comment,
                     headings=mux_table_header,
