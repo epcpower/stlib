@@ -972,18 +972,18 @@ class SunSpecDevice:
 
     def load_tcp(
         self,
-        ipaddr,
+        address,
         slave_id=1,
         timeout=1,
-        ipport=None,
+        port=None,
     ):
         with epcsunspecdemo.utils.fresh_smdx_path(self.model_path):
             self.device = sunspec.core.client.SunSpecClientDevice(
                 slave_id=slave_id,
                 device_type=sunspec.core.client.TCP,
                 timeout=timeout,
-                ipaddr=ipaddr,
-                ipport=ipport,
+                ipaddr=address,
+                ipport=port,
             )
 
     # def signal_from_uuid(self, uuid_) -> SunSpecNv:
