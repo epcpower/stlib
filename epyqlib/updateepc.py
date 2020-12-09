@@ -61,7 +61,7 @@ def get_ui_paths_0(device_dict):
     description="_frame/_signal -> _signal_path_element_...",
 )
 def cf(self, source_directory, source_file_name, destination_path):
-    with open(os.path.join(source_directory, source_file_name)) as f:
+    with open(os.path.join(source_directory, source_file_name), encoding="utf-8") as f:
         device_dict = json.load(f, object_pairs_hook=collections.OrderedDict)
 
     ui_paths = get_ui_paths_0(device_dict)
@@ -99,7 +99,7 @@ def cf(self, source_directory, source_file_name, destination_path):
         if os.path.splitext(ui)[1].casefold() != ".ui":
             continue
 
-        with open(os.path.join(source_directory, ui)) as f:
+        with open(os.path.join(source_directory, ui), encoding="utf-8") as f:
             root = lxml.etree.parse(f)
 
         widgets = root.xpath(
@@ -158,8 +158,8 @@ def cf(self, source_directory, source_file_name, destination_path):
     device_dict.move_to_end("format_version", last=False)
 
     destination_device_file = os.path.join(destination_path, source_file_name)
-    with open(destination_device_file, "w") as f:
-        json.dump(device_dict, f, indent=4)
+    with open(destination_device_file, "w", encoding="ascii") as f:
+        json.dump(device_dict, f, ensure_ascii=True, indent=4)
         f.write("\n")
     referenced_files[source_file_name] = True
 
@@ -181,7 +181,7 @@ def cf(self, source_directory, source_file_name, destination_path):
     "properties in .ui",
 )
 def cf(self, source_directory, source_file_name, destination_path):
-    with open(os.path.join(source_directory, source_file_name)) as f:
+    with open(os.path.join(source_directory, source_file_name), encoding="utf-8") as f:
         device_dict = json.load(f, object_pairs_hook=collections.OrderedDict)
 
     ui_paths = get_ui_paths_0(device_dict)
@@ -213,8 +213,10 @@ def cf(self, source_directory, source_file_name, destination_path):
         """
         )
 
-        with open(os.path.join(source_directory, module)) as f_in:
-            with open(os.path.join(destination_path, module), "w") as f_out:
+        with open(os.path.join(source_directory, module), encoding="utf-8") as f_in:
+            with open(
+                os.path.join(destination_path, module), "w", encoding="utf-8"
+            ) as f_out:
                 written = any(l.startswith("def referenced_files(") for l in f_in)
 
                 f_in.seek(0)
@@ -239,7 +241,7 @@ def cf(self, source_directory, source_file_name, destination_path):
     ui_files = tuple(f for f in referenced_files if f.endswith(".ui"))
 
     for ui in ui_files:
-        with open(os.path.join(source_directory, ui)) as f:
+        with open(os.path.join(source_directory, ui), encoding="utf-8") as f:
             root = lxml.etree.parse(f)
 
         widgets = root.xpath("//widget[property[contains(@name, '_path_element_0')]]")
@@ -279,8 +281,8 @@ def cf(self, source_directory, source_file_name, destination_path):
     device_dict.move_to_end("format_version", last=False)
 
     destination_device_file = os.path.join(destination_path, source_file_name)
-    with open(destination_device_file, "w") as f:
-        json.dump(device_dict, f, indent=4)
+    with open(destination_device_file, "w", encoding="ascii") as f:
+        json.dump(device_dict, f, ensure_ascii=True, indent=4)
         f.write("\n")
     referenced_files[source_file_name] = True
 
@@ -301,7 +303,7 @@ def cf(self, source_directory, source_file_name, destination_path):
     description="self.ui is not longer self",
 )
 def cf(self, source_directory, source_file_name, destination_path):
-    with open(os.path.join(source_directory, source_file_name)) as f:
+    with open(os.path.join(source_directory, source_file_name), encoding="utf-8") as f:
         device_dict = json.load(f, object_pairs_hook=collections.OrderedDict)
 
     ui_paths = get_ui_paths_0(device_dict)
@@ -336,7 +338,7 @@ def cf(self, source_directory, source_file_name, destination_path):
 
     referenced_files = {f: False for f in referenced_files}
 
-    with open(os.path.join(source_directory, module_path), "r") as f:
+    with open(os.path.join(source_directory, module_path), encoding="utf-8") as f:
         source = f.read()
 
     replacements = [
@@ -357,7 +359,7 @@ def cf(self, source_directory, source_file_name, destination_path):
     for original, replacement in replacements:
         source = source.replace(original, replacement)
 
-    with open(os.path.join(destination_path, module_path), "w") as f:
+    with open(os.path.join(destination_path, module_path), "w", encoding="utf-8") as f:
         f.write(source)
 
     referenced_files[module_path] = True
@@ -366,8 +368,8 @@ def cf(self, source_directory, source_file_name, destination_path):
     device_dict.move_to_end("format_version", last=False)
 
     destination_device_file = os.path.join(destination_path, source_file_name)
-    with open(destination_device_file, "w") as f:
-        json.dump(device_dict, f, indent=4)
+    with open(destination_device_file, "w", encoding="ascii") as f:
+        json.dump(device_dict, f, ensure_ascii=True, indent=4)
         f.write("\n")
     referenced_files[source_file_name] = True
 
@@ -386,7 +388,7 @@ def cf(self, source_directory, source_file_name, destination_path):
     old_version=(2,), new_version=None, description="template for next format version"
 )
 def cf(self, source_directory, source_file_name, destination_path):
-    with open(os.path.join(source_directory, source_file_name)) as f:
+    with open(os.path.join(source_directory, source_file_name), encoding="utf-8") as f:
         device_dict = json.load(f, object_pairs_hook=collections.OrderedDict)
 
     ui_paths = get_ui_paths_0(device_dict)
@@ -424,8 +426,8 @@ def cf(self, source_directory, source_file_name, destination_path):
     device_dict.move_to_end("format_version", last=False)
 
     destination_device_file = os.path.join(destination_path, source_file_name)
-    with open(destination_device_file, "w") as f:
-        json.dump(device_dict, f, indent=4)
+    with open(destination_device_file, "w", encoding="ascii") as f:
+        json.dump(device_dict, f, ensure_ascii=True, indent=4)
         f.write("\n")
     referenced_files[source_file_name] = True
 
@@ -452,7 +454,7 @@ def conversion_summaries():
 
 
 def version(path):
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         device_dict = json.load(f, object_pairs_hook=collections.OrderedDict)
 
     v = device_dict.get("format_version", None)
@@ -500,7 +502,7 @@ def version(path):
         fragment = "_path_element_"
 
         for ui in ui_files:
-            with open(os.path.join(os.path.dirname(path), ui)) as f:
+            with open(os.path.join(os.path.dirname(path), ui), encoding="utf-8") as f:
                 if any(fragment in line for line in f):
                     v = (0, 9)
                     break
