@@ -186,10 +186,11 @@ class Progress(QtCore.QObject):
         self.average_timer.stop()
         self.average = None
 
-        self.updated.disconnect(self.progress.setValue)
-        self.progress.close()
-        self.progress.deleteLater()
-        self.progress = None
+        if self.progress is not None:
+            self.updated.disconnect(self.progress.setValue)
+            self.progress.close()
+            self.progress.deleteLater()
+            self.progress = None
 
         self._start_time = None
 
