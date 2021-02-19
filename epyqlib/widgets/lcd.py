@@ -27,7 +27,10 @@ class Lcd(epyqlib.widgets.abstractwidget.AbstractWidget):
             if len(self.signal_object.enumeration) > 0:
                 value = self.signal_object.full_string
             else:
-                value = self.signal_object.format_float()
+                # yep, this isn't for a file.  but the qt lcd widgets don't
+                # support commas and for_file disregards the locale and
+                # formats with periods.
+                value = self.signal_object.format_float(for_file=True)
         elif value is None:
             # TODO: quit hardcoding this and it's better implemented elsewhere
             value = "{0:.2f}".format(0)
