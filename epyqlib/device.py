@@ -230,6 +230,7 @@ class Device:
         self.bus = None
         self.from_zip = False
         self.device_sha = "N/A"
+        self.device_file = "N/A"
 
         if kwargs.get("file", None) is not None:
             constructor = self._init_from_file
@@ -294,6 +295,7 @@ class Device:
             self.bus.set_bus()
 
     def _init_from_file(self, file, only_for_files=False, **kwargs):
+        self.device_file = file
         extension = os.path.splitext(file)[1].casefold()
 
         if extension in (".epz", ".zip"):
@@ -1181,6 +1183,7 @@ class Device:
             self.ui.information_text_browser.append(f"Name:\t\t{self.name}")
             self.ui.information_text_browser.append(f"Type:\t\t{self.node_id_type}")
             self.ui.information_text_browser.append(f"SHA:\t\t{self.device_sha}")
+            self.ui.information_text_browser.append(f"File:\t\t{self.device_file}")
 
         self.notifiees = notifiees
         for notifiee in notifiees:
