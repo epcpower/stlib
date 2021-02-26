@@ -149,7 +149,7 @@ class DeviceTreeView(QtWidgets.QWidget):
         bus.flash()
 
     def check_compatibility(self, device):
-        shas = device.shas
+        shas = device.compatibility_shas
         if len(shas) == 0:
             self.compatibility_notification(
                 message="No compatible revisions specified for this device.",
@@ -170,10 +170,10 @@ class DeviceTreeView(QtWidgets.QWidget):
     def _check_compatibility(self, value, device):
         sha = "{:07x}".format(int(value))
 
-        compatible = any(s.startswith(sha) for s in device.shas)
+        compatible = any(s.startswith(sha) for s in device.compatibility_shas)
         print("alskflasdfasdfaslkfdasdfjsdjfasdfsd")
         print(sha)
-        print(device.shas)
+        print(device.compatibility_shas)
 
         if compatible:
             message = "Embedded SHA {} found in compatibility list.".format(sha)
