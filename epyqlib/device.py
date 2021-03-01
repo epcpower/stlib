@@ -96,6 +96,7 @@ class Elements(Enum):
     scripting = 6
     fault_log = 7
     files = 8
+    information = 9
 
 
 @unique
@@ -107,6 +108,7 @@ class Tabs(Enum):
     scripting = 5
     fault_log = 6
     files = 7
+    information = 8
 
     @classmethod
     def defaults(cls):
@@ -227,6 +229,8 @@ class Device:
     def __init__(self, *args, **kwargs):
         self.bus = None
         self.from_zip = False
+        self.device_sha = "N/A"
+        self.device_file = "N/A"
 
         if kwargs.get("file", None) is not None:
             constructor = self._init_from_file
@@ -291,6 +295,7 @@ class Device:
             self.bus.set_bus()
 
     def _init_from_file(self, file, only_for_files=False, **kwargs):
+        self.device_file = file
         extension = os.path.splitext(file)[1].casefold()
 
         if extension in (".epz", ".zip"):
@@ -429,6 +434,9 @@ class Device:
         if Tabs.files not in tabs:
             self.elements.discard(Elements.files)
 
+        if Tabs.information not in tabs:
+            self.elements.discard(Elements.information)
+
         self.elements |= depended_on
 
         self.referenced_files = [
@@ -445,7 +453,7 @@ class Device:
             if f is not None
         ]
 
-        self.shas = []
+        self.compatibility_shas = []
         compatibility_file = d.get("compatibility", None)
         if compatibility_file is not None:
             compatibility_file = os.path.join(
@@ -455,7 +463,7 @@ class Device:
                 s = file.read()
                 c = json.loads(s, object_pairs_hook=OrderedDict)
 
-            self.shas.extend(c.get("shas", []))
+            self.compatibility_shas.extend(c.get("shas", []))
 
         if not only_for_files:
             self.can_path = os.path.join(path, d["can_path"])
@@ -529,26 +537,32 @@ class Device:
                     break
 
         # TODO error dialog if no .epc found in zip file
-        filename = None
+        filename_epc = None
+        filename_sha = None
         for directory, directories, files in os.walk(path):
             for f in files:
                 logger.info(f)
                 if os.path.splitext(f)[1] == ".epc":
-                    filename = os.path.join(path, directory, f)
-                    break
+                    filename_epc = os.path.join(path, directory, f)
+                elif f == "sha":
+                    filename_sha = os.path.join(path, directory, f)
 
-            if filename is not None:
+            if filename_epc is not None and filename_sha is not None:
                 break
 
-        self.config_path = os.path.abspath(filename)
+        if filename_sha is not None:
+            with open(filename_sha, "r") as f:
+                self.device_sha = f.readline().strip()
+
+        self.config_path = os.path.abspath(filename_epc)
 
         converted_directory = None
-        if not epyqlib.updateepc.is_latest(filename):
+        if not epyqlib.updateepc.is_latest(filename_epc):
             converted_directory = tempfile.TemporaryDirectory()
-            file = epyqlib.updateepc.convert(filename, converted_directory.name)
+            file = epyqlib.updateepc.convert(filename_epc, converted_directory.name)
             self.config_path = os.path.abspath(file)
 
-        with open(filename, "r") as f:
+        with open(filename_epc, "r") as f:
             self._load_config(f, rx_interval=rx_interval, **kwargs)
 
         if converted_directory is not None:
@@ -929,6 +943,8 @@ class Device:
             self.ui.tabs.removeTab(self.ui.tabs.indexOf(self.ui.faultlog))
         if Tabs.files not in tabs:
             self.ui.tabs.removeTab(self.ui.tabs.indexOf(self.ui.files))
+        if Tabs.information not in tabs:
+            self.ui.tabs.removeTab(self.ui.tabs.indexOf(self.ui.information))
 
         self.ui.tabs.setCurrentIndex(0)
 
@@ -1162,6 +1178,12 @@ class Device:
 
         if Tabs.files in tabs:
             self.ui.files_view.set_device_interface(self.device_interface)
+
+        if Tabs.information in tabs:
+            self.ui.information_text_browser.append(f"Name:\t\t{self.name}")
+            self.ui.information_text_browser.append(f"Type:\t\t{self.node_id_type}")
+            self.ui.information_text_browser.append(f"SHA:\t\t{self.device_sha}")
+            self.ui.information_text_browser.append(f"File:\t\t{self.device_file}")
 
         self.notifiees = notifiees
         for notifiee in notifiees:

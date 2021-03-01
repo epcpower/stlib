@@ -147,6 +147,16 @@
            </item>
           </layout>
          </widget>
+         <widget class="QWidget" name="information">
+          <attribute name="title">
+           <string>Information</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_7">
+           <item>
+            <widget class="QTextBrowser" name="information_text_browser"/>
+           </item>
+          </layout>
+         </widget>
         </widget>
        </item>
       </layout>
