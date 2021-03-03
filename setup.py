@@ -70,7 +70,7 @@ setuptools.setup(
         "python-can",
         "QtAwesome",
         "siphash-cffi>=0.1.4",
-        "treq>=20.9.0",
+        "treq>=21.1.0",
         "Twisted[tls]",
     ],
     extras_require={
