@@ -32,10 +32,8 @@ python-docx==0.8.7
 python-dotenv==0.9.1
 QtAwesome==0.6.0
 siphash-cffi>=0.1.4
-
-# unreleased for https://github.com/twisted/twisted/pull/1229
-https://github.com/twisted/twisted/archive/8cbd150168d88caf59e30572101787f184e260a5.zip#egg=twisted[tls]
-treq==20.9.0
+treq==21.1.0
+twisted==21.2.0
 
 -e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec
 -e git+https://github.com/epcpower/sunspec-demo@19581317ae2fd136b5df229d824f81a17da52c58#egg=epcsunspecdemo
