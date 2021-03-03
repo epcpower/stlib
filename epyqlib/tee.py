@@ -26,6 +26,17 @@ class Tee:
         self.__missing_method_name = None  # Hack!
 
     def __getattribute__(self, name):
+        if name == "__isabstractmethod__":
+            # When upgrading to Twisted 21.2.0 there was a change to
+            # twisted.python.log._GlobalStartStopObserver to make it an ABC.
+            # This makes DefaultObserver also an ABC, but it stores sys.stderr
+            # as a class attribute.  Thus, when creating an instance the ABC
+            # metaclasses queries for the .__isabstractmethod__ attribute and
+            # we respond with self.__methodmissing__ which is truthy and so
+            # ABC concludes the instance of Tee is in fact an abstract method...
+            # Let's not be an abstract method.  (also, let's delete this)
+            return False
+
         return object.__getattribute__(self, name)
 
     def __getattr__(self, name):
