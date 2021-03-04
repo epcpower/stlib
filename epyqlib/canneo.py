@@ -38,8 +38,10 @@ class NotFoundError(Exception):
 nothing = object()
 
 
+strip_uuid_from_comment_search_pattern = re.compile(r"<uuid:([a-z0-9-]+)>")
 def strip_uuid_from_comment(comment):
-    match = re.search(r"<uuid:([a-z0-9-]+)>", comment)
+    # Use compiled regex pattern for speed up since this is called thousands of times.
+    match = strip_uuid_from_comment_search_pattern.search(comment)
 
     if match is None:
         return comment, None
@@ -57,8 +59,10 @@ class ReadWrite:
     writable = attr.ib()
 
 
+strip_rw_from_comment_search_pattern = re.compile(r"<rw:([01]):([01])>")
 def strip_rw_from_comment(comment):
-    match = re.search(r"<rw:([01]):([01])>", comment)
+    # Use compiled regex pattern for speed up since this is called thousands of times.
+    match = strip_rw_from_comment_search_pattern.search(comment)
 
     if match is None:
         return comment, None
