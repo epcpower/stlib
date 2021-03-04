@@ -1149,7 +1149,8 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
         pass
 
     def set_from_device(self, column):
-        self._set_stale(stale=False, column=column)
+        subnode = self._get_signal_for_column(column)
+        self._set_stale(stale=False, column=column, subnode=subnode)
 
     def stale(self, column):
         subnode = self._get_signal_for_column(column)
@@ -1159,8 +1160,7 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
 
         return subnode._stale
 
-    def _set_stale(self, stale, column):
-        subnode = self._get_signal_for_column(column)
+    def _set_stale(self, stale, column, subnode):
         was_stale = subnode._stale
 
         subnode._stale = stale
@@ -1173,7 +1173,7 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
             subnode = self._get_signal_for_column(column)
 
             if subnode is not None and subnode.for_remote_data:
-                self._set_stale(stale=True, column=column)
+                self._set_stale(stale=True, column=column, subnode=subnode)
 
     def _get_signal_for_column(self, column):
         if not self.base:
