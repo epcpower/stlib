@@ -1118,7 +1118,7 @@ class Device:
 
         notifiees.append(self.connection_monitor)
 
-        self.bus_status_changed(online=False, transmit=False)
+        self.bus_status_changed(online=False, transmit=False, skip_set_stale=True)
 
         all_signals = set()
         for frame in self.neo_frames.frames:
@@ -1220,8 +1220,8 @@ class Device:
     def get_frames(self):
         return self.frames
 
-    @pyqtSlot(bool)
-    def bus_status_changed(self, online, transmit):
+    @pyqtSlot(bool, bool, bool)
+    def bus_status_changed(self, online, transmit, skip_set_stale=False):
         self.bus_online = online
         self.bus_tx = transmit
 
@@ -1240,9 +1240,10 @@ class Device:
 
         self.read_nv_widget_min_max()
 
-        if self.nvs is not None:
-            if not online:
-                self.nvs.set_stale()
+        if not skip_set_stale:
+            if self.nvs is not None:
+                if not online:
+                    self.nvs.set_stale()
 
         if self.ui.tabs.indexOf(self.ui.files) != -1:
             self.ui.files_view.on_bus_status_changed()
