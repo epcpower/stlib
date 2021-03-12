@@ -789,7 +789,10 @@ class Frame(QtCanListener):
             data = self.data
 
         return can.Message(
-            is_extended_id=self.extended, arbitration_id=self.id, dlc=self.size, data=data
+            is_extended_id=self.extended,
+            arbitration_id=self.id,
+            dlc=self.size,
+            data=data,
         )
 
     def message_received(self, msg):
