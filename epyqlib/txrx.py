@@ -167,7 +167,7 @@ class MessageNode(epyqlib.canneo.Frame, TreeNode):
         # self.message = message
 
         self.fields.id = epyqlib.canneo.format_identifier(
-            message.arbitration_id, message.id_type
+            message.arbitration_id, message.is_extended_id
         )
 
         # self.fields.name = self.name
@@ -328,7 +328,7 @@ class TxRx(TreeNode, epyqlib.canneo.QtCanListener):
     def generate_id(self, message):
         multiplex_value = self.neo.get_multiplex(message)[1]
 
-        return (message.arbitration_id, message.id_type, multiplex_value)
+        return (message.arbitration_id, message.is_extended_id, multiplex_value)
 
     def message_received(self, msg):
         id = self.generate_id(message=msg)

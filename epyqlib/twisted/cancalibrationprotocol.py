@@ -833,7 +833,7 @@ class Packet:
         kwargs.setdefault("data", [0] * dlc)
 
         self.message = can.Message(
-            extended_id=extended_id,
+            is_extended_id=extended_id,
             arbitration_id=arbitration_id,
             dlc=dlc,
             *args,

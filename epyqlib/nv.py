@@ -677,7 +677,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
     def message_received(self, msg):
         if (
             msg.arbitration_id == self.status_frames[0].id
-            and msg.id_type == self.status_frames[0].extended
+            and msg.is_extended_id == self.status_frames[0].extended
         ):
             multiplex_message, multiplex_value = self.neo.get_multiplex(msg)
 

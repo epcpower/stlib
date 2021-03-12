@@ -26,7 +26,6 @@ Pint==0.11
 pyelftools==0.25
 PyQt5==5.13.0
 qt5reactor==0.5
-python-can==3.3.2
 python-dateutil==2.7.5
 python-docx==0.8.7
 python-dotenv==0.9.1
@@ -35,6 +34,7 @@ siphash-cffi>=0.1.4
 treq==21.1.0
 twisted==21.2.0
 
+-e git+https://github.com/gordon-epc/python-can@f451343f8b0991ee96e0849ce3198cc38977cebe#egg=python-can
 -e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec
 -e git+https://github.com/epcpower/sunspec-demo@19581317ae2fd136b5df229d824f81a17da52c58#egg=epcsunspecdemo
 
