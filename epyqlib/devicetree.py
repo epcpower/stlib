@@ -149,7 +149,9 @@ def available_buses():
 
 
 class Bus(TreeNode):
-    def __init__(self, interface, channel, changeable_bitrate=False, device_number=None):
+    def __init__(
+        self, interface, channel, changeable_bitrate=False, device_number=None
+    ):
         TreeNode.__init__(self)
 
         self.interface = interface
