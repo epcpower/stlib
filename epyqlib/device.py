@@ -656,15 +656,14 @@ class Device:
 
         notifiees = []
 
-        # Load the matrix once and copy as needed as a speed optimization.
-        matrix_template = load_matrix(self.can_path)
+        # Load the matrix once and use as needed as a speed optimization.
+        matrix = load_matrix(self.can_path)
 
         if Elements.dash in self.elements:
             self.uis = self.dash_uis
 
             # TODO: this is icky
             if Elements.tx not in self.elements:
-                matrix = copy.copy(matrix_template)
                 self.neo_frames = epyqlib.canneo.Neo(
                     matrix=matrix, bus=self.bus, rx_interval=self.rx_interval
                 )
@@ -673,9 +672,8 @@ class Device:
 
         if Elements.rx in self.elements:
             # TODO: the repetition here is not so pretty
-            matrix_rx = copy.copy(matrix_template)
             neo_rx = epyqlib.canneo.Neo(
-                matrix=matrix_rx,
+                matrix=matrix,
                 frame_class=epyqlib.txrx.MessageNode,
                 signal_class=epyqlib.txrx.SignalNode,
                 node_id_adjust=self.node_id_adjust,
@@ -692,13 +690,12 @@ class Device:
             rx.end_insert_rows.connect(rx_model.end_insert_rows)
 
         if Elements.tx in self.elements:
-            matrix_tx = copy.copy(matrix_template)
             message_node_tx_partial = functools.partial(
                 epyqlib.txrx.MessageNode, tx=True
             )
             signal_node_tx_partial = functools.partial(epyqlib.txrx.SignalNode, tx=True)
             neo_tx = epyqlib.canneo.Neo(
-                matrix=matrix_tx,
+                matrix=matrix,
                 frame_class=message_node_tx_partial,
                 signal_class=signal_node_tx_partial,
                 node_id_adjust=self.node_id_adjust,
@@ -736,9 +733,8 @@ class Device:
 
         self.widget_nvs = None
         if Elements.nv in self.elements:
-            matrix_nv = copy.copy(matrix_template)
             self.frames_nv = epyqlib.canneo.Neo(
-                matrix=matrix_nv,
+                matrix=matrix,
                 frame_class=epyqlib.nv.Frame,
                 signal_class=epyqlib.nv.Nv,
                 node_id_adjust=self.node_id_adjust,
@@ -821,7 +817,7 @@ class Device:
                             )
 
             self.widget_frames_nv = epyqlib.canneo.Neo(
-                matrix=matrix_nv,
+                matrix=matrix,
                 frame_class=epyqlib.nv.Frame,
                 signal_class=epyqlib.nv.Nv,
                 node_id_adjust=self.node_id_adjust,
@@ -1096,9 +1092,8 @@ class Device:
                                 action[0](dash=dash, widget=widget, signal=widget.edit)
                                 break
 
-        monitor_matrix = copy.copy(matrix_template)
         monitor_frames = epyqlib.canneo.Neo(
-            matrix=monitor_matrix,
+            matrix=matrix,
             node_id_adjust=self.node_id_adjust,
         )
         monitor_frame = monitor_frames.frame_by_name(
