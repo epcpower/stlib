@@ -163,13 +163,7 @@ class Bus(TreeNode):
         self.separator = " - "
 
         if self.interface is not None:
-            name = "{}{}{}{}{}".format(
-                self.interface,
-                self.separator,
-                self.channel,
-                self.separator,
-                self.device_number if self.device_number is not None else "",
-            )
+            name = self._generate_fields_name()
         else:
             name = "Offline"
 
@@ -254,6 +248,19 @@ class Bus(TreeNode):
 
     def set_nickname(self, name):
         self.fields.nickname = name
+
+    def set_device_number(self, device_number):
+        self.device_number = device_number
+        self.fields.name = self._generate_fields_name()
+
+    def _generate_fields_name(self):
+        return "{}{}{}{}{}".format(
+            self.interface,
+            self.separator,
+            self.channel,
+            self.separator,
+            self.device_number if self.device_number is not None else "",
+        )
 
 
 class Device(TreeNode):
