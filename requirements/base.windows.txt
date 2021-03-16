@@ -9,7 +9,7 @@
 
 -e git+https://github.com/epcpower/sunspec-demo@19581317ae2fd136b5df229d824f81a17da52c58#egg=epcsunspecdemo  # via -r requirements\base.in
 -e git+https://github.com/altendky/pysunspec@7929d6c4c37419477ab316a0a3334f24bded934a#egg=pysunspec  # via -r requirements\base.in, epcsunspecdemo
--e git+https://github.com/gordon-epc/python-can@f451343f8b0991ee96e0849ce3198cc38977cebe#egg=python-can  # via -r requirements\base.in
+-e git+https://github.com/hardbyte/python-can@2ede107d67002c18463c5276b6a94cdb19fc8320#egg=python-can  # via -r requirements\base.in
 alqtendpy==0.0.4          # via -r requirements\base.in
 altendpy==0.0.21          # via alqtendpy
 appdirs==1.4.3            # via -r requirements\base.in, black
