@@ -254,13 +254,8 @@ class Bus(TreeNode):
         self.fields.name = self._generate_fields_name()
 
     def _generate_fields_name(self):
-        return "{}{}{}{}{}".format(
-            self.interface,
-            self.separator,
-            self.channel,
-            self.separator,
-            self.device_number if self.device_number is not None else "",
-        )
+        fields = [self.interface, self.channel, self.device_number]
+        return self.separator.join(str(field) for field in fields if field is not None)
 
 
 class Device(TreeNode):

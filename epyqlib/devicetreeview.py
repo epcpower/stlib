@@ -231,26 +231,30 @@ class DeviceTreeView(QtWidgets.QWidget):
         return device
 
     def change_device_number(self, node):
-        pcan_bus = can.interface.Bus(bustype=node.interface, channel=node.channel)
-        current_device_number = pcan_bus.get_device_number()
-        new_device_number, ok = QInputDialog.getInt(
-            None,
-            *(("Device ID",) * 2),
-            current_device_number,
-            0,
-            255,
-        )
+        pcan_bus = None
+        try:
+            pcan_bus = can.interface.Bus(bustype=node.interface, channel=node.channel)
+            current_device_number = pcan_bus.get_device_number()
+            new_device_number, ok = QInputDialog.getInt(
+                None,
+                *(("Device ID",) * 2),
+                current_device_number,
+                0,
+                255,
+            )
 
-        if ok:
-            if pcan_bus.set_device_number(new_device_number):
-                node.set_device_number(new_device_number)
-            else:
+            if ok:
+                if pcan_bus.set_device_number(new_device_number):
+                    node.set_device_number(new_device_number)
+                else:
+                    raise Exception(
+                        f"Unable to change device number from '{current_device_number}' to '{new_device_number}'."
+                    )
+        except Exception as e:
+            raise e
+        finally:
+            if pcan_bus is not None:
                 pcan_bus.shutdown()
-                raise Exception(
-                    f"Unable to change device number from '{current_device_number}' to '{new_device_number}'."
-                )
-
-        pcan_bus.shutdown()
 
     def flash(self, interface, channel):
         # TODO  CAMPid 9561616237195401795426778
