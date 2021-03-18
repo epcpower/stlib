@@ -249,8 +249,6 @@ class DeviceTreeView(QtWidgets.QWidget):
                     raise Exception(
                         f"Unable to change device number from '{current_device_number}' to '{new_device_number}'."
                     )
-        except Exception as e:
-            raise e
         finally:
             pcan_bus.shutdown()
 
