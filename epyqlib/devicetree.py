@@ -58,12 +58,14 @@ def available_buses():
                 except:
                     pass
                 else:
+                    device_number = bus.get_device_number()
                     bus.shutdown()
                     valid.append(
                         {
                             "interface": interface,
                             "channel": channel,
                             "changeable_bitrate": True,
+                            "device_number": device_number,
                         }
                     )
 
@@ -80,6 +82,7 @@ def available_buses():
                             "interface": interface,
                             "channel": channel,
                             "changeable_bitrate": False,
+                            "device_number": None,
                         }
                     )
 
@@ -100,6 +103,7 @@ def available_buses():
                             "interface": interface,
                             "channel": channel,
                             "changeable_bitrate": True,
+                            "device_number": None,
                         }
                     )
         elif interface == "socketcan":
@@ -116,6 +120,7 @@ def available_buses():
                             "interface": interface,
                             "channel": channel,
                             "changeable_bitrate": False,
+                            "device_number": None,
                         }
                     )
             for n in range(9):
@@ -131,6 +136,7 @@ def available_buses():
                             "interface": interface,
                             "channel": channel,
                             "changeable_bitrate": False,
+                            "device_number": None,
                         }
                     )
         else:
@@ -143,18 +149,21 @@ def available_buses():
 
 
 class Bus(TreeNode):
-    def __init__(self, interface, channel, changeable_bitrate=False):
+    def __init__(
+        self, interface, channel, changeable_bitrate=False, device_number=None
+    ):
         TreeNode.__init__(self)
 
         self.interface = interface
         self.channel = channel
         self.changeable_bitrate = changeable_bitrate
+        self.device_number = device_number
 
         self.bitrate = default_bitrate
         self.separator = " - "
 
         if self.interface is not None:
-            name = "{}{}{}".format(self.interface, self.separator, self.channel)
+            name = self._generate_fields_name()
         else:
             name = "Offline"
 
@@ -240,6 +249,14 @@ class Bus(TreeNode):
     def set_nickname(self, name):
         self.fields.nickname = name
 
+    def set_device_number(self, device_number):
+        self.device_number = device_number
+        self.fields.name = self._generate_fields_name()
+
+    def _generate_fields_name(self):
+        fields = [self.interface, self.channel, self.device_number]
+        return self.separator.join(str(field) for field in fields if field is not None)
+
 
 class Device(TreeNode):
     def __init__(self, device):
@@ -315,6 +332,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 "interface": None,
                 "channel": None,
                 "changeable_bitrate": False,
+                "device_number": None,
             }
         ] + available_buses()
         for bus in buses:
@@ -323,6 +341,7 @@ class Model(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 interface=bus["interface"],
                 channel=bus["channel"],
                 changeable_bitrate=bus["changeable_bitrate"],
+                device_number=bus["device_number"],
             )
             root.append_child(bus)
             went_offline = functools.partial(self.went_offline, node=bus)

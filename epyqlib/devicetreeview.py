@@ -7,7 +7,7 @@ import textwrap
 
 import can
 from PyQt5 import QtWidgets
-from PyQt5.QtWidgets import QHeaderView, QMenu, QMessageBox
+from PyQt5.QtWidgets import QHeaderView, QMenu, QMessageBox, QInputDialog
 from PyQt5.QtCore import Qt, pyqtSignal, QItemSelectionModel
 
 import epyqlib.datalogger
@@ -112,6 +112,13 @@ class DeviceTreeView(QtWidgets.QWidget):
             remove_device_action = menu.addAction("Close")
         if isinstance(node, epyqlib.devicetree.Bus):
             add_device_action = menu.addAction("Open device file...")
+            change_device_number = menu.addAction("Change device number...")
+            change_device_number.setEnabled(
+                not node._checked.name
+                and not node.fields.name == "Offline"
+                and node.interface == "pcan"
+                and node.bus.bus is None
+            )
             flash_action = menu.addAction("Load firmware...")
             flash_action.setEnabled(
                 not node._checked.name and not node.fields.name == "Offline"
@@ -134,6 +141,8 @@ class DeviceTreeView(QtWidgets.QWidget):
                     self.model.index_from_node(device),
                     QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows,
                 )
+        elif action is change_device_number:
+            self.change_device_number(node)
         elif action is flash_action:
             self.flash(interface=node.interface, channel=node.channel)
         elif action is pull_raw_log_action:
@@ -220,6 +229,28 @@ class DeviceTreeView(QtWidgets.QWidget):
             self.ui.tree_view.setExpanded(index, True)
 
         return device
+
+    def change_device_number(self, node):
+        pcan_bus = can.interface.Bus(bustype=node.interface, channel=node.channel)
+        try:
+            current_device_number = pcan_bus.get_device_number()
+            new_device_number, ok = QInputDialog.getInt(
+                None,
+                *(("Device ID",) * 2),
+                current_device_number,
+                0,
+                255,
+            )
+
+            if ok:
+                if pcan_bus.set_device_number(new_device_number):
+                    node.set_device_number(new_device_number)
+                else:
+                    raise Exception(
+                        f"Unable to change device number from '{current_device_number}' to '{new_device_number}'."
+                    )
+        finally:
+            pcan_bus.shutdown()
 
     def flash(self, interface, channel):
         # TODO  CAMPid 9561616237195401795426778
