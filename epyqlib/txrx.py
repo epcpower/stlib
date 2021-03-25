@@ -42,7 +42,7 @@ class SignalNode(epyqlib.canneo.Signal, TreeNode):
 
     def set_data(self, data):
         try:
-            self.set_human_value(data)
+            self.set_human_value(data, check_range=True)
         except ValueError:
             raise
         else:

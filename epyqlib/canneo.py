@@ -432,6 +432,10 @@ class Signal:
                     )
                 )
 
+            # Check pack_bitstring ahead of time. If this fails with an UnableToPackError exception, then the value
+            # cannot be set and is invalid. Checking here prevents an endless loop of error message dialogs.
+            self.pack_bitstring(value)
+
         return True
 
     def set_value(
