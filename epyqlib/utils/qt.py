@@ -762,8 +762,12 @@ class SortFilterProxyModel(BaseSortFilterProxyModel):
 class HighlightDiffSortFilterProxyModel(SortFilterProxyModel):
     columns: typing.Set[int] = attr.Factory(set)
     _reference_column: int = None
-    diff_highlights: typing.Dict[QtCore.Qt.ItemDataRole, PyQt5.QtGui.QColor] = attr.Factory(dict)
-    reference_highlights: typing.Dict[QtCore.Qt.ItemDataRole, PyQt5.QtGui.QColor] = attr.Factory(dict)
+    diff_highlights: typing.Dict[
+        QtCore.Qt.ItemDataRole, PyQt5.QtGui.QColor
+    ] = attr.Factory(dict)
+    reference_highlights: typing.Dict[
+        QtCore.Qt.ItemDataRole, PyQt5.QtGui.QColor
+    ] = attr.Factory(dict)
     diff_role: QtCore.Qt.ItemDataRole = QtCore.Qt.ItemDataRole.DisplayRole
 
     def data(self, index, role):
