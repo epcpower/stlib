@@ -7,6 +7,7 @@ import sys
 import textwrap
 import time
 import traceback
+import typing
 import uuid
 import weakref
 
@@ -631,14 +632,21 @@ def dialog_from_file(parent, title, file_name):
     )
 
 
-@attr.s
-class SortFilterProxyModel(QtCore.QSortFilterProxyModel):
-    parent = attr.ib(default=None)
-    filter_column = attr.ib(default=0)
-    wildcard = attr.ib(default=QtCore.QRegExp())
+@attr.s(auto_attribs=True)
+class BaseSortFilterProxyModel(QtCore.QSortFilterProxyModel):
+    _parent: QtCore.QObject = None
 
     def __attrs_post_init__(self):
-        super().__init__(self.parent)
+        super().__init__(self._parent)
+
+
+@attr.s(auto_attribs=True)
+class SortFilterProxyModel(BaseSortFilterProxyModel):
+    filter_column: int = 0
+    wildcard: QtCore.QRegExp = attr.Factory(QtCore.QRegExp)
+
+    def __attrs_post_init__(self):
+        super().__attrs_post_init__()
         self.wildcard.setPatternSyntax(QtCore.QRegExp.Wildcard)
 
     def lessThan(self, left, right):
@@ -750,13 +758,13 @@ class SortFilterProxyModel(QtCore.QSortFilterProxyModel):
         return None
 
 
-@attr.s
+@attr.s(auto_attribs=True)
 class HighlightDiffSortFilterProxyModel(SortFilterProxyModel):
-    columns = attr.ib(factory=set, converter=set)
-    _reference_column = attr.ib(default=None)
-    diff_highlights = attr.ib(factory=dict)
-    reference_highlights = attr.ib(factory=dict)
-    diff_role = attr.ib(default=QtCore.Qt.ItemDataRole.DisplayRole)
+    columns: typing.Set[int] = attr.Factory(set)
+    _reference_column: int = None
+    diff_highlights: typing.Dict[QtCore.Qt.ItemDataRole, PyQt5.QtGui.QColor] = attr.Factory(dict)
+    reference_highlights: typing.Dict[QtCore.Qt.ItemDataRole, PyQt5.QtGui.QColor] = attr.Factory(dict)
+    diff_role: QtCore.Qt.ItemDataRole = QtCore.Qt.ItemDataRole.DisplayRole
 
     def data(self, index, role):
         column = index.column()
