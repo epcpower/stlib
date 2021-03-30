@@ -391,7 +391,7 @@ def test_search_in_column(sample, column, target):
     ),
 )
 def test_proxy_search_in_column(sample, column, target):
-    proxy = epyqlib.utils.qt.PySortFilterProxyModel(filter_column=0)
+    proxy = epyqlib.utils.qt.SortFilterProxyModel(filter_column=0)
     proxy.setSourceModel(sample.model.model)
 
     (index,) = proxy.match(

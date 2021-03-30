@@ -631,14 +631,14 @@ def dialog_from_file(parent, title, file_name):
     )
 
 
-class PySortFilterProxyModel(QtCore.QSortFilterProxyModel):
-    def __init__(self, *args, filter_column, **kwargs):
-        super().__init__(*args, **kwargs)
+@attr.s
+class SortFilterProxyModel(QtCore.QSortFilterProxyModel):
+    parent = attr.ib(default=None)
+    filter_column = attr.ib(default=0)
+    wildcard = attr.ib(default=QtCore.QRegExp())
 
-        # TODO: replace with filterKeyColumn
-        self.filter_column = filter_column
-
-        self.wildcard = QtCore.QRegExp()
+    def __attrs_post_init__(self):
+        super().__init__(self.parent)
         self.wildcard.setPatternSyntax(QtCore.QRegExp.Wildcard)
 
     def lessThan(self, left, right):
@@ -751,16 +751,12 @@ class PySortFilterProxyModel(QtCore.QSortFilterProxyModel):
 
 
 @attr.s
-class DiffProxyModel(QtCore.QIdentityProxyModel):
-    parent = attr.ib(default=None)
+class HighlightDiffSortFilterProxyModel(SortFilterProxyModel):
     columns = attr.ib(factory=set, converter=set)
     _reference_column = attr.ib(default=None)
     diff_highlights = attr.ib(factory=dict)
     reference_highlights = attr.ib(factory=dict)
     diff_role = attr.ib(default=QtCore.Qt.ItemDataRole.DisplayRole)
-
-    def __attrs_post_init__(self):
-        super().__init__(self.parent)
 
     def data(self, index, role):
         column = index.column()
