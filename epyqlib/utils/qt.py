@@ -865,23 +865,27 @@ def search_view(view, text, column):
         return
 
     model = view.model()
-
+    index = view.currentIndex()
     models = []
 
-    while model is not None:
+    while True:
         models.append(model)
         search = getattr(model, "search", None)
         if search is not None:
             break
 
-        model = model.sourceModel()
-    else:
-        raise Exception("ack")
+        next_model = model.sourceModel()
+
+        if next_model is None:
+            raise Exception("ack")
+
+        index = model.mapToSource(index)
+        model = next_model
 
     index = search(
         text=text,
         column=column,
-        search_from=view.currentIndex(),
+        search_from = index,
     )
 
     if index is not None:
