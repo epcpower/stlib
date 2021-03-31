@@ -760,7 +760,7 @@ class SortFilterProxyModel(BaseSortFilterProxyModel):
 
 @attr.s(auto_attribs=True)
 class HighlightDiffSortFilterProxyModel(SortFilterProxyModel):
-    columns: typing.Set[int] = attr.Factory(set)
+    columns: typing.Set[int] = attr.ib(factory=set, converter=set)
     _reference_column: int = None
     diff_highlights: typing.Dict[
         QtCore.Qt.ItemDataRole, PyQt5.QtGui.QColor
