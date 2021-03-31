@@ -157,7 +157,7 @@ def message_handler(mode, context, message):
     # Output stack track, minus the last entry which unnecesarily points to the next line.
     tb_stack = traceback.extract_stack()
     tb_format = traceback.format_list(tb_stack[:-1])
-    print(''.join(tb_format))
+    print("".join(tb_format))
 
 
 class Progress(QtCore.QObject):
@@ -889,7 +889,7 @@ def search_view(view, text, column):
     index = search(
         text=text,
         column=column,
-        search_from = index,
+        search_from=index,
     )
 
     if index is not None:
