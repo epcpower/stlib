@@ -154,6 +154,10 @@ def message_handler(mode, context, message):
         )
     )
     print("  {}: {}\n".format(mode, message))
+    # Output stack track, minus the last entry which unnecesarily points to the next line.
+    tb_stack = traceback.extract_stack()
+    tb_format = traceback.format_list(tb_stack[:-1])
+    print(''.join(tb_format))
 
 
 class Progress(QtCore.QObject):
