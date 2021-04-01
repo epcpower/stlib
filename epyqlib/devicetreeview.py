@@ -84,6 +84,7 @@ class DeviceTreeView(QtWidgets.QWidget):
 
         add_device_action = None
         remove_device_action = None
+        change_device_number_action = None
         flash_action = None
         pull_raw_log_action = None
         check_compatibility_action = None
@@ -112,8 +113,8 @@ class DeviceTreeView(QtWidgets.QWidget):
             remove_device_action = menu.addAction("Close")
         if isinstance(node, epyqlib.devicetree.Bus):
             add_device_action = menu.addAction("Open device file...")
-            change_device_number = menu.addAction("Change device number...")
-            change_device_number.setEnabled(
+            change_device_number_action = menu.addAction("Change device number...")
+            change_device_number_action.setEnabled(
                 not node._checked.name
                 and not node.fields.name == "Offline"
                 and node.interface == "pcan"
@@ -141,7 +142,7 @@ class DeviceTreeView(QtWidgets.QWidget):
                     self.model.index_from_node(device),
                     QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows,
                 )
-        elif action is change_device_number:
+        elif action is change_device_number_action:
             self.change_device_number(node)
         elif action is flash_action:
             self.flash(interface=node.interface, channel=node.channel)
