@@ -220,7 +220,7 @@ def test_proxy_search_column_2(qtbot):
 def proxy_search_in_column(column, target):
     model = make_a_model()
 
-    proxy = epyqlib.utils.qt.SortFilterProxyModel(filter_column=0)
+    proxy = epyqlib.utils.qt.PySortFilterProxyModel(filter_column=0)
     proxy.setSourceModel(model.model)
 
     view = PyQt5.QtWidgets.QTreeView()

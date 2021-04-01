@@ -422,7 +422,7 @@ def diff_proxy_test_model():
         for column in range(columns):
             model.setItem(row, column, PyQt5.QtGui.QStandardItem())
 
-    proxy = epyqlib.utils.qt.HighlightDiffSortFilterProxyModel(
+    proxy = epyqlib.utils.qt.DiffProxyModel(
         columns=range(1, rows),
         diff_highlights={
             PyQt5.QtCore.Qt.ItemDataRole.BackgroundRole: (PyQt5.QtGui.QColor("orange"))

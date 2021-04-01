@@ -637,20 +637,13 @@ def dialog_from_file(parent, title, file_name):
 
 
 @attr.s(auto_attribs=True)
-class BaseSortFilterProxyModel(QtCore.QSortFilterProxyModel):
+class PySortFilterProxyModel(QtCore.QSortFilterProxyModel):
     _parent: QtCore.QObject = None
-
-    def __attrs_post_init__(self):
-        super().__init__(self._parent)
-
-
-@attr.s(auto_attribs=True)
-class SortFilterProxyModel(BaseSortFilterProxyModel):
     filter_column: int = 0
     wildcard: QtCore.QRegExp = attr.Factory(QtCore.QRegExp)
 
     def __attrs_post_init__(self):
-        super().__attrs_post_init__()
+        super().__init__(self._parent)
         self.wildcard.setPatternSyntax(QtCore.QRegExp.Wildcard)
 
     def lessThan(self, left, right):
@@ -763,7 +756,8 @@ class SortFilterProxyModel(BaseSortFilterProxyModel):
 
 
 @attr.s(auto_attribs=True)
-class HighlightDiffSortFilterProxyModel(SortFilterProxyModel):
+class DiffProxyModel(QtCore.QIdentityProxyModel):
+    _parent: QtCore.QObject = None
     columns: typing.Set[int] = attr.ib(factory=set, converter=set)
     _reference_column: int = None
     diff_highlights: typing.Dict[
@@ -773,6 +767,9 @@ class HighlightDiffSortFilterProxyModel(SortFilterProxyModel):
         QtCore.Qt.ItemDataRole, PyQt5.QtGui.QColor
     ] = attr.Factory(dict)
     diff_role: QtCore.Qt.ItemDataRole = QtCore.Qt.ItemDataRole.DisplayRole
+
+    def __attrs_post_init__(self):
+        super().__init__(self._parent)
 
     def data(self, index, role):
         column = index.column()

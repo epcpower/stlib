@@ -720,7 +720,7 @@ class Device:
                 column = epyqlib.txrx.Columns.indexes.name
                 for view, model in pairs:
                     if model.root.tx:
-                        proxy = epyqlib.utils.qt.SortFilterProxyModel(
+                        proxy = epyqlib.utils.qt.PySortFilterProxyModel(
                             filter_column=column,
                         )
                         proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
@@ -851,7 +851,13 @@ class Device:
                             path=self.nvs.access_level_node.signal_path(),
                         )
 
-                    proxy = epyqlib.utils.qt.HighlightDiffSortFilterProxyModel(
+                    sort_proxy = epyqlib.utils.qt.PySortFilterProxyModel(
+                        filter_column=column,
+                    )
+                    sort_proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
+                    sort_proxy.setSourceModel(nv_model)
+
+                    diff_proxy = epyqlib.utils.qt.DiffProxyModel(
                         columns=epyqlib.nv.diffable_columns,
                         reference_column=(epyqlib.nv.Columns.indexes.user_default),
                         diff_highlights={
@@ -860,13 +866,12 @@ class Device:
                         reference_highlights={
                             QtCore.Qt.ItemDataRole.BackgroundRole: epyqlib.nv.reference_highlight,
                         },
-                        filter_column=column,
                     )
-                    proxy.setSourceModel(nv_model)
-                    proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
-                    view.setModel(proxy)
-                    view.configure_sort_proxy(proxy)
-                    view.configure_diff_proxy(proxy)
+                    diff_proxy.setSourceModel(sort_proxy)
+
+                    view.setModel(diff_proxy)
+                    view.configure_sort_proxy(sort_proxy)
+                    view.configure_diff_proxy(diff_proxy)
 
                     view.set_metas(self.metas)
                     view.set_sorting_enabled(True)
@@ -891,7 +896,7 @@ class Device:
             )
 
             column = epyqlib.variableselectionmodel.Columns.indexes.name
-            proxy = epyqlib.utils.qt.SortFilterProxyModel(
+            proxy = epyqlib.utils.qt.PySortFilterProxyModel(
                 filter_column=column,
             )
             proxy.setSortCaseSensitivity(Qt.CaseInsensitive)
