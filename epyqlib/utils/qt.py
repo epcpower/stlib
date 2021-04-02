@@ -7,6 +7,7 @@ import sys
 import textwrap
 import time
 import traceback
+import typing
 import uuid
 import weakref
 
@@ -153,6 +154,10 @@ def message_handler(mode, context, message):
         )
     )
     print("  {}: {}\n".format(mode, message))
+    # Output stack track, minus the last entry which unnecesarily points to the next line.
+    tb_stack = traceback.extract_stack()
+    tb_format = traceback.format_list(tb_stack[:-1])
+    print("".join(tb_format))
 
 
 class Progress(QtCore.QObject):
@@ -631,14 +636,14 @@ def dialog_from_file(parent, title, file_name):
     )
 
 
+@attr.s(auto_attribs=True)
 class PySortFilterProxyModel(QtCore.QSortFilterProxyModel):
-    def __init__(self, *args, filter_column, **kwargs):
-        super().__init__(*args, **kwargs)
+    _parent: QtCore.QObject = None
+    filter_column: int = 0
+    wildcard: QtCore.QRegExp = attr.Factory(QtCore.QRegExp)
 
-        # TODO: replace with filterKeyColumn
-        self.filter_column = filter_column
-
-        self.wildcard = QtCore.QRegExp()
+    def __attrs_post_init__(self):
+        super().__init__(self._parent)
         self.wildcard.setPatternSyntax(QtCore.QRegExp.Wildcard)
 
     def lessThan(self, left, right):
@@ -750,17 +755,21 @@ class PySortFilterProxyModel(QtCore.QSortFilterProxyModel):
         return None
 
 
-@attr.s
+@attr.s(auto_attribs=True)
 class DiffProxyModel(QtCore.QIdentityProxyModel):
-    parent = attr.ib(default=None)
-    columns = attr.ib(factory=set, converter=set)
-    _reference_column = attr.ib(default=None)
-    diff_highlights = attr.ib(factory=dict)
-    reference_highlights = attr.ib(factory=dict)
-    diff_role = attr.ib(default=QtCore.Qt.ItemDataRole.DisplayRole)
+    _parent: QtCore.QObject = None
+    columns: typing.Set[int] = attr.ib(factory=set, converter=set)
+    _reference_column: int = None
+    diff_highlights: typing.Dict[
+        QtCore.Qt.ItemDataRole, PyQt5.QtGui.QColor
+    ] = attr.Factory(dict)
+    reference_highlights: typing.Dict[
+        QtCore.Qt.ItemDataRole, PyQt5.QtGui.QColor
+    ] = attr.Factory(dict)
+    diff_role: QtCore.Qt.ItemDataRole = QtCore.Qt.ItemDataRole.DisplayRole
 
     def __attrs_post_init__(self):
-        super().__init__(self.parent)
+        super().__init__(self._parent)
 
     def data(self, index, role):
         column = index.column()
@@ -857,23 +866,27 @@ def search_view(view, text, column):
         return
 
     model = view.model()
-
+    index = view.currentIndex()
     models = []
 
-    while model is not None:
+    while True:
         models.append(model)
         search = getattr(model, "search", None)
         if search is not None:
             break
 
-        model = model.sourceModel()
-    else:
-        raise Exception("ack")
+        next_model = model.sourceModel()
+
+        if next_model is None:
+            raise Exception("ack")
+
+        index = model.mapToSource(index)
+        model = next_model
 
     index = search(
         text=text,
         column=column,
-        search_from=view.currentIndex(),
+        search_from=index,
     )
 
     if index is not None:
