@@ -3,7 +3,9 @@
 # TODO: """DocString if there is one"""
 
 import math
+import pathlib
 import textwrap
+import uuid
 
 import can
 from PyQt5 import QtWidgets
@@ -113,6 +115,13 @@ class DeviceTreeView(QtWidgets.QWidget):
             remove_device_action = menu.addAction("Close")
         if isinstance(node, epyqlib.devicetree.Bus):
             add_device_action = menu.addAction("Open device file...")
+            check_software_hash_action = menu.addAction("Check software hash...")
+            check_software_hash_action.setEnabled(
+                not node._checked.name
+                and not node.fields.name == "Offline"
+                and node.interface == "pcan"
+                and node.bus.bus is None
+            )
             change_device_number_action = menu.addAction("Change device number...")
             change_device_number_action.setEnabled(
                 not node._checked.name
@@ -142,6 +151,8 @@ class DeviceTreeView(QtWidgets.QWidget):
                     self.model.index_from_node(device),
                     QItemSelectionModel.ClearAndSelect | QItemSelectionModel.Rows,
                 )
+        elif action is check_software_hash_action:
+            self.check_software_hash(node)
         elif action is change_device_number_action:
             self.change_device_number(node)
         elif action is flash_action:
@@ -230,6 +241,70 @@ class DeviceTreeView(QtWidgets.QWidget):
             self.ui.tree_view.setExpanded(index, True)
 
         return device
+
+    def check_software_hash(self, node):
+        pcan_bus = can.interface.Bus(bustype=node.interface, channel=node.channel)
+
+        # Recieve N messages on the PCAN bus.
+        # Discover the node ID from the arbitration ID.
+        # Store the found node ID's in a set.
+        node_id_set = set()
+        for i in range(100):
+            recv_id = pcan_bus.recv(0.1)
+            if recv_id is not None:
+                id = recv_id.arbitration_id & 0xFF
+                node_id_set.add(id)
+
+        # Set up the device.
+        factory_epc_path = pathlib.Path(epyqlib.tests.common.devices["factory"])
+        device = epyqlib.hildevice.Device(
+            definition_path=factory_epc_path,
+        )
+        device.load()
+        bus_proxy = epyqlib.busproxy.BusProxy(
+            bus=pcan_bus,
+            auto_disconnect=False,
+        )
+        device.set_bus(bus_proxy)
+
+        # Retrieve the software hash from the device.
+        # Display a dialog with the discovered device information.
+        hash = self.get_software_hash(device)
+        hash.addCallback(self.pcan_software_hash_pop_up_dialog, node, node_id_set)
+        hash.addCallback(lambda ignored: pcan_bus.shutdown())
+
+    @epyqlib.utils.twisted.ensure_deferred
+    @epyqlib.utils.twisted.errback_dialog
+    async def get_software_hash(self, device):
+        # Assumption that the UUID for software hash will not change.
+        software_hash_parameter = device.parameter_from_uuid(
+            uuid_=uuid.UUID("b132073c-740d-4390-96fc-e2c2f6cd8e50"),
+        )
+        hash = await software_hash_parameter.get()
+        hash = int(hash)
+        return hash
+
+    def pcan_software_hash_pop_up_dialog(self, hash, node, node_id_set):
+        if len(node_id_set) == 0:
+            node_id_out = "None Found"
+        elif len(node_id_set) == 1:
+            node_id_out = list(node_id_set)[0]
+        else:
+            node_id_out = list(node_id_set)
+        text = "<table>"
+        text += "<tr><td>PCAN Device: </td><td>"
+        text += " - ".join([node.channel, str(node.device_number)])
+        text += f"</td></tr><tr><td>Software Hash: </td><td>{hex(hash)}</td></tr>"
+        text += f"<tr><td>Node ID: </td><td>{node_id_out}</td></tr>"
+        text += "</table>"
+        epyqlib.utils.qt.dialog(
+            parent=self,
+            title="Hash",
+            message=text,
+            icon=QtWidgets.QMessageBox.Information,
+            rich_text=True,
+            cancellable=False,
+        )
 
     def change_device_number(self, node):
         pcan_bus = can.interface.Bus(bustype=node.interface, channel=node.channel)
