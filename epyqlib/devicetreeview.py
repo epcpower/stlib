@@ -86,6 +86,7 @@ class DeviceTreeView(QtWidgets.QWidget):
 
         add_device_action = None
         remove_device_action = None
+        check_software_hash_action = None
         change_device_number_action = None
         flash_action = None
         pull_raw_log_action = None
