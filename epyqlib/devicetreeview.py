@@ -17,6 +17,7 @@ import epyqlib.device
 import epyqlib.devicetree
 import epyqlib.devicetreeview_ui
 import epyqlib.flash
+import epyqlib.hildevice
 import epyqlib.utils.general
 import epyqlib.utils.qt
 import epyqlib.utils.twisted
@@ -243,47 +244,45 @@ class DeviceTreeView(QtWidgets.QWidget):
 
         return device
 
-    def check_software_hash(self, node):
-        pcan_bus = can.interface.Bus(bustype=node.interface, channel=node.channel)
-
-        # Recieve N messages on the PCAN bus.
-        # Discover the node ID from the arbitration ID.
-        # Store the found node ID's in a set.
-        node_id_set = set()
-        for i in range(100):
-            recv_id = pcan_bus.recv(0.1)
-            if recv_id is not None:
-                id = recv_id.arbitration_id & 0xFF
-                node_id_set.add(id)
-
-        # Set up the device.
-        factory_epc_path = pathlib.Path(epyqlib.tests.common.devices["factory"])
-        device = epyqlib.hildevice.Device(
-            definition_path=factory_epc_path,
-        )
-        device.load()
-        bus_proxy = epyqlib.busproxy.BusProxy(
-            bus=pcan_bus,
-            auto_disconnect=False,
-        )
-        device.set_bus(bus_proxy)
-
-        # Retrieve the software hash from the device.
-        # Display a dialog with the discovered device information.
-        hash = self.get_software_hash(device)
-        hash.addCallback(self.pcan_software_hash_pop_up_dialog, node, node_id_set)
-        hash.addCallback(lambda ignored: pcan_bus.shutdown())
-
     @epyqlib.utils.twisted.ensure_deferred
     @epyqlib.utils.twisted.errback_dialog
-    async def get_software_hash(self, device):
-        # Assumption that the UUID for software hash will not change.
-        software_hash_parameter = device.parameter_from_uuid(
-            uuid_=uuid.UUID("b132073c-740d-4390-96fc-e2c2f6cd8e50"),
-        )
-        hash = await software_hash_parameter.get()
-        hash = int(hash)
-        return hash
+    async def check_software_hash(self, node):
+        pcan_bus = can.interface.Bus(bustype=node.interface, channel=node.channel)
+
+        try:
+            # Recieve N messages on the PCAN bus.
+            # Discover the node ID from the arbitration ID.
+            # Store the found node ID's in a set.
+            node_id_set = set()
+            for i in range(100):
+                recv_id = pcan_bus.recv(0.1)
+                if recv_id is not None:
+                    id = recv_id.arbitration_id & 0xFF
+                    node_id_set.add(id)
+
+            # Set up the device.
+            factory_epc_path = pathlib.Path(epyqlib.tests.common.devices["factory"])
+            device = epyqlib.hildevice.Device(
+                definition_path=factory_epc_path,
+            )
+            device.load()
+            bus_proxy = epyqlib.busproxy.BusProxy(
+                bus=pcan_bus,
+                auto_disconnect=False,
+            )
+            device.set_bus(bus_proxy)
+
+            # Assumption that the UUID for software hash will not change.
+            software_hash_parameter = device.parameter_from_uuid(
+                uuid_=uuid.UUID("b132073c-740d-4390-96fc-e2c2f6cd8e50"),
+            )
+            hash = await software_hash_parameter.get()
+            hash = int(hash)
+
+            # Pop up dialog with software hash and node ID information.
+            self.pcan_software_hash_pop_up_dialog(hash, node, node_id_set)
+        finally:
+            pcan_bus.shutdown()
 
     def pcan_software_hash_pop_up_dialog(self, hash, node, node_id_set):
         if len(node_id_set) == 0:
