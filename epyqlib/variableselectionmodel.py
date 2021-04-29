@@ -789,7 +789,7 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             [hash_node] = [
                 n for n in block_header_node.children if n.fields.name == "softwareHash"
             ]
-            log_hash = f'{hash_node.fields.value:07x}'
+            log_hash = f"{hash_node.fields.value:07x}"
             if not hashes_match(self.git_hash, log_hash):
                 if hash_node.fields.value is not None:
                     log_hash = "{:07x}".format(hash_node.fields.value)
