@@ -48,6 +48,10 @@ class Columns(epyqlib.abstractcolumns.AbstractColumns):
 Columns.indexes = Columns.indexes()
 
 
+def hashes_match(this, that):
+    return this.startswith(that) or that.startswith(this)
+
+
 class Sender(QObject):
     array_truncated_signal = pyqtSignal(int, str, int)
 
@@ -480,7 +484,6 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             v for v in variables if v.name.startswith("dataLogger_gitRev_")
         ]
         self.git_hash = self.git_hash.name.split("0x", 1)[1]
-        self.git_hash = int(self.git_hash, 16)
 
         logger.debug("Updating from binary, {} variables".format(len(variables)))
 
@@ -515,7 +518,6 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             v for v in variables if v.name.startswith("dataLogger_gitRev_")
         ]
         self.git_hash = self.git_hash.name.split("0x", 1)[1]
-        self.git_hash = int(self.git_hash, 16)
 
         logger.debug("Updating from binary, {} variables".format(len(variables)))
 
@@ -787,7 +789,8 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             [hash_node] = [
                 n for n in block_header_node.children if n.fields.name == "softwareHash"
             ]
-            if self.git_hash != hash_node.fields.value:
+            log_hash = f'{hash_node.fields.value:07x}'
+            if not hashes_match(self.git_hash, log_hash):
                 if hash_node.fields.value is not None:
                     log_hash = "{:07x}".format(hash_node.fields.value)
                 else:
@@ -796,7 +799,7 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 d = twisted.internet.defer.Deferred()
                 d.errback(
                     Exception(
-                        "Git hashes from .out ({:07x}) and the log ({}) do not match".format(
+                        "Git hashes from .out ({}) and the log ({}) do not match".format(
                             self.git_hash, log_hash
                         )
                     )
