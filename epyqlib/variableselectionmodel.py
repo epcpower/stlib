@@ -796,7 +796,6 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 log_hash = str(hash_node.fields.value)
 
             if not hashes_match(self.git_hash, log_hash):
-
                 d = twisted.internet.defer.Deferred()
                 d.errback(
                     Exception(
