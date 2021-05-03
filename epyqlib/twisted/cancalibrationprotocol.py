@@ -547,7 +547,8 @@ class Handler(QObject, twisted.protocols.policies.TimeoutMixin):
 
     def dataReceived(self, msg):
         if not (
-            msg.arbitration_id == self._rx_id and bool(msg.is_extended_id) == self._extended
+            msg.arbitration_id == self._rx_id
+            and bool(msg.is_extended_id) == self._extended
         ):
             return
 
