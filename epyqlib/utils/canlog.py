@@ -77,7 +77,7 @@ class Message:
             type=MessageType.Rx,
             id=Id(
                 value=message.arbitration_id,
-                extended=message.id_type,
+                extended=message.is_extended_id,
             ),
             data=bytearray(message.data),
         )
