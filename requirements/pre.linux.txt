@@ -11,7 +11,7 @@ idna==2.10                # via requests
 pip-tools==5.1.0          # via -r requirements/pre.in
 requests==2.25.1          # via romp
 romp==2020.3              # via -r requirements/pre.in
-six==1.15.0               # via pip-tools
+six==1.16.0               # via pip-tools
 urllib3==1.26.4           # via requests
 wheel==0.34.2             # via -r requirements/pre.in
 

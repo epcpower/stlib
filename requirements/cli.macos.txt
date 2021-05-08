@@ -67,9 +67,10 @@ qt5reactor==0.5           # via -r requirements/base.in
 qtawesome==0.6.0          # via -r requirements/base.in
 qtpy==1.9.0               # via qtawesome
 regex==2021.4.4           # via black
-requests==2.25.1          # via fab, romp, treq
+requests==2.25.1          # via -r requirements/cli.in, fab, romp, treq
 romp==2020.3              # via -r requirements/pre.in
 s3transfer==0.3.7         # via boto3
+selenium==3.141.0         # via -r requirements/cli.in
 service-identity==18.1.0  # via twisted
 siphash-cffi==0.1.4       # via -r requirements/base.in
 six==1.16.0               # via automat, pathlib2, pip-tools, pyopenssl, python-dateutil, qtawesome, treq
@@ -82,7 +83,7 @@ treq==21.1.0              # via -r requirements/base.in
 twisted[tls]==21.2.0      # via -r requirements/base.in, qt5reactor, treq
 typed-ast==1.4.3          # via black
 typing-extensions==3.10.0.0  # via black
-urllib3==1.25.11          # via botocore, dulwich, requests
+urllib3==1.25.11          # via botocore, dulwich, requests, selenium
 wheel==0.34.2             # via -r requirements/pre.in
 wrapt==1.12.1             # via python-can
 zope.interface==5.4.0     # via twisted
