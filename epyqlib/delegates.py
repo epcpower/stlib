@@ -70,8 +70,8 @@ class Delegate:
 
 # TODO: CAMPid 374895478431714307074310
 class CustomCombo(QtWidgets.QComboBox):
-    def hidePopup(self):
-        super().hidePopup()
+    def hideEvent(self, QHideEvent):
+        super().hideEvent(QHideEvent)
 
         QtCore.QCoreApplication.postEvent(
             self,
