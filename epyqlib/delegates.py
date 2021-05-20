@@ -70,17 +70,28 @@ class Delegate:
 
 # TODO: CAMPid 374895478431714307074310
 class CustomCombo(QtWidgets.QComboBox):
-    def hideEvent(self, QHideEvent):
-        super().hideEvent(QHideEvent)
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.view_item_pressed = False
+        self.view().pressed.connect(self.handleItemPressed)
 
-        QtCore.QCoreApplication.postEvent(
-            self,
-            QtGui.QKeyEvent(
-                QtCore.QEvent.KeyPress,
-                QtCore.Qt.Key_Enter,
-                QtCore.Qt.NoModifier,
-            ),
-        )
+    def handleItemPressed(self):
+        # If an item is selected in the view list,
+        # allow hidePopup to post event to set the value.
+        self.view_item_pressed = True
+
+    def hidePopup(self):
+        super().hidePopup()
+
+        if self.view_item_pressed:
+            QtCore.QCoreApplication.postEvent(
+                self,
+                QtGui.QKeyEvent(
+                    QtCore.QEvent.KeyPress,
+                    QtCore.Qt.Key_Enter,
+                    QtCore.Qt.NoModifier,
+                ),
+            )
 
 
 class ByFunction(QtWidgets.QStyledItemDelegate):
