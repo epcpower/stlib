@@ -70,17 +70,44 @@ class Delegate:
 
 # TODO: CAMPid 374895478431714307074310
 class CustomCombo(QtWidgets.QComboBox):
-    def hidePopup(self):
-        super().hidePopup()
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.view_item_pressed = False
+        self.view().pressed.connect(self.handleItemPressed)
 
+    def handleItemPressed(self):
+        # If an item is selected in the view list,
+        # allow hidePopup to post event to set the value.
+        self.view_item_pressed = True
+
+    def sendKeyPress(self, key_to_send):
         QtCore.QCoreApplication.postEvent(
             self,
             QtGui.QKeyEvent(
                 QtCore.QEvent.KeyPress,
-                QtCore.Qt.Key_Enter,
+                key_to_send,
                 QtCore.Qt.NoModifier,
             ),
         )
+
+    def hidePopup(self):
+        super().hidePopup()
+
+        # For a mouse click on a view item, send an enter to clear the delegate.
+        if self.view_item_pressed:
+            self.sendKeyPress(QtCore.Qt.Key_Enter)
+
+    def keyReleaseEvent(self, QKeyEvent):
+        super().keyReleaseEvent(QKeyEvent)
+
+        # For key release, double send the return/enter or escape to clear the delegate.
+        if (
+            QKeyEvent.key() == QtCore.Qt.Key_Return
+            or QKeyEvent.key() == QtCore.Qt.Key_Enter
+        ):
+            self.sendKeyPress(QtCore.Qt.Key_Enter)
+        elif QKeyEvent.key() == QtCore.Qt.Key_Escape:
+            self.sendKeyPress(QtCore.Qt.Key_Escape)
 
 
 class ByFunction(QtWidgets.QStyledItemDelegate):
