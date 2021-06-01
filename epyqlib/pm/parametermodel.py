@@ -154,6 +154,15 @@ class Parameter(epyqlib.treenode.TreeNode):
     internal_variable = epyqlib.attrsmodel.create_str_or_none_attribute()
     getter_function = epyqlib.attrsmodel.create_str_or_none_attribute()
     setter_function = epyqlib.attrsmodel.create_str_or_none_attribute()
+
+    constant = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_decimal_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Decimal(allow_none=True, as_string=True),
+        ),
+    )
+
     rejected_callback = epyqlib.attrsmodel.create_str_or_none_attribute()
     internal_type = epyqlib.attrsmodel.create_str_or_none_attribute()
     internal_scale_factor = attr.ib(
@@ -282,6 +291,7 @@ class Parameter(epyqlib.treenode.TreeNode):
                 self.internal_variable,
                 self.getter_function,
                 self.setter_function,
+                self.constant,
             )
         )
 
