@@ -157,9 +157,9 @@ class Parameter(epyqlib.treenode.TreeNode):
 
     constant = attr.ib(
         default=None,
-        converter=epyqlib.attrsmodel.to_decimal_or_none,
+        converter=epyqlib.attrsmodel.to_decimal_or_expression_or_none,
         metadata=graham.create_metadata(
-            field=marshmallow.fields.Decimal(allow_none=True, as_string=True),
+            field=marshmallow.fields.String(allow_none=True, as_string=True),
         ),
     )
 

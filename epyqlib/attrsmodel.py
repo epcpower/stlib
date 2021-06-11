@@ -735,6 +735,35 @@ def to_decimal_or_none(s):
 
     return result
 
+def to_decimal_or_expression_or_none(s):
+    if s is None:
+        return None
+
+    if isinstance(s, str) and len(s) == 0:
+        return None
+
+    if isinstance(s, str):
+        s = locale.delocalize(s)
+
+    #see if its a decimal
+    try:
+        if s.isdecimal():
+            result = decimal.Decimal(s)
+            return result
+    except decimal.InvalidOperation as e:
+        print ("to_decimal_or_expression_or_none NOT A DECIMAL")
+        #raise ValueError("Invalid number: {}".format(repr(s))) from e
+
+    #expression
+
+    if isinstance(s, str):
+        if len(s) == 0:
+            return None
+
+        return s
+    return str(s)
+
+    #return result
 
 def to_str_or_none(s):
     if s is None:
