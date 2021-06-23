@@ -1702,6 +1702,7 @@ columns = epyqlib.attrsmodel.columns(
     merge("internal_variable", Parameter),
     merge("getter_function", Parameter),
     merge("setter_function", Parameter),
+    merge("constant", Parameter),
     merge("rejected_callback", Parameter),
     merge("internal_type", Parameter),
     merge("internal_scale_factor", Parameter),
