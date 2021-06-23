@@ -1606,7 +1606,9 @@ class Tests:
         ]
 
         columns = set(columns_list)
+
         assert len(columns_list) == len(columns)
+
         extra = columns - fields
         missing = fields - columns
 
