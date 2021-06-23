@@ -1610,12 +1610,6 @@ class Tests:
         extra = columns - fields
         missing = fields - columns
 
-        print("columns = ", columns)
-        print("fields = ", fields)
-
-        print("extra = ", extra)
-        print("missing = ", missing)
-
         assert extra == set()
         assert missing == set(), columns_to_code(missing)
 
