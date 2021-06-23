@@ -1616,9 +1616,6 @@ class Tests:
         print("extra = ", extra)
         print("missing = ", missing)
 
-
-
-
         assert extra == set()
         assert missing == set(), columns_to_code(missing)
 
