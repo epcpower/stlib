@@ -1606,11 +1606,18 @@ class Tests:
         ]
 
         columns = set(columns_list)
-
         assert len(columns_list) == len(columns)
-
         extra = columns - fields
         missing = fields - columns
+
+        print("columns = ", columns)
+        print("fields = ", fields)
+
+        print("extra = ", extra)
+        print("missing = ", missing)
+
+
+
 
         assert extra == set()
         assert missing == set(), columns_to_code(missing)
