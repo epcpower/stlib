@@ -181,6 +181,14 @@ class Parameter(epyqlib.treenode.TreeNode):
 
     read_only = create_read_only_attribute()
 
+    getter_index = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_int_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.Integer(allow_none=True),
+        ),
+    )
+
     access_level_uuid = epyqlib.attrsmodel.attr_uuid(
         default=None,
         allow_none=True,
@@ -1701,6 +1709,7 @@ columns = epyqlib.attrsmodel.columns(
     merge("label", SunSpecEnumerator),
     merge("internal_variable", Parameter),
     merge("getter_function", Parameter),
+    merge("getter_index", Parameter),
     merge("setter_function", Parameter),
     merge("constant", Parameter),
     merge("rejected_callback", Parameter),
