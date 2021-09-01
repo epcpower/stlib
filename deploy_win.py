@@ -257,7 +257,7 @@ zipped_licenses = ()
 for tarred in tarred_licenses:
     r = requests.get(tarred[1])
     with tarfile.open(fileobj=io.BytesIO(r.content)) as z:
-        with z.open(tarred[2]) as i:
+        with z.extractfile(tarred[2]) as i:
             with open(tarred[0], "wb") as o:
                 o.write(i.read())
 
