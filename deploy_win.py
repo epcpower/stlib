@@ -94,6 +94,7 @@ import os
 import shutil
 import tempfile
 import zipfile
+import tarfile
 
 import subprocess
 
@@ -244,13 +245,23 @@ import requests
 
 pyqt5_license_path = os.path.join("build", "PyQt5_LICENSE")
 qt_license_path = os.path.join("build", "Qt_LICENSE")
-zipped_licenses = (
+tarred_licenses = (
     (
         pyqt5_license_path,
-        "https://sourceforge.net/projects/pyqt/files/PyQt5/PyQt-5.8.2/PyQt5_gpl-5.8.2.zip",
-        "PyQt5_gpl-5.8.2/LICENSE",
+        "https://files.pythonhosted.org/packages/3a/fb/eb51731f2dc7c22d8e1a63ba88fb702727b324c6352183a32f27f73b8116/PyQt5-5.14.1.tar.gz",
+        "PyQt5-5.14.1/LICENSE",
     ),
 )
+
+zipped_licenses = (
+)
+
+for tarred in tarred_licenses:
+    r = requests.get(tarred[1])
+    with tarfile.open(fileobj=io.BytesIO(r.content), mode='w') as z:
+        with z.open(tarred[2]) as i:
+            with open(tarred[0], "wb") as o:
+                o.write(i.read())
 
 for zipped in zipped_licenses:
     r = requests.get(zipped[1])
