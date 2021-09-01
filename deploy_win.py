@@ -442,7 +442,7 @@ for path in os.listdir(base):
 
 report_and_check_call(
     command=[
-        os.path.join("c:/", "Qt", "QtIFW-3.0.1", "bin", "binarycreator.exe"),
+        os.path.join("qtifw", "bin", "binarycreator.exe"),
         "-c",
         os.path.join("installer", "config", "config.xml"),
         "-p",
