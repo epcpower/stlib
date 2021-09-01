@@ -252,7 +252,6 @@ tarred_licenses = (
         "PyQt5-5.14.1/LICENSE",
     ),
 )
-PyQt5-5.14.1/LICENSE
 zipped_licenses = ()
 
 for tarred in tarred_licenses:
