@@ -45,7 +45,7 @@ def write_build_file(target):
             slug=os.environ["APPVEYOR_PROJECT_SLUG"],
             id=os.environ["APPVEYOR_JOB_ID"],
         )
-    elif os.environ.get("GITHUB_ACTIONS") == "True":
+    elif os.environ.get("GITHUB_ACTIONS") == "true":
         GITHUB_RUN_ID = os.environ.get("GITHUB_RUN_ID", "None")
         GITHUB_RUN_NUMBER = os.environ.get("GITHUB_RUN_NUMBER", "None")
         GITHUB_SERVER_URL = os.environ.get("GITHUB_SERVER_URL", "None")
