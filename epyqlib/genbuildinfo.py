@@ -45,6 +45,23 @@ def write_build_file(target):
             slug=os.environ["APPVEYOR_PROJECT_SLUG"],
             id=os.environ["APPVEYOR_JOB_ID"],
         )
+    elif os.environ.get("GITHUB_ACTIONS") == "True":
+        GITHUB_RUN_ID = os.environ.get("GITHUB_RUN_ID", "None")
+        GITHUB_RUN_NUMBER = os.environ.get("GITHUB_RUN_NUMBER", "None")
+        GITHUB_SERVER_URL = os.environ.get("GITHUB_SERVER_URL", "None")
+        GITHUB_REPOSITORY = os.environ.get("GITHUB_REPOSITORY", "None")
+        values["build_system"] = "GitHub Actions"
+        values["job_id"] = f"{GITHUB_RUN_ID}_{GITHUB_RUN_NUMBER}"
+        mapping = {
+            "build_id": "GITHUB_RUN_ID",
+            "build_number": "GITHUB_RUN_NUMBER",
+            # "build_version": "APPVEYOR_BUILD_VERSION",
+            # "job_id": "GITHUB_JOB",
+        }
+        values.update({k: os.environ[v] for k, v in mapping.items()})
+        values[
+            "job_url"
+        ] = f"{GITHUB_SERVER_URL}/{GITHUB_REPOSITORY}/actions/runs/{GITHUB_RUN_ID}"
 
     for k, v in values.items():
         target.write("{} = {}\n".format(k, repr(v)))
