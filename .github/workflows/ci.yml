@@ -46,6 +46,8 @@ jobs:
           ls
           ls ../
 
+          cat ../epyqlib/_build_generated.py
+
           venv/Scripts/pytest -vvvv -s --no-qt-log --run-factory epyqlib.tests --pyargs
 
           python boots.py publish
