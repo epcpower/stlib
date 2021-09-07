@@ -43,12 +43,6 @@ jobs:
           venv/Scripts/pip freeze --all
           python boots.py build
 
-          ls
-          ls ../
-          ls epyqlib
-
-          cat epyqlib/_build_generated.py
-
           venv/Scripts/pytest -vvvv -s --no-qt-log --run-factory epyqlib.tests --pyargs
 
           python boots.py publish
