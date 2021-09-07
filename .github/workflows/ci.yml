@@ -45,6 +45,7 @@ jobs:
 
           ls
           ls ../
+          ls ../epyqlib
 
           cat ../epyqlib/_build_generated.py
 
