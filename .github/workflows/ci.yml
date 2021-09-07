@@ -39,15 +39,15 @@ jobs:
           pip --version
           python boots.py create --group package
           venv/Scripts/black --check --diff .
-          venv/Scripts/genbuildinfo "../epyqlib/_build_generated.py"
+          venv/Scripts/genbuildinfo "epyqlib/_build_generated.py"
           venv/Scripts/pip freeze --all
           python boots.py build
 
           ls
           ls ../
-          ls ../epyqlib
+          ls epyqlib
 
-          cat ../epyqlib/_build_generated.py
+          cat epyqlib/_build_generated.py
 
           venv/Scripts/pytest -vvvv -s --no-qt-log --run-factory epyqlib.tests --pyargs
 
