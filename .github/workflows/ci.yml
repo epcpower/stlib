@@ -31,6 +31,9 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: python commands
+        env: 
+          TWINE_USERNAME : ${{ secrets.TWINE_USERNAME }}
+          TWINE_PASSWORD : ${{ secrets.TWINE_PASSWORD }} 
         run: |
           set -vx
           which pip
