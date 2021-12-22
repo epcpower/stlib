@@ -5,7 +5,7 @@ description = ""
 authors = ["Alex Anker <alex.anker@epcpower.com>"]
 
 #[tool.poetry-dynamic-versioning]
-#enable = true
+##enable = true
 
 [tool.poetry.dependencies]
 python = "^3.7"
@@ -68,7 +68,6 @@ autodevice = 'epyqlib.autodevice.cli:cli'
 epyqlib = 'epyqlib.cli.main:cli'
 
 [tool.poetry.plugins.pytest11]
-#epyqlib = 'epyqlib.tests.pytest_plugin'
 epyqlib = "epyqlib.tests.pytest_plugin"
 
 [build-system]
