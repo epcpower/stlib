@@ -46,13 +46,12 @@ jobs:
           TWINE_PASSWORD : ${{ secrets.TWINE_PASSWORD }}
         run: |
           set -vx
-          which pip
-          pip --version
-          venv/Scripts/black --check --diff .
-          venv/Scripts/genbuildinfo "epyqlib/_build_generated.py"
-          venv/Scripts/pip freeze --all
+          poetry run pip --version
+          poetry run black --check --diff .
+          poetry run genbuildinfo "epyqlib/_build_generated.py"
+          poetry run pip freeze --all
 
-          venv/Scripts/pytest -vvvv -s --no-qt-log --run-factory epyqlib.tests --pyargs
+          poetry run pytest -vvvv -s --no-qt-log --run-factory epyqlib.tests --pyargs
 
 
       - name: Archive artifacts
