@@ -39,6 +39,7 @@ jobs:
       - name: poetry install
         run: |
           poetry install
+          poetry --version
 
       - name: python commands
         env:
