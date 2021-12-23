@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import argparse
 import collections
+
 try:
     import configparser
 except ImportError:
@@ -39,52 +40,55 @@ class ExitError(Exception):
 class InvalidStageException(Exception):
     @classmethod
     def build(cls, stage):
-        return cls('Stage {stage!r} not found in: {stages}'.format(
-            stage=stage,
-            stages=', '.join(requirements_extensions)
-        ))
+        return cls(
+            "Stage {stage!r} not found in: {stages}".format(
+                stage=stage, stages=", ".join(requirements_extensions)
+            )
+        )
 
 
 class InvalidBooleanString(Exception):
     @classmethod
     def build(cls, s):
         return cls(
-            'Invalid boolean string found {invalid!r}.'
-            '  Expected one of: {valid}'.format(
+            "Invalid boolean string found {invalid!r}."
+            "  Expected one of: {valid}".format(
                 invalid=s,
-                valid=', '.join(
-                    '/'.join(pair) for pair in boolean_string_pairs
-                ),
+                valid=", ".join("/".join(pair) for pair in boolean_string_pairs),
             )
         )
 
 
-requirements_specification = 'in'
-requirements_lock = 'txt'
+requirements_specification = "in"
+requirements_lock = "txt"
 
-requirements_extensions = collections.OrderedDict((
-    (requirements_specification, '.in'),
-    (requirements_lock, '.txt'),
-))
+requirements_extensions = collections.OrderedDict(
+    (
+        (requirements_specification, ".in"),
+        (requirements_lock, ".txt"),
+    )
+)
 
 
-windows = 'windows'
-linux = 'linux'
-macos = 'macos'
+windows = "windows"
+linux = "linux"
+macos = "macos"
 
-platforms = collections.OrderedDict((
-    (linux, 'linux'),
-    (windows, 'win'),
-    (macos, 'darwin'),
-))
+platforms = collections.OrderedDict(
+    (
+        (linux, "linux"),
+        (windows, "win"),
+        (macos, "darwin"),
+    )
+)
 
 platform_names = {
-    windows: 'Windows',
-    linux: 'Linux',
-    macos: 'macOS',
+    windows: "Windows",
+    linux: "Linux",
+    macos: "macOS",
 }
 
-default_pre_requirements = ['pip', 'setuptools', 'pip-tools', 'romp']
+default_pre_requirements = ["pip", "setuptools", "pip-tools", "romp"]
 
 
 def get_platform():
@@ -92,7 +96,7 @@ def get_platform():
         if sys.platform.startswith(platform_text):
             return platform
 
-    raise ExitError('Unsupported platform {}'.format(sys.platform))
+    raise ExitError("Unsupported platform {}".format(sys.platform))
 
 
 def resolve_path(*path):
@@ -101,9 +105,9 @@ def resolve_path(*path):
 
 def sub(f, command, *args, **kwargs):
     command = list(command)
-    print('Launching: ')
+    print("Launching: ")
     for arg in command:
-        print('    {}'.format(arg))
+        print("    {}".format(arg))
 
     return f(command, *args, **kwargs)
 
@@ -133,10 +137,10 @@ def read_dot_env(path):
             for line in f:
                 line = line.strip()
 
-                if line.startswith('#'):
+                if line.startswith("#"):
                     continue
 
-                k, _, v = line.partition('=')
+                k, _, v = line.partition("=")
                 env[k] = v
 
     return env
@@ -148,7 +152,7 @@ def build_requirements_path(group, stage, configuration):
 
     file_name = group
     if stage == requirements_lock:
-        file_name += '.' + configuration.platform
+        file_name += "." + configuration.platform
     file_name += requirements_extensions[stage]
 
     return resolve_path(
@@ -161,20 +165,20 @@ def pip_seed_requirements(configuration):
     pre_lock = build_requirements_path(
         group=configuration.pre_group,
         stage=requirements_lock,
-        configuration=configuration
+        configuration=configuration,
     )
 
     if os.path.isfile(pre_lock):
-        return ['--requirement', pre_lock]
+        return ["--requirement", pre_lock]
 
     pre_specification = build_requirements_path(
         group=configuration.pre_group,
         stage=requirements_specification,
-        configuration=configuration
+        configuration=configuration,
     )
 
     if os.path.isfile(pre_specification):
-        return ['--requirement', pre_specification]
+        return ["--requirement", pre_specification]
 
     return default_pre_requirements
 
@@ -200,13 +204,13 @@ def common_create(
 ):
     if os.path.exists(configuration.resolved_venv_path()):
         raise ExitError(
-            'venv already exists. if you know it is safe, remove it with:\n'
-            '    python {} rm'.format(os.path.basename(__file__))
+            "venv already exists. if you know it is safe, remove it with:\n"
+            "    python {} rm".format(os.path.basename(__file__))
         )
 
     env = dict(os.environ)
     env.update(read_dot_env(configuration.resolved_dot_env()))
-    pip_src = env.get('PIP_SRC')
+    pip_src = env.get("PIP_SRC")
     if pip_src is not None:
         try:
             os.makedirs(pip_src)
@@ -218,14 +222,16 @@ def common_create(
 
     extras = []
     if configuration.python_identifier.version >= (3, 6):
-        extras.extend(('--prompt', configuration.resolved_venv_prompt()))
+        extras.extend(("--prompt", configuration.resolved_venv_prompt()))
 
     check_call(
         [
             python,
-            '-m', 'venv',
+            "-m",
+            "venv",
             configuration.resolved_venv_path(),
-        ] + extras,
+        ]
+        + extras,
         cwd=configuration.project_root,
         env=env,
     )
@@ -255,10 +261,12 @@ def install_pre(python, configuration, env=None):
     check_call(
         [
             python,
-            '-m', 'pip',
-            'install',
-            '--upgrade',
-        ] + pip_seed_requirements(configuration=configuration),
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+        ]
+        + pip_seed_requirements(configuration=configuration),
         cwd=configuration.project_root,
         env=env,
     )
@@ -286,16 +294,18 @@ def sync_requirements(group, configuration, python=None, pip_sync=None):
 
     requirements_path = os.path.join(
         configuration.resolved_requirements_path(),
-        'local' + requirements_extensions[requirements_lock],
+        "local" + requirements_extensions[requirements_lock],
     )
     if os.path.isfile(requirements_path):
         check_call(
             [
                 python,
-                '-m', 'pip',
-                'install',
-                '--no-deps',
-                '--requirement', requirements_path,
+                "-m",
+                "pip",
+                "install",
+                "--no-deps",
+                "--requirement",
+                requirements_path,
             ],
             cwd=configuration.project_root,
             env=env,
@@ -307,10 +317,11 @@ def sync_requirements_file(env, requirements, configuration, pip_sync):
         pip_sync = [
             os.path.join(
                 configuration.resolved_venv_common_bin(),
-                'python',
+                "python",
             ),
-            '-m', 'piptools',
-            'sync',
+            "-m",
+            "piptools",
+            "sync",
         ]
 
     check_call(
@@ -326,8 +337,8 @@ def sync_requirements_file(env, requirements, configuration, pip_sync):
 
 
 def linux_create(group, configuration):
-    venv_bin = os.path.join(configuration.resolved_venv_path(), 'bin')
-    python_path, = configuration.python_identifier.linux_command()
+    venv_bin = os.path.join(configuration.resolved_venv_path(), "bin")
+    (python_path,) = configuration.python_identifier.linux_command()
     common_create(
         group=group,
         python=python_path,
@@ -339,8 +350,10 @@ def linux_create(group, configuration):
 
 def windows_create(group, configuration):
     python_path = check_output(
-        configuration.python_identifier.windows_command() + [
-            '-c', 'import sys; print(sys.executable)',
+        configuration.python_identifier.windows_command()
+        + [
+            "-c",
+            "import sys; print(sys.executable)",
         ],
         cwd=configuration.project_root,
     )
@@ -366,7 +379,7 @@ def rm(ignore_missing, configuration):
 
         if not ignore_missing:
             raise ExitError(
-                'venv not found at: {}'.format(
+                "venv not found at: {}".format(
                     configuration.resolved_venv_path(),
                 ),
             )
@@ -383,7 +396,7 @@ def lock(temporary_env, use_default_python, configuration):
     else:
         temporary_path = tempfile.mkdtemp()
         try:
-            configuration.venv_path = os.path.join(temporary_path, 'venv')
+            configuration.venv_path = os.path.join(temporary_path, "venv")
             lock_core(
                 use_default_python=use_default_python,
                 configuration=configuration,
@@ -403,7 +416,7 @@ def lock_core(use_default_python, configuration):
     specification_paths = tuple(
         os.path.join(configuration.resolved_requirements_path(), filename)
         for filename in glob.glob(
-            os.path.join(configuration.resolved_requirements_path(), '*.in'),
+            os.path.join(configuration.resolved_requirements_path(), "*.in"),
         )
     )
 
@@ -419,10 +432,10 @@ def lock_core(use_default_python, configuration):
 
         extras = []
         if group == configuration.pre_group:
-            extras.append('--allow-unsafe')
+            extras.append("--allow-unsafe")
 
         if configuration.use_hashes:
-            extras.append('--generate-hashes')
+            extras.append("--generate-hashes")
 
         root_relative_specification_path = os.path.relpath(
             specification_path,
@@ -433,11 +446,14 @@ def lock_core(use_default_python, configuration):
             [
                 os.path.join(
                     configuration.resolved_venv_common_bin(),
-                    'pip-compile',
+                    "pip-compile",
                 ),
-                '--output-file', out_path,
-                '--build-isolation',
-            ] + extras + [root_relative_specification_path],
+                "--output-file",
+                out_path,
+                "--build-isolation",
+            ]
+            + extras
+            + [root_relative_specification_path],
             cwd=configuration.project_root,
         )
 
@@ -466,9 +482,9 @@ def ensure(group, quick, use_default_python, configuration):
     check(configuration=configuration)
 
     if existed:
-        print('venv already present and passes some basic checks')
+        print("venv already present and passes some basic checks")
     else:
-        print('venv created and passed some basic checks')
+        print("venv created and passed some basic checks")
 
 
 def clean_path(path):
@@ -478,26 +494,25 @@ def clean_path(path):
 def check(configuration):
     activate = os.path.join(
         configuration.resolved_venv_common_bin(),
-        'activate',
+        "activate",
     )
-    expected_name = 'VIRTUAL_ENV'
+    expected_name = "VIRTUAL_ENV"
 
     # try:
     with open(activate) as f:
         for line in f:
             line = line.strip()
             try:
-                name, original_venv_path = line.split('=', 1)
+                name, original_venv_path = line.split("=", 1)
             except ValueError:
                 continue
 
             if name == expected_name:
-                original_venv_path, = shlex.split(original_venv_path)
+                (original_venv_path,) = shlex.split(original_venv_path)
                 break
         else:
             raise Exception(
-                '{} assignment not found'
-                ' in "{}"'.format(expected_name, activate),
+                "{} assignment not found" ' in "{}"'.format(expected_name, activate),
             )
     # except OSError as e:
     #     if e.errno == errno.ENOENT:
@@ -505,9 +520,8 @@ def check(configuration):
     #
     #     raise
 
-    moved = (
-        clean_path(configuration.resolved_venv_path())
-        != clean_path(original_venv_path)
+    moved = clean_path(configuration.resolved_venv_path()) != clean_path(
+        original_venv_path
     )
     if moved:
         raise ExitError(
@@ -546,7 +560,7 @@ def check(configuration):
 def resole(url, configuration):
     response = urlopen(url)
 
-    with open(resolve_path(__file__), 'wb') as f:
+    with open(resolve_path(__file__), "wb") as f:
         f.write(response.read())
 
 
@@ -559,11 +573,11 @@ def build(configuration):
             [
                 resolve_path(
                     configuration.resolved_venv_common_bin(),
-                    'python',
+                    "python",
                 ),
-                resolve_path(configuration.project_root, 'setup.py'),
+                resolve_path(configuration.project_root, "setup.py"),
                 command,
-                '--dist-dir',
+                "--dist-dir",
                 configuration.resolved_dist_dir(),
             ],
         )
@@ -575,29 +589,30 @@ def publish(force, configuration):
 
     no_tag = call(
         [
-            'git',
-            'describe',
-            '--tags',
-            '--candidates', '0',
+            "git",
+            "describe",
+            "--tags",
+            "--candidates",
+            "0",
         ],
     )
 
     if no_tag:
         if force:
-            print('Not on a tag, but --force...')
+            print("Not on a tag, but --force...")
         else:
-            print('Not on a tag, doing nothing.')
+            print("Not on a tag, doing nothing.")
             return
     else:
-        print('On a tag.')
+        print("On a tag.")
 
-    print('Uploading to PyPI.')
+    print("Uploading to PyPI.")
 
     check_call(
         [
-            resolve_path(configuration.resolved_venv_common_bin(), 'twine'),
-            'upload',
-            resolve_path(configuration.resolved_dist_dir(), '*'),
+            resolve_path(configuration.resolved_venv_common_bin(), "twine"),
+            "upload",
+            resolve_path(configuration.resolved_dist_dir(), "*"),
         ],
     )
 
@@ -609,8 +624,8 @@ def pick(destination, group, configuration):
         configuration=configuration,
     )
 
-    print('     source: ' + source)
-    print('destination: ' + destination)
+    print("     source: " + source)
+    print("destination: " + destination)
     shutil.copyfile(source, destination)
 
 
@@ -618,7 +633,7 @@ def pick(destination, group, configuration):
 def make_remote_lock_archive(archive_path, configuration):
     root = configuration.project_root
 
-    with tarfile.open(name=archive_path, mode='w') as archive:
+    with tarfile.open(name=archive_path, mode="w") as archive:
         for pattern in configuration.remotelock_paths:
             for path in glob.glob(os.path.join(root, pattern)):
                 archive_name = os.path.relpath(path, root)
@@ -633,7 +648,7 @@ def splitall(path):
         if parts[0] == path:  # sentinel for absolute paths
             allparts.insert(0, parts[0])
             break
-        elif parts[1] == path: # sentinel for relative paths
+        elif parts[1] == path:  # sentinel for relative paths
             allparts.insert(0, parts[1])
             break
         else:
@@ -655,8 +670,8 @@ def remotelock(configuration):
     directory = tempfile.mkdtemp()
 
     try:
-        archive_path = os.path.join(directory, 'archive.tar.gz')
-        artifact_path = os.path.join(directory, 'artifact.zip')
+        archive_path = os.path.join(directory, "archive.tar.gz")
+        artifact_path = os.path.join(directory, "artifact.zip")
 
         make_remote_lock_archive(
             archive_path=archive_path,
@@ -666,36 +681,56 @@ def remotelock(configuration):
         version = configuration.python_identifier.romp_version()
         architecture = configuration.python_identifier.romp_architecture()
 
-        artifact_paths = ensure_posixpath(os.path.join(
-            configuration.requirements_path,
-            '*.txt',
-        ))
+        artifact_paths = ensure_posixpath(
+            os.path.join(
+                configuration.requirements_path,
+                "*.txt",
+            )
+        )
 
         check_call(
             [
-                os.path.join(configuration.resolved_venv_common_bin(), 'romp'),
-                '--command', 'python {} lock --use-default-python'.format(os.path.basename(__file__)),
-                '--platform', 'Windows',
-                '--interpreter', 'CPython',
-                '--version', version,
-                '--architecture', architecture,
+                os.path.join(configuration.resolved_venv_common_bin(), "romp"),
+                "--command",
+                "python {} lock --use-default-python".format(
+                    os.path.basename(__file__)
+                ),
+                "--platform",
+                "Windows",
+                "--interpreter",
+                "CPython",
+                "--version",
+                version,
+                "--architecture",
+                architecture,
                 # '--include', 'Windows', 'CPython', version, 'x86',
-                '--include', 'Linux', 'CPython', version, 'x86_64',
-                '--include', 'macOS', 'CPython', version, 'x86_64',
-                '--archive-file', archive_path,
-                '--artifact-paths', artifact_paths,
-                '--artifact', artifact_path,
+                "--include",
+                "Linux",
+                "CPython",
+                version,
+                "x86_64",
+                "--include",
+                "macOS",
+                "CPython",
+                version,
+                "x86_64",
+                "--archive-file",
+                archive_path,
+                "--artifact-paths",
+                artifact_paths,
+                "--artifact",
+                artifact_path,
             ]
         )
 
-        with tarfile.open(artifact_path, mode='r:gz') as tar:
+        with tarfile.open(artifact_path, mode="r:gz") as tar:
             tar.extractall(path=configuration.project_root)
     finally:
         rmtree(directory)
 
 
 def install(group, configuration):
-    if group == 'pre':
+    if group == "pre":
         install_pre(
             python=sys.executable,
             configuration=configuration,
@@ -706,42 +741,40 @@ def install(group, configuration):
             group=group,
             configuration=configuration,
             pip_sync=[
-                configuration.resolved_active_python_script('python'),
-                '-m', 'piptools',
-                'sync',
+                configuration.resolved_active_python_script("python"),
+                "-m",
+                "piptools",
+                "sync",
             ],
         )
 
 
 def add_group_option(parser, default):
     parser.add_argument(
-        '--group',
+        "--group",
         default=default,
         help=(
-            'Select a specific requirements group'
-            ' (stem of a file in requirements/)'
+            "Select a specific requirements group" " (stem of a file in requirements/)"
         ),
     )
 
 
 def add_use_default_python_option(parser):
     parser.add_argument(
-        '--use-default-python',
-        action='store_true',
+        "--use-default-python",
+        action="store_true",
         help=(
-            'Use just bare `python` instead of searching for the proper'
-            'version.  This can be helpful when you know you have the proper'
+            "Use just bare `python` instead of searching for the proper"
+            "version.  This can be helpful when you know you have the proper"
             "Python version as 'default' but it may not be identifiable as"
-            'such via the normal means.'
+            "such via the normal means."
         ),
     )
 
 
 def add_subparser(subparser, *args, **kwargs):
     return subparser.add_parser(
-        *args,
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-        **kwargs
+        *args, formatter_class=argparse.ArgumentDefaultsHelpFormatter, **kwargs
     )
 
 
@@ -753,7 +786,7 @@ class PythonIdentifier:
 
     @classmethod
     def from_string(cls, identifier_string):
-        bit_split = '-'
+        bit_split = "-"
 
         version_string, split, bit_width = identifier_string.rpartition(
             bit_split,
@@ -765,10 +798,10 @@ class PythonIdentifier:
             bit_width = 64
 
         version_string = version_string.strip()
-        if version_string == '':
+        if version_string == "":
             version = ()
         else:
-            split_version = version_string.split('.')
+            split_version = version_string.split(".")
             if len(split_version) > 0:
                 version = tuple(int(v) for v in split_version)
             else:
@@ -777,35 +810,35 @@ class PythonIdentifier:
         return cls(version=version, bit_width=bit_width)
 
     def dotted_version(self, places):
-        return '.'.join(str(v) for v in self.version[:places])
+        return ".".join(str(v) for v in self.version[:places])
 
     def linux_command(self):
         if self.use_default_python:
-            return ['python']
+            return ["python"]
 
-        command = 'python'
+        command = "python"
         command += self.dotted_version(places=2)
 
         return [command]
 
     def windows_command(self):
         if self.use_default_python:
-            return ['python']
+            return ["python"]
 
-        command = ['py']
+        command = ["py"]
 
         if len(self.version) > 0:
-            version = '-' + self.dotted_version(places=2)
+            version = "-" + self.dotted_version(places=2)
 
             if self.bit_width is not None:
-                version += '-' + str(self.bit_width)
+                version += "-" + str(self.bit_width)
 
             command.append(version)
 
         return command
 
     def for_romp(self, platform):
-        return '{}-{}-x{}'.format(
+        return "{}-{}-x{}".format(
             platform_names[platform],
             self.dotted_version(places=2),
             self.bit_width,
@@ -816,16 +849,16 @@ class PythonIdentifier:
 
     def romp_architecture(self):
         return {
-            32: 'x86',
-            64: 'x86_64',
+            32: "x86",
+            64: "x86_64",
         }[self.bit_width]
 
 
 boolean_string_pairs = (
-    ('yes', 'no'),
-    ('true', 'false'),
-    ('1', '0'),
-    ('on', 'off'),
+    ("yes", "no"),
+    ("true", "false"),
+    ("1", "0"),
+    ("on", "off"),
 )
 truthy_strings = {s[0].lower() for s in boolean_string_pairs}
 falsey_strings = {s[1].lower() for s in boolean_string_pairs}
@@ -843,51 +876,52 @@ def parse_boolean_string(s):
 
 class Configuration:
     configuration_defaults = {
-        'project_root': '',
-        'python_identifier': '',
-        'default_group': 'base',
-        'pre_group': 'pre',
-        'requirements_path': 'requirements',
-        'dot_env': '.env',
-        'venv_path': 'venv',
-        'venv_common_bin': 'Scripts',
-        'venv_python': 'python',
-        'venv_prompt': None,
-        'update_url': (
-            'https://raw.githubusercontent.com'
-            '/altendky/boots/master/boots.py'
+        "project_root": "",
+        "python_identifier": "",
+        "default_group": "base",
+        "pre_group": "pre",
+        "requirements_path": "requirements",
+        "dot_env": ".env",
+        "venv_path": "venv",
+        "venv_common_bin": "Scripts",
+        "venv_python": "python",
+        "venv_prompt": None,
+        "update_url": (
+            "https://raw.githubusercontent.com" "/altendky/boots/master/boots.py"
         ),
-        'dist_commands': ('sdist', 'bdist_wheel'),
-        'dist_dir': 'dist',
-        'use_hashes': 'yes',
-        'remotelock_paths': ':'.join((
-            os.path.basename(__file__),
-            '{}.cfg'.format(os.path.splitext(os.path.basename(__file__))[0]),
-            'setup.cfg',
-            'setup.py',
-            'requirements/*.in',
-            'pyproject.toml',
-        )),
+        "dist_commands": ("sdist", "bdist_wheel"),
+        "dist_dir": "dist",
+        "use_hashes": "yes",
+        "remotelock_paths": ":".join(
+            (
+                os.path.basename(__file__),
+                "{}.cfg".format(os.path.splitext(os.path.basename(__file__))[0]),
+                "setup.cfg",
+                "setup.py",
+                "requirements/*.in",
+                "pyproject.toml",
+            )
+        ),
     }
 
     def __init__(
-            self,
-            project_root,
-            python_identifier,
-            default_group,
-            pre_group,
-            requirements_path,
-            dot_env,
-            venv_path,
-            venv_common_bin,
-            venv_python,
-            venv_prompt,
-            update_url,
-            dist_commands,
-            dist_dir,
-            use_hashes,
-            platform,
-            remotelock_paths,
+        self,
+        project_root,
+        python_identifier,
+        default_group,
+        pre_group,
+        requirements_path,
+        dot_env,
+        venv_path,
+        venv_common_bin,
+        venv_python,
+        venv_prompt,
+        update_url,
+        dist_commands,
+        dist_dir,
+        use_hashes,
+        platform,
+        remotelock_paths,
     ):
         self.project_root = project_root
         self.python_identifier = python_identifier
@@ -927,33 +961,33 @@ class Configuration:
     @classmethod
     def from_dict(cls, d, reference_path):
         c = dict(cls.configuration_defaults)
-        c['project_root'] = resolve_path(reference_path, c['project_root'])
+        c["project_root"] = resolve_path(reference_path, c["project_root"])
         c.update(d)
 
         python_identifier = PythonIdentifier.from_string(
-            identifier_string=c['python_identifier'],
+            identifier_string=c["python_identifier"],
         )
 
-        use_hashes = parse_boolean_string(c['use_hashes'])
+        use_hashes = parse_boolean_string(c["use_hashes"])
 
         platform = get_platform()
 
-        remotelock_paths = tuple(c['remotelock_paths'].split(':'))
+        remotelock_paths = tuple(c["remotelock_paths"].split(":"))
 
         return cls(
-            project_root=c['project_root'],
+            project_root=c["project_root"],
             python_identifier=python_identifier,
-            default_group=c['default_group'],
-            pre_group=c['pre_group'],
-            requirements_path=c['requirements_path'],
-            dot_env=c['dot_env'],
-            venv_path=c['venv_path'],
-            venv_common_bin=c['venv_common_bin'],
-            venv_python=c['venv_python'],
-            venv_prompt=c['venv_prompt'],
-            update_url=c['update_url'],
-            dist_commands=c['dist_commands'],
-            dist_dir=c['dist_dir'],
+            default_group=c["default_group"],
+            pre_group=c["pre_group"],
+            requirements_path=c["requirements_path"],
+            dot_env=c["dot_env"],
+            venv_path=c["venv_path"],
+            venv_common_bin=c["venv_common_bin"],
+            venv_python=c["venv_python"],
+            venv_prompt=c["venv_prompt"],
+            update_url=c["update_url"],
+            dist_commands=c["dist_commands"],
+            dist_dir=c["dist_dir"],
             use_hashes=use_hashes,
             platform=platform,
             remotelock_paths=remotelock_paths,
@@ -978,11 +1012,11 @@ class Configuration:
         return resolve_path(self.resolved_venv_common_bin(), self.venv_python)
 
     def resolved_active_python_script(self, script):
-        return resolve_path(sysconfig.get_path('scripts'), script)
+        return resolve_path(sysconfig.get_path("scripts"), script)
 
     def resolved_venv_prompt(self):
         if self.venv_prompt is None:
-            return '{} - {}'.format(
+            return "{} - {}".format(
                 os.path.basename(self.project_root),
                 os.path.basename(self.resolved_venv_path()),
             )
@@ -996,11 +1030,11 @@ def main():
     config_files = (
         os.path.join(
             our_directory,
-            '{}.cfg'.format(name),
+            "{}.cfg".format(name),
         )
         for name in (
             os.path.splitext(os.path.basename(__file__))[0],
-            'setup',
+            "setup",
         )
     )
     for file_path in config_files:
@@ -1016,7 +1050,7 @@ def main():
         )
 
     parser = argparse.ArgumentParser(
-        description='Create and manage the venv',
+        description="Create and manage the venv",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.set_defaults(func=parser.print_help)
@@ -1024,15 +1058,15 @@ def main():
 
     check_parser = add_subparser(
         subparsers,
-        'check',
-        description='Do some basic validity checks against the venv',
+        "check",
+        description="Do some basic validity checks against the venv",
     )
     check_parser.set_defaults(func=check)
 
     create_parser = add_subparser(
         subparsers,
-        'create',
-        description='Create the venv',
+        "create",
+        description="Create the venv",
     )
     add_group_option(create_parser, default=configuration.default_group)
     add_use_default_python_option(create_parser)
@@ -1040,16 +1074,16 @@ def main():
 
     ensure_parser = add_subparser(
         subparsers,
-        'ensure',
-        description='Create the venv if not already present',
+        "ensure",
+        description="Create the venv if not already present",
     )
     add_group_option(ensure_parser, default=configuration.default_group)
     ensure_parser.add_argument(
-        '--quick',
-        action='store_true',
+        "--quick",
+        action="store_true",
         help=(
-            'Consider valid if venv directory exists, '
-            'do not make sure that all packages are installed'
+            "Consider valid if venv directory exists, "
+            "do not make sure that all packages are installed"
         ),
     )
     add_use_default_python_option(ensure_parser)
@@ -1057,27 +1091,27 @@ def main():
 
     rm_parser = add_subparser(
         subparsers,
-        'rm',
-        description='Remove the venv',
+        "rm",
+        description="Remove the venv",
     )
     rm_parser.add_argument(
-        '--ignore-missing',
-        action='store_true',
-        help='Do not raise an error if no venv is present',
+        "--ignore-missing",
+        action="store_true",
+        help="Do not raise an error if no venv is present",
     )
     rm_parser.set_defaults(func=rm)
 
     lock_parser = add_subparser(
         subparsers,
-        'lock',
-        description='pip-compile the requirements specification files',
+        "lock",
+        description="pip-compile the requirements specification files",
     )
     lock_parser.add_argument(
-        '--temporary-env',
-        action='store_true',
+        "--temporary-env",
+        action="store_true",
         help=(
-            'Use a temporary virtualenv such as when locking on a secondary'
-            ' platform using a shared filesystem'
+            "Use a temporary virtualenv such as when locking on a secondary"
+            " platform using a shared filesystem"
         ),
     )
     add_use_default_python_option(lock_parser)
@@ -1085,63 +1119,61 @@ def main():
 
     resole_parser = add_subparser(
         subparsers,
-        'resole',
-        description='Resole {} (self update)'.format(
-            os.path.basename(__file__)
-        ),
+        "resole",
+        description="Resole {} (self update)".format(os.path.basename(__file__)),
     )
     resole_parser.add_argument(
-        '--url',
+        "--url",
         default=configuration.update_url,
-        help='URL to update from',
+        help="URL to update from",
     )
     resole_parser.set_defaults(func=resole)
 
     build_parser = add_subparser(
         subparsers,
-        'build',
-        description='Build...  such as sdist and bdist_wheel',
+        "build",
+        description="Build...  such as sdist and bdist_wheel",
     )
     build_parser.set_defaults(func=build)
 
     publish_parser = add_subparser(
         subparsers,
-        'publish',
-        description='Publish to PyPI',
+        "publish",
+        description="Publish to PyPI",
     )
     publish_parser.add_argument(
-        '--force',
-        action='store_true',
-        help='Ignore the check for being on a tag',
+        "--force",
+        action="store_true",
+        help="Ignore the check for being on a tag",
     )
     publish_parser.set_defaults(func=publish)
 
     pick_parser = add_subparser(
         subparsers,
-        'pick',
-        description='Copy the presently applicable lock file',
+        "pick",
+        description="Copy the presently applicable lock file",
     )
     pick_parser.add_argument(
-        '--destination',
+        "--destination",
         default=resolve_path(
             configuration.resolved_requirements_path(),
-            'picked' + requirements_extensions[requirements_lock],
+            "picked" + requirements_extensions[requirements_lock],
         ),
-        help='The path to copy the picked lock file to',
+        help="The path to copy the picked lock file to",
     )
     add_group_option(parser=pick_parser, default=configuration.default_group)
     pick_parser.set_defaults(func=pick)
 
     remotelock_parser = add_subparser(
         subparsers,
-        'remotelock',
-        description='Remotely lock',
+        "remotelock",
+        description="Remotely lock",
     )
     remotelock_parser.set_defaults(func=remotelock)
 
     install_parser = add_subparser(
         subparsers,
-        'install',
+        "install",
         description="Install requirements",
     )
     add_group_option(install_parser, default=configuration.default_group)
@@ -1149,24 +1181,20 @@ def main():
 
     args = parser.parse_args()
 
-    reserved_parameters = {'func', 'configuration'}
-    cleaned = {
-        k: v
-        for k, v in vars(args).items()
-        if k not in reserved_parameters
-    }
+    reserved_parameters = {"func", "configuration"}
+    cleaned = {k: v for k, v in vars(args).items() if k not in reserved_parameters}
 
-    os.environ['CUSTOM_COMPILE_COMMAND'] = 'python {} lock'.format(
+    os.environ["CUSTOM_COMPILE_COMMAND"] = "python {} lock".format(
         os.path.basename(__file__)
     )
-    os.environ['PIP_DISABLE_PIP_VERSION_CHECK'] = '1'
+    os.environ["PIP_DISABLE_PIP_VERSION_CHECK"] = "1"
     # https://github.com/pypa/pip/issues/5200#issuecomment-380131668
     # The flag sets the internal parameter to `False`, so you need to supply a
     # false value to the environment variable
-    os.environ['PIP_NO_WARN_SCRIPT_LOCATION'] = '0'
+    os.environ["PIP_NO_WARN_SCRIPT_LOCATION"] = "0"
 
     if args.func != parser.print_help:
-        cleaned['configuration'] = configuration
+        cleaned["configuration"] = configuration
 
     args.func(**cleaned)
 
@@ -1190,7 +1218,7 @@ def rmtree(path, retries=4):
         else:
             break
 
-        print('{} remaining removal attempts'.format(remaining))
+        print("{} remaining removal attempts".format(remaining))
         time.sleep(0.5)
 
 
@@ -1198,9 +1226,9 @@ def _entry_point():
     try:
         sys.exit(main())
     except ExitError as e:
-        sys.stderr.write(str(e) + '\n')
+        sys.stderr.write(str(e) + "\n")
         sys.exit(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     _entry_point()
