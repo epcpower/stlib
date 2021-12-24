@@ -39,7 +39,6 @@ jobs:
       - name: poetry install
         run: |
           poetry install
-          poetry run python -m pip install --no-deps -e .
           poetry --version
 
       - name: python commands
@@ -53,6 +52,7 @@ jobs:
           poetry run genbuildinfo "epyqlib/_build_generated.py"
           poetry run pip freeze --all
           poetry build
+          poetry run buildui
           poetry run pytest -vvvv -s --no-qt-log --run-factory epyqlib.tests --pyargs
 
 
