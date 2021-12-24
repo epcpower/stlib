@@ -39,6 +39,7 @@ jobs:
       - name: poetry install
         run: |
           poetry install
+          poetry run python -m pip install --no-deps -e .
           poetry --version
 
       - name: python commands
