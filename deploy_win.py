@@ -4,7 +4,7 @@ import sys
 
 
 # TODO: CAMPid 98852142341263132467998754961432
-import epyq
+#import epyq
 import epyqlib.tee
 import glob
 import inspect
@@ -185,8 +185,13 @@ if args.device_file is not None:
             )
 
             zip_path = os.path.join(
-                "..", "{}-{}-{}.zip".format(args.name, group, epyq.__version_tag__)
+                "..", "{}-{}-{}.zip".format(args.name, group, "1234")
             )
+
+
+#            zip_path = os.path.join(
+#                "..", "{}-{}-{}.zip".format(args.name, group, epyq.__version_tag__)
+#            )
             with zipfile.ZipFile(file=zip_path, mode="w") as zip:
                 for path in glob.glob(os.path.join(device_dir, "*.epz")):
                     zip.write(filename=path, arcname=os.path.basename(path))
@@ -463,10 +468,17 @@ report_and_check_call(
 
 installer_file = "{}-{}-{}-{}.exe".format(
     args.name,
-    epyq.__version_tag__,
+    "1234",
     "x86_64" if sys.maxsize > 2 ** 32 else "x86",
-    epyq.__build_tag__,
+    "5678",
 )
+
+#installer_file = "{}-{}-{}-{}.exe".format(
+#    args.name,
+#    epyq.__version_tag__,
+#    "x86_64" if sys.maxsize > 2 ** 32 else "x86",
+#    epyq.__build_tag__,
+#)
 
 shutil.copy(os.path.join("build", "epyq.exe"), os.path.join("..", installer_file))
 
