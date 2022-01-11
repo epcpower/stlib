@@ -1,1 +1,1 @@
-"venv\Scripts\pyqt5designer.exe"
+".venv\Scripts\pyqt5designer.exe"
