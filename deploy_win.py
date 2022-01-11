@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+sys.path.append(".\..\..\src")
 
 
 # TODO: CAMPid 98852142341263132467998754961432
@@ -328,13 +329,13 @@ with open(third_party_license, "w", encoding="utf-8", newline="\n") as out:
         ),
         (
             "win32",
-            ("venv", "Lib", "site-packages", "win32", "license.txt"),
+            (".venv", "Lib", "site-packages", "win32", "license.txt"),
             None,
             False,
         ),
         (
             "win32com",
-            ("venv", "Lib", "site-packages", "win32com", "License.txt"),
+            (".venv", "Lib", "site-packages", "win32com", "License.txt"),
             None,
             False,
         ),
