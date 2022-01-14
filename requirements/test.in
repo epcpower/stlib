@@ -1,7 +1,0 @@
---requirement base.in
-
-pytest==5.3.5
-pytest-qt==3.3.0
-pytest-rerunfailures==5.0
-pytest-twisted==1.12
-pytest-xvfb==1.2.0
