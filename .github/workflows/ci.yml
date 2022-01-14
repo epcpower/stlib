@@ -30,21 +30,29 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install poetry
+        run: |
+          python -m ensurepip
+          python -m pip install --upgrade pip
+          python -m pip install poetry
+      - name: poetry install
+        run: |
+          poetry install
+          poetry --version
       - name: python commands
+        env:
+          TWINE_USERNAME : ${{ secrets.TWINE_USERNAME }}
+          TWINE_PASSWORD : ${{ secrets.TWINE_PASSWORD }}
         run: |
           set -vx
-          which pip
-          pip --version
-          python boots.py create --group package
-          venv/Scripts/black --check --diff .
-          venv/Scripts/genbuildinfo "epyqlib/_build_generated.py"
-          venv/Scripts/pip freeze --all
-          python boots.py build
-
-          venv/Scripts/pytest -vvvv -s --no-qt-log --run-factory epyqlib.tests --pyargs
-
-          python boots.py publish
-
+          poetry run pip --version
+          poetry run black --check --diff .
+          poetry run genbuildinfo "epyqlib/_build_generated.py"
+          poetry run pip freeze --all
+          poetry build
+          poetry run buildui
+          poetry run pytest -vvvv -s --no-qt-log --run-factory epyqlib.tests --pyargs
       - name: Archive artifacts
         uses: actions/upload-artifact@v2
         with:
