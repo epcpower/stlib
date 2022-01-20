@@ -53,7 +53,7 @@ pytest-twisted = "1.12"
 pytest-xvfb = "1.2.0"
 
 [tool.poetry.dev-dependencies]
-
+poetry-dynamic-versioning = "^0.13.1"
 
 [tool.poetry.scripts]
 collectdevices = 'epyqlib.collectdevices:main'
@@ -79,6 +79,7 @@ requires = [
     "setuptools",
     "wheel",
     "poetry-core>=1.0.0",
+    "poetry-dynamic-versioning",
 ]
 build-backend = "poetry.core.masonry.api"
 
