@@ -52,6 +52,9 @@ jobs:
           poetry run pip freeze --all
           poetry run buildui
           poetry run pytest -vvvv -s --no-qt-log --run-factory epyqlib.tests --pyargs
+          poetry build
+
+          #need to publish here
       - name: Archive artifacts
         uses: actions/upload-artifact@v2
         with:
