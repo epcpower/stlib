@@ -12,8 +12,8 @@ import warnings
 
 import attr
 import canmatrix
-import epcsunspecdemo.demos
-import epcsunspecdemo.utils
+import sunspecdemo.demos
+import sunspecdemo.utils
 import sunspec.core.client
 import twisted.internet.defer
 
@@ -938,7 +938,7 @@ class SunSpecDevice:
         )
         warnings.warn(message=message, category=DeprecationWarning)
 
-        with epcsunspecdemo.utils.fresh_smdx_path(self.model_path):
+        with sunspecdemo.utils.fresh_smdx_path(self.model_path):
             self.device = sunspec.core.client.SunSpecClientDevice(
                 slave_id=slave_id,
                 device_type=device_type,
@@ -960,7 +960,7 @@ class SunSpecDevice:
         timeout=1,
         parity=sunspec.core.client.PARITY_NONE,
     ):
-        with epcsunspecdemo.utils.fresh_smdx_path(self.model_path):
+        with sunspecdemo.utils.fresh_smdx_path(self.model_path):
             self.device = sunspec.core.client.SunSpecClientDevice(
                 slave_id=slave_id,
                 device_type=sunspec.core.client.RTU,
@@ -977,7 +977,7 @@ class SunSpecDevice:
         timeout=1,
         port=None,
     ):
-        with epcsunspecdemo.utils.fresh_smdx_path(self.model_path):
+        with sunspecdemo.utils.fresh_smdx_path(self.model_path):
             self.device = sunspec.core.client.SunSpecClientDevice(
                 slave_id=slave_id,
                 device_type=sunspec.core.client.TCP,
@@ -1064,11 +1064,11 @@ class SunSpecDevice:
         check_limits_point = self.device.epc_control.model.points["ChkLmts"]
         submit_point = self.device.epc_control.model.points["SubAccLvl"]
 
-        epcsunspecdemo.demos.send_val(access_level_point, level)
-        epcsunspecdemo.demos.send_val(password_point, password)
-        epcsunspecdemo.demos.send_val(check_limits_point, check_limits)
+        sunspecdemo.demos.send_val(access_level_point, level)
+        sunspecdemo.demos.send_val(password_point, password)
+        sunspecdemo.demos.send_val(check_limits_point, check_limits)
 
-        epcsunspecdemo.demos.send_val(submit_point, True)
+        sunspecdemo.demos.send_val(submit_point, True)
 
     @contextlib.asynccontextmanager
     async def temporary_access_level(

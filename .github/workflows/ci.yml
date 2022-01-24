@@ -55,6 +55,13 @@ jobs:
           poetry build
 
           #need to publish here
+
+      - name: Publish executable
+        #only run if a new tag is created
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          poetry publish -u ${{ secrets.TWINE_USERNAME }} -p ${{ secrets.TWINE_PASSWORD }}
+
       - name: Archive artifacts
         uses: actions/upload-artifact@v2
         with:

@@ -6,7 +6,7 @@ authors = ["Alex Anker <alex.anker@epcpower.com>"]
 
 [tool.poetry-dynamic-versioning]
 enable = true
-format = "{base}.post{distance}+{commit}"
+style = "pep440"
 
 [tool.poetry.dependencies]
 python = "^3.7"
@@ -42,9 +42,6 @@ QtAwesome = "0.6.0"
 siphash-cffi = "^0.1.4"
 treq = "21.1.0"
 Twisted = "21.2.0"
-python-can = {git = "https://github.com/hardbyte/python-can", rev = "2ede107d67002c18463c5276b6a94cdb19fc8320"}
-pysunspec = {git = "https://github.com/altendky/pysunspec", rev = "ad7ca25964ca8071c652fb5836af6e7286dc48dc"}
-epcsunspecdemo = {git = "https://github.com/epcpower/sunspec-demo", rev = "19581317ae2fd136b5df229d824f81a17da52c58"}
 twine = "1.13.0"
 PyQt5Designer = "^5.14.1"
 pytest = "5.3.5"
@@ -52,9 +49,13 @@ pytest-qt = "3.3.0"
 pytest-rerunfailures = "5.0"
 pytest-twisted = "1.12"
 pytest-xvfb = "1.2.0"
+python-can = "^3.3.4"
+pysunspec = "^2.1.1"
+sunspecdemo = "^0.1.6"
 
 [tool.poetry.dev-dependencies]
 poetry-dynamic-versioning = "^0.13.1"
+
 
 [tool.poetry.scripts]
 collectdevices = 'epyqlib.collectdevices:main'
