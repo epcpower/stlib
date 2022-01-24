@@ -41,9 +41,6 @@ jobs:
           poetry install
           poetry --version
       - name: python commands
-        env:
-          TWINE_USERNAME : ${{ secrets.TWINE_USERNAME }}
-          TWINE_PASSWORD : ${{ secrets.TWINE_PASSWORD }}
         run: |
           set -vx
           poetry run pip --version
@@ -52,6 +49,8 @@ jobs:
           poetry run pip freeze --all
           poetry run buildui
           poetry run pytest -vvvv -s --no-qt-log --run-factory epyqlib.tests --pyargs
+
+          poetry run poetry-dynamic-versioning
           poetry build
 
           #need to publish here
