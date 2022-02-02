@@ -31,7 +31,7 @@ marshmallow = "2.16.3"
 natsort = "5.5.0"
 paho-mqtt = "1.4.0"
 Pint = "0.11"
-pyelftools = "0.25"
+pyelftools = "0.26"
 PyQt5 = ">=5.13.0"
 ##pyqt5-tools fails
 ##pyqt5-tools = { version = "5.14.1.3", markers = "sys_platform == 'win32'" }

@@ -672,7 +672,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
 name = "pyelftools"
-version = "0.25"
+version = "0.26"
 description = "Library for analyzing ELF files and DWARF debugging information"
 category = "main"
 optional = false
@@ -1294,7 +1294,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "e9ecce90329329543bae6108c8ef4ae08cd60d58d21fd6c1734537b9801e963c"
+content-hash = "9a6b4d914fd33b317f69d1bf3efb300cc7b93ca0bcdef598395a03a46029ae9e"
 
 [metadata.files]
 aenum = [
@@ -1809,8 +1809,8 @@ pycparser = [
     {file = "pycparser-2.21.tar.gz", hash = "sha256:e644fdec12f7872f86c58ff790da456218b10f863970249516d60a5eaca77206"},
 ]
 pyelftools = [
-    {file = "pyelftools-0.25-py2.py3-none-any.whl", hash = "sha256:1ec62792b31d9d4e5399a686a515a31091be84e307c4680fd3627121500a1be7"},
-    {file = "pyelftools-0.25.tar.gz", hash = "sha256:89c6da6f56280c37a5ff33468591ba9a124e17d71fe42de971818cbff46c1b24"},
+    {file = "pyelftools-0.26-py2.py3-none-any.whl", hash = "sha256:cc0ea0de82b240a73ef4056fce44acbb4727dca7d66759371aff2bad457ed711"},
+    {file = "pyelftools-0.26.tar.gz", hash = "sha256:86ac6cee19f6c945e8dedf78c6ee74f1112bd14da5a658d8c9d4103aed5756a2"},
 ]
 pygments = [
     {file = "Pygments-2.11.2-py3-none-any.whl", hash = "sha256:44238f1b60a76d78fc8ca0528ee429702aae011c265fe6a8dd8b63049ae41c65"},
