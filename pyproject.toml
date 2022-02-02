@@ -43,7 +43,7 @@ siphash-cffi = "^0.1.4"
 treq = "21.1.0"
 Twisted = "21.2.0"
 twine = "1.13.0"
-PyQt5Designer = "^5.14.1"
+PyQt5Designer = { version = "^5.14.1", markers = "sys_platform == 'win32'" }
 pytest = "5.3.5"
 pytest-qt = "3.3.0"
 pytest-rerunfailures = "5.0"
