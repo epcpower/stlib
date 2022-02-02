@@ -47,7 +47,7 @@ jobs:
           poetry run black --check --diff .
           poetry run genbuildinfo "epyqlib/_build_generated.py"
           poetry run pip freeze --all
-          poetry run buildui
+          poetry run builduiepyqlib
           poetry run pytest -vvvv -s --no-qt-log --run-factory epyqlib.tests --pyargs
 
           poetry run poetry-dynamic-versioning
