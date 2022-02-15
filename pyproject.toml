@@ -45,8 +45,9 @@ Twisted = "21.2.0"
 twine = "1.13.0"
 PyQt5Designer = { version = "^5.14.1", markers = "sys_platform == 'win32'" }
 python-can = "^3.3.4"
+#sunspecdemo = {git = "https://github.com/epcpower/sunspec-demo", rev = "761374b847b7f632b7c7d86e77da36bc0b3ad1d8"}
 pysunspec = "^2.1.1"
-sunspecdemo = "^0.1.6"
+sunspecdemo = "0.1.92"
 
 [tool.poetry.dev-dependencies]
 poetry-dynamic-versioning = "^0.13.1"
