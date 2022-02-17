@@ -9,9 +9,6 @@ enable = true
 vcs = "git"
 style = "pep440"
 
-#[tool.poetry-dynamic-versioning.substitution]
-#files = ["epyqlib/__init__.py"]
-
 [tool.poetry.dependencies]
 python = "^3.7"
 alqtendpy = "0.0.4"
