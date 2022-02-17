@@ -31,15 +31,15 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install poetry
+      - name: Install Poetry and Venv
         run: |
           python -m ensurepip
           python -m pip install --upgrade pip
           python -m pip install poetry
-      - name: poetry install
-        run: |
+
           poetry install
           poetry --version
+
       - name: python commands
         run: |
           set -vx
