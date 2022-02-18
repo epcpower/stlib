@@ -1,12 +1,8 @@
-import operator
+# For development and git commit, the __version__ is set to the build placeholder 0.0.0
+# For release, the __version__ is modified by poetry dynamic versioning with the actual released version
+__version__ = "0.0.0"
 
 import epyqlib._build
-import epyqlib._version
 
-
-__version__, __sha__ = operator.itemgetter("version", "full-revisionid")(
-    epyqlib._version.get_versions(),
-)
-
-__version_tag__ = "v{}-{}".format(__version__, __sha__)
+__version_tag__ = "v{}".format(__version__)
 __build_tag__ = epyqlib._build.job_id
