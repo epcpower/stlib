@@ -10,7 +10,7 @@ vcs = "git"
 style = "pep440"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.7.9"
 alqtendpy = "0.0.4"
 arrow = "0.12.1"
 appdirs = "1.4.3"
@@ -44,7 +44,8 @@ treq = "21.1.0"
 Twisted = "21.2.0"
 twine = "1.13.0"
 PyQt5Designer = { version = "^5.14.1", markers = "sys_platform == 'win32'" }
-python-can = "^3.3.4"
+#note deleteme aanker, this will break pm's tox publishing (cant point to a revision #)
+python-can = {git = "https://github.com/hardbyte/python-can", rev = "2ede107d67002c18463c5276b6a94cdb19fc8320"}
 #sunspecdemo = {git = "https://github.com/epcpower/sunspec-demo", rev = "761374b847b7f632b7c7d86e77da36bc0b3ad1d8"}
 pysunspec = "^2.1.1"
 sunspecdemo = "0.1.92"
