@@ -31,8 +31,9 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install Poetry and Venv
+      - name: Setup Venv
         run: |
+          #Install Poetry
           python -m ensurepip
           python -m pip install --upgrade pip
           python -m pip install poetry
@@ -52,8 +53,6 @@ jobs:
 
           poetry run poetry-dynamic-versioning
           poetry build
-
-          #need to publish here
 
       - name: Publish executable
         #only run if a new tag is created
