@@ -1083,7 +1083,7 @@ version = "0.0.0"
 description = "EPC SunSpec demonstration tool"
 category = "main"
 optional = false
-python-versions = "3.7.9"
+python-versions = ">=3.7.9, <4.0"
 develop = false
 
 [package.dependencies]
@@ -1101,8 +1101,8 @@ typing-extensions = "^4.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/epcpower/sunspec-demo"
-reference = "9d3044d539a2e0c1b394ab630a3f7773145a1173"
-resolved_reference = "9d3044d539a2e0c1b394ab630a3f7773145a1173"
+reference = "6a07576a9d3c16f00a31121ff96edcbfe0d73822"
+resolved_reference = "6a07576a9d3c16f00a31121ff96edcbfe0d73822"
 
 [[package]]
 name = "toml"
@@ -1307,8 +1307,8 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [metadata]
 lock-version = "1.1"
-python-versions = "3.7.9"
-content-hash = "6d45c8e51a24def85f1f758a7e9b4d793923d3be0d76d597019d44c4eeae3df3"
+python-versions = ">=3.7.9, <4.0"
+content-hash = "842e3f4c3c2daf947a996c5dcdfff4242356fab396a0ea70992b752c69adffc5"
 
 [metadata.files]
 alqtendpy = [
