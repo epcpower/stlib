@@ -10,7 +10,7 @@ vcs = "git"
 style = "pep440"
 
 [tool.poetry.dependencies]
-python = ">=3.7.9, <4.0"
+python = "3.7.9"
 alqtendpy = "0.0.4"
 arrow = "0.12.1"
 appdirs = "1.4.3"
