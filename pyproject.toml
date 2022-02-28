@@ -5,6 +5,7 @@ description = ""
 authors = ["Alex Anker <alex.anker@epcpower.com>"]
 
 [tool.poetry-dynamic-versioning]
+#modifies epyqlib/__init__.py
 enable = true
 vcs = "git"
 style = "pep440"
@@ -45,9 +46,11 @@ Twisted = "21.2.0"
 twine = "1.13.0"
 PyQt5Designer = { version = "^5.14.1", markers = "sys_platform == 'win32'" }
 python-can = "4.0.0.dev0"
+pysunspec = "2.1.0"
+
+#EPC Repos
 sunspecdemo = {git = "https://github.com/epcpower/sunspec-demo", rev = "6a07576a9d3c16f00a31121ff96edcbfe0d73822"}
 #sunspecdemo = "0.1.92"
-pysunspec = "2.1.0"
 
 [tool.poetry.dev-dependencies]
 poetry-dynamic-versioning = "^0.13.1"
