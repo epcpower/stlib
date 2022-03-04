@@ -2,6 +2,8 @@
 
 import sys
 
+#STLib, the submodule of ST, tries importing ST.That would a "poetry add ../../" which isnt what we want
+#this is a hack to include it anyway.
 sys.path.append(".\..\..\src")
 
 
