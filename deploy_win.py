@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 
 import sys
+from pathlib import Path
 
-sys.path.append(".\..\..\src")
+# For deployment, stlib is a submodule of st (epyq), but also imports st (epyq).
+# This would require adding a "poetry add ../..", which is not ideal.
+# The following line is a workaround to allow inclusion of st's (epyq's) src directory from stlib.
+sys.path.append(str(Path("./../../src").resolve()))
 
 
 # TODO: CAMPid 98852142341263132467998754961432

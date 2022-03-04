@@ -1,3 +1,0 @@
-include epyqlib/scripting.csv
-include epyqlib/icon.ico
-recursive-include epyqlib *.ui
