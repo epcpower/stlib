@@ -63,7 +63,7 @@ python-dateutil = "*"
 name = "atomicwrites"
 version = "1.4.0"
 description = "Atomic file writes."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
@@ -251,7 +251,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 name = "colorama"
 version = "0.4.4"
 description = "Cross-platform colored terminal text."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
@@ -286,7 +286,7 @@ test = ["pytest (>=6.2.0)", "pytest-cov", "pytest-subtests", "pytest-xdist", "pr
 name = "decorator"
 version = "5.1.1"
 description = "Decorators for Humans"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.5"
 
@@ -402,7 +402,7 @@ tests = ["codecov", "pytest", "pytest-cov", "tox"]
 name = "greenlet"
 version = "1.1.2"
 description = "Lightweight in-process concurrent programming"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
 
@@ -526,7 +526,7 @@ tests = ["pytest", "pytz"]
 name = "more-itertools"
 version = "8.12.0"
 description = "More routines for operating on iterables, beyond itertools"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.5"
 
@@ -616,7 +616,7 @@ testing = ["coverage", "nose"]
 name = "pluggy"
 version = "0.13.1"
 description = "plugin and hook calling mechanisms for python"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
@@ -643,7 +643,7 @@ tomlkit = ">=0.4"
 name = "py"
 version = "1.11.0"
 description = "library with cross-python path, ini-parsing, io, code, log facilities"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
@@ -775,7 +775,7 @@ pyserial = "*"
 name = "pytest"
 version = "5.3.5"
 description = "pytest: simple powerful testing with Python"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.5"
 
@@ -798,7 +798,7 @@ testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "requests", "xm
 name = "pytest-qt"
 version = "3.3.0"
 description = "pytest support for PyQt and PySide applications"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
@@ -813,7 +813,7 @@ doc = ["sphinx", "sphinx-rtd-theme"]
 name = "pytest-rerunfailures"
 version = "5.0"
 description = "pytest plugin to re-run tests to eliminate flaky failures"
-category = "main"
+category = "dev"
 optional = false
 python-versions = "*"
 
@@ -824,7 +824,7 @@ pytest = ">=3.6"
 name = "pytest-twisted"
 version = "1.13.4"
 description = "A twisted plugin for pytest."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
 
@@ -842,7 +842,7 @@ pyside2 = ["qt5reactor[pyside2] (>=0.6.3)"]
 name = "pytest-xvfb"
 version = "1.2.0"
 description = "A pytest plugin to run Xvfb for tests."
-category = "main"
+category = "dev"
 optional = false
 python-versions = "*"
 
@@ -908,7 +908,7 @@ cli = ["click (>=5.0)"]
 name = "pyvirtualdisplay"
 version = "3.0"
 description = "python wrapper for Xvfb, Xephyr and Xvnc"
-category = "main"
+category = "dev"
 optional = false
 python-versions = "*"
 
@@ -1255,7 +1255,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 name = "wcwidth"
 version = "0.2.5"
 description = "Measures the displayed width of unicode strings in a terminal"
-category = "main"
+category = "dev"
 optional = false
 python-versions = "*"
 
@@ -1311,7 +1311,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "3.7.9"
-content-hash = "4d86dd22fa09996774de6a33cef400693336e1a36b72683ec81b9f383dea0336"
+content-hash = "469662ab48439e2994961b13708d94d4e9c4864b5095d7711078cdc957fd0eeb"
 
 [metadata.files]
 aenum = [
