@@ -109,4 +109,4 @@ include = '''
     | epyqlib/.*\.pyi?
 )$
 '''
-exclude = ''
+exclude = './.venv'
