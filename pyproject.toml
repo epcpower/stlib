@@ -27,7 +27,6 @@ bitstruct = "6.0.0"
 boto3 = "1.14.41.0"
 boto3-type-annotations = "0.3.1"
 canmatrix = "0.9.1"
-ccstudiodss = {extras = ["java"], version = "0.4.3"}
 certifi = "2020.6.20"
 certitude = { version = "1.0.1", markers = "sys_platform == 'Darwin'" }
 click = "<=7.1.2"
@@ -55,7 +54,9 @@ twine = "1.13.0"
 PyQt5Designer = { version = "^5.14.1", markers = "sys_platform == 'win32'" }
 python-can = "4.0.0.dev0"
 pysunspec = "2.1.0"
-javabridge = "1.0.18"
+#javabridge & ccstudiodss commented out so we dont need java in CI run.  Needed to get outparsecheck running.
+#javabridge = "1.0.18"
+#ccstudiodss = {extras = ["java"], version = "0.4.3"}
 
 [tool.poetry.dev-dependencies]
 poetry-dynamic-versioning = "^0.13.1"
@@ -67,6 +68,7 @@ pytest-twisted = "<=1.13.4"
 pytest-xvfb = "1.2.0"
 
 [tool.poetry.scripts]
+#outparsecheck needs javabridge & ccstudiodss installed.  They are commented out in .toml.
 outparsecheck = 'epyqlib.outparsecheck:dss'
 collectdevices = 'epyqlib.collectdevices:main'
 contiguouscommits = 'epyqlib.utils.contiguouscommits:_entry_point'
