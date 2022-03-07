@@ -32,8 +32,8 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - uses: actions/setup-java@v2
         with:
-          distribution: 'temurin' # See 'Supported distributions' for available options
-          java-version: '17'
+          distribution: 'zulu' # See 'Supported distributions' for available options
+          java-version: '11'
       - name: Setup Venv
         run: |
           #Install Poetry
