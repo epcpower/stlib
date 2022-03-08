@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "epyqlib"
-version = "2022.2.1.post35.dev0+6ede3f7"
+version = "0.0.0"
 description = ""
 authors = ["Alex Anker <alex.anker@epcpower.com>"]
 include = ["epyqlib/scripting.csv", "epyqlib/icon.ico", "epyqlib/**/*.ui"]
