@@ -50,13 +50,14 @@ QtAwesome = "0.6.0"
 siphash-cffi = "^0.1.4"
 treq = "21.1.0"
 Twisted = "21.2.0"
-twine = "1.13.0"
 PyQt5Designer = { version = "^5.14.1", markers = "sys_platform == 'win32'" }
 python-can = "4.0.0"
 pysunspec = "2.1.0"
 #javabridge & ccstudiodss commented out so we dont need java in CI run.  Needed to get outparsecheck running.
 #javabridge = "1.0.18"
 #ccstudiodss = {extras = ["java"], version = "0.4.3"}
+requests = "2.27.1"
+selenium = "3.141.0"
 
 [tool.poetry.dev-dependencies]
 poetry-dynamic-versioning = "^0.13.1"
@@ -66,6 +67,7 @@ pytest-qt = "3.3.0"
 pytest-rerunfailures = "5.0"
 pytest-twisted = "<=1.13.4"
 pytest-xvfb = "1.2.0"
+twine = "1.13.0"
 
 [tool.poetry.scripts]
 #outparsecheck needs javabridge & ccstudiodss installed.  They are commented out in .toml.
