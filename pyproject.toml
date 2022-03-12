@@ -40,8 +40,6 @@ paho-mqtt = "1.4.0"
 Pint = "0.11"
 pyelftools = "0.26"
 PyQt5 = ">=5.13.0"
-##pyqt5-tools fails
-##pyqt5-tools = { version = "5.14.1.3", markers = "sys_platform == 'win32'" }
 pyqt5-tools = { version = "5.13.2.1.6rc1", markers = "sys_platform == 'win32'" }
 qt5reactor = "0.5"
 python-dateutil = "2.7.5"
@@ -52,7 +50,6 @@ siphash-cffi = "^0.1.4"
 treq = "21.1.0"
 Twisted = "21.2.0"
 twine = "1.13.0"
-#PyQt5Designer = { version = "^5.14.1", markers = "sys_platform == 'win32'" }
 python-can = "4.0.0"
 pysunspec = "2.1.0"
 #javabridge & ccstudiodss commented out so we dont need java in CI run.  Needed to get outparsecheck running.
