@@ -727,7 +727,7 @@ python-versions = ">=3.5"
 name = "pyqt5-tools"
 version = "5.13.2.1.6rc1"
 description = "Tools to supplement the official PyQt5 wheels"
-category = "main"
+category = "dev"
 optional = false
 python-versions = "*"
 
@@ -1311,7 +1311,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7.9"
-content-hash = "36333621101459f72b2cecbaf7390fc06ae41ca1abe526c9bf7f20b2be9ee18c"
+content-hash = "a7eb161ecc8b5ea1fa5a143f87c619bd1e2b66803aee5f23bec2f19521f29d6e"
 
 [metadata.files]
 alqtendpy = [

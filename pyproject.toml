@@ -40,7 +40,6 @@ paho-mqtt = "1.4.0"
 Pint = "0.11"
 pyelftools = "0.26"
 PyQt5 = ">=5.13.0"
-pyqt5-tools = { version = "5.13.2.1.6rc1", markers = "sys_platform == 'win32'" }
 qt5reactor = "0.5"
 python-dateutil = "2.7.5"
 python-docx = "0.8.7"
@@ -66,6 +65,7 @@ pytest-rerunfailures = "5.0"
 pytest-twisted = "<=1.13.4"
 pytest-xvfb = "1.2.0"
 twine = "1.13.0"
+pyqt5-tools = { version = "5.13.2.1.6rc1", markers = "sys_platform == 'win32'" }
 
 [tool.poetry.scripts]
 #outparsecheck needs javabridge & ccstudiodss installed.  They are commented out in .toml.
