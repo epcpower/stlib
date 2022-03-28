@@ -69,7 +69,6 @@ jobs:
 
           poetry run poetry-dynamic-versioning
           poetry build
-
       - name: Publish executable
         #only run if a new tag is created
         if: startsWith(github.ref, 'refs/tags/')
