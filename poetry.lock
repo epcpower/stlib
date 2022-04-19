@@ -1102,8 +1102,8 @@ typing-extensions = "^4.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/epcpower/sunspec-demo.git"
-reference = "ead80c958b024a2d5e256c4db5a25952e4088184"
-resolved_reference = "ead80c958b024a2d5e256c4db5a25952e4088184"
+reference = "6155522b0cf2e8bd7f5c4cb0bf044f95f154f0a7"
+resolved_reference = "6155522b0cf2e8bd7f5c4cb0bf044f95f154f0a7"
 
 [[package]]
 name = "toml"
@@ -1309,7 +1309,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.9,<3.11"
-content-hash = "d0789b0eded77c7c3962b9ea4f5ed8e51018b6f986e0e73039402cd2548de221"
+content-hash = "d8c906df70a05bd940e7fe6f218c3f186e7eb46ab6207d27611edf9afa88c81b"
 
 [metadata.files]
 alqtendpy = [
