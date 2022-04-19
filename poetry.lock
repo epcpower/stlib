@@ -943,11 +943,11 @@ test = ["pytest (>=6.0.0)", "pytest-cov (>=3.0.0)", "pytest-qt"]
 
 [[package]]
 name = "readme-renderer"
-version = "34.0"
+version = "35.0"
 description = "readme_renderer is a library for rendering \"readme\" descriptions for Warehouse"
 category = "dev"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.7"
 
 [package.dependencies]
 bleach = ">=2.1.0"
@@ -1082,26 +1082,28 @@ smmap = ">=3.0.1"
 
 [[package]]
 name = "sunspecdemo"
-version = "0.2.0"
+version = "0.0.0"
 description = "EPC SunSpec demonstration tool"
 category = "main"
 optional = false
 python-versions = ">=3.7.9,<3.11"
+develop = false
 
 [package.dependencies]
 attrs = ">=19.3.0"
-click = ">=7.0,<8.0"
+click = "^7.0"
 pyserial = "3.4"
 pysunspec = "2.1.0"
-toml = ">=0.10.2,<0.11.0"
+toml = "^0.10.2"
 toolz = "0.9.0"
 tqdm = "4.32.1"
-typing-extensions = ">=4.0.1,<5.0.0"
+typing-extensions = "^4.0.1"
 
 [package.source]
-type = "legacy"
-url = "https://epc-power-us-890711758583.d.codeartifact.us-east-2.amazonaws.com/pypi/epc-power/simple"
-reference = "epc-power"
+type = "git"
+url = "https://github.com/epcpower/sunspec-demo.git"
+reference = "ead80c958b024a2d5e256c4db5a25952e4088184"
+resolved_reference = "ead80c958b024a2d5e256c4db5a25952e4088184"
 
 [[package]]
 name = "toml"
@@ -1307,7 +1309,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7.9,<3.11"
-content-hash = "5aa4694b76c43e458a174606515ab6f33bbfe6bce1773c75ba8e9cde38d270a7"
+content-hash = "d0789b0eded77c7c3962b9ea4f5ed8e51018b6f986e0e73039402cd2548de221"
 
 [metadata.files]
 alqtendpy = [
@@ -1944,8 +1946,8 @@ qtpy = [
     {file = "QtPy-2.0.1.tar.gz", hash = "sha256:adfd073ffbd2de81dc7aaa0b983499ef5c59c96adcfdcc9dea60d42ca885eb8f"},
 ]
 readme-renderer = [
-    {file = "readme_renderer-34.0-py3-none-any.whl", hash = "sha256:262510fe6aae81ed4e94d8b169077f325614c0b1a45916a80442c6576264a9c2"},
-    {file = "readme_renderer-34.0.tar.gz", hash = "sha256:dfb4d17f21706d145f7473e0b61ca245ba58e810cf9b2209a48239677f82e5b0"},
+    {file = "readme_renderer-35.0-py3-none-any.whl", hash = "sha256:73b84905d091c31f36e50b4ae05ae2acead661f6a09a9abb4df7d2ddcdb6a698"},
+    {file = "readme_renderer-35.0.tar.gz", hash = "sha256:a727999acfc222fc21d82a12ed48c957c4989785e5865807c65a487d21677497"},
 ]
 regex = [
     {file = "regex-2022.3.15-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:42eb13b93765c6698a5ab3bcd318d8c39bb42e5fa8a7fcf7d8d98923f3babdb1"},
@@ -2089,10 +2091,7 @@ smmap2 = [
     {file = "smmap2-3.0.1-py3-none-any.whl", hash = "sha256:0cb6ea470b1ad9a65a02ca7f4c7ae601861f7dd24a43812ca51cfca2892bb524"},
     {file = "smmap2-3.0.1.tar.gz", hash = "sha256:44cc8bdaf96442dbb9a8e2e14377d074b3d0eea292eee3c95c8c449b6c92c557"},
 ]
-sunspecdemo = [
-    {file = "sunspecdemo-0.2.0-py3-none-any.whl", hash = "sha256:8e4d7080d318326a73ab26282da415648a1d31f6cec9624d489ee9342eefc88d"},
-    {file = "sunspecdemo-0.2.0.tar.gz", hash = "sha256:979ae70fc81adc5e7344b307c65d987f17ad68f4cfb9d1c1ca013be0cb3871dd"},
-]
+sunspecdemo = []
 toml = [
     {file = "toml-0.10.2-py2.py3-none-any.whl", hash = "sha256:806143ae5bfb6a3c6e736a764057db0e6a0e05e338b5630894a5f779cabb4f9b"},
     {file = "toml-0.10.2.tar.gz", hash = "sha256:b3bda1d108d5dd99f4a20d24d9c348e91c4db7ab1b749200bded2f839ccbe68f"},

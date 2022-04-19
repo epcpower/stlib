@@ -26,7 +26,9 @@ secondary = true
 python = ">=3.7.9,<3.11"
 
 #### EPC Repos ####
-sunspecdemo = {version = "0.2.0", source = "epc-power"}
+#sunspecdemo = {version = "0.2.0", source = "epc-power"}
+sunspecdemo = { git = "https://github.com/epcpower/sunspec-demo.git", rev = "ead80c958b024a2d5e256c4db5a25952e4088184" }
+
 ###################
 
 alqtendpy = "0.0.4"
