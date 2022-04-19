@@ -26,8 +26,8 @@ secondary = true
 python = ">=3.7.9,<3.11"
 
 #### EPC Repos ####
-#sunspecdemo = {version = "0.2.0", source = "epc-power"}
-sunspecdemo = { git = "https://github.com/epcpower/sunspec-demo.git", rev = "474cdaa4d085eb8de064a73844b1b5b4b39de6dd" }
+sunspecdemo = {version = "0.3.0", source = "epc-power"}
+#sunspecdemo = { git = "https://github.com/epcpower/sunspec-demo.git", rev = "474cdaa4d085eb8de064a73844b1b5b4b39de6dd" }
 
 ###################
 
