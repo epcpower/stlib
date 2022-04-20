@@ -28,7 +28,6 @@ python = ">=3.7.9,<3.11"
 #### EPC Repos ####
 #if referencing commit hashes:
 sunspecdemo = { git = "https://github.com/epcpower/sunspec-demo.git", rev = "6155522b0cf2e8bd7f5c4cb0bf044f95f154f0a7" }
-data-bridge = { git = "https://github.com/epcpower/data-bridge.git", rev = "23a6a1482da1d11a65412147caf51858705773bd" }
 
 #if referencing tags:
 #sunspecdemo = {version = "0.3.0", source = "epc-power"}
@@ -39,7 +38,7 @@ arrow = "0.12.1"
 appdirs = "1.4.3"
 attrs = ">=19.3.0"
 bitstruct = "6.0.0"
-#boto3 = "1.14.41.0"
+boto3 = "1.14.41.0"
 boto3-type-annotations = "0.3.1"
 canmatrix = "0.9.1"
 certifi = "2020.6.20"
