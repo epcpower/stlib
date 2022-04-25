@@ -16,6 +16,8 @@ defaults:
 
 env:
   PYTHON_VERSION: 3.7
+  AWS_REGION: us-east-2
+
 
 jobs:
   build:
@@ -30,24 +32,48 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Setup Venv
+        run: |
+          #Install Poetry
+          python -m ensurepip
+          python -m pip install --upgrade pip
+          python -m pip install poetry
+          poetry config virtualenvs.in-project true
+          poetry config virtualenvs.path .
+
+          #Setup AWS Connection
+          export CODEARTIFACT_AUTH_TOKEN=`aws codeartifact get-authorization-token --domain epc-power-us --domain-owner ${{ secrets.AWS_ACCOUNT_ID }} --query authorizationToken --output text`
+          poetry config repositories.epc-power https://epc-power-us-${{ secrets.AWS_ACCOUNT_ID }}.d.codeartifact.us-east-2.amazonaws.com/pypi/epc-power/
+          poetry config http-basic.epc-power aws $CODEARTIFACT_AUTH_TOKEN
+          poetry config repositories.third-party https://epc-power-us-${{ secrets.AWS_ACCOUNT_ID }}.d.codeartifact.us-east-2.amazonaws.com/pypi/third-party/
+          poetry config http-basic.third-party aws $CODEARTIFACT_AUTH_TOKEN
+
+          poetry install
+
+          poetry --version
       - name: python commands
-        env: 
-          TWINE_USERNAME : ${{ secrets.TWINE_USERNAME }}
-          TWINE_PASSWORD : ${{ secrets.TWINE_PASSWORD }} 
         run: |
           set -vx
-          which pip
-          pip --version
-          python boots.py create --group package
-          venv/Scripts/black --check --diff .
-          venv/Scripts/genbuildinfo "epyqlib/_build_generated.py"
-          venv/Scripts/pip freeze --all
-          python boots.py build
+          poetry run pip --version
+          poetry run black --check --diff .
+          poetry run genbuildinfo "epyqlib/_build_generated.py"
+          poetry run pip freeze --all
+          poetry run builduiepyqlib
+          poetry run pytest -vvvv -s --no-qt-log --run-factory epyqlib.tests --pyargs
 
-          venv/Scripts/pytest -vvvv -s --no-qt-log --run-factory epyqlib.tests --pyargs
-
-          python boots.py publish
-
+          poetry run poetry-dynamic-versioning
+          poetry build
+      - name: Publish executable
+        #only run if a new tag is created
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          poetry publish --repository epc-power
       - name: Archive artifacts
         uses: actions/upload-artifact@v2
         with:

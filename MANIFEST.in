@@ -1,5 +1,0 @@
-include versioneer.py
-include epyqlib/_version.py
-include epyqlib/scripting.csv
-include epyqlib/icon.ico
-recursive-include epyqlib *.ui
