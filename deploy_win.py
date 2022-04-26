@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 
 import sys
+from pathlib import Path
+
+# For deployment, stlib is a submodule of st (epyq), but also imports st (epyq).
+# This would require adding a "poetry add ../..", which is not ideal.
+# The following line is a workaround to allow inclusion of st's (epyq's) src directory from stlib.
+sys.path.append(str(Path("./../../src").resolve()))
 
 
 # TODO: CAMPid 98852142341263132467998754961432
@@ -328,13 +334,13 @@ with open(third_party_license, "w", encoding="utf-8", newline="\n") as out:
         ),
         (
             "win32",
-            ("venv", "Lib", "site-packages", "win32", "license.txt"),
+            (".venv", "Lib", "site-packages", "win32", "license.txt"),
             None,
             False,
         ),
         (
             "win32com",
-            ("venv", "Lib", "site-packages", "win32com", "License.txt"),
+            (".venv", "Lib", "site-packages", "win32com", "License.txt"),
             None,
             False,
         ),

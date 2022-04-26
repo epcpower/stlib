@@ -1,0 +1,126 @@
+[tool.poetry]
+name = "epyqlib"
+version = "0.0.0"
+description = ""
+authors = ["Alex Anker <alex.anker@epcpower.com>"]
+include = ["epyqlib/scripting.csv", "epyqlib/icon.ico", "epyqlib/**/*.ui"]
+license = "GPL-2.0-or-later"
+
+[tool.poetry-dynamic-versioning]
+#modifies epyqlib/__init__.py
+enable = false
+vcs = "git"
+style = "pep440"
+
+[[tool.poetry.source]]
+name = "epc-power"
+url = "https://epc-power-us-890711758583.d.codeartifact.us-east-2.amazonaws.com/pypi/epc-power/simple"
+secondary = true
+
+[[tool.poetry.source]]
+name = "third-party"
+url = "https://epc-power-us-890711758583.d.codeartifact.us-east-2.amazonaws.com/pypi/third-party/simple"
+secondary = true
+
+[tool.poetry.dependencies]
+python = ">=3.7.9,<3.11"
+
+#### EPC Repos ####
+#if referencing commit hashes:
+sunspecdemo = { git = "https://github.com/epcpower/sunspec-demo.git", rev = "474cdaa4d085eb8de064a73844b1b5b4b39de6dd" }
+
+#if referencing tags:
+#sunspecdemo = {version = "0.3.0", source = "epc-power"}
+###################
+
+alqtendpy = "0.0.4"
+arrow = "0.12.1"
+appdirs = "1.4.3"
+attrs = ">=19.3.0"
+bitstruct = "6.0.0"
+boto3 = "1.14.41.0"
+boto3-type-annotations = "0.3.1"
+canmatrix = "0.9.1"
+certifi = "2020.6.20"
+certitude = { version = "1.0.1", markers = "sys_platform == 'Darwin'" }
+click = "<=7.1.2"
+dulwich = "0.20.6"
+fab = "3.0.0"
+GitPython = "2.1.15"
+graham = "0.1.11"
+marshmallow = "2.16.3"
+natsort = "5.5.0"
+paho-mqtt = "1.4.0"
+Pint = "0.11"
+pyelftools = "0.26"
+PyQt5 = ">=5.13.0"
+qt5reactor = "0.5"
+python-dateutil = "2.7.5"
+python-docx = "0.8.7"
+python-dotenv = "0.9.1"
+QtAwesome = "0.6.0"
+siphash-cffi = {version = "0.1.4", source = "third-party"}
+treq = "21.1.0"
+Twisted = "21.2.0"
+python-can = "4.0.0"
+pysunspec = "2.1.0"
+#javabridge & ccstudiodss commented out so we dont need java in CI run.  Needed to get outparsecheck running.
+#javabridge = "1.0.18"
+#ccstudiodss = {extras = ["java"], version = "0.4.3"}
+requests = "2.27.1"
+selenium = "3.141.0"
+
+[tool.poetry.dev-dependencies]
+poetry-dynamic-versioning = "^0.13.1"
+black = "20.8b1"
+pytest = "5.3.5"
+pytest-qt = "3.3.0"
+pytest-rerunfailures = "5.0"
+pytest-twisted = "<=1.13.4"
+pytest-xvfb = "1.2.0"
+twine = "1.13.0"
+pyqt5-tools = { version = "5.13.2.1.6rc1", markers = "sys_platform == 'win32'" }
+
+[tool.poetry.scripts]
+#outparsecheck needs javabridge & ccstudiodss installed.  They are commented out in .toml.
+outparsecheck = 'epyqlib.outparsecheck:dss'
+collectdevices = 'epyqlib.collectdevices:main'
+contiguouscommits = 'epyqlib.utils.contiguouscommits:_entry_point'
+epyqflash = 'epyqlib.flash:_entry_point'
+patchvenv = 'epyqlib.patchvenv:main'
+cangenmanual = 'epyqlib.cangenmanual:_entry_point'
+updateepc = 'epyqlib.updateepc:main'
+genbuildinfo = 'epyqlib.genbuildinfo:write_build_file'
+versionfile = 'epyqlib.cli.versionfile:cli'
+generateversion = 'epyqlib.cli.generateversion:cli'
+autodevice = 'epyqlib.autodevice.cli:cli'
+epyqlib = 'epyqlib.cli.main:cli'
+builduiepyqlib = 'epyqlib.builduiepyqlib:compile_ui'
+
+[tool.poetry.plugins.pytest11]
+epyqlib = "epyqlib.tests.pytest_plugin"
+
+[build-system]
+requires = [
+    "alqtendpy",
+    "pyqt5<5.14.1",
+    "setuptools",
+    "wheel",
+    "poetry-core>=1.0.0",
+    "poetry-dynamic-versioning",
+]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.black]
+target-version =  ['py37']
+include = '''
+^/(
+    setup.py
+    | canmatrix.setup.py
+    | deploy_win.py
+    | trctosocketcan.py
+    | epyqlib/.*\.pyi?
+)$
+'''
+exclude = './.venv'

@@ -12,7 +12,7 @@ library_path = pathlib.Path(__file__).parents[2].resolve()
 
 project_path = library_path.parents[1]
 
-scripts_path = project_path / "venv" / "Scripts"
+scripts_path = project_path / ".venv" / "Scripts"
 
 examples_path = library_path / "examples" / "develop"
 
