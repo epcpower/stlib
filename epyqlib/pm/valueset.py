@@ -67,6 +67,9 @@ class OverlayConfiguration:
 
         return configuration
 
+    def reference_output_path(self):
+        return self.reference_path / self.output_path
+
     def recipe_output_path(self, recipe):
         return self.reference_path / self.output_path / recipe.output_path
 
