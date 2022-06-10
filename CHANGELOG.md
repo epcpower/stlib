@@ -9,7 +9,7 @@ For instructions, see the [changelog confluence page](https://epcpower.atlassian
 
 ### Added
 
-- SC-629: Added CAN parameter to .xlsx output.
+- SC-629: Added CAN parameter manual output.
 - SC-572: Added changelog for release notes.
 
 CI
