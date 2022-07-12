@@ -13,5 +13,5 @@ For instructions, see the [changelog confluence page](https://epcpower.atlassian
 - SC-572: Added changelog for release notes.
 
 CI
-
+- SC-662: Use new global token, Store credentials for private repo installs
 - SC-399: Romp Removal / Poetry Implementation
