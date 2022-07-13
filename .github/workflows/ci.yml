@@ -24,11 +24,14 @@ jobs:
     name: CI
     runs-on: windows-latest
     steps:
+      - name: Store Credentials
+        run: |
+          echo "https://${{ secrets.EPC_GITHUB_PAT }}:@github.com" > ${HOME}/.git-credentials
+          git config --global credential.helper store
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
-          submodules: recursive
       - uses: actions/setup-python@v2
         with:
           python-version: ${{ env.PYTHON_VERSION }}
