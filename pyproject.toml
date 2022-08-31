@@ -27,7 +27,7 @@ python = ">=3.7.9,<3.11"
 
 #### EPC Repos ####
 #if referencing commit hashes:
-sunspecdemo = { git = "https://github.com/epcpower/sunspec-demo.git", rev = "474cdaa4d085eb8de064a73844b1b5b4b39de6dd" }
+sunspecdemo = { git = "https://github.com/epcpower/sunspec-demo.git", rev = "a04b466da431549946297c66364ee835c3fab3e0" }
 
 #if referencing tags:
 #sunspecdemo = {version = "0.3.0", source = "epc-power"}
@@ -38,7 +38,7 @@ arrow = "0.12.1"
 appdirs = "1.4.3"
 attrs = ">=19.3.0"
 bitstruct = "6.0.0"
-boto3 = "1.14.41.0"
+boto3 = "1.14.41"
 boto3-type-annotations = "0.3.1"
 canmatrix = "0.9.1"
 certifi = "2020.6.20"

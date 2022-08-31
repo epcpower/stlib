@@ -14,6 +14,7 @@ For instructions, see the [changelog confluence page](https://epcpower.atlassian
 
 ### CI
 
+- SC-780: Pin poetry to 1.1.15 & fix boto3 ref
 - SC-399: Romp Removal / Poetry Implementation
 
 ### Fixed
