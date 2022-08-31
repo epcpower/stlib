@@ -9,12 +9,12 @@ For instructions, see the [changelog confluence page](https://epcpower.atlassian
 
 ### Added
 
-- SC-780: Pin poetry to 1.1.15
 - SC-629: Added CAN parameter excel manual output.
 - SC-572: Added changelog for release notes.
 
 ### CI
 
+- SC-780: Pin poetry to 1.1.15
 - SC-399: Romp Removal / Poetry Implementation
 
 ### Fixed
