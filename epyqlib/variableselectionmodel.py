@@ -283,7 +283,9 @@ class VariableNode(epyqlib.treenode.TreeNode):
 
         # Check for the case where base_type.dimensions is [None].
         if None not in base_type.dimensions:
-            for index in range(min(base_type.dimensions[len(indexes)], maximum_children)):
+            for index in range(
+                min(base_type.dimensions[len(indexes)], maximum_children)
+            ):
                 child_address = address + base_type.offset_of(*(indexes + (index,)))
                 variable = epyqlib.cmemoryparser.Variable(
                     name=format.format(index),
