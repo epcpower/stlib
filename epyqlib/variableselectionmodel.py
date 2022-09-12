@@ -281,24 +281,26 @@ class VariableNode(epyqlib.treenode.TreeNode):
         else:
             child_type = base_type.type
 
-        for index in range(min(base_type.dimensions[len(indexes)], maximum_children)):
-            child_address = address + base_type.offset_of(*(indexes + (index,)))
-            variable = epyqlib.cmemoryparser.Variable(
-                name=format.format(index),
-                type=child_type,
-                address=child_address,
-            )
-            child_node = VariableNode(variable=variable, comparison_value=index)
-            self.append_child(child_node)
-            new_members.append(child_node)
-
-        if base_type.dimensions[len(indexes)] > maximum_children:
-            if sender is not None:
-                sender.array_truncated(
-                    maximum_children, self.fields.name, base_type.length()
+        # Check for the case where base_type.dimensions is [None].
+        if None not in base_type.dimensions:
+            for index in range(min(base_type.dimensions[len(indexes)], maximum_children)):
+                child_address = address + base_type.offset_of(*(indexes + (index,)))
+                variable = epyqlib.cmemoryparser.Variable(
+                    name=format.format(index),
+                    type=child_type,
+                    address=child_address,
                 )
+                child_node = VariableNode(variable=variable, comparison_value=index)
+                self.append_child(child_node)
+                new_members.append(child_node)
 
-            # TODO: add a marker showing visually that it has been truncated
+            if base_type.dimensions[len(indexes)] > maximum_children:
+                if sender is not None:
+                    sender.array_truncated(
+                        maximum_children, self.fields.name, base_type.length()
+                    )
+
+                # TODO: add a marker showing visually that it has been truncated
 
         return new_members
 
@@ -600,20 +602,22 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 return
 
             if test(node):
-                # TODO: CAMPid 0457543543696754329525426
-                chunk = cache.new_chunk(
-                    address=int(node.fields.address, 16),
-                    bytes=self.zero_bytes(node.fields.size),
-                    reference=node,
-                )
-                cache.add(chunk)
-
-                if subscribe:
-                    callback = functools.partial(
-                        self.update_chunk,
-                        node=node,
+                # Check specifically for None value. Zero shouldn't be a value for size, but just in case.
+                if node.fields.size is not None:
+                    # TODO: CAMPid 0457543543696754329525426
+                    chunk = cache.new_chunk(
+                        address=int(node.fields.address, 16),
+                        bytes=self.zero_bytes(node.fields.size),
+                        reference=node,
                     )
-                    cache.subscribe(callback, chunk)
+                    cache.add(chunk)
+
+                    if subscribe:
+                        callback = functools.partial(
+                            self.update_chunk,
+                            node=node,
+                        )
+                        cache.subscribe(callback, chunk)
 
         root.traverse(call_this=update_parameter, payload=cache, internal_nodes=True)
 
