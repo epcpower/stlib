@@ -103,11 +103,12 @@ class VariableNode(epyqlib.treenode.TreeNode):
         base_type = epyqlib.cmemoryparser.base_type(variable)
         type_name = epyqlib.cmemoryparser.type_name(variable)
 
+        # Note that if base_type.bytes is None, set size with 0 to prevent other issues.
         self.fields = Columns(
             name=name,
             type=type_name,
             address="0x{:08X}".format(address),
-            size=base_type.bytes,
+            size=base_type.bytes if base_type.bytes is not None else 0,
             bits=bits,
             value=None,
             file=filename,
@@ -210,7 +211,11 @@ class VariableNode(epyqlib.treenode.TreeNode):
         if isinstance(base_type, epyqlib.cmemoryparser.Struct):
             new_members.extend(self.add_struct_members(base_type, address))
 
-        if isinstance(base_type, epyqlib.cmemoryparser.ArrayType):
+        # Check for the case where base_type is ArrayType and base_type.dimensions is not [None].
+        if (
+            isinstance(base_type, epyqlib.cmemoryparser.ArrayType)
+            and None not in base_type.dimensions
+        ):
             new_members.extend(
                 self.add_array_members(base_type, address, sender=sender)
             )
@@ -281,28 +286,24 @@ class VariableNode(epyqlib.treenode.TreeNode):
         else:
             child_type = base_type.type
 
-        # Check for the case where base_type.dimensions is [None].
-        if None not in base_type.dimensions:
-            for index in range(
-                min(base_type.dimensions[len(indexes)], maximum_children)
-            ):
-                child_address = address + base_type.offset_of(*(indexes + (index,)))
-                variable = epyqlib.cmemoryparser.Variable(
-                    name=format.format(index),
-                    type=child_type,
-                    address=child_address,
+        for index in range(min(base_type.dimensions[len(indexes)], maximum_children)):
+            child_address = address + base_type.offset_of(*(indexes + (index,)))
+            variable = epyqlib.cmemoryparser.Variable(
+                name=format.format(index),
+                type=child_type,
+                address=child_address,
+            )
+            child_node = VariableNode(variable=variable, comparison_value=index)
+            self.append_child(child_node)
+            new_members.append(child_node)
+
+        if base_type.dimensions[len(indexes)] > maximum_children:
+            if sender is not None:
+                sender.array_truncated(
+                    maximum_children, self.fields.name, base_type.length()
                 )
-                child_node = VariableNode(variable=variable, comparison_value=index)
-                self.append_child(child_node)
-                new_members.append(child_node)
 
-            if base_type.dimensions[len(indexes)] > maximum_children:
-                if sender is not None:
-                    sender.array_truncated(
-                        maximum_children, self.fields.name, base_type.length()
-                    )
-
-                # TODO: add a marker showing visually that it has been truncated
+            # TODO: add a marker showing visually that it has been truncated
 
         return new_members
 
@@ -604,22 +605,20 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 return
 
             if test(node):
-                # Check specifically for None value. Zero shouldn't be a value for size, but just in case.
-                if node.fields.size is not None:
-                    # TODO: CAMPid 0457543543696754329525426
-                    chunk = cache.new_chunk(
-                        address=int(node.fields.address, 16),
-                        bytes=self.zero_bytes(node.fields.size),
-                        reference=node,
-                    )
-                    cache.add(chunk)
+                # TODO: CAMPid 0457543543696754329525426
+                chunk = cache.new_chunk(
+                    address=int(node.fields.address, 16),
+                    bytes=self.zero_bytes(node.fields.size),
+                    reference=node,
+                )
+                cache.add(chunk)
 
-                    if subscribe:
-                        callback = functools.partial(
-                            self.update_chunk,
-                            node=node,
-                        )
-                        cache.subscribe(callback, chunk)
+                if subscribe:
+                    callback = functools.partial(
+                        self.update_chunk,
+                        node=node,
+                    )
+                    cache.subscribe(callback, chunk)
 
         root.traverse(call_this=update_parameter, payload=cache, internal_nodes=True)
 
