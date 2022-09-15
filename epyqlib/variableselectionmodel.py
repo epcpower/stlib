@@ -103,11 +103,12 @@ class VariableNode(epyqlib.treenode.TreeNode):
         base_type = epyqlib.cmemoryparser.base_type(variable)
         type_name = epyqlib.cmemoryparser.type_name(variable)
 
+        # Note that if base_type.bytes is None, set size with 0 to prevent other issues.
         self.fields = Columns(
             name=name,
             type=type_name,
             address="0x{:08X}".format(address),
-            size=base_type.bytes,
+            size=base_type.bytes if base_type.bytes is not None else 0,
             bits=bits,
             value=None,
             file=filename,
@@ -210,7 +211,11 @@ class VariableNode(epyqlib.treenode.TreeNode):
         if isinstance(base_type, epyqlib.cmemoryparser.Struct):
             new_members.extend(self.add_struct_members(base_type, address))
 
-        if isinstance(base_type, epyqlib.cmemoryparser.ArrayType):
+        # Check for the case where base_type is ArrayType and base_type.dimensions is not [None].
+        if (
+            isinstance(base_type, epyqlib.cmemoryparser.ArrayType)
+            and None not in base_type.dimensions
+        ):
             new_members.extend(
                 self.add_array_members(base_type, address, sender=sender)
             )
