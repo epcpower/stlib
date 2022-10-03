@@ -79,7 +79,8 @@ class DataLogger:
         return bytes(str(time()), "utf-8")
 
     async def _notify_new_raw_log(self, path: str):
-        build_hash_signal = self.nvs.signal_from_names("SoftwareHash", "SoftwareHash")
+        software_hash_path = self.device.get_config_path_element("software_hash_path")
+        build_hash_signal = self.nvs.signal_from_names(*software_hash_path)
         serial_number_signal = self.nvs.signal_from_names("SN", "SerialNumber")
 
         build_hash = await self.nv_protocol.read(

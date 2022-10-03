@@ -386,6 +386,8 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         nvs,
         nv_model,
         bus,
+        datalogger_blockheader_name,
+        datalogger_recordheader_name,
         tx_id=0x1FFFFFFF,
         rx_id=0x1FFFFFF7,
         parent=None,
@@ -412,6 +414,8 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         self.nvs = nvs
         self.nv_model = nv_model
         self.bus = bus
+        self.datalogger_blockheader_name = datalogger_blockheader_name
+        self.datalogger_recordheader_name = datalogger_recordheader_name
 
         self.git_hash = None
 
@@ -736,12 +740,12 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         self.nv_model.submit_transaction()
 
     def record_header_length(self):
-        [x] = self.names["DataLogger_RecordHeader"]
+        [x] = self.names[self.datalogger_recordheader_name]
         return x.type.bytes * (self.bits_per_byte // 8)
 
     def block_header_length(self):
         try:
-            [block_header] = self.names["DataLogger_BlockHeader"]
+            [block_header] = self.names[self.datalogger_blockheader_name]
         except KeyError:
             block_header_bytes = 0
         else:
@@ -753,7 +757,7 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         data_stream = io.BytesIO(data)
         raw_header = data_stream.read(self.block_header_length())
 
-        [x] = self.names["DataLogger_BlockHeader"]
+        [x] = self.names[self.datalogger_blockheader_name]
         block_header_node = self.parse_block_header_into_node(
             raw_header=raw_header, bits_per_byte=self.bits_per_byte, block_header_type=x
         )
@@ -762,7 +766,7 @@ class VariableModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
         cache = cache_and_raw_chunk.cache
         raw_chunks = cache_and_raw_chunk.raw_chunks
 
-        [x] = self.names["DataLogger_RecordHeader"]
+        [x] = self.names[self.datalogger_recordheader_name]
         # TODO: hardcoded 32-bit addressing and offset assumption
         #       intended to avoid collision
         record_header_address = 2 ** 32 + 100

@@ -45,6 +45,7 @@ import shutil
 import tempfile
 import textwrap
 import twisted.internet.task
+import typing
 import uuid
 import zipfile
 from twisted.internet.defer import setDebugging
@@ -232,6 +233,7 @@ class Device:
         self.from_zip = False
         self.device_sha = "N/A"
         self.device_file = "N/A"
+        self.raw_dict = dict()
 
         if kwargs.get("file", None) is not None:
             constructor = self._init_from_file
@@ -361,6 +363,7 @@ class Device:
             "access_password_path",
             "ParameterQuery;FactoryAccess;FactoryAccess",
         )
+        d.setdefault("software_hash_path", None)
 
         self.module_path = d.get("module", None)
         self.plugin = None
@@ -752,6 +755,10 @@ class Device:
             if access_password_path is not None:
                 access_password_path = access_password_path.split(";")
 
+            software_hash_path = self.raw_dict["software_hash_path"]
+            if software_hash_path is not None:
+                software_hash_path = software_hash_path.split(";")
+
             def none_or_uuid(uuid_string):
                 if uuid_string is None:
                     return None
@@ -891,6 +898,8 @@ class Device:
                 nvs=self.nvs,
                 nv_model=nv_model,
                 bus=self.bus,
+                datalogger_blockheader_name=self.get_config_element("datalogger_blockheader_name"),
+                datalogger_recordheader_name=self.get_config_element("datalogger_recordheader_name"),
                 tx_id=self.neo_frames.frame_by_name("CCP").id,
                 rx_id=self.neo_frames.frame_by_name("CCPResponse").id,
             )
@@ -1294,6 +1303,38 @@ class Device:
                 self.nvs.set_stale()
                 self.nvs.cancel_cyclic_read_all()
 
+    def get_config_element(self, config_key: str) -> typing.Union[str, None]:
+        """
+        Simple retrieval of configuration value given configuration key.
+
+        Args:
+            config_key: configuration key into the raw dictionary
+
+        Returns:
+            string configuration value
+        """
+        if config_key in self.raw_dict:
+            return self.raw_dict[config_key]
+
+        return None
+
+    def get_config_path_element(self, config_key: str) -> typing.List[str]:
+        """
+        Retrieval of configuration path elements given configuration key.
+        Path elements are split into a list.
+
+        Args:
+            config_key: configuration key into the raw dictionary
+
+        Returns:
+            list of configuration path elements
+        """
+        config_path_value = self.get_config_element(config_key)
+        if config_path_value is not None:
+            return config_path_value.split(";")
+
+        return config_path_value
+
 
 class FrameTimeout(epyqlib.canneo.QtCanListener):
     lost = epyqlib.utils.qt.Signal()
@@ -1362,12 +1403,10 @@ class DeviceInterface:
         return str(serial_number_signal.scaled_value)
 
     async def get_build_hash(self) -> str:
-        serial_number_signal = self.device.nvs.signal_from_names(
-            "SoftwareHash",
-            "SoftwareHash",
-        )
+        software_hash_path = self.device.get_config_path_element("software_hash_path")
+        software_hash_signal = self.device.nvs.signal_from_names(*software_hash_path)
 
-        return await self._read_single_param(serial_number_signal)
+        return await self._read_single_param(software_hash_signal)
 
     async def _read_single_param(self, param_signal):
         param_response = await self.device.nvs.read_all_from_device(
