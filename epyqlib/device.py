@@ -898,8 +898,12 @@ class Device:
                 nvs=self.nvs,
                 nv_model=nv_model,
                 bus=self.bus,
-                datalogger_blockheader_name=self.get_config_element("datalogger_blockheader_name"),
-                datalogger_recordheader_name=self.get_config_element("datalogger_recordheader_name"),
+                datalogger_blockheader_name=self.get_config_element(
+                    "datalogger_blockheader_name"
+                ),
+                datalogger_recordheader_name=self.get_config_element(
+                    "datalogger_recordheader_name"
+                ),
                 tx_id=self.neo_frames.frame_by_name("CCP").id,
                 rx_id=self.neo_frames.frame_by_name("CCPResponse").id,
             )
