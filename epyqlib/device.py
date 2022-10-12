@@ -355,17 +355,17 @@ class Device:
         self.elements = set(Elements)
 
         s = file.read()
-        d = json.loads(s, object_pairs_hook=OrderedDict)
-        self.raw_dict = d
-        d.setdefault("nv_meta_enum", None)
-        d.setdefault("access_level_path", None)
-        d.setdefault(
+        config_dict = json.loads(s, object_pairs_hook=OrderedDict)
+        self.raw_dict = config_dict
+        config_dict.setdefault("nv_meta_enum", None)
+        config_dict.setdefault("access_level_path", None)
+        config_dict.setdefault(
             "access_password_path",
             "ParameterQuery;FactoryAccess;FactoryAccess",
         )
-        d.setdefault("software_hash_path", None)
+        config_dict.setdefault("software_hash_path", None)
 
-        self.module_path = d.get("module", None)
+        self.module_path = config_dict.get("module", None)
         self.plugin = None
         if self.module_path is None:
             module = epyqlib.deviceextension
@@ -385,7 +385,7 @@ class Device:
         path = os.path.dirname(file.name)
         for ui_path_name in ["ui_path", "ui_paths", "menu"]:
             try:
-                json_ui_paths = d[ui_path_name]
+                json_ui_paths = config_dict[ui_path_name]
                 break
             except KeyError:
                 pass
@@ -397,7 +397,7 @@ class Device:
 
         self.ui_paths = json_ui_paths
 
-        hierarchy_path = d.get("parameter_hierarchy", None)
+        hierarchy_path = config_dict.get("parameter_hierarchy", None)
         if hierarchy_path is None:
             hierarchy = None
         else:
@@ -406,7 +406,7 @@ class Device:
 
         for tab in Tabs:
             try:
-                value = d["tabs"][tab.name]
+                value = config_dict["tabs"][tab.name]
             except KeyError:
                 pass
             else:
@@ -446,11 +446,11 @@ class Device:
         self.referenced_files = [
             f
             for f in [
-                d.get("module", None),
-                d.get("can_path", None),
-                d.get("compatibility", None),
-                d.get("parameter_defaults", None),
-                d.get("parameter_hierarchy", None),
+                config_dict.get("module", None),
+                config_dict.get("can_path", None),
+                config_dict.get("compatibility", None),
+                config_dict.get("parameter_defaults", None),
+                config_dict.get("parameter_hierarchy", None),
                 *self.ui_paths.values(),
                 *module.referenced_files(self.raw_dict),
             ]
@@ -458,7 +458,7 @@ class Device:
         ]
 
         self.compatibility_shas = []
-        compatibility_file = d.get("compatibility", None)
+        compatibility_file = config_dict.get("compatibility", None)
         if compatibility_file is not None:
             compatibility_file = os.path.join(
                 os.path.dirname(self.config_path), compatibility_file
@@ -470,13 +470,15 @@ class Device:
             self.compatibility_shas.extend(c.get("shas", []))
 
         if not only_for_files:
-            self.can_path = os.path.join(path, d["can_path"])
+            self.can_path = os.path.join(path, config_dict["can_path"])
             with open(self.can_path, "rb") as f:
                 self.can_contents = f.read()
 
-            self.node_id_type = d.get("node_id_type", next(iter(node_id_types))).lower()
+            self.node_id_type = config_dict.get(
+                "node_id_type", next(iter(node_id_types))
+            ).lower()
             if self.node_id is None:
-                self.node_id = d.get("node_id")
+                self.node_id = config_dict.get("node_id")
             if self.node_id is None and self.node_id_type == "j1939":
                 self.node_id, ok = QInputDialog.getInt(
                     None,
@@ -489,7 +491,7 @@ class Device:
                 if not ok:
                     raise CancelError("User canceled node ID dialog")
             self.node_id = int(self.node_id)
-            self.controller_id = int(d.get("controller_id", 65))
+            self.controller_id = int(config_dict.get("controller_id", 65))
             self.node_id_adjust = functools.partial(
                 node_id_types[self.node_id_type],
                 device_id=self.node_id,
@@ -498,13 +500,13 @@ class Device:
 
             self._init_from_parameters(
                 uis=self.ui_paths,
-                serial_number=d.get("serial_number", ""),
-                name=d.get("name", ""),
+                serial_number=config_dict.get("serial_number", ""),
+                name=config_dict.get("name", ""),
                 tabs=tabs,
                 rx_interval=rx_interval,
                 edit_actions=edit_actions,
-                nv_configuration=d.get("nv_configuration"),
-                can_configuration=d.get("can_configuration"),
+                nv_configuration=config_dict.get("nv_configuration"),
+                can_configuration=config_dict.get("can_configuration"),
                 hierarchy=hierarchy,
                 **kwargs,
             )
