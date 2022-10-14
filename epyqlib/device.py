@@ -563,12 +563,15 @@ class Device:
         self.config_path = os.path.abspath(filename_epc)
 
         converted_directory = None
+        final_filename_epc = filename_epc
         if not epyqlib.updateepc.is_latest(filename_epc):
             converted_directory = tempfile.TemporaryDirectory()
-            file = epyqlib.updateepc.convert(filename_epc, converted_directory.name)
-            self.config_path = os.path.abspath(file)
+            final_filename_epc = epyqlib.updateepc.convert(
+                filename_epc, converted_directory.name
+            )
+            self.config_path = os.path.abspath(final_filename_epc)
 
-        with open(filename_epc, "r") as f:
+        with open(final_filename_epc, "r") as f:
             self._load_config(f, rx_interval=rx_interval, **kwargs)
 
         if converted_directory is not None:
@@ -756,10 +759,6 @@ class Device:
             access_password_path = self.raw_dict["access_password_path"]
             if access_password_path is not None:
                 access_password_path = access_password_path.split(";")
-
-            software_hash_path = self.raw_dict["software_hash_path"]
-            if software_hash_path is not None:
-                software_hash_path = software_hash_path.split(";")
 
             def none_or_uuid(uuid_string):
                 if uuid_string is None:
