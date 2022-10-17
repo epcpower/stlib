@@ -43,7 +43,7 @@ class RestartTimeoutError(Exception):
     pass
 
 
-supported_version = [2]
+supported_version = [3]
 
 
 def format_version_validator(instance, attribute, value):

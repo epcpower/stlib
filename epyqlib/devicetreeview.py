@@ -180,7 +180,10 @@ class DeviceTreeView(QtWidgets.QWidget):
             )
         else:
             try:
-                signal = device.nvs.signal_from_names("SoftwareHash", "SoftwareHash")
+                software_hash_path = device.get_config_path_element(
+                    "software_hash_path"
+                )
+                signal = device.nvs.signal_from_names(*software_hash_path)
             except epyqlib.nv.NotFoundError as e:
                 raise UnsupportedError(
                     "Compatibility check is not supported for this device"

@@ -385,7 +385,86 @@ def cf(self, source_directory, source_file_name, destination_path):
 
 
 @converters.append(
-    old_version=(2,), new_version=None, description="template for next format version"
+    old_version=(2,),
+    new_version=(3,),
+    description="add to device_dict: datalogger_blockheader_name, datalogger_recordheader_name, software_hash_path",
+)
+def cf(self, source_directory, source_file_name, destination_path):
+    with open(os.path.join(source_directory, source_file_name), encoding="utf-8") as f:
+        device_dict = json.load(f, object_pairs_hook=collections.OrderedDict)
+
+    ui_paths = get_ui_paths_0(device_dict)
+
+    module_path = device_dict.get("module", None)
+    if module_path is None:
+        module = epyqlib.deviceextension
+    else:
+        spec = importlib.util.spec_from_file_location(
+            "extension", os.path.join(source_directory, module_path)
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+
+    referenced_files = (
+        source_file_name,
+        *(
+            device_dict.get(name)
+            for name in (
+                "module",
+                "can_path",
+                "compatibility",
+                "parameter_defaults",
+                "parameter_hierarchy",
+            )
+            if name in device_dict
+        ),
+        *ui_paths.values(),
+        *module.referenced_files(device_dict),
+    )
+    referenced_files = {f: False for f in referenced_files}
+
+    # These device dict key-value pairs are what have been previously hardcoded for BZ.
+    # They will not work for RMDC, so RMDC must use .epc file format version 3 or higher.
+    device_dict_appends = [
+        [
+            "datalogger_blockheader_name",
+            "DataLogger_BlockHeader",
+        ],
+        [
+            "datalogger_recordheader_name",
+            "DataLogger_RecordHeader",
+        ],
+        [
+            "software_hash_path",
+            "SoftwareHash;SoftwareHash",
+        ],
+    ]
+
+    for key, value in device_dict_appends:
+        device_dict[key] = value
+
+    device_dict["format_version"] = self.new_version
+    device_dict.move_to_end("format_version", last=False)
+
+    destination_device_file = os.path.join(destination_path, source_file_name)
+    with open(destination_device_file, "w", encoding="ascii") as f:
+        json.dump(device_dict, f, ensure_ascii=True, indent=4)
+        f.write("\n")
+    referenced_files[source_file_name] = True
+
+    for f, handled in referenced_files.items():
+        if not handled:
+            logging.info("Copying {}".format(f))
+            shutil.copy(
+                src=os.path.join(source_directory, f),
+                dst=destination_path,
+            )
+
+    return destination_device_file
+
+
+@converters.append(
+    old_version=(3,), new_version=None, description="template for next format version"
 )
 def cf(self, source_directory, source_file_name, destination_path):
     with open(os.path.join(source_directory, source_file_name), encoding="utf-8") as f:

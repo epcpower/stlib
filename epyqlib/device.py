@@ -45,6 +45,7 @@ import shutil
 import tempfile
 import textwrap
 import twisted.internet.task
+import typing
 import uuid
 import zipfile
 from twisted.internet.defer import setDebugging
@@ -232,6 +233,7 @@ class Device:
         self.from_zip = False
         self.device_sha = "N/A"
         self.device_file = "N/A"
+        self.raw_dict = dict()
 
         if kwargs.get("file", None) is not None:
             constructor = self._init_from_file
@@ -353,16 +355,17 @@ class Device:
         self.elements = set(Elements)
 
         s = file.read()
-        d = json.loads(s, object_pairs_hook=OrderedDict)
-        self.raw_dict = d
-        d.setdefault("nv_meta_enum", None)
-        d.setdefault("access_level_path", None)
-        d.setdefault(
+        config_dict = json.loads(s, object_pairs_hook=OrderedDict)
+        self.raw_dict = config_dict
+        config_dict.setdefault("nv_meta_enum", None)
+        config_dict.setdefault("access_level_path", None)
+        config_dict.setdefault(
             "access_password_path",
             "ParameterQuery;FactoryAccess;FactoryAccess",
         )
+        config_dict.setdefault("software_hash_path", None)
 
-        self.module_path = d.get("module", None)
+        self.module_path = config_dict.get("module", None)
         self.plugin = None
         if self.module_path is None:
             module = epyqlib.deviceextension
@@ -382,7 +385,7 @@ class Device:
         path = os.path.dirname(file.name)
         for ui_path_name in ["ui_path", "ui_paths", "menu"]:
             try:
-                json_ui_paths = d[ui_path_name]
+                json_ui_paths = config_dict[ui_path_name]
                 break
             except KeyError:
                 pass
@@ -394,7 +397,7 @@ class Device:
 
         self.ui_paths = json_ui_paths
 
-        hierarchy_path = d.get("parameter_hierarchy", None)
+        hierarchy_path = config_dict.get("parameter_hierarchy", None)
         if hierarchy_path is None:
             hierarchy = None
         else:
@@ -403,7 +406,7 @@ class Device:
 
         for tab in Tabs:
             try:
-                value = d["tabs"][tab.name]
+                value = config_dict["tabs"][tab.name]
             except KeyError:
                 pass
             else:
@@ -443,11 +446,11 @@ class Device:
         self.referenced_files = [
             f
             for f in [
-                d.get("module", None),
-                d.get("can_path", None),
-                d.get("compatibility", None),
-                d.get("parameter_defaults", None),
-                d.get("parameter_hierarchy", None),
+                config_dict.get("module", None),
+                config_dict.get("can_path", None),
+                config_dict.get("compatibility", None),
+                config_dict.get("parameter_defaults", None),
+                config_dict.get("parameter_hierarchy", None),
                 *self.ui_paths.values(),
                 *module.referenced_files(self.raw_dict),
             ]
@@ -455,7 +458,7 @@ class Device:
         ]
 
         self.compatibility_shas = []
-        compatibility_file = d.get("compatibility", None)
+        compatibility_file = config_dict.get("compatibility", None)
         if compatibility_file is not None:
             compatibility_file = os.path.join(
                 os.path.dirname(self.config_path), compatibility_file
@@ -467,13 +470,15 @@ class Device:
             self.compatibility_shas.extend(c.get("shas", []))
 
         if not only_for_files:
-            self.can_path = os.path.join(path, d["can_path"])
+            self.can_path = os.path.join(path, config_dict["can_path"])
             with open(self.can_path, "rb") as f:
                 self.can_contents = f.read()
 
-            self.node_id_type = d.get("node_id_type", next(iter(node_id_types))).lower()
+            self.node_id_type = config_dict.get(
+                "node_id_type", next(iter(node_id_types))
+            ).lower()
             if self.node_id is None:
-                self.node_id = d.get("node_id")
+                self.node_id = config_dict.get("node_id")
             if self.node_id is None and self.node_id_type == "j1939":
                 self.node_id, ok = QInputDialog.getInt(
                     None,
@@ -486,7 +491,7 @@ class Device:
                 if not ok:
                     raise CancelError("User canceled node ID dialog")
             self.node_id = int(self.node_id)
-            self.controller_id = int(d.get("controller_id", 65))
+            self.controller_id = int(config_dict.get("controller_id", 65))
             self.node_id_adjust = functools.partial(
                 node_id_types[self.node_id_type],
                 device_id=self.node_id,
@@ -495,13 +500,13 @@ class Device:
 
             self._init_from_parameters(
                 uis=self.ui_paths,
-                serial_number=d.get("serial_number", ""),
-                name=d.get("name", ""),
+                serial_number=config_dict.get("serial_number", ""),
+                name=config_dict.get("name", ""),
                 tabs=tabs,
                 rx_interval=rx_interval,
                 edit_actions=edit_actions,
-                nv_configuration=d.get("nv_configuration"),
-                can_configuration=d.get("can_configuration"),
+                nv_configuration=config_dict.get("nv_configuration"),
+                can_configuration=config_dict.get("can_configuration"),
                 hierarchy=hierarchy,
                 **kwargs,
             )
@@ -558,12 +563,15 @@ class Device:
         self.config_path = os.path.abspath(filename_epc)
 
         converted_directory = None
+        final_filename_epc = filename_epc
         if not epyqlib.updateepc.is_latest(filename_epc):
             converted_directory = tempfile.TemporaryDirectory()
-            file = epyqlib.updateepc.convert(filename_epc, converted_directory.name)
-            self.config_path = os.path.abspath(file)
+            final_filename_epc = epyqlib.updateepc.convert(
+                filename_epc, converted_directory.name
+            )
+            self.config_path = os.path.abspath(final_filename_epc)
 
-        with open(filename_epc, "r") as f:
+        with open(final_filename_epc, "r") as f:
             self._load_config(f, rx_interval=rx_interval, **kwargs)
 
         if converted_directory is not None:
@@ -891,6 +899,12 @@ class Device:
                 nvs=self.nvs,
                 nv_model=nv_model,
                 bus=self.bus,
+                datalogger_blockheader_name=self.get_config_element(
+                    "datalogger_blockheader_name"
+                ),
+                datalogger_recordheader_name=self.get_config_element(
+                    "datalogger_recordheader_name"
+                ),
                 tx_id=self.neo_frames.frame_by_name("CCP").id,
                 rx_id=self.neo_frames.frame_by_name("CCPResponse").id,
             )
@@ -1294,6 +1308,38 @@ class Device:
                 self.nvs.set_stale()
                 self.nvs.cancel_cyclic_read_all()
 
+    def get_config_element(self, config_key: str) -> typing.Union[str, None]:
+        """
+        Simple retrieval of configuration value given configuration key.
+
+        Args:
+            config_key: configuration key into the raw dictionary
+
+        Returns:
+            string configuration value
+        """
+        if config_key in self.raw_dict:
+            return self.raw_dict[config_key]
+
+        return None
+
+    def get_config_path_element(self, config_key: str) -> typing.List[str]:
+        """
+        Retrieval of configuration path elements given configuration key.
+        Path elements are split into a list.
+
+        Args:
+            config_key: configuration key into the raw dictionary
+
+        Returns:
+            list of configuration path elements
+        """
+        config_path_value = self.get_config_element(config_key)
+        if config_path_value is not None:
+            return config_path_value.split(";")
+
+        return config_path_value
+
 
 class FrameTimeout(epyqlib.canneo.QtCanListener):
     lost = epyqlib.utils.qt.Signal()
@@ -1362,12 +1408,10 @@ class DeviceInterface:
         return str(serial_number_signal.scaled_value)
 
     async def get_build_hash(self) -> str:
-        serial_number_signal = self.device.nvs.signal_from_names(
-            "SoftwareHash",
-            "SoftwareHash",
-        )
+        software_hash_path = self.device.get_config_path_element("software_hash_path")
+        software_hash_signal = self.device.nvs.signal_from_names(*software_hash_path)
 
-        return await self._read_single_param(serial_number_signal)
+        return await self._read_single_param(software_hash_signal)
 
     async def _read_single_param(self, param_signal):
         param_response = await self.device.nvs.read_all_from_device(

@@ -14,7 +14,7 @@ def factory_definition():
         return epyqlib.hildevice.Definition.loadp(updated)
 
 
-@pytest.mark.parametrize("version", [[1], [3]])
+@pytest.mark.parametrize("version", [[1], [4]])
 def test_definition_format_version_validator(factory_definition, version):
     with pytest.raises(epyqlib.hildevice.FormatVersionError):
         attr.evolve(factory_definition, format_version=version)
