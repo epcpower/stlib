@@ -7,6 +7,10 @@ For instructions, see the [changelog confluence page](https://epcpower.atlassian
 
 ## [Unreleased] - YYYY-MM-DD
 
+### Changed
+
+- MDL-325: Update boto3 and python-dateutil to be compatible with conan 1.59.0 for SIL GUI
+
 ## [v2022.10] - 2022-10-19
 
 ### Added
@@ -27,4 +31,3 @@ For instructions, see the [changelog confluence page](https://epcpower.atlassian
 
 - SC-769: Allow datalogger binary to load with empty SunSpec JSON
 - SC-734: revert pyelftools to pre-poetry version
-
