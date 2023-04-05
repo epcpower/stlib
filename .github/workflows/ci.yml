@@ -75,7 +75,7 @@ jobs:
         run: |
           poetry publish --repository epc-power
       - name: Archive artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2-node16
         with:
           name: epyq_st
           path: |
