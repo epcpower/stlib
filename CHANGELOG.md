@@ -26,6 +26,7 @@ For instructions, see the [changelog confluence page](https://epcpower.atlassian
 - SC-760: Pin poetry to 1.1.15 & fix boto3 ref
 - SC-399: Romp Removal / Poetry Implementation
 - SC-219: Github Actions CI
+- SC-1100: Update actions versions to alleviate CI build warnings
 
 ### Fixed
 
