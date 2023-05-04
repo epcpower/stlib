@@ -29,7 +29,7 @@ jobs:
         with:
           node-version: 16
       - name: Clear npm cache
-        run: npm ci
+        run: npm install
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
