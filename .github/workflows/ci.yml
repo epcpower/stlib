@@ -29,13 +29,13 @@ jobs:
         with:
           node-version: 16
       - name: Clear npm cache
-        run: npm cache clean --force
+        run: npm ci
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.sha }}
           submodules: recursive
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v2
         with:
           python-version: ${{ env.PYTHON_VERSION }}
       - name: Configure AWS credentials
@@ -81,7 +81,7 @@ jobs:
         run: |
           poetry publish --repository epc-power
       - name: Archive artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: epyq_st
           path: |
