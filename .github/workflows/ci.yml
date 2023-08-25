@@ -58,7 +58,6 @@ jobs:
           poetry config http-basic.third-party aws $CODEARTIFACT_AUTH_TOKEN
 
           poetry install
-
           poetry --version
       - name: python commands
         run: |
