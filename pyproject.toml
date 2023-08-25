@@ -1,5 +1,8 @@
 [tool.poetry]
 name = "epyqlib"
+# The version variable below is set to the generic build placeholder "0.0.0".
+# (In other words: leave alone!) During CI, poetry dynamic versioning
+# modifies the __version__ variable in the applicable __init__.py file.
 version = "0.0.0"
 description = ""
 authors = ["Alex Anker <alex.anker@epcpower.com>"]
@@ -8,19 +11,19 @@ license = "GPL-2.0-or-later"
 
 [tool.poetry-dynamic-versioning]
 #modifies epyqlib/__init__.py
-enable = false
+enable = true
 vcs = "git"
 style = "pep440"
 
 [[tool.poetry.source]]
 name = "epc-power"
 url = "https://epc-power-us-890711758583.d.codeartifact.us-east-2.amazonaws.com/pypi/epc-power/simple"
-secondary = true
+priority = "explicit"
 
 [[tool.poetry.source]]
 name = "third-party"
 url = "https://epc-power-us-890711758583.d.codeartifact.us-east-2.amazonaws.com/pypi/third-party/simple"
-secondary = true
+priority = "explicit"
 
 [tool.poetry.dependencies]
 python = ">=3.7.9,<3.11"
@@ -71,7 +74,6 @@ requests = "2.27.1"
 selenium = "3.141.0"
 
 [tool.poetry.dev-dependencies]
-poetry-dynamic-versioning = "^0.13.1"
 black = "20.8b1"
 pytest = "5.3.5"
 pytest-qt = "3.3.0"
