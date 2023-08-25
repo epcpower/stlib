@@ -22,6 +22,7 @@ For instructions, see the [changelog confluence page](https://epcpower.atlassian
 
 ### CI
 
+- SC-1339: Update poetry to 1.5.1 version
 - SC-1100: Pin versions of all python packages for installing poetry
 - SC-1100: Update actions versions to alleviate CI build warnings
 - SC-798: Release v2022.10
