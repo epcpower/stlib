@@ -309,6 +309,13 @@ class Group(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
+    comment = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
     children = attr.ib(
         default=attr.Factory(list),
         cmp=False,
@@ -554,6 +561,13 @@ class ArrayGroupElement(epyqlib.treenode.TreeNode):
         default="New Array Group Element",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
+        ),
+    )
+    comment = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
         ),
     )
     uuid = epyqlib.attrsmodel.attr_uuid()
