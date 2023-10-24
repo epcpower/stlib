@@ -63,13 +63,13 @@ jobs:
         run: |
           set -vx
           poetry run pip --version
+          poetry run poetry-dynamic-versioning
           poetry run black --check --diff .
           poetry run genbuildinfo "epyqlib/_build_generated.py"
           poetry run pip freeze --all
           poetry run builduiepyqlib
           poetry run pytest -vvvv -s --no-qt-log --run-factory epyqlib.tests --pyargs
 
-          poetry version $(git describe --tags --abbrev=0 2>/dev/null)
           poetry build
       - name: Publish executable
         #only run if a new tag is created
