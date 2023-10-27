@@ -15,8 +15,8 @@ enable = true
 vcs = "git"
 style = "pep440"
 
-[tool.poetry-dynamic-versioning.substitution]
-files = ["epyqlib/__init__.py"]
+#[tool.poetry-dynamic-versioning.substitution]
+#files = ["epyqlib/__init__.py"]
 
 [[tool.poetry.source]]
 name = "epc-power"
@@ -75,6 +75,7 @@ pysunspec = "2.1.0"
 #ccstudiodss = {extras = ["java"], version = "0.4.3"}
 requests = "2.27.1"
 selenium = "3.141.0"
+dunamai = "^1.19.0"
 
 [tool.poetry.dev-dependencies]
 black = "20.8b1"
