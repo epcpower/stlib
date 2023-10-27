@@ -3,17 +3,6 @@
 # For release/distribution, the __version__ variable below is modified
 # during CI by poetry dynamic versioning with the github tagged version.
 
-
-def serialize_pep440(
-    base: str,
-    stage: Optional[str] = None,
-    revision: Optional[int] = None,
-    post: Optional[int] = None,
-    dev: Optional[int] = None,
-    epoch: Optional[int] = None,
-    metadata: Optional[Sequence[Union[str, int]]] = None,
-) -> str:
-
 __version__ = "0.0.0"
 
 import epyqlib._build
