@@ -563,13 +563,6 @@ class ArrayGroupElement(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(),
         ),
     )
-    comment = attr.ib(
-        default=None,
-        converter=epyqlib.attrsmodel.to_str_or_none,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
-        ),
-    )
     uuid = epyqlib.attrsmodel.attr_uuid()
     original = attr.ib(
         default=None,
