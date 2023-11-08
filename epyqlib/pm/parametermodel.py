@@ -310,11 +310,8 @@ class Group(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
-    parameter_description_map, group_description_map = create_description_maps()
     comment = attr.ib(
-        default=group_description_map[name]
-        if name in group_description_map.keys()
-        else None,
+        default=None,
         converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
