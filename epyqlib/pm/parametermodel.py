@@ -186,9 +186,7 @@ class Parameter(epyqlib.treenode.TreeNode):
         allow_none=True,
     )
     comment = attr.ib(
-        default=parameter_description_map[name]
-        if name in parameter_description_map.keys()
-        else None,
+        default=None,
         converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
