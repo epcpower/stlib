@@ -60,13 +60,6 @@ class Group(epyqlib.treenode.TreeNode):
         metadata={"valid_types": (Parameter, None)},
     )
     uuid = epyqlib.attrsmodel.attr_uuid()
-    comment = attr.ib(
-        default=default,
-        converter=to_str_or_none,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
-        ),
-    )
 
     def __attrs_post_init__(self):
         super().__init__()
