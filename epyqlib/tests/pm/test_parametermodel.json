@@ -6,6 +6,7 @@
             "_type": "group",
             "name": "Group A",
             "type_name": null,
+            "comment": null,
             "children": [
                 {
                     "_type": "parameter",
@@ -48,6 +49,7 @@
                     "_type": "group",
                     "name": "Group A B",
                     "type_name": null,
+                    "comment": null,
                     "children": [],
                     "uuid": "5db07237-82c8-488f-925b-1a2a2802fb5b"
                 },
@@ -884,6 +886,7 @@
             "_type": "group",
             "name": "Group C",
             "type_name": null,
+            "comment": null,
             "children": [],
             "uuid": "7878effc-2d29-4719-bf0d-192e18d0f27c"
         },
