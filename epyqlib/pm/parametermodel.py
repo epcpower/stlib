@@ -5,8 +5,6 @@ import math
 import uuid
 
 import attr
-import numpy as np
-import pandas as pd
 import graham
 import marshmallow
 import PyQt5.QtCore
@@ -51,47 +49,6 @@ def sort_multiselect(node):
                 node, uuid, node.find_root().model
             ),
         )
-
-
-def load_parameters_json():
-    json_file = open("/home/annie/Repos/grid-tied/interface/pm/parameters.json")
-    return json.load(json_file)
-
-
-def load_updated_descriptions_xlsx():
-    xlsx_file = open("/home/annie/Documents/Parameter & Group Descriptions.xlsx")
-    parameter_description_df = pd.read_excel(xlsx_file, "Parameter Descriptions")
-    parameter_description_df = parameter_description_df.replace({np.nan: None})
-    group_description_df = pd.read_excel(xlsx_file, "Group Descriptions")
-    group_description_df = group_description_df.replace({np.nan: None})
-    return (parameter_description_df, group_description_df)
-
-
-def create_description_maps():
-    parameter_description_df, group_description_df = load_updated_descriptions_xlsx()
-
-    groups = group_description_df["Group"]
-    group_descriptions = group_description_df["Description"]
-    group_description_map = {}
-    for group, description in zip(groups, group_descriptions):
-        name = group.split(" -> ")[-1]
-        group_description_map[name] = description
-
-    # Get all the group names (without separator) in a list
-    group_names = []
-    for group in groups:
-        group_names = group_names + group.split(" -> ")
-    group_names = list(set(group_names))
-
-    # Create parameter description map
-    parameters = parameter_description_df["Parameter"]
-    parameter_descriptions = parameter_description_df["Short Description 4.5.0"]
-    parameter_description_map = {}
-    for parameter, description in zip(parameters, parameter_descriptions):
-        name = parameter.split(":")[-1]
-        parameter_description_map[name] = description
-
-    return parameter_description_map, group_description_map
 
 
 create_notes_attribute = epyqlib.attrsmodel.create_str_or_none_attribute
@@ -228,7 +185,6 @@ class Parameter(epyqlib.treenode.TreeNode):
         default=None,
         allow_none=True,
     )
-    parameter_description_map, group_description_map = create_description_maps()
     comment = attr.ib(
         default=parameter_description_map[name]
         if name in parameter_description_map.keys()
