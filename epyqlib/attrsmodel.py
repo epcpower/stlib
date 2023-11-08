@@ -289,7 +289,7 @@ def ify():
             metadata = field.metadata.get(metadata_key)
 
             extras = {}
-            if field.name == "children" or field.name == "comment":
+            if field.name == "children":
                 extras["no_column"] = True
 
             if metadata is None:
@@ -1611,7 +1611,9 @@ class Tests:
 
         extra = columns - fields
         missing = fields - columns
-
+        print("COLUMNS: ", columns)
+        print("EXTRA: ", extra)
+        print("MISSING: ", missing)
         assert extra == set()
         assert missing == set(), columns_to_code(missing)
 
