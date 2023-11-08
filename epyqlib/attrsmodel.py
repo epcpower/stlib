@@ -289,7 +289,7 @@ def ify():
             metadata = field.metadata.get(metadata_key)
 
             extras = {}
-            if field.name == "children":
+            if field.name == "children" or field.name == "comment":
                 extras["no_column"] = True
 
             if metadata is None:
