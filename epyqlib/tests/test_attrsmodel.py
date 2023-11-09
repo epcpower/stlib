@@ -104,7 +104,6 @@ columns = epyqlib.attrsmodel.columns(
     ),
     ((Parameter, "value"),),
     merge("uuid", *types.types.values()),
-    ((Group, "comment"),),
 )
 
 
@@ -129,16 +128,14 @@ def make_a_model(
     )
 
     group_a = group_cls(
-        name="Group A",
-        uuid="f5b7569e-9d7e-4433-a034-29c3e04d1ad4",
+        name="Group A", uuid="f5b7569e-9d7e-4433-a034-29c3e04d1ad4", comment=""
     )
     parameter_a_a = parameter_cls(
         name="Parameter A A",
         uuid="df286eb3-67f0-42d6-b56a-8ee1ded49248",
     )
     group_a_b = group_cls(
-        name="Group A B",
-        uuid="aee15e15-c5df-4e73-ae1a-9a5d4eaa798a",
+        name="Group A B", uuid="aee15e15-c5df-4e73-ae1a-9a5d4eaa798a", comment=""
     )
     parameter_b = parameter_cls(
         name="Parameter B",
@@ -146,8 +143,7 @@ def make_a_model(
         uuid="a1fd7abb-4760-472e-bc94-1ef4d2cfad62",
     )
     group_c = group_cls(
-        name="Group C",
-        uuid="2777e016-a3e6-470d-b20c-7a44904df710",
+        name="Group C", uuid="2777e016-a3e6-470d-b20c-7a44904df710", comment=""
     )
     parameter_d = parameter_cls(
         name="Parameter D",

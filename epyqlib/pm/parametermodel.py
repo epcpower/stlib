@@ -1757,6 +1757,7 @@ columns = epyqlib.attrsmodel.columns(
         merge(
             "comment",
             Parameter,
+            Group,
             ArrayParameterElement,
             TableArrayElement,
         )
