@@ -6,7 +6,6 @@
             "_type": "group",
             "name": "Group A",
             "type_name": null,
-            "comment": null,
             "children": [
                 {
                     "_type": "parameter",
@@ -49,8 +48,8 @@
                     "_type": "group",
                     "name": "Group A B",
                     "type_name": null,
-                    "comment": null,
                     "children": [],
+                    "comment": null,
                     "uuid": "5db07237-82c8-488f-925b-1a2a2802fb5b"
                 },
                 {
@@ -843,6 +842,7 @@
                     "uuid": "58b7bf0d-4dec-4707-a976-d49a856eb3ba"
                 }
             ],
+            "comment": null,
             "uuid": "78fb0043-b46f-4198-86ed-3ba8d48bf4c8"
         },
         {
@@ -886,8 +886,8 @@
             "_type": "group",
             "name": "Group C",
             "type_name": null,
-            "comment": null,
             "children": [],
+            "comment": null,
             "uuid": "7878effc-2d29-4719-bf0d-192e18d0f27c"
         },
         {
