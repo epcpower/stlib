@@ -104,7 +104,6 @@ columns = epyqlib.attrsmodel.columns(
     ),
     ((Parameter, "value"),),
     merge("uuid", *types.types.values()),
-    ((Group, "comment"),),
 )
 
 
