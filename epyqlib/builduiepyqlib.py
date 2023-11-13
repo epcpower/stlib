@@ -9,7 +9,7 @@ def _do_nothing(*args, **kwargs):
     pass
 
 
-def compile_ui(
+def compile_ui_alqtendpy(
     file_paths=(),
     directory_paths=(),
     extension=".ui",
@@ -67,6 +67,6 @@ def compile_paths(
 
 def compile_ui():
     print("epyqlib::compile_ui building UI in epyqlib")
-    compile_ui(
+    compile_ui_alqtendpy(
         directory_paths=[pathlib.Path(__file__).parent],
     )
