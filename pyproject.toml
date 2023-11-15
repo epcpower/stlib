@@ -107,8 +107,8 @@ epyqlib = "epyqlib.tests.pytest_plugin"
 
 [build-system]
 requires = [
-    "alqtendpy",
-    "pyqt5<5.14.1",
+    #"alqtendpy",
+    #"pyqt5<5.14.1",
     "setuptools",
     "wheel",
     "poetry-core>=1.0.0",
