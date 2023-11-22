@@ -15,9 +15,6 @@ enable = true
 vcs = "git"
 style = "pep440"
 
-#[tool.poetry-dynamic-versioning.substitution]
-#files = ["epyqlib/__init__.py"]
-
 [[tool.poetry.source]]
 name = "epc-power"
 url = "https://epc-power-us-890711758583.d.codeartifact.us-east-2.amazonaws.com/pypi/epc-power/simple"
