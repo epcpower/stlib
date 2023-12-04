@@ -1,17 +1,13 @@
 import collections
-import contextlib
 import decimal
-import functools
 import inspect
 import itertools
-import json
 import locale
 import logging
 import pathlib
 import string
 import sys
 import uuid
-import weakref
 from natsort import natsorted
 
 import attr
@@ -1611,9 +1607,7 @@ class Tests:
 
         extra = columns - fields
         missing = fields - columns
-        print("COLUMNS: ", columns)
-        print("EXTRA: ", extra)
-        print("MISSING: ", missing)
+
         assert extra == set()
         assert missing == set(), columns_to_code(missing)
 
