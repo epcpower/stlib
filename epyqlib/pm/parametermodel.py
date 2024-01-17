@@ -191,6 +191,13 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
+    manual_description = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
     notes = create_notes_attribute()
     original_frame_name = attr.ib(
         default=None,
