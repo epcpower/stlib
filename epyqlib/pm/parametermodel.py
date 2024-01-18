@@ -1716,6 +1716,7 @@ columns = epyqlib.attrsmodel.columns(
     merge("sunspec_setter", Parameter),
     merge("active_curve_getter", Table),
     merge("active_curve_setter", Table),
+    merge("manual_description", Parameter),
     merge(
         "nv_format",
         Parameter,
