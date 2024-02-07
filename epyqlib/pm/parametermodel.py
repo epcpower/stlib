@@ -332,7 +332,7 @@ class Group(epyqlib.treenode.TreeNode):
             ),
         ),
     )
-    comment = attr.ib(
+    manual_description = attr.ib(
         default=None,
         converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
