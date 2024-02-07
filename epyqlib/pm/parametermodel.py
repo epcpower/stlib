@@ -830,6 +830,13 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
+    manual_description = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
     enumeration_uuid = epyqlib.attrsmodel.attr_uuid(
         default=None,
         allow_none=True,
@@ -1716,7 +1723,7 @@ columns = epyqlib.attrsmodel.columns(
     merge("sunspec_setter", Parameter),
     merge("active_curve_getter", Table),
     merge("active_curve_setter", Table),
-    merge("manual_description", Parameter),
+    merge("manual_description", Parameter, TableArrayElement),
     merge(
         "nv_format",
         Parameter,
