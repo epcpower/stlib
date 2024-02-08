@@ -1723,7 +1723,7 @@ columns = epyqlib.attrsmodel.columns(
     merge("sunspec_setter", Parameter),
     merge("active_curve_getter", Table),
     merge("active_curve_setter", Table),
-    merge("manual_description", Parameter, TableArrayElement),
+    merge("manual_description", Parameter, Group, TableArrayElement),
     merge(
         "nv_format",
         Parameter,
@@ -1771,7 +1771,6 @@ columns = epyqlib.attrsmodel.columns(
         merge(
             "comment",
             Parameter,
-            Group,
             ArrayParameterElement,
             TableArrayElement,
         )
