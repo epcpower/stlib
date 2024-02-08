@@ -50,7 +50,7 @@
                     "name": "Group A B",
                     "type_name": null,
                     "children": [],
-                    "comment": null,
+                    "manual_description": null,
                     "uuid": "5db07237-82c8-488f-925b-1a2a2802fb5b"
                 },
                 {
@@ -861,7 +861,7 @@
                     "uuid": "58b7bf0d-4dec-4707-a976-d49a856eb3ba"
                 }
             ],
-            "comment": null,
+            "manual_description": null,
             "uuid": "78fb0043-b46f-4198-86ed-3ba8d48bf4c8"
         },
         {
@@ -907,7 +907,7 @@
             "name": "Group C",
             "type_name": null,
             "children": [],
-            "comment": null,
+            "manual_description": null,
             "uuid": "7878effc-2d29-4719-bf0d-192e18d0f27c"
         },
         {
