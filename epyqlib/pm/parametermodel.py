@@ -191,6 +191,13 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
+    manual_description = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
     notes = create_notes_attribute()
     original_frame_name = attr.ib(
         default=None,
@@ -323,6 +330,13 @@ class Group(epyqlib.treenode.TreeNode):
                     marshmallow.fields.Nested(graham.schema(Parameter)),
                 )
             ),
+        ),
+    )
+    manual_description = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
         ),
     )
     uuid = epyqlib.attrsmodel.attr_uuid()
@@ -810,6 +824,13 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
         ),
     )
     comment = attr.ib(
+        default=None,
+        converter=epyqlib.attrsmodel.to_str_or_none,
+        metadata=graham.create_metadata(
+            field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+    manual_description = attr.ib(
         default=None,
         converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
@@ -1702,6 +1723,7 @@ columns = epyqlib.attrsmodel.columns(
     merge("sunspec_setter", Parameter),
     merge("active_curve_getter", Table),
     merge("active_curve_setter", Table),
+    merge("manual_description", Parameter, Group, TableArrayElement),
     merge(
         "nv_format",
         Parameter,

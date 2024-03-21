@@ -91,6 +91,7 @@ types = epyqlib.attrsmodel.Types(
     ),
 )
 
+
 # TODO: CAMPid 943896754217967154269254167
 def merge(name, *types):
     return tuple((x, name) for x in types)
