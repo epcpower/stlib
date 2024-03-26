@@ -27,7 +27,7 @@ python = ">=3.8,<3.11"
 
 #### EPC Repos ####
 #if referencing commit hashes:
-sunspecdemo = { git = "https://github.com/epcpower/sunspec-demo.git", rev = "a04b466da431549946297c66364ee835c3fab3e0" }
+sunspecdemo = { git = "https://github.com/epcpower/sunspec-demo.git", rev = "57b7699ffc000ad5d2018748c7fdbe3273b7e908" }
 
 #if referencing tags:
 #sunspecdemo = {version = "0.3.0", source = "epc-power"}
@@ -63,12 +63,13 @@ siphash-cffi = {version = "0.1.4", source = "third-party"}
 treq = "21.1.0"
 Twisted = "21.2.0"
 python-can = "4.0.0"
-pysunspec = "2.1.0"
+pysunspec = "2.1.1"
 #javabridge & ccstudiodss commented out so we dont need java in CI run.  Needed to get outparsecheck running.
 #javabridge = "1.0.18"
 #ccstudiodss = {extras = ["java"], version = "0.4.3"}
 requests = "2.27.1"
 selenium = "3.141.0"
+uptime = "^3.0.1"
 
 [tool.poetry.dev-dependencies]
 poetry-dynamic-versioning = "^0.13.1"

@@ -715,7 +715,7 @@ python-versions = "*"
 
 [[package]]
 name = "pysunspec"
-version = "2.1.0"
+version = "2.1.1"
 description = "Python SunSpec Tools"
 category = "main"
 optional = false
@@ -1059,14 +1059,14 @@ version = "0.0.0"
 description = "EPC SunSpec demonstration tool"
 category = "main"
 optional = false
-python-versions = ">=3.7.9,<3.11"
+python-versions = ">=3.8,<3.11"
 develop = false
 
 [package.dependencies]
 attrs = ">=19.3.0"
 click = "^7.0"
 pyserial = "3.4"
-pysunspec = "2.1.0"
+pysunspec = "2.1.1"
 toml = "^0.10.2"
 toolz = "0.9.0"
 tqdm = "4.32.1"
@@ -1075,8 +1075,8 @@ typing-extensions = "^4.0.1"
 [package.source]
 type = "git"
 url = "https://github.com/epcpower/sunspec-demo.git"
-reference = "a04b466da431549946297c66364ee835c3fab3e0"
-resolved_reference = "a04b466da431549946297c66364ee835c3fab3e0"
+reference = "57b7699ffc000ad5d2018748c7fdbe3273b7e908"
+resolved_reference = "57b7699ffc000ad5d2018748c7fdbe3273b7e908"
 
 [[package]]
 name = "toml"
@@ -1210,6 +1210,14 @@ optional = false
 python-versions = ">=3.8"
 
 [[package]]
+name = "uptime"
+version = "3.0.1"
+description = "Cross-platform uptime library"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "urllib3"
 version = "1.25.11"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
@@ -1262,7 +1270,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8,<3.11"
-content-hash = "1cc8c103937eb20e41213bfd1b4809b3ede0951055a698e6f4a4b9fc87cd9204"
+content-hash = "e6b6378f3709eeaa67d12df19fdfad77fd9502f4d147c29f93c8ae74f921d1c1"
 
 [metadata.files]
 alqtendpy = [
@@ -1890,8 +1898,8 @@ pyserial = [
     {file = "pyserial-3.4.tar.gz", hash = "sha256:6e2d401fdee0eab996cf734e67773a0143b932772ca8b42451440cfed942c627"},
 ]
 pysunspec = [
-    {file = "pysunspec-2.1.0-py2.py3-none-any.whl", hash = "sha256:97dbd776796df2acf8b4610f546fc251af99aa6474181d91008cd2a1fdfb03fe"},
-    {file = "pysunspec-2.1.0.tar.gz", hash = "sha256:c4587736b107e72b411f1bb9a4cd9d4e7791217cb90533ca2ab87210151ae08c"},
+    {file = "pysunspec-2.1.1-py3-none-any.whl", hash = "sha256:af05b0a0449d75aaebb1a1134e740d4c81081291d5fd1f17bb882134a6021b20"},
+    {file = "pysunspec-2.1.1.tar.gz", hash = "sha256:9824c815a98935399029276837feb1f3d5749646415910317026d3b7f8d9a142"},
 ]
 pytest = [
     {file = "pytest-5.3.5-py3-none-any.whl", hash = "sha256:ff615c761e25eb25df19edddc0b970302d2a9091fbce0e7213298d85fb61fef6"},
@@ -2222,6 +2230,9 @@ typed-ast = [
 typing-extensions = [
     {file = "typing_extensions-4.10.0-py3-none-any.whl", hash = "sha256:69b1a937c3a517342112fb4c6df7e72fc39a38e7891a5730ed4985b5214b5475"},
     {file = "typing_extensions-4.10.0.tar.gz", hash = "sha256:b0abd7c89e8fb96f98db18d86106ff1d90ab692004eb746cf6eda2682f91b3cb"},
+]
+uptime = [
+    {file = "uptime-3.0.1.tar.gz", hash = "sha256:7c300254775b807ce46e3dcbcda30aa3b9a204b9c57a7ac1e79ee6dbe3942973"},
 ]
 urllib3 = [
     {file = "urllib3-1.25.11-py2.py3-none-any.whl", hash = "sha256:f5321fbe4bf3fefa0efd0bfe7fb14e90909eb62a48ccda331726b4319897dd5e"},
