@@ -12,8 +12,6 @@ import warnings
 
 import attr
 import canmatrix
-import sunspecdemo.demos
-import sunspecdemo.utils
 import sunspec.core.client
 import twisted.internet.defer
 
