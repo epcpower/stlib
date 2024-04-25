@@ -5,21 +5,18 @@ import itertools
 import json
 import operator
 import pathlib
-import sys
 import time
 import uuid
 import warnings
-
 import attr
 import canmatrix
 import sunspec.core.client
-import twisted.internet.defer
-
 import epyqlib.busproxy
 import epyqlib.canneo
 import epyqlib.device
 import epyqlib.nv
 import epyqlib.utils.qt
+import epyqlib.utils.sunspecdemo_utils
 import epyqlib.utils.twisted
 import epyqlib.utils.units
 import epyqlib.updateepc
@@ -936,7 +933,7 @@ class SunSpecDevice:
         )
         warnings.warn(message=message, category=DeprecationWarning)
 
-        with sunspecdemo.utils.fresh_smdx_path(self.model_path):
+        with epyqlib.utils.sunspecdemo_utils.fresh_smdx_path(self.model_path):
             self.device = sunspec.core.client.SunSpecClientDevice(
                 slave_id=slave_id,
                 device_type=device_type,
@@ -958,7 +955,7 @@ class SunSpecDevice:
         timeout=1,
         parity=sunspec.core.client.PARITY_NONE,
     ):
-        with sunspecdemo.utils.fresh_smdx_path(self.model_path):
+        with epyqlib.utils.sunspecdemo_utils.fresh_smdx_path(self.model_path):
             self.device = sunspec.core.client.SunSpecClientDevice(
                 slave_id=slave_id,
                 device_type=sunspec.core.client.RTU,
@@ -975,7 +972,7 @@ class SunSpecDevice:
         timeout=1,
         port=None,
     ):
-        with sunspecdemo.utils.fresh_smdx_path(self.model_path):
+        with epyqlib.utils.sunspecdemo_utils.fresh_smdx_path(self.model_path):
             self.device = sunspec.core.client.SunSpecClientDevice(
                 slave_id=slave_id,
                 device_type=sunspec.core.client.TCP,
@@ -1062,11 +1059,11 @@ class SunSpecDevice:
         check_limits_point = self.device.epc_control.model.points["ChkLmts"]
         submit_point = self.device.epc_control.model.points["SubAccLvl"]
 
-        sunspecdemo.demos.send_val(access_level_point, level)
-        sunspecdemo.demos.send_val(password_point, password)
-        sunspecdemo.demos.send_val(check_limits_point, check_limits)
+        epyqlib.utils.sunspecdemo_utils.send_val(access_level_point, level)
+        epyqlib.utils.sunspecdemo_utils.send_val(password_point, password)
+        epyqlib.utils.sunspecdemo_utils.send_val(check_limits_point, check_limits)
 
-        sunspecdemo.demos.send_val(submit_point, True)
+        epyqlib.utils.sunspecdemo_utils.send_val(submit_point, True)
 
     @contextlib.asynccontextmanager
     async def temporary_access_level(
