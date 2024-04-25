@@ -901,3 +901,255 @@ class SunSpecNv:
 
     def units(self):
         return parse_units(unit_string=self.nv.point_type.units)
+
+
+@attr.s
+class SunSpecDevice:
+    model_path = attr.ib(converter=pathlib.Path)
+    device = attr.ib(default=None)
+    cyclic_frames = attr.ib(default=attr.Factory(set))
+    default_elevated_access_level = attr.ib(default=None)
+    default_access_level_password = attr.ib(default=None)
+    save_nv = attr.ib(default=None)
+    save_nv_value = attr.ib(default=None)
+    uuid_to_point = attr.ib(default=None)
+    uuid_to_model = attr.ib(default=None)
+    uuid = attr.ib(default=uuid.uuid4)
+
+    def load(
+        self,
+        slave_id=1,
+        device_type=sunspec.core.client.RTU,
+        name="/dev/ttyUSB0",
+        baudrate=115200,
+        timeout=1,
+        parity=sunspec.core.client.PARITY_NONE,
+        ipaddr=None,
+        ipport=502,
+        pathlist=None,
+        trace=False,
+    ):
+        message = (
+            "SunSpecDevice.load() method is deprecated and will be"
+            + " removed in the future. Use SunSpecDevice.load_rtu()"
+            + " or SunSpecDevice.load_tcp() instead."
+        )
+        warnings.warn(message=message, category=DeprecationWarning)
+
+        with sunspecdemo.utils.fresh_smdx_path(self.model_path):
+            self.device = sunspec.core.client.SunSpecClientDevice(
+                slave_id=slave_id,
+                device_type=device_type,
+                name=name,
+                baudrate=baudrate,
+                timeout=timeout,
+                parity=parity,
+                ipaddr=ipaddr,
+                ipport=ipport,
+                pathlist=pathlist,
+                trace=trace,
+            )
+
+    def load_rtu(
+        self,
+        slave_id=1,
+        name="/dev/ttyUSB0",
+        baudrate=115200,
+        timeout=1,
+        parity=sunspec.core.client.PARITY_NONE,
+    ):
+        with sunspecdemo.utils.fresh_smdx_path(self.model_path):
+            self.device = sunspec.core.client.SunSpecClientDevice(
+                slave_id=slave_id,
+                device_type=sunspec.core.client.RTU,
+                name=name,
+                baudrate=baudrate,
+                timeout=timeout,
+                parity=parity,
+            )
+
+    def load_tcp(
+        self,
+        address,
+        slave_id=1,
+        timeout=1,
+        port=None,
+    ):
+        with sunspecdemo.utils.fresh_smdx_path(self.model_path):
+            self.device = sunspec.core.client.SunSpecClientDevice(
+                slave_id=slave_id,
+                device_type=sunspec.core.client.TCP,
+                timeout=timeout,
+                ipaddr=address,
+                ipport=port,
+            )
+
+    # def signal_from_uuid(self, uuid_) -> SunSpecNv:
+    #     return self.nv_from_uuid(uuid_=uuid_)
+
+    def nv_from_uuid(self, uuid_) -> SunSpecNv:
+        return SunSpecNv(
+            nv=self.uuid_to_point[uuid_],
+            model=self.uuid_to_model[uuid_],
+            # device=self,
+        )
+
+    # no 'signals' so just alias
+    parameter_from_uuid = nv_from_uuid
+
+    def map_uuids(self):
+        def get_uuid(block, point):
+            comment = point.point_type.notes
+
+            for index in itertools.count():
+                comment, uuid = epyqlib.canneo.strip_uuid_from_comment(
+                    comment,
+                )
+
+                if uuid is None:
+                    return uuid
+
+                if block.type == "fixed":
+                    return uuid
+
+                if block.type == "repeating" and index == block.index - 1:
+                    return uuid
+
+        points = [
+            [model, block, point]
+            for model in self.device.device.models_list
+            for block in model.blocks
+            for point in [*block.points_list, *block.points_sf.values()]
+            if point.point_type.notes is not None
+        ]
+
+        self.uuid_to_point = {
+            get_uuid(block=block, point=point): point for model, block, point in points
+        }
+
+        self.uuid_to_model = {
+            get_uuid(block=block, point=point): model for model, block, point in points
+        }
+
+    async def get_access_level(self):
+        access_level_point = self.device.epc_control.model.points["AccLvl"]
+
+        self.device.epc_control.read()
+
+        return access_level_point.value
+
+    async def get_check_limits(self):
+        point = self.device.epc_control.model.points["ChkLmts"]
+        self.device.epc_control.read()
+
+        return point.value
+
+    async def get_password(self):
+        point = self.device.epc_control.model.points["Passwd"]
+        self.device.epc_control.read()
+
+        return point.value
+
+    async def set_access_level(self, level=None, password=None, check_limits=True):
+        if level is None:
+            level = self.default_elevated_access_level
+
+        if password is None:
+            password = self.default_access_level_password
+
+        access_level_point = self.device.epc_control.model.points["AccLvl"]
+        password_point = self.device.epc_control.model.points["Passwd"]
+        check_limits_point = self.device.epc_control.model.points["ChkLmts"]
+        submit_point = self.device.epc_control.model.points["SubAccLvl"]
+
+        sunspecdemo.demos.send_val(access_level_point, level)
+        sunspecdemo.demos.send_val(password_point, password)
+        sunspecdemo.demos.send_val(check_limits_point, check_limits)
+
+        sunspecdemo.demos.send_val(submit_point, True)
+
+    @contextlib.asynccontextmanager
+    async def temporary_access_level(
+        self,
+        level=None,
+        password=None,
+        check_limits=True,
+    ):
+        check_limits_point = self.device.epc_control.model.points["ChkLmts"]
+
+        original_access_level = await self.get_access_level()
+        self.device.epc_control.read()
+        original_check_limits = check_limits_point.value
+
+        try:
+            await self.set_access_level(
+                level=level,
+                password=password,
+                check_limits=check_limits,
+            )
+            yield
+        finally:
+            await self.set_access_level(
+                level=original_access_level,
+                password=password,
+                check_limits=original_check_limits,
+            )
+
+    async def reset(self, timeout=20, sleep=25):
+        # SoftwareReset:InitiateReset
+        reset_parameter = self.parameter_from_uuid(
+            uuid_=uuid.UUID("b582085d-7734-4260-ab97-47e50a41b06c"),
+        )
+
+        # TODO: just accept the 1s or whatever default timeout?  A set without
+        #       waiting for the response could be nice.  (or embedded sending
+        #       a response)
+        with contextlib.suppress(sunspec.core.client.SunSpecClientError):
+            await reset_parameter.set(value=1)
+
+        if sleep > 0:
+            await epyqlib.utils.twisted.sleep(sleep)
+
+        await self.reconnect(timeout=timeout)
+
+    async def reconnect(self, timeout=20):
+        # Serial Number
+        a_parameter_that_can_be_read = self.parameter_from_uuid(
+            uuid_=uuid.UUID("390f27ea-6f28-4313-b183-5f37d007ccd1"),
+        )
+
+        end = time.monotonic() + timeout
+        while True:
+            try:
+                for _ in range(5):
+                    await epyqlib.utils.twisted.sleep(0.2)
+                    await a_parameter_that_can_be_read.get()
+            except sunspec.core.client.SunSpecClientError as e:
+                if time.monotonic() > end:
+                    raise RestartTimeoutError() from e
+                continue
+            else:
+                break
+
+    async def to_nv(self, timeout=30):
+        save_command_parameter = self.parameter_from_uuid(
+            uuid.UUID("2c768acc-f88e-431c-8fc1-ea8d5b2ba253"),
+        )
+        save_in_progress_parameter = self.parameter_from_uuid(
+            uuid.UUID("5d623539-a564-4374-b00d-492a0fbb2f55"),
+        )
+
+        await save_command_parameter.set(1)
+        await epyqlib.utils.twisted.sleep(0.250)
+
+        end = time.monotonic() + timeout
+        while time.monotonic() < end:
+            try:
+                saving = await save_in_progress_parameter.get()
+            except sunspec.core.client.SunSpecClientError:
+                continue
+
+            if not saving:
+                break
+        else:
+            raise Exception()
