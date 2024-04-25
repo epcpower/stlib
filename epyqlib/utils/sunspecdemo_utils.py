@@ -2,6 +2,7 @@ import contextlib
 import os
 import sunspec.core.device
 
+
 @contextlib.contextmanager
 def fresh_smdx_path(*paths):
     original_pathlist = sunspec.core.device.file_pathlist
@@ -14,6 +15,7 @@ def fresh_smdx_path(*paths):
         yield sunspec.core.device.file_pathlist
     finally:
         sunspec.core.device.file_pathlist = original_pathlist
+
 
 def send_val(point, val):
     point.value_setter(val)
