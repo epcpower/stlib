@@ -13,10 +13,10 @@ def fresh_smdx_path(
     Creates a new smdx path using a path to the model
 
     Returns:
-        typing.Generator[sunspec.core.device.file_pathlist]: A new smdx path
+        typing.Iterator[sunspec.core.device.file_pathlist]: A new smdx path
 
     Yields:
-        Iterator[typing.Generator[sunspec.core.device.file_pathlist]]: A new smdx path
+        Iterator[typing.Iterator[sunspec.core.device.file_pathlist]]: A new smdx path
     """
     original_pathlist = sunspec.core.device.file_pathlist
     sunspec.core.device.file_pathlist = sunspec.core.util.PathList()
