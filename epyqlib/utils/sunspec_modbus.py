@@ -8,7 +8,7 @@ import sunspec.core.device
 @contextlib.contextmanager
 def fresh_smdx_path(
     *paths: pathlib.Path,
-) -> typing.Generator[sunspec.core.device.file_pathlist]:
+) -> typing.Iterator[sunspec.core.device.file_pathlist]:
     """
     Creates a new smdx path using a path to the model
 
