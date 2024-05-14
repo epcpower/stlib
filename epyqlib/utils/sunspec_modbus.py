@@ -6,15 +6,17 @@ import sunspec.core.device
 
 
 @contextlib.contextmanager
-def fresh_smdx_path(*paths: pathlib.Path) -> pathlib.Path:
+def fresh_smdx_path(
+    *paths: pathlib.Path,
+) -> typing.Generator[sunspec.core.device.file_pathlist]:
     """
-    Creates a new smdx path
+    Creates a new smdx path using a path to the model
 
     Returns:
-        pathlib.Path: path from the SunSpecDevice model
+        typing.Generator[sunspec.core.device.file_pathlist]: A new smdx path
 
     Yields:
-        Iterator[pathlib.Path]: list of file path(s) from sunspec.core.device
+        Iterator[typing.Generator[sunspec.core.device.file_pathlist]]: A new smdx path
     """
     original_pathlist = sunspec.core.device.file_pathlist
     sunspec.core.device.file_pathlist = sunspec.core.util.PathList()
@@ -28,13 +30,15 @@ def fresh_smdx_path(*paths: pathlib.Path) -> pathlib.Path:
         sunspec.core.device.file_pathlist = original_pathlist
 
 
-def send_val(point: typing.Any, val: int) -> None:
+def send_val(
+    point: sunspec.core.device.Point, val: typing.Union[int, bool, float, str]
+) -> None:
     """
-    Sets the value for a point
+    Sets a value for a point in the model
 
     Args:
-        point (typing.ANy): A point in the model
-        val (int): A value the point will be set to
+        point (sunspec.core.device.Point): A point in the SunSpec model
+        val (typing.Union[int, bool, float, str]): A new value the point will be set to
     """
     point.value_setter(val)
     point.write()
