@@ -69,7 +69,6 @@ pysunspec = "2.1.1"
 #ccstudiodss = {extras = ["java"], version = "0.4.3"}
 requests = "2.27.1"
 selenium = "3.141.0"
-uptime = "^3.0.1"
 
 [tool.poetry.dev-dependencies]
 poetry-dynamic-versioning = "^0.13.1"
