@@ -129,20 +129,6 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.Boolean(),
         ),
     )
-    nv_factor = attr.ib(
-        default=None,
-        converter=epyqlib.attrsmodel.to_str_or_none,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True)
-        ),
-    )
-    nv_cast = attr.ib(
-        default=False,
-        converter=epyqlib.attrsmodel.two_state_checkbox,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.Boolean(),
-        ),
-    )
 
     internal_variable = epyqlib.attrsmodel.create_str_or_none_attribute()
     getter_function = epyqlib.attrsmodel.create_str_or_none_attribute()
@@ -397,8 +383,6 @@ class Enumerations(epyqlib.treenode.TreeNode):
 @epyqlib.utils.qt.pyqtify_passthrough_properties(
     original="original",
     field_names=(
-        "nv_factor",
-        "nv_cast",
         "access_level_uuid",
         "comment",
         "decimal_places",
@@ -441,20 +425,6 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
         converter=epyqlib.attrsmodel.to_decimal_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.Decimal(allow_none=True, as_string=True),
-        ),
-    )
-    nv_factor = attr.ib(
-        default=None,
-        converter=epyqlib.attrsmodel.to_str_or_none,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True)
-        ),
-    )
-    nv_cast = attr.ib(
-        default=False,
-        converter=epyqlib.attrsmodel.two_state_checkbox,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.Boolean(),
         ),
     )
     uuid = epyqlib.attrsmodel.attr_uuid()
@@ -720,8 +690,6 @@ class Array(epyqlib.treenode.TreeNode):
         "enumeration_uuid",
         "minimum",
         "maximum",
-        "nv_factor",
-        "nv_cast",
         "comment",
         "units",
         "visibility",
@@ -780,20 +748,7 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.Decimal(allow_none=True, as_string=True),
         ),
     )
-    nv_factor = attr.ib(
-        default=None,
-        converter=epyqlib.attrsmodel.to_str_or_none,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True)
-        ),
-    )
-    nv_cast = attr.ib(
-        default=False,
-        converter=epyqlib.attrsmodel.two_state_checkbox,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.Boolean(),
-        ),
-    )
+
     comment = attr.ib(
         default=None,
         converter=epyqlib.attrsmodel.to_str_or_none,
@@ -1676,18 +1631,6 @@ columns = epyqlib.attrsmodel.columns(
     merge("active_curve_getter", Table),
     merge("active_curve_setter", Table),
     merge("manual_description", Parameter, Group, TableArrayElement),
-    merge(
-        "nv_factor",
-        Parameter,
-        TableArrayElement,
-        ArrayParameterElement,
-    ),
-    merge(
-        "nv_cast",
-        Parameter,
-        TableArrayElement,
-        ArrayParameterElement,
-    ),
     merge("read_only", Parameter, ArrayParameterElement, TableArrayElement),
     merge(
         "access_level_uuid",
