@@ -1486,7 +1486,11 @@ class Model:
                 if new_child is None:
                     pass
                 elif row == -1:
-                    new_parent.append_child(new_child)
+                    if isinstance(new_child, list):
+                        for c in new_child:
+                            new_parent.append_child(c)
+                    else:
+                        new_parent.append_child(new_child)
                 else:
                     new_row = new_parent.row_of_child(node_to_insert_before)
                     new_parent.insert_child(new_row, new_child)
