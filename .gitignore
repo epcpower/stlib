@@ -4,6 +4,10 @@ epyqlib/_build_generated.py
 /epyqlib/resources/*.py
 *_ui.py
 
+#Visual Studio and Visual Studio Code
+#The templates are not currently adequate.
+.vs/
+.vscode/
 
 # Created by https://www.gitignore.io/api/vim,git,python
 # Edit at https://www.gitignore.io/?templates=vim,git,python
