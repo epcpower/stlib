@@ -1504,7 +1504,11 @@ class Model:
             else:
                 row = len(self.root.children)
         u = uuid.UUID(bytes=bytes(data.data(self.mime_type)))
-        source = self.node_from_uuid(u)
+        try:
+            source = self.node_from_uuid(u)
+        except NotFoundError as e:
+            logger.debug(e)
+            source = None
         return source, new_parent, row
 
     def node_from_uuid(self, u):
