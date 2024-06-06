@@ -1349,14 +1349,17 @@ python-dotenv = "*"
 
 [[package]]
 name = "pyserial"
-version = "3.4"
+version = "3.5"
 description = "Python Serial Port Extension"
 optional = false
 python-versions = "*"
 files = [
-    {file = "pyserial-3.4-py2.py3-none-any.whl", hash = "sha256:e0770fadba80c31013896c7e6ef703f72e7834965954a78e71a3049488d4d7d8"},
-    {file = "pyserial-3.4.tar.gz", hash = "sha256:6e2d401fdee0eab996cf734e67773a0143b932772ca8b42451440cfed942c627"},
+    {file = "pyserial-3.5-py2.py3-none-any.whl", hash = "sha256:c4451db6ba391ca6ca299fb3ec7bae67a5c55dde170964c7a14ceefec02f2cf0"},
+    {file = "pyserial-3.5.tar.gz", hash = "sha256:3c77e014170dfffbd816e6ffc205e9842efb10be9f58ec16d3e8675b4925cddb"},
 ]
+
+[package.extras]
+cp2110 = ["hidapi"]
 
 [[package]]
 name = "pysunspec"
@@ -1929,32 +1932,6 @@ files = [
 smmap = ">=3.0.1"
 
 [[package]]
-name = "sunspecdemo"
-version = "0.0.0"
-description = "EPC SunSpec demonstration tool"
-optional = false
-python-versions = ">=3.7.9,<3.11"
-files = []
-develop = false
-
-[package.dependencies]
-attrs = ">=19.3.0"
-click = "^7.0"
-pyserial = "3.4"
-pysunspec = "2.1.0"
-setuptools = ">=53.0.0"
-toml = "^0.10.2"
-toolz = "0.9.0"
-tqdm = "4.32.1"
-typing-extensions = "^4.0.1"
-
-[package.source]
-type = "git"
-url = "https://github.com/epcpower/sunspec-demo.git"
-reference = "f2292143054bbf7fc80ad98f4334a21e03cbe5ef"
-resolved_reference = "f2292143054bbf7fc80ad98f4334a21e03cbe5ef"
-
-[[package]]
 name = "toml"
 version = "0.10.2"
 description = "Python Library for Tom's Obvious, Minimal Language"
@@ -1966,28 +1943,24 @@ files = [
 ]
 
 [[package]]
-name = "toolz"
-version = "0.9.0"
-description = "List processing tools and functional utilities"
-optional = false
-python-versions = "*"
-files = [
-    {file = "toolz-0.9.0.tar.gz", hash = "sha256:929f0a7ea7f61c178bd951bdae93920515d3fbdbafc8e6caf82d752b9b3b31c9"},
-]
-
-[[package]]
 name = "tqdm"
-version = "4.32.1"
+version = "4.66.4"
 description = "Fast, Extensible Progress Meter"
 optional = false
-python-versions = ">=2.6, !=3.0.*, !=3.1.*"
+python-versions = ">=3.7"
 files = [
-    {file = "tqdm-4.32.1-py2.py3-none-any.whl", hash = "sha256:e288416eecd4df19d12407d0c913cbf77aa8009d7fddb18f632aded3bdbdda6b"},
-    {file = "tqdm-4.32.1.tar.gz", hash = "sha256:0a860bf2683fdbb4812fe539a6c22ea3f1777843ea985cb8c3807db448a0f7ab"},
+    {file = "tqdm-4.66.4-py3-none-any.whl", hash = "sha256:b75ca56b413b030bc3f00af51fd2c1a1a5eac6a0c1cca83cbb37a5c52abce644"},
+    {file = "tqdm-4.66.4.tar.gz", hash = "sha256:e4d936c9de8727928f3be6079590e97d9abfe8d39a590be678eb5919ffc186bb"},
 ]
 
+[package.dependencies]
+colorama = {version = "*", markers = "platform_system == \"Windows\""}
+
 [package.extras]
-dev = ["argopt", "py-make (>=0.1.0)", "pydoc-markdown", "twine"]
+dev = ["pytest (>=6)", "pytest-cov", "pytest-timeout", "pytest-xdist"]
+notebook = ["ipywidgets (>=6)"]
+slack = ["slack-sdk"]
+telegram = ["requests"]
 
 [[package]]
 name = "treq"
@@ -2371,4 +2344,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.7.9,<3.11"
-content-hash = "af7d4c5ade596b37fcf7b30ebb3b0cf19ff14a5b1bebd7fbdd93ea405b4f5009"
+content-hash = "11fda8e164d26349cff9e057ae62d8f65cefb7d0788cb35a3f7712f582cf695e"
