@@ -30,7 +30,7 @@ python = ">=3.7.9,<3.11"
 
 #### EPC Repos ####
 #if referencing commit hashes:
-sunspecdemo = { git = "https://github.com/epcpower/sunspec-demo.git", rev = "a04b466da431549946297c66364ee835c3fab3e0" }
+sunspecdemo = { git = "https://github.com/epcpower/sunspec-demo.git", rev = "f2292143054bbf7fc80ad98f4334a21e03cbe5ef" }
 
 #if referencing tags:
 #sunspecdemo = {version = "0.3.0", source = "epc-power"}
@@ -72,6 +72,8 @@ pysunspec = "2.1.0"
 #ccstudiodss = {extras = ["java"], version = "0.4.3"}
 requests = "2.27.1"
 selenium = "3.141.0"
+# Can't do 0.21 because of https://github.com/python-poetry/poetry/issues/9293
+docutils = "!=0.21.post1"
 
 [tool.poetry.group.dev.dependencies]
 black = "20.8b1"
