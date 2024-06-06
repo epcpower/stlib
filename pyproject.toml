@@ -24,15 +24,6 @@ secondary = true
 
 [tool.poetry.dependencies]
 python = ">=3.8,<3.11"
-
-#### EPC Repos ####
-#if referencing commit hashes:
-sunspecdemo = { git = "https://github.com/epcpower/sunspec-demo.git", rev = "4e07f096dfc1f65be29d5a5bf2265a43b905fc48" }
-
-#if referencing tags:
-#sunspecdemo = {version = "0.3.0", source = "epc-power"}
-###################
-
 alqtendpy = "0.0.4"
 arrow = "0.12.1"
 appdirs = "1.4.3"
