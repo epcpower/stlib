@@ -3,9 +3,9 @@ name: CI
 on:
   push:
     branches:
-      - "**" #double star includes a '/'.  single star doesnt match a '/'
+      - '**' #double star includes a '/'.  single star doesnt match a '/'
     tags:
-      - "**" #double star includes a '/'.  single star doesnt match a '/'
+      - '**' #double star includes a '/'.  single star doesnt match a '/'
   schedule:
     # Daily at 05:44
     - cron: '44 5 * * *'
