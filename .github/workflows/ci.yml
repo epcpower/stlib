@@ -3,9 +3,9 @@ name: CI
 on:
   push:
     branches:
-      - "**" #double star includes a '/'.  single star doesnt match a '/'
+      - '**' #double star includes a '/'.  single star doesnt match a '/'
     tags:
-      - "**" #double star includes a '/'.  single star doesnt match a '/'
+      - '**' #double star includes a '/'.  single star doesnt match a '/'
   schedule:
     # Daily at 05:44
     - cron: '44 5 * * *'
@@ -15,9 +15,8 @@ defaults:
     shell: bash
 
 env:
-  PYTHON_VERSION: 3.7
+  PYTHON_VERSION: 3.8
   AWS_REGION: us-east-2
-
 
 jobs:
   build:
