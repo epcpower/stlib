@@ -146,17 +146,17 @@ d = ["aiohttp (>=3.3.2)", "aiohttp-cors"]
 
 [[package]]
 name = "boto3"
-version = "1.34.133"
+version = "1.34.135"
 description = "The AWS SDK for Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "boto3-1.34.133-py3-none-any.whl", hash = "sha256:da7e78c03270be872ad78301892396ffea56647efcb2c3a8621ef46a905541ab"},
-    {file = "boto3-1.34.133.tar.gz", hash = "sha256:7071f8ce1f09113ca5630860fd590464e6325a4df55faae83c956225941016fc"},
+    {file = "boto3-1.34.135-py3-none-any.whl", hash = "sha256:6f5d7a20afbe45e3f7c6b5e96071752d36c3942535b1f7924964f1fdf25376a7"},
+    {file = "boto3-1.34.135.tar.gz", hash = "sha256:344f635233c85dbb509b87638232ff9132739f90bb5e6bf01fa0e0a521a9107e"},
 ]
 
 [package.dependencies]
-botocore = ">=1.34.133,<1.35.0"
+botocore = ">=1.34.135,<1.35.0"
 jmespath = ">=0.7.1,<2.0.0"
 s3transfer = ">=0.10.0,<0.11.0"
 
@@ -176,13 +176,13 @@ files = [
 
 [[package]]
 name = "botocore"
-version = "1.34.133"
+version = "1.34.135"
 description = "Low-level, data-driven core of boto 3."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "botocore-1.34.133-py3-none-any.whl", hash = "sha256:f269dad8e17432d2527b97ed9f1fd30ec8dc705f8b818957170d1af484680ef2"},
-    {file = "botocore-1.34.133.tar.gz", hash = "sha256:5ea609aa4831a6589e32eef052a359ad8d7311733b4d86a9d35dab4bd3ec80ff"},
+    {file = "botocore-1.34.135-py3-none-any.whl", hash = "sha256:3aa9e85e7c479babefb5a590e844435449df418085f3c74d604277bc52dc3109"},
+    {file = "botocore-1.34.135.tar.gz", hash = "sha256:2e72f37072f75cb1391fca9d7a4c32cecb52a3557d62431d0f59d5311dc7d0cf"},
 ]
 
 [package.dependencies]
@@ -470,20 +470,6 @@ fastimport = ["fastimport"]
 https = ["urllib3[secure] (>=1.24.1)"]
 pgp = ["gpg"]
 watch = ["pyinotify"]
-
-[[package]]
-name = "dunamai"
-version = "1.21.1"
-description = "Dynamic version generation"
-optional = false
-python-versions = ">=3.5"
-files = [
-    {file = "dunamai-1.21.1-py3-none-any.whl", hash = "sha256:fe303541463648b8197c495decf62cd8f15234fb6d891a5f295015e452f656c8"},
-    {file = "dunamai-1.21.1.tar.gz", hash = "sha256:d7fea28ad2faf20a6ca5ec121e5c68e55eec6b8ada23d9c387e4e7a574cc559f"},
-]
-
-[package.dependencies]
-packaging = ">=20.9"
 
 [[package]]
 name = "fab"
@@ -1159,22 +1145,6 @@ files = [
 
 [package.extras]
 dev = ["pre-commit", "tox"]
-
-[[package]]
-name = "poetry-dynamic-versioning"
-version = "0.13.1"
-description = "Plugin for Poetry to enable dynamic versioning based on VCS tags"
-optional = false
-python-versions = ">=3.5,<4.0"
-files = [
-    {file = "poetry-dynamic-versioning-0.13.1.tar.gz", hash = "sha256:5c0e7b22560db76812057ef95dadad662ecc63eb270145787eabe73da7c222f9"},
-    {file = "poetry_dynamic_versioning-0.13.1-py3-none-any.whl", hash = "sha256:6d79f76436c624653fc06eb9bb54fb4f39b1d54362bc366ad2496855711d3a78"},
-]
-
-[package.dependencies]
-dunamai = ">=1.5,<2.0"
-jinja2 = {version = ">=2.11.1,<4", markers = "python_version >= \"3.6\" and python_version < \"4.0\""}
-tomlkit = ">=0.4"
 
 [[package]]
 name = "py"
@@ -1918,17 +1888,6 @@ files = [
 ]
 
 [[package]]
-name = "tomlkit"
-version = "0.12.5"
-description = "Style preserving TOML library"
-optional = false
-python-versions = ">=3.7"
-files = [
-    {file = "tomlkit-0.12.5-py3-none-any.whl", hash = "sha256:af914f5a9c59ed9d0762c7b64d3b5d5df007448eb9cd2edc8a46b1eafead172f"},
-    {file = "tomlkit-0.12.5.tar.gz", hash = "sha256:eef34fba39834d4d6b73c9ba7f3e4d1c417a4e56f89a7e96e090dd0d24b8fb3c"},
-]
-
-[[package]]
 name = "tqdm"
 version = "4.66.4"
 description = "Fast, Extensible Progress Meter"
@@ -2304,4 +2263,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.11"
-content-hash = "697fb3eefcb32bee87ba73b8fc2a71a64376b1774432a566319aba6ae9f515f0"
+content-hash = "937df8c68d0b3121fef570457d8898c23f25b91253a2197ac7e6fe9faad3043b"
