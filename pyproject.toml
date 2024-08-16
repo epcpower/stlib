@@ -26,7 +26,8 @@ url = "https://epc-power-us-890711758583.d.codeartifact.us-east-2.amazonaws.com/
 priority = "explicit"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<3.11"
+python = ">=3.10,<3.11"
+#python = ">=3.8,<3.11"
 alqtendpy = "0.0.4"
 arrow = "0.12.1"
 appdirs = "1.4.3"
@@ -47,13 +48,15 @@ natsort = "5.5.0"
 paho-mqtt = "1.4.0"
 Pint = "0.19.2"
 pyelftools = { git = "https://github.com/eliben/pyelftools", rev = "27941c50fef8cff8ef991419511664154c8cdf52" }
-PyQt5 = ">=5.13.0"
+PyQt5 = ">=5.15.9"
+#PyQt5 = ">=5.13.0"
 qt5reactor = "0.6.3"
 python-dateutil = "^2.8.2"
 python-docx = "0.8.7"
 python-dotenv = "0.9.1"
 QtAwesome = "0.6.0"
-siphash-cffi = {version = "0.1.4", source = "third-party"}
+#siphash-cffi = {version = "0.1.4", source = "third-party"}
+siphash-cffi = "0.1.4"
 treq = "21.1.0"
 Twisted = "21.2.0"
 python-can = "4.0.0"
@@ -74,7 +77,8 @@ pytest-rerunfailures = "10.3"
 pytest-twisted = "<=1.13.4"
 pytest-xvfb = "1.2.0"
 twine = "1.13.0"
-pyqt5-tools = { version = "5.13.2.1.6rc1", markers = "sys_platform == 'win32'" }
+pyqt5-tools = { version = "5.15.9.3.3", markers = "sys_platform == 'win32'" }
+#pyqt5-tools = { version = "5.13.2.1.6rc1", markers = "sys_platform == 'win32'" }
 
 [tool.poetry.scripts]
 #outparsecheck needs javabridge & ccstudiodss installed.  They are commented out in .toml.
