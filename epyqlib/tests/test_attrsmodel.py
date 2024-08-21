@@ -919,7 +919,7 @@ def test_enumeration(qtbot):
 
     item.enumeration_uuid = enumerator_a.uuid
 
-    application = qt_api.QApplication.instance()
+    application = qt_api.QtWidgets.QApplication.instance()
 
     for row, enumerator in enumerate(group.children):
         assert view.edit(
