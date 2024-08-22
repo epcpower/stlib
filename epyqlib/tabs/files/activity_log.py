@@ -1,7 +1,7 @@
 import inspect
 import pickle
 import time
-from collections import Callable
+from collections.abc import Callable
 from datetime import datetime
 from os import path
 from typing import Union

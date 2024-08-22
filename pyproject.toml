@@ -47,7 +47,8 @@ marshmallow = "2.16.3"
 natsort = "5.5.0"
 paho-mqtt = "1.4.0"
 Pint = "0.19.2"
-pyelftools = { git = "https://github.com/eliben/pyelftools", rev = "27941c50fef8cff8ef991419511664154c8cdf52" }
+pyelftools = "0.31"
+# pyelftools = { git = "https://github.com/eliben/pyelftools", rev = "27941c50fef8cff8ef991419511664154c8cdf52" }
 PyQt5 = ">=5.15.9"
 #PyQt5 = ">=5.13.0"
 qt5reactor = "0.6.3"

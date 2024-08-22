@@ -67,7 +67,7 @@ class Button(epyqlib.widgets.abstracttxwidget.AbstractTxWidget):
                 ]:
                     widths.append(get_text_width(button, text))
 
-                button.setMinimumWidth(1.3 * max(widths))
+                button.setMinimumWidth(int(1.3 * max(widths)))
         else:
             if self.ui is not None:
                 self.ui.value.setText("")

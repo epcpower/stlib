@@ -231,7 +231,7 @@ class Led(epyqlib.widgets.abstractwidget.AbstractWidget):
         else:
             width = 0
 
-        self.ui.value.setFixedSize(width, height)
+        self.ui.value.setFixedSize(int(width), int(height))
 
     def set_label_custom(self, new_signal=None):
         label = None

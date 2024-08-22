@@ -18,7 +18,8 @@ import sys
 sys.path[0:0] = [".", ".."]
 
 import collections
-from elftools.dwarf.dwarf_expr import GenericExprVisitor
+from elftools.dwarf.dwarf_expr import DWARFExprParser
+# from elftools.dwarf.dwarf_expr import GenericExprVisitor
 from elftools.dwarf.dwarfinfo import DebugSectionDescriptor
 from elftools.dwarf.descriptions import describe_attr_value
 import elftools.common.exceptions
@@ -88,8 +89,10 @@ def bytearray_to_bits(data):
 
 
 def process_expression(expression, dwarf_info):
-    generic_expression_visitor = GenericExprVisitor(dwarf_info.structs)
-    generic_expression_visitor.process_expr(expression)
+    # generic_expression_visitor = GenericExprVisitor(dwarf_info.structs)
+    # generic_expression_visitor.process_expr(expression)
+    generic_expression_visitor = DWARFExprParser(dwarf_info.structs)
+    generic_expression_visitor.parse_expr(expression)
     (result,) = generic_expression_visitor._cur_args
     return result
 
