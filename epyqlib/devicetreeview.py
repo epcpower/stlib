@@ -505,7 +505,7 @@ class DeviceTreeView(QtWidgets.QWidget):
         width = sum(widths)
         width += 2 * self.ui.tree_view.frameWidth()
 
-        self.ui.tree_view.setMinimumWidth(1.25 * width)
+        self.ui.tree_view.setMinimumWidth(int(1.25 * width))
 
         self.ui.tree_view.header().setSectionResizeMode(
             epyqlib.devicetree.Columns.indexes.name, QHeaderView.Stretch

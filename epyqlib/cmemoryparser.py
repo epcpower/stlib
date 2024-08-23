@@ -92,8 +92,9 @@ def process_expression(expression, dwarf_info):
     # generic_expression_visitor = GenericExprVisitor(dwarf_info.structs)
     # generic_expression_visitor.process_expr(expression)
     generic_expression_visitor = DWARFExprParser(dwarf_info.structs)
-    generic_expression_visitor.parse_expr(expression)
-    (result,) = generic_expression_visitor._cur_args
+    parsed_expr = generic_expression_visitor.parse_expr(expression)
+    result = parsed_expr[0].args[0]
+    # (result,) = generic_expression_visitor._cur_args
     return result
 
 
@@ -863,6 +864,13 @@ def process_file(filename):
         debug_line_sec=debug_sections.get(".debug_line", None),
         debug_pubtypes_sec=debug_sections.get(".pubtypes_sec", None),
         debug_pubnames_sec=debug_sections.get(".pubnames_sec", None),
+        debug_addr_sec=debug_sections.get(".debug_addr_sec", None),
+        debug_str_offsets_sec=debug_sections.get(".debug_str_offsets_sec", None),
+        debug_line_str_sec=debug_sections.get(".debug_line_str_sec", None),
+        debug_loclists_sec=debug_sections.get(".debug_loclists_sec", None),
+        debug_rnglists_sec=debug_sections.get(".debug_rnglists_sec", None),
+        debug_sup_sec=debug_sections.get(".debug_sup_sec", None),
+        gnu_debugaltlink_sec=debug_sections.get(".gnu_debugaltlink_sec", None),
     )
 
     objects = collections.OrderedDict(

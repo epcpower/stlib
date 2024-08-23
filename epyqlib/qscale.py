@@ -99,7 +99,7 @@ class QScale(QtWidgets.QWidget):
         if vertical:
             height, width = width, height
 
-        super().setMinimumSize(width, height)
+        super().setMinimumSize(int(width), int(height))
 
     def setMinimum(self, max):
         if not isinf(max):
@@ -540,8 +540,8 @@ class QScale(QtWidgets.QWidget):
                         position = QtCore.QRect(
                             0,
                             0,
-                            2.0 * (center.x() + radius * cos(u)),
-                            center.y() - radius * sin(u),
+                            int(2.0 * (center.x() + radius * cos(u))),
+                            int(center.y() - radius * sin(u)),
                         )
                     painter.resetTransform()
                     # TODO: add usage of m_labelsFormat and m_labelsPrecision
@@ -609,7 +609,7 @@ class QScale(QtWidgets.QWidget):
                 painter.setPen(QtGui.QPen(self.palette().color(QtGui.QPalette.Base), 2))
             else:
                 painter.setPen(QtGui.QPen(Qt.blue))
-            painter.drawLine(0, 0, radius - 15, 0)
+            painter.drawLine(0, 0, int(radius - 15), 0)
             painter.resetTransform()
 
         def drawCover(self, center):

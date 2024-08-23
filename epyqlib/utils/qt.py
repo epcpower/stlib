@@ -385,7 +385,7 @@ class FittedTextBrowser(QtWidgets.QTextBrowser):
             )
         )
 
-        return QtCore.QSize(width, height)
+        return QtCore.QSize(int(width), int(height))
 
 
 class DialogUi:
@@ -460,8 +460,8 @@ class Dialog(QtWidgets.QDialog):
         screen_number = desktops.screenNumber(self.parent())
         geometry = desktops.screenGeometry(screen_number)
 
-        self.setMaximumHeight(geometry.height() * 0.7)
-        self.setMaximumWidth(geometry.width() * 0.7)
+        self.setMaximumHeight(int(geometry.height() * 0.7))
+        self.setMaximumWidth(int(geometry.width() * 0.7))
         self.minimum_size = self.minimumSize()
         self.maximum_size = self.maximumSize()
 
