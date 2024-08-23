@@ -19,6 +19,7 @@ sys.path[0:0] = [".", ".."]
 
 import collections
 from elftools.dwarf.dwarf_expr import DWARFExprParser
+
 # from elftools.dwarf.dwarf_expr import GenericExprVisitor
 from elftools.dwarf.dwarfinfo import DebugSectionDescriptor
 from elftools.dwarf.descriptions import describe_attr_value
