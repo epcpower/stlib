@@ -860,14 +860,14 @@ def process_file(filename):
         debug_line_sec=debug_sections.get(".debug_line", None),
         debug_pubtypes_sec=debug_sections.get(".pubtypes_sec", None),
         debug_pubnames_sec=debug_sections.get(".pubnames_sec", None),
-        debug_addr_sec=debug_sections.get('.debug_addr', None),
-        debug_str_offsets_sec=debug_sections.get('.debug_str_offsets', None),
-        debug_line_str_sec=debug_sections.get('.debug_line_str', None),
-        debug_loclists_sec=debug_sections.get('.debug_loclists', None),
-        debug_rnglists_sec=debug_sections.get('.debug_rnglists', None),
-        debug_sup_sec=debug_sections.get('.debug_sup', None),
-        gnu_debugaltlink_sec=debug_sections.get('.gnu_debugaltlink', None),
-        debug_types_sec=debug_sections.get('.debug_types', None),
+        debug_addr_sec=debug_sections.get(".debug_addr", None),
+        debug_str_offsets_sec=debug_sections.get(".debug_str_offsets", None),
+        debug_line_str_sec=debug_sections.get(".debug_line_str", None),
+        debug_loclists_sec=debug_sections.get(".debug_loclists", None),
+        debug_rnglists_sec=debug_sections.get(".debug_rnglists", None),
+        debug_sup_sec=debug_sections.get(".debug_sup", None),
+        gnu_debugaltlink_sec=debug_sections.get(".gnu_debugaltlink", None),
+        debug_types_sec=debug_sections.get(".debug_types", None),
     )
 
     objects = collections.OrderedDict(
