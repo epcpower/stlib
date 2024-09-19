@@ -18,7 +18,7 @@ import sys
 sys.path[0:0] = [".", ".."]
 
 import collections
-from elftools.dwarf.dwarf_expr import GenericExprVisitor
+from elftools.dwarf.dwarf_expr import DWARFExprParser
 from elftools.dwarf.dwarfinfo import DebugSectionDescriptor
 from elftools.dwarf.descriptions import describe_attr_value
 import elftools.common.exceptions
@@ -88,10 +88,10 @@ def bytearray_to_bits(data):
 
 
 def process_expression(expression, dwarf_info):
-    generic_expression_visitor = GenericExprVisitor(dwarf_info.structs)
-    generic_expression_visitor.process_expr(expression)
-    (result,) = generic_expression_visitor._cur_args
-    return result
+    raise NotImplementedError
+    generic_expression_visitor = DWARFExprParser(dwarf_info.structs)
+    parsed = generic_expression_visitor.parse_expr(expression)
+    return parsed[0].args[0]
 
 
 @attr.s
@@ -860,6 +860,14 @@ def process_file(filename):
         debug_line_sec=debug_sections.get(".debug_line", None),
         debug_pubtypes_sec=debug_sections.get(".pubtypes_sec", None),
         debug_pubnames_sec=debug_sections.get(".pubnames_sec", None),
+        debug_addr_sec=debug_sections.get('.debug_addr', None),
+        debug_str_offsets_sec=debug_sections.get('.debug_str_offsets', None),
+        debug_line_str_sec=debug_sections.get('.debug_line_str', None),
+        debug_loclists_sec=debug_sections.get('.debug_loclists', None),
+        debug_rnglists_sec=debug_sections.get('.debug_rnglists', None),
+        debug_sup_sec=debug_sections.get('.debug_sup', None),
+        gnu_debugaltlink_sec=debug_sections.get('.gnu_debugaltlink', None),
+        debug_types_sec=debug_sections.get('.debug_types', None),
     )
 
     objects = collections.OrderedDict(

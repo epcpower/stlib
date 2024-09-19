@@ -1199,7 +1199,7 @@ files = [
 
 [[package]]
 name = "pyelftools"
-version = "0.25"
+version = "0.30"
 description = "Library for analyzing ELF files and DWARF debugging information"
 optional = false
 python-versions = "*"
@@ -1209,8 +1209,8 @@ develop = false
 [package.source]
 type = "git"
 url = "https://github.com/eliben/pyelftools"
-reference = "27941c50fef8cff8ef991419511664154c8cdf52"
-resolved_reference = "27941c50fef8cff8ef991419511664154c8cdf52"
+reference = "a612ffead684f67674a109b60b0dc8f20770308a"
+resolved_reference = "a612ffead684f67674a109b60b0dc8f20770308a"
 
 [[package]]
 name = "pygments"
@@ -2271,4 +2271,4 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<3.11"
-content-hash = "c7a8fd6e4b221f6ca1854d4bd68ef8b4d6b7ad6b4e92d996fd82eea07a7d0d71"
+content-hash = "45852f6da19dba1f95b7fa2da743a6329541b1e4a3413d79f232563b573e35f0"
