@@ -1492,8 +1492,13 @@ class Model:
                     else:
                         new_parent.append_child(new_child)
                 else:
-                    new_row = new_parent.row_of_child(node_to_insert_before)
-                    new_parent.insert_child(new_row, new_child)
+                    if isinstance(new_child, list):
+                        for c in new_child:
+                            new_row = new_parent.row_of_child(node_to_insert_before)
+                            new_parent.insert_child(new_row, c)
+                    else:
+                        new_row = new_parent.row_of_child(node_to_insert_before)
+                        new_parent.insert_child(new_row, new_child)
 
         # Always returning False so that Qt won't do anything...  like
         # thinking it knows which row of items to delete to finish the

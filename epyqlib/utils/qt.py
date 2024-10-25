@@ -949,7 +949,7 @@ def pyqtify(name=None, property_decorator=lambda: property):
                 raise AttributeError(
                     "'{class_name}' object has no attribute '{name}'".format(
                         class_name=type(self).__name__,
-                        attribute=name,
+                        name=name,
                     )
                 )
 
