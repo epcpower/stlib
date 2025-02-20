@@ -247,8 +247,6 @@ class ValueSet:
     def overlay(self, overlay):
         attribute_names = [
             "value",
-            "user_default",
-            "factory_default",
             "minimum",
             "maximum",
         ]
@@ -312,8 +310,6 @@ def merge(name, *types):
 columns = epyqlib.attrsmodel.columns(
     merge("name", *types.types.values()),
     merge("value", Parameter),
-    merge("user_default", Parameter),
-    merge("factory_default", Parameter),
     merge("minimum", Parameter),
     merge("maximum", Parameter),
     merge("readable", Parameter),

@@ -788,26 +788,6 @@ class Device:
                 serial_number_uuid=serial_number_uuid,
             )
 
-            default_metas = [
-                meta
-                for meta in (
-                    epyqlib.nv.MetaEnum.user_default,
-                    epyqlib.nv.MetaEnum.factory_default,
-                )
-                if meta not in self.metas
-            ]
-
-            if len(default_metas) > 0 and "parameter_defaults" in self.raw_dict:
-                parameter_defaults_path = os.path.join(
-                    os.path.dirname(self.config_path),
-                    self.raw_dict["parameter_defaults"],
-                )
-                with open(parameter_defaults_path) as f:
-                    self.nvs.defaults_from_dict(
-                        d=json.load(f, parse_float=decimal.Decimal),
-                        default_metas=default_metas,
-                    )
-
             for nv in self.nvs.all_nv():
                 if isinstance(nv, epyqlib.nv.Nv):
                     if epyqlib.nv.MetaEnum.minimum not in self.metas:
@@ -867,7 +847,7 @@ class Device:
 
                     diff_proxy = epyqlib.utils.qt.DiffProxyModel(
                         columns=epyqlib.nv.diffable_columns,
-                        reference_column=(epyqlib.nv.Columns.indexes.user_default),
+                        reference_column=(epyqlib.nv.Columns.indexes.scratch),
                         diff_highlights={
                             QtCore.Qt.ItemDataRole.BackgroundRole: epyqlib.nv.diff_highlight,
                         },

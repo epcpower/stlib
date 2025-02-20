@@ -53,8 +53,6 @@ class Columns(AbstractColumns):
         "reset",
         "clear",
         "scratch",
-        "user_default",
-        "factory_default",
         "minimum",
         "maximum",
         "comment",
@@ -67,8 +65,6 @@ Columns.indexes = Columns.indexes()
 diffable_columns = [
     Columns.indexes.value,
     Columns.indexes.scratch,
-    Columns.indexes.user_default,
-    Columns.indexes.factory_default,
     Columns.indexes.minimum,
     Columns.indexes.maximum,
 ]
@@ -142,10 +138,8 @@ class Group(TreeNode):
 
 class MetaEnum(epyqlib.utils.general.AutoNumberIntEnum):
     value = 0
-    user_default = 1
-    factory_default = 2
-    minimum = 3
-    maximum = 4
+    minimum = 1
+    maximum = 2
 
 
 meta_limits = (MetaEnum.minimum, MetaEnum.maximum)
@@ -735,10 +729,6 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 parameter = epyqlib.pm.valuesetmodel.Parameter(
                     name=child.fields.name,
                     value=value,
-                    user_default=child.meta.user_default.get_human_value(for_file=True),
-                    factory_default=child.meta.factory_default.get_human_value(
-                        for_file=True
-                    ),
                     minimum=child.meta.minimum.get_human_value(for_file=True),
                     maximum=child.meta.maximum.get_human_value(for_file=True),
                     readable=not child.is_write_only(),
@@ -758,8 +748,6 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 parameter = epyqlib.pm.valuesetmodel.Parameter(
                     name=child.fields.name,
                     value=format_float(value=0),
-                    user_default=format_float(value=0),
-                    factory_default=format_float(value=0),
                     minimum=format_float(value=child.min),
                     maximum=format_float(value=child.max),
                     parameter_uuid=child.parameter_uuid,
@@ -836,19 +824,6 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 else:
                     logger.info(not_found_format.format("value"))
 
-                for meta in MetaEnum:
-                    if meta == MetaEnum.value:
-                        continue
-
-                    v = getattr(parameter, meta.name)
-                    if v is not None:
-                        child.set_meta(
-                            data=v,
-                            meta=meta,
-                            check_range=False,
-                        )
-                    else:
-                        logger.info(not_found_format.format(meta.name))
             elif len(parameters) > 1:
                 logger.info(
                     "Nv value named '{}' occurred {} times when loading "
@@ -864,42 +839,6 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
             logger.info(
                 "Unrecognized NV value named '{}' ({}) found when loading "
                 "from value set".format(name, meta.name)
-            )
-
-    def defaults_from_dict(
-        self,
-        d,
-        default_metas=(MetaEnum.factory_default,),
-    ):
-        only_in_file = list(d.keys())
-
-        for child in self.all_nv():
-            value = d.get(child.fields.name, None)
-            if value is not None:
-                for meta in default_metas:
-                    child.set_meta(
-                        data=value,
-                        meta=meta,
-                    )
-                    self.changed.emit(
-                        child,
-                        meta_column_indexes[meta],
-                        child,
-                        meta_column_indexes[meta],
-                        [Qt.DisplayRole],
-                    )
-                only_in_file.remove(child.fields.name)
-            else:
-                logger.info(
-                    "Nv value named '{}' not found when loading from dict".format(
-                        child.fields.name
-                    )
-                )
-
-        for name in only_in_file:
-            logger.info(
-                "Unrecognized NV value named '{}' found when loading to "
-                "defaults from dict".format(name)
             )
 
     async def module_to_nv(self):
@@ -1092,8 +1031,6 @@ class Nv(epyqlib.canneo.Signal, TreeNode):
 
         if self.base:
             metas = (
-                MetaEnum.user_default,
-                MetaEnum.factory_default,
                 MetaEnum.minimum,
                 MetaEnum.maximum,
             )
@@ -1535,8 +1472,6 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
             scratch="Scratch",
             minimum="Min",
             maximum="Max",
-            user_default="User Default",
-            factory_default="Factory Default",
             comment="Comment",
         )
 

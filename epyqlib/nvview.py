@@ -225,7 +225,6 @@ class NvView(QtWidgets.QWidget):
         self.metas = metas
 
         show_but_no_edit = {
-            epyqlib.nv.MetaEnum.factory_default,
             epyqlib.nv.MetaEnum.minimum,
             epyqlib.nv.MetaEnum.maximum,
         }
@@ -664,8 +663,6 @@ class NvView(QtWidgets.QWidget):
         )
 
         default_reference_preference = [
-            epyqlib.nv.Columns.indexes.user_default,
-            epyqlib.nv.Columns.indexes.factory_default,
             epyqlib.nv.Columns.indexes.scratch,
         ]
 
