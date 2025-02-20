@@ -768,7 +768,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                 child.scratch.set_human_value(decimal.Decimal(value))
                 child.fields.scratch = child.scratch.full_string
                 only_in_file.remove(child.fields.name)
-            else:
+            elif not child.is_read_only():
                 logger.info(
                     "Nv value named '{}' not found when loading from dict".format(
                         child.fields.name
@@ -829,7 +829,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                     "Nv value named '{}' occurred {} times when loading "
                     "from value set".format(name, len(parameters)),
                 )
-            else:
+            elif not child.is_read_only():
                 logger.info(
                     "Nv value named '{}' not found when loading from "
                     "value set".format(name),
@@ -2023,11 +2023,6 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                 if len(parameters) == 0:
                     parameters = d.get(name, [])
 
-                not_found_format = (
-                    "Nv value named '{}' ({{}}) not found when loading "
-                    "from value set".format(name)
-                )
-
                 if len(parameters) == 1:
                     (parameter,) = parameters
 
@@ -2046,14 +2041,13 @@ class NvModel(epyqlib.pyqabstractitemmodel.PyQAbstractItemModel):
                                 Qt.EditRole,
                                 check_range=False,
                             )
-                        else:
-                            logger.warning(not_found_format.format(meta.name))
+
                 elif len(parameters) > 1:
                     logger.warning(
                         "Nv value named '{}' occurred {} times when loading "
                         "from value set".format(name, len(parameters)),
                     )
-                else:
+                elif not child.is_read_only():
                     logger.warning(
                         "Nv value named '{}' not found when loading from "
                         "value set".format(name),
