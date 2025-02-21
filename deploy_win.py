@@ -304,7 +304,7 @@ with open(third_party_license, "w", encoding="utf-8", newline="\n") as out:
         ),
         ("Python", (os.environ["PYTHON"], "LICENSE.txt"), None, False),
         ("PyQt5", (pyqt5_license_path,), None, False),
-        ("Qt", (), "https://www.gnu.org/licenses/gpl-3.0.txt", True),
+        #("Qt", (), "https://www.gnu.org/licenses/gpl-3.0.txt", True),
         (
             "PEAK-System",
             ("installer", "peak-system.txt"),
