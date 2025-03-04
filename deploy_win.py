@@ -250,7 +250,6 @@ def write_license(name, contents, url, collapse_double_newlines):
 import requests
 
 pyqt5_license_path = os.path.join("build", "PyQt5_LICENSE")
-qt_license_path = os.path.join("build", "Qt_LICENSE")
 tarred_licenses = (
     (
         pyqt5_license_path,
@@ -304,7 +303,12 @@ with open(third_party_license, "w", encoding="utf-8", newline="\n") as out:
         ),
         ("Python", (os.environ["PYTHON"], "LICENSE.txt"), None, False),
         ("PyQt5", (pyqt5_license_path,), None, False),
-        ("Qt", (), "https://www.gnu.org/licenses/gpl-3.0.txt", True),
+        (
+            "Qt",
+            ("sub", "epyqlib", "epyqlib", "gpl-3.0.txt"),
+            "https://www.gnu.org/licenses/gpl-3.0.txt",  # URL became unreliable, so local file now.
+            False,
+        ),
         (
             "PEAK-System",
             ("installer", "peak-system.txt"),
