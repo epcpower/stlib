@@ -10,19 +10,31 @@ import epyqlib.attrsmodel
 import graham
 import marshmallow
 
+import uuid
+from itertools import chain
+
 
 def create_path_attribute():
     return attr.ib(
         converter=pathlib.Path,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(),
-        ),
+        metadata=graham.create_metadata(field=marshmallow.fields.String())
     )
 
 
 def to_list_of_pathlib(l):
     return [pathlib.Path(path) for path in l]
 
+def to_dict(value):
+    if value is None:
+        return {}
+
+    if not isinstance(value, dict):
+        raise TypeError(f"Expected a dictionary, got {type(value).__name__}")
+
+    try:
+        return {str(k): int(v) for k, v in value.items()}
+    except ValueError as e:
+        raise ValueError(f"Invalid dictionary format for slipstream_prefixes_offsets: {e}")
 
 @graham.schemify(tag="valueset_overlay_recipe")
 @attr.s
@@ -31,11 +43,35 @@ class OverlayRecipe:
     base_pmvs_path = create_path_attribute()
     overlay_pmvs_paths = attr.ib(
         converter=to_list_of_pathlib,
+        metadata=graham.create_metadata(field=marshmallow.fields.List(marshmallow.fields.String()))
+    )
+    slipstream_pmvs_paths = attr.ib(
+        converter=to_list_of_pathlib,
+        metadata=graham.create_metadata(field=marshmallow.fields.List(marshmallow.fields.String())),
+        default=attr.Factory(list) # ensure default is an empty list if field missing
+    )
+    slipstream_prefixes_offsets = attr.ib(
+        converter=to_dict,
         metadata=graham.create_metadata(
-            field=marshmallow.fields.List(marshmallow.fields.String()),
+            field=marshmallow.fields.Dict(
+                keys=marshmallow.fields.String(),
+                values=marshmallow.fields.Integer()
+            )
         ),
+        default=attr.Factory(dict) # ensure default is an empty dictionary if field missing
     )
 
+    @slipstream_prefixes_offsets.validator
+    def check_matching_lengths(self, attribute, value):
+        """
+        Ensures overlay_pmvs_paths and slipstream_prefixes_offsets match in length if both are non-empty.
+        """
+        if self.slipstream_pmvs_paths and value:
+            if len(self.slipstream_pmvs_paths) != len(value):
+                raise ValueError(
+                    f"Mismatch in slipstream_pmvs_paths ({len(self.slipstream_pmvs_paths)}) "
+                    f"and slipstream_prefixes_offsets ({len(value)}) for recipe: {self.output_path}"
+                )
 
 @graham.schemify(tag="valueset_overlay_configuration")
 @attr.s
@@ -79,6 +115,9 @@ class OverlayConfiguration:
     def recipe_overlay_pmvs_paths(self, recipe):
         return [self.reference_path / path for path in recipe.overlay_pmvs_paths]
 
+    def recipe_slipstream_pmvs_paths(self, recipe):
+        return [self.reference_path / path for path in recipe.slipstream_pmvs_paths]
+
     def raw(self, echo=lambda *args, **kwargs: None):
         input_modification_times = []
         output_modification_times = []
@@ -97,12 +136,11 @@ class OverlayConfiguration:
                 output_modification_time = stat.st_mtime
             output_modification_times.append(output_modification_time)
 
-            overlay_pmvs_paths = self.recipe_overlay_pmvs_paths(recipe=recipe)
+            overlay_pmvs_paths      = self.recipe_overlay_pmvs_paths(recipe=recipe)
+            slipstream_pmvs_paths   = self.recipe_slipstream_pmvs_paths(recipe=recipe)
 
-            for overlay_pmvs_path in overlay_pmvs_paths:
-                input_modification_times.append(
-                    overlay_pmvs_path.stat().st_mtime,
-                )
+            for pmvs_path in chain(overlay_pmvs_paths, slipstream_pmvs_paths):
+                input_modification_times.append(pmvs_path.stat().st_mtime)
 
         return min(output_modification_times) < max(input_modification_times)
 
@@ -202,9 +240,7 @@ def cli(configuration_path_string, only_if_raw):
 
     if only_if_raw:
         if not configuration.raw(echo=click.echo):
-            click.echo(
-                "Generated files appear to be up to date, skipping cooking",
-            )
+            click.echo("Generated files appear to be up to date, skipping cooking")
 
             return
 
@@ -212,24 +248,34 @@ def cli(configuration_path_string, only_if_raw):
 
     for recipe in configuration.recipes:
         output_path = configuration.recipe_output_path(recipe=recipe)
-        click.echo(f"Creating: {os.fspath(output_path)}")
+        click.echo(f"Creating: {os.fspath(output_path.relative_to(configuration.reference_path))}")
 
-        base_pmvs_path = configuration.recipe_base_pmvs_path(recipe=recipe)
+        base_pmvs_path          = configuration.recipe_base_pmvs_path(recipe=recipe)
+        overlay_pmvs_paths      = configuration.recipe_overlay_pmvs_paths(recipe=recipe)
+        slipstream_pmvs_paths   = configuration.recipe_slipstream_pmvs_paths(recipe=recipe)
+        all_pmvs_paths          = [base_pmvs_path, *overlay_pmvs_paths]
 
-        overlay_pmvs_paths = configuration.recipe_overlay_pmvs_paths(
-            recipe=recipe,
-        )
-
-        all_pmvs_paths = [base_pmvs_path, *overlay_pmvs_paths]
-
-        click.echo(
-            "\n".join(f"    {os.fspath(path)}" for path in all_pmvs_paths),
-        )
+        click.echo("\n".join(f"    {os.fspath(path.relative_to(configuration.reference_path))}" for path in all_pmvs_paths))
 
         result_value_set = epyqlib.pm.valuesetmodel.loadp(base_pmvs_path)
 
         for path in overlay_pmvs_paths:
             overlay_value_set = epyqlib.pm.valuesetmodel.loadp(path)
+            result_value_set.overlay(overlay_value_set)
+
+        slipstream_keys = list(recipe.slipstream_prefixes_offsets.keys())
+        for i, path in enumerate(slipstream_pmvs_paths):
+            prefix = slipstream_keys[i]
+            offset = recipe.slipstream_prefixes_offsets[prefix];
+
+            click.echo(f"    Slipstreaming: {os.fspath(path.relative_to(configuration.reference_path))} with prefix '{prefix}' and offset {offset}")
+
+            overlay_value_set = epyqlib.pm.valuesetmodel.loadp(path)
+
+            for param in overlay_value_set.model.root.children:
+                param.name = prefix + param.name
+                param.parameter_uuid = uuid.UUID(int=(param.parameter_uuid.int + offset))
+
             result_value_set.overlay(overlay_value_set)
 
         output_path.parent.mkdir(parents=True, exist_ok=True)
