@@ -285,7 +285,7 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
                                 self.confirm_save_signal = signal
                                 self.confirm_save_value = key
 
-        for frame in self.status_frames.values():
+        for frame in self.set_frames.values():
             if not re.search("BCU\d+_", frame.mux_name):
                 for signal in frame.signals:
                     if signal.name == self.configuration.nv_save_in_progress_name:
