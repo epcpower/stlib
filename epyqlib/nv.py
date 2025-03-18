@@ -113,7 +113,7 @@ configurations = {
         read_write_signal="ReadParam_command",
         read_write_status_signal="ReadParam_status",
         meta_signal=None,
-        nv_save_in_progress_name=None,
+        nv_save_in_progress_name=None
     ),
     "j1939": Configuration(
         set_frame="ParameterQuery",
@@ -123,8 +123,18 @@ configurations = {
         read_write_signal="ReadParam_command",
         read_write_status_signal="ReadParam_status",
         meta_signal="Meta",
-        nv_save_in_progress_name="eeSaveInProgress",
+        nv_save_in_progress_name=None
     ),
+    "j1939m": Configuration(
+        set_frame="ParameterQuery",
+        status_frame="ParameterResponse",
+        to_nv_command="SaveToEE",
+        to_nv_status="SaveToEE",
+        read_write_signal="ReadParam_command",
+        read_write_status_signal="ReadParam_status",
+        meta_signal="Meta",
+        nv_save_in_progress_name="SaveToEE"
+    )
 }
 
 
@@ -251,35 +261,41 @@ class Nvs(TreeNode, epyqlib.canneo.QtCanListener):
         self.confirm_save_multiplex_value = None
         self.confirm_save_signal = None
         self.confirm_save_value = None
-        for frame in self.set_frames.values():
-            for signal in frame.signals:
-                if signal.name == self.configuration.to_nv_command:
-                    for key, value in signal.enumeration.items():
-                        if value == "Enable":
-                            self.save_frame = frame
-                            self.save_signal = signal
-                            self.save_value = key
 
-        save_status_name = self.configuration.to_nv_status
+        for frame in self.set_frames.values():
+            if not re.search("BCU\d+_", frame.mux_name):
+                for signal in frame.signals:
+                    if signal.name == self.configuration.to_nv_command:
+                        print("Found EEPROM save query signal: {}:{}:{}".format(frame.name, frame.mux_name, signal.name))
+                        for key, value in signal.enumeration.items():
+                            if value == "Enable":
+                                self.save_frame = frame
+                                self.save_signal = signal
+                                self.save_value = key
+
         for frame in self.status_frames.values():
-            for signal in frame.signals:
-                if signal.name == save_status_name:
-                    for key, value in signal.enumeration.items():
-                        if value == "Enable":
-                            self.confirm_save_frame = frame
-                            self.confirm_save_multiplex_value = signal.multiplex
-                            self.confirm_save_signal = signal
-                            self.confirm_save_value = key
+            if not re.search("BCU\d+_", frame.mux_name):
+                for signal in frame.signals:
+                    if signal.name == self.configuration.to_nv_status:
+                        print("Found EEPROM save status signal: {}:{}:{}".format(frame.name, frame.mux_name, signal.name))
+                        for key, value in signal.enumeration.items():
+                            if value == "Enable":
+                                self.confirm_save_frame = frame
+                                self.confirm_save_multiplex_value = signal.multiplex
+                                self.confirm_save_signal = signal
+                                self.confirm_save_value = key
 
-        for frame in self.set_frames.values():
-            for signal in frame.signals:
-                if signal.name == self.configuration.nv_save_in_progress_name:
-                    self.nv_save_in_progress_signal = signal
+        for frame in self.status_frames.values():
+            if not re.search("BCU\d+_", frame.mux_name):
+                for signal in frame.signals:
+                    if signal.name == self.configuration.nv_save_in_progress_name:
+                        print("Found EEPROM save progress signal: {}:{}:{}".format(frame.name, frame.mux_name, signal.name))
+                        self.nv_save_in_progress_signal = signal
 
         if self.confirm_save_frame is None:
             raise Exception(
                 "'{}' signal not found in NV parameter interface".format(
-                    save_status_name
+                    self.configuration.to_nv_status
                 )
             )
 
