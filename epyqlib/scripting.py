@@ -46,7 +46,7 @@ class Event:
             return self
 
         return attr.evolve(
-            inst=self,
+            self,
             action=self.action.resolve(device=self.device),
         )
 
@@ -102,7 +102,7 @@ class Action:
             signal = device.nvs.neo.signal_by_path(*self.signal)
 
         return attr.evolve(
-            inst=self,
+            self,
             signal=signal,
             is_nv=is_nv,
         )
@@ -132,14 +132,14 @@ class CompoundAction:
 
     def resolve(self, device):
         return attr.evolve(
-            inst=self,
+            self,
             actions=tuple(action.resolve(device=device) for action in self.actions),
         )
 
 
 def compound_event_from_events(events):
     return attr.evolve(
-        inst=events[0],
+        events[0],
         action=CompoundAction(
             actions=tuple(event.action for event in events),
         ),
