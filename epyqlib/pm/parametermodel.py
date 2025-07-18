@@ -172,6 +172,19 @@ class Parameter(epyqlib.treenode.TreeNode):
         ),
     )
     notes = create_notes_attribute()
+    tool_attributes = epyqlib.attrsmodel.attr_uuid_list(
+        default=None,
+        allow_none=True,
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=tool_attributes,
+        human_name="Tool Attributes",
+        data_display=epyqlib.attrsmodel.names_from_uuid_list,
+        delegate=epyqlib.attrsmodel.RootDelegateCache(
+            list_selection_root="tool_attributes",
+            multi_select=True,
+        ),
+    )
     visibility = epyqlib.attrsmodel.attr_uuid_list(
         default=None,
         allow_none=True,
@@ -365,6 +378,7 @@ class Enumerations(epyqlib.treenode.TreeNode):
         "enumeration_uuid",
         "units",
         "visibility",
+        "tool_attributes",
     ),
 )
 @attr.s(hash=False)
@@ -441,6 +455,19 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
         converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+    tool_attributes = epyqlib.attrsmodel.attr_uuid_list(
+        default=None,
+        allow_none=True,
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=tool_attributes,
+        human_name="Tool Attributes",
+        data_display=epyqlib.attrsmodel.names_from_uuid_list,
+        delegate=epyqlib.attrsmodel.RootDelegateCache(
+            list_selection_root="tool_attributes",
+            multi_select=True,
         ),
     )
     visibility = epyqlib.attrsmodel.attr_uuid_list(
@@ -668,6 +695,7 @@ class Array(epyqlib.treenode.TreeNode):
         "comment",
         "units",
         "visibility",
+        "tool_attributes",
         "display_hexadecimal",
         "default",
         "decimal_places",
@@ -747,6 +775,19 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
         converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+    tool_attributes = epyqlib.attrsmodel.attr_uuid_list(
+        default=None,
+        allow_none=True,
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=tool_attributes,
+        human_name="Tool Attributes",
+        data_display=epyqlib.attrsmodel.names_from_uuid_list,
+        delegate=epyqlib.attrsmodel.RootDelegateCache(
+            list_selection_root="tool_attributes",
+            multi_select=True,
         ),
     )
     visibility = epyqlib.attrsmodel.attr_uuid_list(
@@ -1615,6 +1656,12 @@ columns = epyqlib.attrsmodel.columns(
     ),
     merge(
         "visibility",
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
+    merge(
+        "tool_attributes",
         Parameter,
         ArrayParameterElement,
         TableArrayElement,
