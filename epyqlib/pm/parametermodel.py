@@ -172,24 +172,6 @@ class Parameter(epyqlib.treenode.TreeNode):
         ),
     )
     notes = create_notes_attribute()
-    original_frame_name = attr.ib(
-        default=None,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
-        ),
-    )
-    original_multiplexer_name = attr.ib(
-        default=None,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
-        ),
-    )
-    original_signal_name = attr.ib(
-        default=None,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
-        ),
-    )
     visibility = epyqlib.attrsmodel.attr_uuid_list(
         default=None,
         allow_none=True,
@@ -1672,9 +1654,6 @@ columns = epyqlib.attrsmodel.columns(
         ArrayParameterElement,
         TableArrayElement,
     ),
-    merge("original_frame_name", Parameter),
-    merge("original_multiplexer_name", Parameter),
-    merge("original_signal_name", Parameter),
     merge("parameter_uuid", Parameter),
     merge("uuid", *types.types.values()),
 )
