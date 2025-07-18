@@ -65,7 +65,7 @@ class Parameter(epyqlib.treenode.TreeNode):
         ),
     )
     abbreviation = create_abbreviation_attribute()
-    type_name = attr.ib(
+    decoded_name = attr.ib(
         default=None,
         converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
@@ -262,13 +262,6 @@ class Group(epyqlib.treenode.TreeNode):
         default="New Group",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
-        ),
-    )
-    type_name = attr.ib(
-        default=None,
-        converter=epyqlib.attrsmodel.to_str_or_none,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
         ),
     )
     children = attr.ib(
@@ -1568,7 +1561,7 @@ columns = epyqlib.attrsmodel.columns(
         Array,
         SunSpecEnumerator,
     ),
-    (merge("type_name", Parameter, Group) + merge("type", SunSpecEnumerator)),
+    (merge("decoded_name", Parameter) + merge("type", SunSpecEnumerator)),
     merge("length", Array),
     merge("named_enumerators", Array),
     merge(
