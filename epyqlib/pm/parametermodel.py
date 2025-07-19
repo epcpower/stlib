@@ -566,13 +566,6 @@ class Array(epyqlib.treenode.TreeNode):
         default=1,
         converter=int,
     )
-    named_enumerators = attr.ib(
-        default=True,
-        converter=epyqlib.attrsmodel.two_state_checkbox,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.Boolean(),
-        ),
-    )
     children = attr.ib(
         default=attr.Factory(list),
         cmp=False,
@@ -1597,7 +1590,6 @@ columns = epyqlib.attrsmodel.columns(
     ),
     (merge("decoded_name", Parameter) + merge("type", SunSpecEnumerator)),
     merge("length", Array),
-    merge("named_enumerators", Array),
     merge(
         "units",
         Parameter,
