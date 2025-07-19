@@ -1366,13 +1366,6 @@ class SunSpecEnumerator(epyqlib.treenode.TreeNode):
         ),
     )
     abbreviation = create_abbreviation_attribute()
-    label = attr.ib(
-        default="",
-        converter=epyqlib.attrsmodel.to_str_or_none,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
-        ),
-    )
     description = attr.ib(
         default="",
         metadata=graham.create_metadata(
@@ -1637,7 +1630,6 @@ columns = epyqlib.attrsmodel.columns(
         ArrayParameterElement,
         TableArrayElement,
     ),
-    merge("label", SunSpecEnumerator),
     merge("internal_variable", Parameter),
     merge("getter_function", Parameter),
     merge("setter_function", Parameter),
