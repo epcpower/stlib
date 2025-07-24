@@ -64,7 +64,6 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
-    abbreviation = create_abbreviation_attribute()
     decoded_name = attr.ib(
         default=None,
         converter=epyqlib.attrsmodel.to_str_or_none,
@@ -390,7 +389,6 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
         ),
     )
 
-    abbreviation = create_abbreviation_attribute()
     notes = create_notes_attribute()
     read_only = create_read_only_attribute()
 
@@ -561,7 +559,6 @@ class Array(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(),
         ),
     )
-    abbreviation = create_abbreviation_attribute()
     length = attr.ib(
         default=1,
         converter=int,
@@ -624,7 +621,6 @@ class Array(epyqlib.treenode.TreeNode):
                     type_ = self.element_types[type(original)]
                     new_child = type_(original=original)
                     new_child.name = f"_{(index + 1):0{places}}"
-                    new_child.abbreviation = f"{self.abbreviation}{index + 1}"
                     self.append_child(new_child)
 
         epyqlib.utils.qt.pyqtify_set(self, "length", value)
@@ -678,7 +674,6 @@ class Array(epyqlib.treenode.TreeNode):
     original="original",
     field_names=(
         "name",
-        "abbreviation",
         "notes",
         "read_only",
         "access_level_uuid",
@@ -704,7 +699,6 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
         ),
     )
 
-    abbreviation = create_abbreviation_attribute()
     notes = create_notes_attribute()
     read_only = create_read_only_attribute()
 
@@ -1580,14 +1574,6 @@ def merge(name, *types):
 
 columns = epyqlib.attrsmodel.columns(
     merge("name", *types.types.values()),
-    merge(
-        "abbreviation",
-        Parameter,
-        ArrayParameterElement,
-        TableArrayElement,
-        Array,
-        SunSpecEnumerator,
-    ),
     (merge("decoded_name", Parameter) + merge("type", SunSpecEnumerator)),
     merge("length", Array),
     merge(
