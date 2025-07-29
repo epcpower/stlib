@@ -64,8 +64,7 @@ class Parameter(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(allow_none=True),
         ),
     )
-    abbreviation = create_abbreviation_attribute()
-    type_name = attr.ib(
+    decoded_name = attr.ib(
         default=None,
         converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
@@ -172,22 +171,17 @@ class Parameter(epyqlib.treenode.TreeNode):
         ),
     )
     notes = create_notes_attribute()
-    original_frame_name = attr.ib(
+    tool_attributes = epyqlib.attrsmodel.attr_uuid_list(
         default=None,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
-        ),
+        allow_none=True,
     )
-    original_multiplexer_name = attr.ib(
-        default=None,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
-        ),
-    )
-    original_signal_name = attr.ib(
-        default=None,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
+    epyqlib.attrsmodel.attrib(
+        attribute=tool_attributes,
+        human_name="Tool Attributes",
+        data_display=epyqlib.attrsmodel.names_from_uuid_list,
+        delegate=epyqlib.attrsmodel.RootDelegateCache(
+            list_selection_root="tool_attributes",
+            multi_select=True,
         ),
     )
     visibility = epyqlib.attrsmodel.attr_uuid_list(
@@ -280,13 +274,6 @@ class Group(epyqlib.treenode.TreeNode):
         default="New Group",
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(),
-        ),
-    )
-    type_name = attr.ib(
-        default=None,
-        converter=epyqlib.attrsmodel.to_str_or_none,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
         ),
     )
     children = attr.ib(
@@ -390,6 +377,7 @@ class Enumerations(epyqlib.treenode.TreeNode):
         "enumeration_uuid",
         "units",
         "visibility",
+        "tool_attributes",
     ),
 )
 @attr.s(hash=False)
@@ -401,7 +389,6 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
         ),
     )
 
-    abbreviation = create_abbreviation_attribute()
     notes = create_notes_attribute()
     read_only = create_read_only_attribute()
 
@@ -466,6 +453,19 @@ class ArrayParameterElement(epyqlib.treenode.TreeNode):
         converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+    tool_attributes = epyqlib.attrsmodel.attr_uuid_list(
+        default=None,
+        allow_none=True,
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=tool_attributes,
+        human_name="Tool Attributes",
+        data_display=epyqlib.attrsmodel.names_from_uuid_list,
+        delegate=epyqlib.attrsmodel.RootDelegateCache(
+            list_selection_root="tool_attributes",
+            multi_select=True,
         ),
     )
     visibility = epyqlib.attrsmodel.attr_uuid_list(
@@ -559,17 +559,9 @@ class Array(epyqlib.treenode.TreeNode):
             field=marshmallow.fields.String(),
         ),
     )
-    abbreviation = create_abbreviation_attribute()
     length = attr.ib(
         default=1,
         converter=int,
-    )
-    named_enumerators = attr.ib(
-        default=True,
-        converter=epyqlib.attrsmodel.two_state_checkbox,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.Boolean(),
-        ),
     )
     children = attr.ib(
         default=attr.Factory(list),
@@ -629,7 +621,6 @@ class Array(epyqlib.treenode.TreeNode):
                     type_ = self.element_types[type(original)]
                     new_child = type_(original=original)
                     new_child.name = f"_{(index + 1):0{places}}"
-                    new_child.abbreviation = f"{self.abbreviation}{index + 1}"
                     self.append_child(new_child)
 
         epyqlib.utils.qt.pyqtify_set(self, "length", value)
@@ -683,7 +674,6 @@ class Array(epyqlib.treenode.TreeNode):
     original="original",
     field_names=(
         "name",
-        "abbreviation",
         "notes",
         "read_only",
         "access_level_uuid",
@@ -693,6 +683,7 @@ class Array(epyqlib.treenode.TreeNode):
         "comment",
         "units",
         "visibility",
+        "tool_attributes",
         "display_hexadecimal",
         "default",
         "decimal_places",
@@ -708,7 +699,6 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
         ),
     )
 
-    abbreviation = create_abbreviation_attribute()
     notes = create_notes_attribute()
     read_only = create_read_only_attribute()
 
@@ -772,6 +762,19 @@ class TableArrayElement(epyqlib.treenode.TreeNode):
         converter=epyqlib.attrsmodel.to_str_or_none,
         metadata=graham.create_metadata(
             field=marshmallow.fields.String(allow_none=True),
+        ),
+    )
+    tool_attributes = epyqlib.attrsmodel.attr_uuid_list(
+        default=None,
+        allow_none=True,
+    )
+    epyqlib.attrsmodel.attrib(
+        attribute=tool_attributes,
+        human_name="Tool Attributes",
+        data_display=epyqlib.attrsmodel.names_from_uuid_list,
+        delegate=epyqlib.attrsmodel.RootDelegateCache(
+            list_selection_root="tool_attributes",
+            multi_select=True,
         ),
     )
     visibility = epyqlib.attrsmodel.attr_uuid_list(
@@ -1350,13 +1353,6 @@ class SunSpecEnumerator(epyqlib.treenode.TreeNode):
         ),
     )
     abbreviation = create_abbreviation_attribute()
-    label = attr.ib(
-        default="",
-        converter=epyqlib.attrsmodel.to_str_or_none,
-        metadata=graham.create_metadata(
-            field=marshmallow.fields.String(allow_none=True),
-        ),
-    )
     description = attr.ib(
         default="",
         metadata=graham.create_metadata(
@@ -1578,17 +1574,8 @@ def merge(name, *types):
 
 columns = epyqlib.attrsmodel.columns(
     merge("name", *types.types.values()),
-    merge(
-        "abbreviation",
-        Parameter,
-        ArrayParameterElement,
-        TableArrayElement,
-        Array,
-        SunSpecEnumerator,
-    ),
-    (merge("type_name", Parameter, Group) + merge("type", SunSpecEnumerator)),
+    (merge("decoded_name", Parameter) + merge("type", SunSpecEnumerator)),
     merge("length", Array),
-    merge("named_enumerators", Array),
     merge(
         "units",
         Parameter,
@@ -1621,7 +1608,6 @@ columns = epyqlib.attrsmodel.columns(
         ArrayParameterElement,
         TableArrayElement,
     ),
-    merge("label", SunSpecEnumerator),
     merge("internal_variable", Parameter),
     merge("getter_function", Parameter),
     merge("setter_function", Parameter),
@@ -1640,6 +1626,12 @@ columns = epyqlib.attrsmodel.columns(
     ),
     merge(
         "visibility",
+        Parameter,
+        ArrayParameterElement,
+        TableArrayElement,
+    ),
+    merge(
+        "tool_attributes",
         Parameter,
         ArrayParameterElement,
         TableArrayElement,
@@ -1672,9 +1664,6 @@ columns = epyqlib.attrsmodel.columns(
         ArrayParameterElement,
         TableArrayElement,
     ),
-    merge("original_frame_name", Parameter),
-    merge("original_multiplexer_name", Parameter),
-    merge("original_signal_name", Parameter),
     merge("parameter_uuid", Parameter),
     merge("uuid", *types.types.values()),
 )
