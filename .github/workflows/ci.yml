@@ -45,7 +45,6 @@ jobs:
           python3 -m pip install poetry==1.5.1
 
           poetry --version
-
           poetry config virtualenvs.in-project true
           poetry config virtualenvs.path .
 
