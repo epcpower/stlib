@@ -5,11 +5,13 @@
         {
             "_type": "group",
             "name": "Group A",
+            "type_name": null,
             "children": [
                 {
                     "_type": "parameter",
                     "name": "Parameter A A",
-                    "decoded_name": null,
+                    "abbreviation": null,
+                    "type_name": null,
                     "default": null,
                     "minimum": null,
                     "maximum": null,
@@ -29,13 +31,16 @@
                     "comment": null,
                     "manual_description": null,
                     "notes": null,
-                    "tool_attributes": null,
+                    "original_frame_name": null,
+                    "original_multiplexer_name": null,
+                    "original_signal_name": null,
                     "visibility": null,
                     "uuid": "fd184494-35a2-4b3a-970c-9a3d98cc15cd"
                 },
                 {
                     "_type": "group",
                     "name": "Group A B",
+                    "type_name": null,
                     "children": [],
                     "manual_description": null,
                     "uuid": "5db07237-82c8-488f-925b-1a2a2802fb5b"
@@ -61,11 +66,14 @@
                         {
                             "_type": "array",
                             "name": "Table Array A",
+                            "abbreviation": null,
+                            "named_enumerators": true,
                             "children": [
                                 {
                                     "_type": "parameter",
                                     "name": "A0",
-                                    "decoded_name": null,
+                                    "abbreviation": null,
+                                    "type_name": null,
                                     "default": null,
                                     "minimum": null,
                                     "maximum": null,
@@ -85,13 +93,16 @@
                                     "comment": null,
                                     "manual_description": null,
                                     "notes": null,
-                                    "tool_attributes": null,
+                                    "original_frame_name": null,
+                                    "original_multiplexer_name": null,
+                                    "original_signal_name": null,
                                     "visibility": null,
                                     "uuid": "a32ea0c1-0838-430f-8d3c-192b5bff3047"
                                 },
                                 {
                                     "_type": "array_parameter_element",
                                     "name": "A1",
+                                    "abbreviation": "None2",
                                     "notes": null,
                                     "read_only": false,
                                     "default": null,
@@ -104,7 +115,6 @@
                                     "decimal_places": null,
                                     "display_hexadecimal": false,
                                     "units": null,
-                                    "tool_attributes": null,
                                     "visibility": null,
                                     "original": "a32ea0c1-0838-430f-8d3c-192b5bff3047"
                                 }
@@ -114,11 +124,14 @@
                         {
                             "_type": "array",
                             "name": "Table Array B",
+                            "abbreviation": null,
+                            "named_enumerators": true,
                             "children": [
                                 {
                                     "_type": "parameter",
                                     "name": "B0",
-                                    "decoded_name": null,
+                                    "abbreviation": null,
+                                    "type_name": null,
                                     "default": null,
                                     "minimum": null,
                                     "maximum": null,
@@ -138,13 +151,16 @@
                                     "comment": null,
                                     "manual_description": null,
                                     "notes": null,
-                                    "tool_attributes": null,
+                                    "original_frame_name": null,
+                                    "original_multiplexer_name": null,
+                                    "original_signal_name": null,
                                     "visibility": null,
                                     "uuid": "1c7d0fac-aaa6-415b-b7c1-08d1f5d07097"
                                 },
                                 {
                                     "_type": "array_parameter_element",
                                     "name": "B1",
+                                    "abbreviation": "None2",
                                     "notes": null,
                                     "read_only": false,
                                     "default": null,
@@ -157,7 +173,6 @@
                                     "decimal_places": null,
                                     "display_hexadecimal": false,
                                     "units": null,
-                                    "tool_attributes": null,
                                     "visibility": null,
                                     "original": "1c7d0fac-aaa6-415b-b7c1-08d1f5d07097"
                                 }
@@ -196,6 +211,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A0",
+                                                            "abbreviation": null,
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -210,7 +226,6 @@
                                                             "manual_description": null,
                                                             "enumeration_uuid": null,
                                                             "units": null,
-                                                            "tool_attributes": null,
                                                             "visibility": null,
                                                             "display_hexadecimal": false,
                                                             "default": null,
@@ -221,6 +236,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -235,7 +251,6 @@
                                                             "manual_description": null,
                                                             "enumeration_uuid": null,
                                                             "units": null,
-                                                            "tool_attributes": null,
                                                             "visibility": null,
                                                             "display_hexadecimal": false,
                                                             "default": null,
@@ -260,6 +275,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B0",
+                                                            "abbreviation": null,
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -274,7 +290,6 @@
                                                             "manual_description": null,
                                                             "enumeration_uuid": null,
                                                             "units": null,
-                                                            "tool_attributes": null,
                                                             "visibility": null,
                                                             "display_hexadecimal": false,
                                                             "default": null,
@@ -285,6 +300,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -299,7 +315,6 @@
                                                             "manual_description": null,
                                                             "enumeration_uuid": null,
                                                             "units": null,
-                                                            "tool_attributes": null,
                                                             "visibility": null,
                                                             "display_hexadecimal": false,
                                                             "default": null,
@@ -337,6 +352,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A0",
+                                                            "abbreviation": null,
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -351,7 +367,6 @@
                                                             "manual_description": null,
                                                             "enumeration_uuid": null,
                                                             "units": null,
-                                                            "tool_attributes": null,
                                                             "visibility": null,
                                                             "display_hexadecimal": false,
                                                             "default": null,
@@ -362,6 +377,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -376,7 +392,6 @@
                                                             "manual_description": null,
                                                             "enumeration_uuid": null,
                                                             "units": null,
-                                                            "tool_attributes": null,
                                                             "visibility": null,
                                                             "display_hexadecimal": false,
                                                             "default": null,
@@ -401,6 +416,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B0",
+                                                            "abbreviation": null,
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -415,7 +431,6 @@
                                                             "manual_description": null,
                                                             "enumeration_uuid": null,
                                                             "units": null,
-                                                            "tool_attributes": null,
                                                             "visibility": null,
                                                             "display_hexadecimal": false,
                                                             "default": null,
@@ -426,6 +441,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -440,7 +456,6 @@
                                                             "manual_description": null,
                                                             "enumeration_uuid": null,
                                                             "units": null,
-                                                            "tool_attributes": null,
                                                             "visibility": null,
                                                             "display_hexadecimal": false,
                                                             "default": null,
@@ -490,6 +505,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A0",
+                                                            "abbreviation": null,
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -504,7 +520,6 @@
                                                             "manual_description": null,
                                                             "enumeration_uuid": null,
                                                             "units": null,
-                                                            "tool_attributes": null,
                                                             "visibility": null,
                                                             "display_hexadecimal": false,
                                                             "default": null,
@@ -515,6 +530,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -529,7 +545,6 @@
                                                             "manual_description": null,
                                                             "enumeration_uuid": null,
                                                             "units": null,
-                                                            "tool_attributes": null,
                                                             "visibility": null,
                                                             "display_hexadecimal": false,
                                                             "default": null,
@@ -554,6 +569,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B0",
+                                                            "abbreviation": null,
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -568,7 +584,6 @@
                                                             "manual_description": null,
                                                             "enumeration_uuid": null,
                                                             "units": null,
-                                                            "tool_attributes": null,
                                                             "visibility": null,
                                                             "display_hexadecimal": false,
                                                             "default": null,
@@ -579,6 +594,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -593,7 +609,6 @@
                                                             "manual_description": null,
                                                             "enumeration_uuid": null,
                                                             "units": null,
-                                                            "tool_attributes": null,
                                                             "visibility": null,
                                                             "display_hexadecimal": false,
                                                             "default": null,
@@ -631,6 +646,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A0",
+                                                            "abbreviation": null,
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -645,7 +661,6 @@
                                                             "manual_description": null,
                                                             "enumeration_uuid": null,
                                                             "units": null,
-                                                            "tool_attributes": null,
                                                             "visibility": null,
                                                             "display_hexadecimal": false,
                                                             "default": null,
@@ -656,6 +671,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "A1",
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -670,7 +686,6 @@
                                                             "manual_description": null,
                                                             "enumeration_uuid": null,
                                                             "units": null,
-                                                            "tool_attributes": null,
                                                             "visibility": null,
                                                             "display_hexadecimal": false,
                                                             "default": null,
@@ -695,6 +710,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B0",
+                                                            "abbreviation": null,
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -709,7 +725,6 @@
                                                             "manual_description": null,
                                                             "enumeration_uuid": null,
                                                             "units": null,
-                                                            "tool_attributes": null,
                                                             "visibility": null,
                                                             "display_hexadecimal": false,
                                                             "default": null,
@@ -720,6 +735,7 @@
                                                         {
                                                             "_type": "table_array_element",
                                                             "name": "B1",
+                                                            "abbreviation": "None2",
                                                             "notes": null,
                                                             "read_only": false,
                                                             "path": [
@@ -734,7 +750,6 @@
                                                             "manual_description": null,
                                                             "enumeration_uuid": null,
                                                             "units": null,
-                                                            "tool_attributes": null,
                                                             "visibility": null,
                                                             "display_hexadecimal": false,
                                                             "default": null,
@@ -772,7 +787,8 @@
         {
             "_type": "parameter",
             "name": "Parameter B",
-            "decoded_name": null,
+            "abbreviation": null,
+            "type_name": null,
             "default": "42",
             "minimum": null,
             "maximum": null,
@@ -792,13 +808,16 @@
             "comment": null,
             "manual_description": null,
             "notes": null,
-            "tool_attributes": null,
+            "original_frame_name": null,
+            "original_multiplexer_name": null,
+            "original_signal_name": null,
             "visibility": null,
             "uuid": "ee545382-a651-479b-9dc2-a4c3d42c230c"
         },
         {
             "_type": "group",
             "name": "Group C",
+            "type_name": null,
             "children": [],
             "manual_description": null,
             "uuid": "7878effc-2d29-4719-bf0d-192e18d0f27c"
