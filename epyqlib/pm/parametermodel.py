@@ -1574,7 +1574,6 @@ def merge(name, *types):
 
 columns = epyqlib.attrsmodel.columns(
     merge("name", *types.types.values()),
-    merge("abbreviation", SunSpecEnumerator),
     (merge("decoded_name", Parameter) + merge("type", SunSpecEnumerator)),
     merge("length", Array),
     merge(
