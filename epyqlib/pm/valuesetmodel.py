@@ -148,7 +148,9 @@ class Parameter(epyqlib.treenode.TreeNode):
 
     value = decimal_attrib(default=None)
     user_default = decimal_attrib(default=None, load_only=True)
+    epyqlib.attrsmodel.attrib(attribute=user_default, no_column=True)
     factory_default = decimal_attrib(default=None, load_only=True)
+    epyqlib.attrsmodel.attrib(attribute=factory_default, no_column=True)
     minimum = decimal_attrib(default=None, load_only=True)
     maximum = decimal_attrib(default=None, load_only=True)
 
