@@ -11,7 +11,6 @@ except ImportError as e:
     raise ImportError("Package gitpython expected but not found") from e
 import json
 import os
-import pip
 import shutil
 import stat
 import sys
