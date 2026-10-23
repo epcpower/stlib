@@ -92,7 +92,7 @@ jobs:
           done
           curl --fail --silent --show-error --output /dev/null \
             --user "$POETRY_HTTP_BASIC_EPC_POWER_USERNAME:$POETRY_HTTP_BASIC_EPC_POWER_PASSWORD" \
-            https://epc-power-us-${{ secrets.AWS_ACCOUNT_ID }}.d.codeartifact.us-east-2.amazonaws.com/pypi/epc-power/simple/
+            https://epc-power-us-${{ secrets.AWS_ACCOUNT_ID }}.d.codeartifact.us-east-2.amazonaws.com/pypi/epc-power/simple/epyqlib/
           poetry publish --repository epc-power --dry-run
       - name: Publish executable
         #only run if a new tag is created
