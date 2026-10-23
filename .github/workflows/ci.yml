@@ -83,6 +83,17 @@ jobs:
           poetry run pytest -vvvv -s --no-qt-log --run-factory epyqlib.tests --pyargs
 
           poetry build
+      - name: Verify publish credentials
+        # Runs as its own step so it checks the credentials carried over via $GITHUB_ENV,
+        # the same way the publish step receives them.
+        run: |
+          for var in POETRY_HTTP_BASIC_EPC_POWER_USERNAME POETRY_HTTP_BASIC_EPC_POWER_PASSWORD; do
+            if [ -z "${!var}" ]; then echo "::error::$var is not set"; exit 1; fi
+          done
+          curl --fail --silent --show-error --output /dev/null \
+            --user "$POETRY_HTTP_BASIC_EPC_POWER_USERNAME:$POETRY_HTTP_BASIC_EPC_POWER_PASSWORD" \
+            https://epc-power-us-${{ secrets.AWS_ACCOUNT_ID }}.d.codeartifact.us-east-2.amazonaws.com/pypi/epc-power/simple/
+          poetry publish --repository epc-power --dry-run
       - name: Publish executable
         #only run if a new tag is created
         if: startsWith(github.ref, 'refs/tags/')
